@@ -186,6 +186,25 @@ impl HttpClient {
         Self::deserialize_internal(response).await
     }
 
+    pub async fn get_json_with_payload<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
+    where
+        T: Serialize,
+        R: DeserializeOwned,
+    {
+        let bytes = serde_json::to_vec(payload)?;
+        let body = Bytes::from(bytes);
+
+        let response = self
+            .dispatch(
+                reqwest::Method::GET,
+                url,
+                Some(body),
+                Some("application/json"),
+            )
+            .await?;
+        Self::deserialize_internal(response).await
+    }
+
     pub async fn post_json<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
     where
         T: Serialize,
@@ -203,6 +222,15 @@ impl HttpClient {
             )
             .await?;
         Self::deserialize_internal(response).await
+    }
+
+    pub async fn post_void<R>(&self, url: &str) -> anyhow::Result<R, HttpClientError>
+    where
+        R: ApiResponse,
+    {
+        let response = self.dispatch(reqwest::Method::POST, url, None, None).await?;
+
+        R::from_response(response).await
     }
 
     pub async fn put_json<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>

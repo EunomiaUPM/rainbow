@@ -3,10 +3,8 @@ use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factor
 use crate::protocols::dsp::facades::data_plane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::protocol_types::DataAddressDto;
 use rainbow_catalog_agent::DataServiceDto;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::ops::Deref;
 use std::sync::Arc;
 use urn::Urn;
@@ -26,7 +24,7 @@ impl DataPlaneProviderFacadeForDSProtocol {
 
 #[async_trait::async_trait]
 impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
-    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddress> {
+    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddressDto> {
         todo!()
     }
 
@@ -37,7 +35,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
         data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
-        let strategy = self.dataplane_strategy_factory.get_strategy(&TransferRoles::Provider, &format);
+        let strategy = self.dataplane_strategy_factory.get_strategy(&RoleConfig::Provider, &format);
         strategy.on_transfer_request_pre(session_id, format, data_service, data_address).await?;
         Ok(())
     }
@@ -55,7 +53,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_request_post(session_id, &format, data_service, data_address).await?;
         Ok(())
@@ -68,7 +66,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_start_pre(session_id).await?;
         Ok(())
@@ -81,7 +79,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_start_post(session_id).await?;
         Ok(())
@@ -94,7 +92,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_suspension_pre(session_id).await?;
         Ok(())
@@ -107,7 +105,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_suspension_post(session_id).await?;
         Ok(())
@@ -120,7 +118,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_completion_pre(session_id).await?;
         Ok(())
@@ -133,7 +131,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_completion_post(session_id).await?;
         Ok(())
@@ -146,7 +144,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_termination_pre(session_id).await?;
         Ok(())
@@ -159,7 +157,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
         let format = process.inner.transfer_direction.parse::<DctFormats>()?;
-        let role = process.inner.role.parse::<TransferRoles>()?;
+        let role = process.inner.role.parse::<RoleConfig>()?;
         let strategy = self.dataplane_strategy_factory.get_strategy(&role, &format);
         strategy.on_transfer_termination_post(session_id).await?;
         Ok(())

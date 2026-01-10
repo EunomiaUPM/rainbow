@@ -24,6 +24,19 @@ pub struct NewCatalogDto {
     pub dspace_participant_id: Option<String>,
 }
 
+impl Default for NewCatalogDto {
+    fn default() -> Self {
+        Self {
+            id: None,
+            foaf_home_page: None,
+            dct_conforms_to: None,
+            dct_creator: None,
+            dct_title: None,
+            dspace_participant_id: None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]

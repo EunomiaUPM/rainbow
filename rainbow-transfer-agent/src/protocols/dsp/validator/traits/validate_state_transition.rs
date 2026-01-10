@@ -16,9 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::protocols::dsp::protocol_types::{TransferProcessMessageType, TransferProcessState, TransferStateAttribute};
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]
 pub trait ValidateStateTransition: Send + Sync + 'static {
@@ -27,7 +26,7 @@ pub trait ValidateStateTransition: Send + Sync + 'static {
     // consumer can receive: [start, suspension, completion, termination]
     async fn validate_role_for_message(
         &self,
-        role: &TransferRoles,
+        role: &RoleConfig,
         message_type: &TransferProcessMessageType,
     ) -> anyhow::Result<()>;
     // validate state transition from state a to b based in DSP state machine
@@ -42,6 +41,6 @@ pub trait ValidateStateTransition: Send + Sync + 'static {
         current_state: &TransferProcessState,
         current_state_attribute: &TransferStateAttribute,
         message_type: &TransferProcessMessageType,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()>;
 }

@@ -1,6 +1,6 @@
 use crate::data::entities::dataservice;
 use crate::data::entities::dataservice::{EditDataServiceModel, NewDataServiceModel};
-use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, DataServiceRepoErrors};
+use crate::data::repo_traits::catalog_db_errors::CatalogAgentRepoErrors;
 use urn::Urn;
 
 #[async_trait::async_trait]

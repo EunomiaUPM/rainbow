@@ -1,0 +1,26 @@
+{
+  "id": "policy-1",
+  "version": "1.0",
+  "title": "Mi example policy",
+  "description": "Mi example super policy",
+  "content": {
+    "permission": [
+      {
+        "action": "use",
+        "constraint": [
+          {
+            "leftOperand": "bla",
+            "operator": "eq",
+            "rightOperand": "$bla"
+          }
+        ]
+      }
+    ]
+  },
+  "parameters": {
+    "$bla": {
+      "id": "hola",
+      "dataType": "string"
+    }
+  }
+}

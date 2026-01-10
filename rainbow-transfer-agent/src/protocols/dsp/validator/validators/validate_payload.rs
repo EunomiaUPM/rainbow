@@ -22,9 +22,9 @@ use crate::protocols::dsp::protocol_types::{TransferProcessMessageTrait, Transfe
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::{anyhow, bail};
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
@@ -65,11 +65,16 @@ impl ValidatePayload for ValidatePayloadService {
         &self,
         uri_id: &String,
         payload: &dyn TransferProcessMessageTrait,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()> {
         let identifier = match role {
-            TransferRoles::Provider => payload.get_provider_pid(),
-            TransferRoles::Consumer => payload.get_consumer_pid(),
+            RoleConfig::Provider => payload.get_provider_pid(),
+            RoleConfig::Consumer => payload.get_consumer_pid(),
+            _ => {
+                let err = CommonErrors::parse_new("Something went wrong. Role not recognized.");
+                error!("{}", err.log());
+                bail!(err)
+            }
         }
         .ok_or_else(|| {
             let err = CommonErrors::parse_new("Something went wrong. Role not recognized.");
@@ -91,8 +96,8 @@ impl ValidatePayload for ValidatePayloadService {
         payload: &dyn TransferProcessMessageTrait,
         dto: &TransferProcessDto,
     ) -> anyhow::Result<()> {
-        let provider_pid_in_dto = self.helpers.get_pid_by_role(dto, TransferRoles::Provider).await?.to_string();
-        let consumer_pid_in_dto = self.helpers.get_pid_by_role(dto, TransferRoles::Consumer).await?.to_string();
+        let provider_pid_in_dto = self.helpers.get_pid_by_role(dto, RoleConfig::Provider).await?.to_string();
+        let consumer_pid_in_dto = self.helpers.get_pid_by_role(dto, RoleConfig::Consumer).await?.to_string();
         let provider_pid_in_payload = payload.get_provider_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
         let consumer_pid_in_payload = payload.get_consumer_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
         if provider_pid_in_dto != provider_pid_in_payload || consumer_pid_in_dto != consumer_pid_in_payload {
@@ -134,13 +139,13 @@ impl ValidatePayload for ValidatePayloadService {
         payload: &dyn TransferProcessMessageTrait,
         dto: &TransferProcessDto,
     ) -> anyhow::Result<()> {
-        let role = dto.inner.role.parse::<TransferRoles>()?;
+        let role = dto.inner.role.parse::<RoleConfig>()?;
         let state_attribute =
             dto.inner.state_attribute.clone().unwrap_or("".to_string()).parse::<TransferStateAttribute>()?;
         let is_data_address_in_payload = payload.get_data_address().is_some();
 
         if is_data_address_in_payload == true {
-            if role == TransferRoles::Consumer {
+            if role == RoleConfig::Consumer {
                 if state_attribute != TransferStateAttribute::OnRequest {
                     let err = CommonErrors::parse_new(
                         "Data address should be defined only in the first TransferStart message from provider",

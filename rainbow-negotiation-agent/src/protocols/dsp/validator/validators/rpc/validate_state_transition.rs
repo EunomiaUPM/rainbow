@@ -22,8 +22,8 @@ use crate::protocols::dsp::validator::traits::validate_state_transition::Validat
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::bail;
 use log::error;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::sync::Arc;
 
 pub struct ValidatedStateTransitionServiceForRcp {
@@ -38,7 +38,7 @@ impl ValidatedStateTransitionServiceForRcp {
 impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
     async fn validate_role_for_message(
         &self,
-        _role: &TransferRoles,
+        _role: &RoleConfig,
         _message_type: &NegotiationProcessMessageType,
     ) -> anyhow::Result<()> {
         Ok(())

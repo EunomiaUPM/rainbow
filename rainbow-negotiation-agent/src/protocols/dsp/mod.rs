@@ -36,7 +36,6 @@ use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
-use crate::protocols::dsp::orchestrator::rpc::peer_communication::PeerCommunication;
 use crate::protocols::dsp::orchestrator::rpc::persistence::OrchestrationPersistenceForRpc;
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
 use crate::protocols::dsp::persistence::persistence_protocol::NegotiationPersistenceForProtocolService;
@@ -119,7 +118,6 @@ impl ProtocolPluginTrait for NegotiationDSP {
         ));
 
         // http service
-        let peer_communication = Arc::new(PeerCommunication::new(http_client.clone()));
         let persistence_protocol_service = Arc::new(OrchestrationPersistenceForProtocol::new(
             self.negotiation_agent_process_entities.clone(),
             self.negotiation_agent_message_service.clone(),

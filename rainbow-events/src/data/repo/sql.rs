@@ -100,7 +100,7 @@ impl SubscriptionRepo for EventsRepoForSql {
             Err(e) => return Err(EventRepoErrors::ErrorFetchingSubscription(e.into())),
         };
 
-        let subscription_id = subscription_id.to_string();
+        let _subscription_id = subscription_id.to_string();
         let mut old_active_model: subscription::ActiveModel = old_model.into();
         if let Some(callback_address) = edit_subscription.callback_address {
             old_active_model.callback_address = ActiveValue::Set(callback_address);
@@ -182,7 +182,7 @@ impl NotificationRepo for EventsRepoForSql {
         subscription_id: Urn,
     ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors> {
         let subscription = self.get_subscription_by_id(subscription_id.clone()).await;
-        let subscription = match subscription {
+        let _subscription = match subscription {
             Ok(subscription) => match subscription {
                 Some(subscription) => subscription,
                 None => return Err(EventRepoErrors::SubscriptionNotFound),
@@ -206,7 +206,7 @@ impl NotificationRepo for EventsRepoForSql {
         subscription_id: Urn,
     ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors> {
         let subscription = self.get_subscription_by_id(subscription_id.clone()).await;
-        let subscription = match subscription {
+        let _subscription = match subscription {
             Ok(subscription) => match subscription {
                 Some(subscription) => subscription,
                 None => return Err(EventRepoErrors::SubscriptionNotFound),
@@ -231,7 +231,7 @@ impl NotificationRepo for EventsRepoForSql {
         subscription_id: Urn,
     ) -> anyhow::Result<Vec<Model>, EventRepoErrors> {
         let subscription = self.get_subscription_by_id(subscription_id.clone()).await;
-        let subscription = match subscription {
+        let _subscription = match subscription {
             Ok(subscription) => match subscription {
                 Some(subscription) => subscription,
                 None => return Err(EventRepoErrors::SubscriptionNotFound),
@@ -258,7 +258,7 @@ impl NotificationRepo for EventsRepoForSql {
         notification_id: Urn,
     ) -> anyhow::Result<Option<notification::Model>, EventRepoErrors> {
         let subscription = self.get_subscription_by_id(subscription_id.clone()).await;
-        let subscription = match subscription {
+        let _subscription = match subscription {
             Ok(subscription) => match subscription {
                 Some(subscription) => subscription,
                 None => return Err(EventRepoErrors::SubscriptionNotFound),
@@ -279,7 +279,7 @@ impl NotificationRepo for EventsRepoForSql {
         new_notification: NewNotification,
     ) -> anyhow::Result<notification::Model, EventRepoErrors> {
         let subscription = self.get_subscription_by_id(subscription_id.clone()).await;
-        let subscription = match subscription {
+        let _subscription = match subscription {
             Ok(subscription) => match subscription {
                 Some(subscription) => subscription,
                 None => return Err(EventRepoErrors::SubscriptionNotFound),

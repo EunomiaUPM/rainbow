@@ -19,11 +19,9 @@
 
 use crate::entities::negotiation_process::NegotiationProcessDto;
 use anyhow::bail;
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::dsp_common::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{
-    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer,
-};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::{Debug, Display};
@@ -739,8 +737,7 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
         let consumer_str = match value.identifiers.get("consumerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'consumerPid' in NegotiationProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'consumerPid' in NegotiationProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -749,7 +746,7 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for consumerPid '{}': {}",
+                    "Invalid URN format for consumerPid '{}': {}",
                     consumer_str, e
                 ));
                 error!("{}", err.log());
@@ -760,8 +757,7 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'providerPid' in NegotiationProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'providerPid' in NegotiationProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -770,7 +766,7 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for providerPid '{}': {}",
+                    "Invalid URN format for providerPid '{}': {}",
                     provider_str, e
                 ));
                 error!("{}", err.log());
@@ -782,7 +778,7 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
             Ok(s) => s,
             Err(_) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid or unknown NegotiationProcessState '{}' in database model",
+                    "Invalid or unknown NegotiationProcessState '{}' in database model",
                     value.inner.state
                 ));
                 error!("{}", err.log());

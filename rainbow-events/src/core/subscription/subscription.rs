@@ -22,10 +22,10 @@ use crate::core::subscription::subscription_types::{
     RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities,
 };
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
+use crate::data::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
-use crate::data::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
 use std::sync::Arc;
 use urn::Urn;
 

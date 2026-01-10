@@ -23,8 +23,8 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::{anyhow, bail};
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
@@ -48,10 +48,10 @@ impl ValidationHelpers for ValidationHelperService {
         })
     }
 
-    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<TransferRoles> {
+    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<RoleConfig> {
         match identifier {
-            "consumerPid" => Ok(TransferRoles::Consumer),
-            "providerPid" => Ok(TransferRoles::Provider),
+            "consumerPid" => Ok(RoleConfig::Consumer),
+            "providerPid" => Ok(RoleConfig::Provider),
             _ => {
                 let err =
                     CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
@@ -61,10 +61,16 @@ impl ValidationHelpers for ValidationHelperService {
         }
     }
 
-    async fn parse_role_into_identifier(&self, role: &TransferRoles) -> anyhow::Result<&str> {
+    async fn parse_role_into_identifier(&self, role: &RoleConfig) -> anyhow::Result<&str> {
         match role {
-            TransferRoles::Provider => Ok("providerPid"),
-            TransferRoles::Consumer => Ok("consumerPid"),
+            RoleConfig::Provider => Ok("providerPid"),
+            RoleConfig::Consumer => Ok("consumerPid"),
+            _ => {
+                let err =
+                    CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
+                error!("{}", err.log());
+                bail!(err);
+            }
         }
     }
 
@@ -98,7 +104,7 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(dto)
     }
 
-    async fn get_pid_by_role(&self, dto: &TransferProcessDto, role: TransferRoles) -> anyhow::Result<Urn> {
+    async fn get_pid_by_role(&self, dto: &TransferProcessDto, role: RoleConfig) -> anyhow::Result<Urn> {
         let role_as_identifier = self.parse_role_into_identifier(&role).await?;
         let pid = dto.identifiers.get(role_as_identifier).ok_or_else(|| {
             let err = CommonErrors::parse_new("There is no such a identifier, role is mandatory.");
@@ -109,9 +115,9 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(urn)
     }
 
-    async fn get_role_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<TransferRoles> {
+    async fn get_role_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<RoleConfig> {
         let role = &dto.inner.role;
-        let role = role.parse::<TransferRoles>()?;
+        let role = role.parse::<RoleConfig>()?;
         Ok(role)
     }
 

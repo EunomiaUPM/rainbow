@@ -17,7 +17,7 @@
  *
  */
 
-pub(crate) mod application;
+mod boot;
 pub(crate) mod cmd;
 pub(crate) mod db_migrations;
 pub(crate) mod grpc_worker;

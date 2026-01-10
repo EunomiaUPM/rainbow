@@ -17,27 +17,32 @@
  *
  */
 
+use crate::cache::factory_redis::CatalogAgentCacheForRedis;
 use crate::data::factory_sql::CatalogAgentRepoForSql;
 use crate::entities::catalogs::catalogs::CatalogEntities;
 use crate::entities::data_services::data_services::DataServiceEntities;
 use crate::entities::datasets::datasets::DatasetEntities;
 use crate::entities::distributions::distributions::DistributionEntities;
+use crate::entities::instantiation_engine::instantiation_engine::PolicyInstantiationEngine;
 use crate::entities::odrl_policies::odrl_policies::OdrlPolicyEntities;
+use crate::entities::peer_catalogs::peer_catalogs::PeerCatalogEntities;
 use crate::entities::policy_templates::policy_templates::PolicyTemplateEntities;
 use crate::http::catalogs::CatalogEntityRouter;
 use crate::http::data_services::DataServiceEntityRouter;
 use crate::http::datasets::DatasetEntityRouter;
 use crate::http::distributions::DistributionEntityRouter;
 use crate::http::odrl_policies::OdrlOfferEntityRouter;
+use crate::http::peer_catalog::PeerCatalogEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
 use crate::protocols::dsp::CatalogDSP;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
-use rainbow_common::config::services::{CatalogConfig, CommonConfig};
-use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
-use rainbow_common::config::types::HostType;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::{
+    ApiConfigTrait, CacheConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
+};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::health::HealthRouter;
@@ -55,7 +60,7 @@ pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
     pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
-        let well_known_router = WellKnownRoot::get_router()?;
+        let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module catalog router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
@@ -102,10 +107,14 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
     let db_connection_url = config.get_full_db_url();
+    let cache_connection_url = config.get_full_cache_url();
     let db_connection = Database::connect(db_connection_url).await.expect("Database can't connect");
+    let redis_client = redis::Client::open(cache_connection_url)?;
+    let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
     let http_client = Arc::new(HttpClient::new(20, 3));
 
     // repo
+    let catalog_agent_cache = Arc::new(CatalogAgentCacheForRedis::create_repo(redis_connection));
     let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
 
     // facades
@@ -116,19 +125,44 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     ));
 
     // entities
-    let catalog_controller_service = Arc::new(CatalogEntities::new(catalog_agent_repo.clone()));
+    let catalog_controller_service = Arc::new(CatalogEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let catalog_router = CatalogEntityRouter::new(catalog_controller_service.clone(), config.clone());
-    let data_services_controller_service = Arc::new(DataServiceEntities::new(catalog_agent_repo.clone()));
+    let data_services_controller_service = Arc::new(DataServiceEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let data_services_router = DataServiceEntityRouter::new(data_services_controller_service.clone(), config.clone());
-    let datasets_controller_service = Arc::new(DatasetEntities::new(catalog_agent_repo.clone()));
+    let datasets_controller_service = Arc::new(DatasetEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let datasets_router = DatasetEntityRouter::new(datasets_controller_service.clone(), config.clone());
-    let distributions_controller_service = Arc::new(DistributionEntities::new(catalog_agent_repo.clone()));
+    let distributions_controller_service = Arc::new(DistributionEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let distributions_router = DistributionEntityRouter::new(distributions_controller_service.clone(), config.clone());
-    let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(catalog_agent_repo.clone()));
+    let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let odrl_offer_router = OdrlOfferEntityRouter::new(odrl_offer_controller_service.clone(), config.clone());
+
     let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
-    let policy_templates_router =
-        PolicyTemplateEntityRouter::new(policy_templates_controller_service.clone(), config.clone());
+    let policy_engine_service = Arc::new(PolicyInstantiationEngine::new(
+        odrl_offer_controller_service.clone(),
+        policy_templates_controller_service.clone(),
+    ));
+    let policy_templates_router = PolicyTemplateEntityRouter::new(
+        policy_templates_controller_service.clone(),
+        policy_engine_service.clone(),
+        config.clone(),
+    );
+    let peer_catalog_service = Arc::new(PeerCatalogEntities::new(catalog_agent_cache.clone()));
+    let peer_catalog_router = PeerCatalogEntityRouter::new(peer_catalog_service.clone());
 
     // dsp
     let dsp_router = CatalogDSP::new(
@@ -137,6 +171,7 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
         datasets_controller_service.clone(),
         odrl_offer_controller_service.clone(),
         distributions_controller_service.clone(),
+        peer_catalog_service.clone(),
         mates_facade.clone(),
         config.clone(),
     )
@@ -170,9 +205,10 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
             policy_templates_router.router(),
         )
         .nest(
-            format!("{}/dsp/current/catalog", router_str.as_str()).as_str(),
-            dsp_router,
-        );
+            format!("{}/peer-catalogs", router_str.as_str()).as_str(),
+            peer_catalog_router.router(),
+        )
+        .nest("/dsp/current/catalog", dsp_router);
 
     Ok(router)
 }

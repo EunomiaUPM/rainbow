@@ -16,15 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageType, NegotiationProcessState};
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]
 pub trait ValidateStateTransition: Send + Sync + 'static {
     async fn validate_role_for_message(
         &self,
-        role: &TransferRoles,
+        role: &RoleConfig,
         message_type: &NegotiationProcessMessageType,
     ) -> anyhow::Result<()>;
     async fn validate_state_transition(

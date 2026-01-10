@@ -31,8 +31,8 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;

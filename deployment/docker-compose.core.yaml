@@ -1,6 +1,10 @@
 version: "3.5"
 services:
 
+
+  # ====================================================================
+  # PROVIDER Persistence layer =========================================
+  # ====================================================================
   ds_core_provider:
     # platform: linux/amd64
     container_name: "ds_core_provider"
@@ -13,6 +17,21 @@ services:
     ports:
       - "1400:5432"
 
+  ds_core_provider_redis:
+    image: redis:alpine
+    container_name: ds_core_provider_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server 
+      --requirepass ds_core_provider_redis
+      --user admin on >ds_core_provider_redis ~* +@all
+
+
+  # ====================================================================
+  # CONSUMER Persistence layer =========================================
+  # ====================================================================
   ds_core_consumer:
     # platform: linux/amd64
     container_name: "ds_core_consumer"
@@ -25,8 +44,71 @@ services:
     ports:
       - "1300:5432"
 
+  ds_core_consumer_redis:
+    image: redis:alpine
+    container_name: ds_core_consumer_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server 
+      --requirepass ds_core_consumer_redis
+      --user admin on >ds_core_consumer_redis ~* +@all
+
+
+
+  # ====================================================================
+  # IDM ================================================================
+  # Keycloack
+  # ====================================================================
+  idm:
+    container_name: "idm"
+    image: "quay.io/keycloak/keycloak:26.4.7"
+    restart: always
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "2000:8080"
+    command:
+      - "start-dev"
+
+
+  # ====================================================================
+  # AUTHORITY ==========================================================
+  # Authority with start and setup services, along with its database
+  # ====================================================================
   ds_authority:
-    container_name: "ds_authority"
+    container_name: ds_authority
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    restart: on-failure
+    depends_on:
+      - ds_authority_db
+    ports:
+      - "1500:1500"
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+      - ./../static/certificates:/app/certificates
+      - ./../static/specs:/app/specs
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "start", "--env-file", "/app/.env.authority" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ds_authority_setup:
+    container_name: ds_authority_setup
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    depends_on:
+      - ds_authority_db
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "setup", "--env-file", "/app/.env.authority" ]
+
+  ds_authority_db:
+    container_name: ds_authority_db
     image: "postgres"
     restart: always
     environment:

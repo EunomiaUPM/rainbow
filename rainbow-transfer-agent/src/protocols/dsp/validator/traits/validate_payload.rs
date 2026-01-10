@@ -16,10 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::protocols::dsp::protocol_types::TransferProcessMessageTrait;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]
 pub trait ValidatePayload: Send + Sync + 'static {
@@ -34,7 +33,7 @@ pub trait ValidatePayload: Send + Sync + 'static {
         &self,
         uri_id: &String,
         payload: &dyn TransferProcessMessageTrait,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()>;
     /// Validates if consumer_pid and provider_pid are equal to identifiers in db
     async fn validate_correlation(

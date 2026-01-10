@@ -5,9 +5,9 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageWrapper, NegotiationProcessState,
 };
 use anyhow::{anyhow, bail};
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::dsp_common::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::str::FromStr;
 use tracing::error;
 use urn::Urn;
@@ -28,10 +28,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(urn)
     }
-    fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<TransferRoles> {
+    fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<RoleConfig> {
         match identifier.to_lowercase().as_str() {
-            "consumerpid" => Ok(TransferRoles::Consumer),
-            "providerpid" => Ok(TransferRoles::Provider),
+            "consumerpid" => Ok(RoleConfig::Consumer),
+            "providerpid" => Ok(RoleConfig::Provider),
             _ => {
                 let err = CommonErrors::parse_new("Not able to parse indentifier into role");
                 error!("{}", err.log());
@@ -39,13 +39,18 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
             }
         }
     }
-    fn parse_role_into_identifier(&self, role: &TransferRoles) -> anyhow::Result<&str> {
+    fn parse_role_into_identifier(&self, role: &RoleConfig) -> anyhow::Result<&str> {
         match role {
-            TransferRoles::Provider => Ok("providerPid"),
-            TransferRoles::Consumer => Ok("consumerPid"),
+            RoleConfig::Provider => Ok("providerPid"),
+            RoleConfig::Consumer => Ok("consumerPid"),
+            _ => {
+                let err = CommonErrors::parse_new("Not able to parse indentifier into role");
+                error!("{}", err.log());
+                bail!(err)
+            }
         }
     }
-    fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: TransferRoles) -> anyhow::Result<Urn> {
+    fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: RoleConfig) -> anyhow::Result<Urn> {
         let role_as_identifier = self.parse_role_into_identifier(&role)?;
         let pid = dto.identifiers.get(role_as_identifier).ok_or_else(|| {
             let err = CommonErrors::parse_new("There is no such a identifier, role is mandatory.");

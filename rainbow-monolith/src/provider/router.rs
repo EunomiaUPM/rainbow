@@ -21,11 +21,14 @@ use axum::Router;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::ApplicationConfig;
+use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
 
 pub async fn create_core_provider_router(config: &ApplicationConfig) -> Router {
+    let well_known_root_dspace =
+        WellKnownRoot::get_well_known_router(&config.into()).expect("Failed to well known router");
     let auth_router = AuthProviderApplication::create_router(&config.ssi_auth()).await;
     //let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
     let transfer_agent_router =
@@ -34,6 +37,7 @@ pub async fn create_core_provider_router(config: &ApplicationConfig) -> Router {
 
     Router::new()
         //.merge(cn_router)
+        .merge(well_known_root_dspace)
         .merge(catalog_agent_router)
         .merge(auth_router)
         .merge(transfer_agent_router)

@@ -19,8 +19,6 @@
 
 use super::MatesFacadeTrait;
 use crate::config::min_know_services::MinKnownConfig;
-use crate::config::services::SsiAuthConfig;
-use crate::config::traits::{CommonConfigTrait, ExtraHostsTrait};
 use crate::config::types::HostType;
 use crate::http_client::HttpClient;
 use crate::mates::Mates;

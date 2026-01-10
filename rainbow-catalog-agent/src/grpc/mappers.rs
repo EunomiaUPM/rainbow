@@ -3,14 +3,16 @@ use crate::entities::data_services::{DataServiceDto, EditDataServiceDto, NewData
 use crate::entities::datasets::{DatasetDto, EditDatasetDto, NewDatasetDto};
 use crate::entities::distributions::{DistributionDto, EditDistributionDto, NewDistributionDto};
 use crate::entities::odrl_policies::{CatalogEntityTypes, NewOdrlPolicyDto, OdrlPolicyDto};
+use crate::entities::policy_templates::types::LocalizedText;
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateDto};
 use crate::grpc::api::catalog_agent::{
     CatalogEntityType, CreateCatalogRequest, CreateDataServiceRequest, CreateDatasetRequest, CreateDistributionRequest,
     CreateOdrlPolicyRequest, CreatePolicyTemplateRequest, DataService, Dataset, Distribution, OdrlPolicy,
     PolicyTemplate, PutCatalogRequest, PutDataServiceRequest, PutDatasetRequest, PutDistributionRequest,
 };
+use prost_types::Struct;
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
+use rainbow_common::dsp_common::odrl::OdrlPolicyInfo;
 use std::str::FromStr;
 use tonic::Status;
 use urn::Urn;
@@ -69,6 +71,14 @@ fn json_to_proto_struct(v: serde_json::Value) -> prost_types::Struct {
         }
         _ => prost_types::Struct::default(),
     }
+}
+
+fn localized_text_to_proto(txt: Option<LocalizedText>) -> Option<prost_types::Value> {
+    txt.and_then(|t| serde_json::to_value(t).ok()).map(|json| json_to_proto_value(json))
+}
+
+fn proto_to_localized_text(val: Option<prost_types::Value>) -> Option<LocalizedText> {
+    val.map(proto_value_to_json).and_then(|json| serde_json::from_value(json).ok())
 }
 
 impl From<CatalogDto> for crate::grpc::api::catalog_agent::Catalog {
@@ -299,24 +309,31 @@ impl From<OdrlPolicyDto> for OdrlPolicy {
     fn from(dto: OdrlPolicyDto) -> Self {
         let model = dto.inner;
 
-        let odrl_offer =
-            if let Some(val) = model.odrl_offer { json_to_proto_struct(val) } else { prost_types::Struct::default() };
+        let offer_val = json_to_proto_value(model.odrl_offer);
+        let odrl_offer = match offer_val.kind {
+            Some(prost_types::value::Kind::StructValue(s)) => Some(s),
+            _ => None,
+        };
 
-        let entity_type = match model.entity_type.as_str() {
-            "Distribution" => CatalogEntityType::Distribution,
-            "DataService" => CatalogEntityType::DataService,
-            "Catalog" => CatalogEntityType::Catalog,
-            "Dataset" => CatalogEntityType::Dataset,
-            _ => CatalogEntityType::Catalog,
-        }
-        .into();
+        let inst_params = model.instantiation_parameters.map(|json| {
+            let val = json_to_proto_value(json);
+            match val.kind {
+                Some(prost_types::value::Kind::StructValue(s)) => s,
+                _ => Struct::default(),
+            }
+        });
 
         Self {
             id: model.id,
-            odrl_offer: Some(odrl_offer),
             entity_id: model.entity,
-            entity_type,
+            entity_type: CatalogEntityType::from_str_name(&model.entity_type)
+                .unwrap_or(CatalogEntityType::Unspecified)
+                .into(),
+            odrl_offer,
             created_at: model.created_at.to_rfc3339(),
+            source_template_id: model.source_template_id,
+            source_template_version: model.source_template_version,
+            instantiation_parameters: inst_params,
         }
     }
 }
@@ -354,25 +371,45 @@ impl TryFrom<CreateOdrlPolicyRequest> for NewOdrlPolicyDto {
             }
         };
 
-        Ok(Self { id, odrl_offer, entity_id, entity_type })
+        Ok(Self {
+            id,
+            odrl_offer,
+            entity_id,
+            entity_type,
+            source_template_id: None,
+            source_template_version: None,
+            instantiation_parameters: None,
+        })
     }
 }
 
 impl From<PolicyTemplateDto> for PolicyTemplate {
     fn from(dto: PolicyTemplateDto) -> Self {
-        let model = dto.inner;
+        let model = dto;
 
-        let content = json_to_proto_struct(model.content);
+        let content_json = serde_json::to_value(model.content).unwrap_or(serde_json::Value::Null);
+        let content_val = json_to_proto_value(content_json);
+        let content = match content_val.kind {
+            Some(prost_types::value::Kind::StructValue(s)) => s,
+            _ => Struct::default(),
+        };
 
-        let operand_options = model.operand_options.map(json_to_proto_struct);
+        let parameters_json = serde_json::to_value(model.parameters).unwrap_or(serde_json::Value::Null);
+        let parameters_val = json_to_proto_value(parameters_json);
+        let parameters = match parameters_val.kind {
+            Some(prost_types::value::Kind::StructValue(s)) => s,
+            _ => Struct::default(),
+        };
 
         Self {
             id: model.id,
-            title: model.title,
-            description: model.description,
+            version: model.version,
+            date: model.date.to_rfc3339(),
+            author: model.author,
+            title: localized_text_to_proto(model.title),
+            description: localized_text_to_proto(model.description),
             content: Some(content),
-            operand_options,
-            created_at: model.created_at.to_rfc3339(),
+            parameters: Some(parameters),
         }
     }
 }
@@ -381,23 +418,41 @@ impl TryFrom<CreatePolicyTemplateRequest> for NewPolicyTemplateDto {
     type Error = Status;
 
     fn try_from(req: CreatePolicyTemplateRequest) -> Result<Self, Self::Error> {
-        // En PolicyTemplate, content es obligatorio
-        let content_struct = req.content.ok_or_else(|| Status::invalid_argument("content (Struct) is required"))?;
+        let content_struct = req.content.ok_or_else(|| Status::invalid_argument("content is required"))?;
+        let content_prost_val =
+            prost_types::Value { kind: Some(prost_types::value::Kind::StructValue(content_struct)) };
+        let content_json = proto_value_to_json(content_prost_val);
 
-        if content_struct.fields.is_empty() {
-            return Err(Status::invalid_argument("content cannot be empty"));
-        }
+        let content: OdrlPolicyInfo = serde_json::from_value(content_json)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ODRL content: {}", e)))?;
 
-        let content = proto_struct_to_json(content_struct);
+        let parameters = if let Some(params_struct) = req.parameters {
+            let val = prost_types::Value { kind: Some(prost_types::value::Kind::StructValue(params_struct)) };
+            let json = proto_value_to_json(val);
+            serde_json::from_value(json).unwrap_or_default()
+        } else {
+            std::collections::HashMap::new()
+        };
 
-        let operand_options = req.operand_options.map(proto_struct_to_json);
+        let date = if let Some(d) = req.date {
+            Some(
+                chrono::DateTime::parse_from_rfc3339(&d)
+                    .map_err(|_| Status::invalid_argument("Invalid date format"))?
+                    .into(),
+            )
+        } else {
+            None
+        };
 
         Ok(Self {
-            id: req.id, // NewPolicyTemplateDto usa Option<String>
-            title: req.title,
-            description: req.description,
+            id: req.id,
+            version: req.version,
+            date,
+            author: req.author,
+            title: proto_to_localized_text(req.title),
+            description: proto_to_localized_text(req.description),
             content,
-            operand_options,
+            parameters,
         })
     }
 }

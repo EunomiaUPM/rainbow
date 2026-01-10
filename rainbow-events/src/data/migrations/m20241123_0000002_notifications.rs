@@ -17,8 +17,8 @@
  *
  */
 
-use sea_orm_migration::prelude::*;
 use crate::data::migrations::m20241123_0000001_subscriptions::Subscriptions;
+use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {

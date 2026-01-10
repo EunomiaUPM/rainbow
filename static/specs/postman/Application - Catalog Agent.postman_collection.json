@@ -1,0 +1,1997 @@
+{
+	"info": {
+		"_postman_id": "43fd4584-54a9-4b4e-ae36-4cc49fce22ab",
+		"name": "Application - Catalog Agent",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13165791"
+	},
+	"item": [
+		{
+			"name": "Entities",
+			"item": [
+				{
+					"name": "Catalog",
+					"item": [
+						{
+							"name": "Get All",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs?with_main_catalog=true",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "4",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "2",
+											"disabled": true
+										},
+										{
+											"key": "with_main_catalog",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": [\n        \"urn:catalog:e4a1a62e-af27-4b27-9999-4eef1718e993\",\n        \"urn:catalog:eddcf8e6-358b-42f0-8b31-0f7033e2156c\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Main",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/main",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"main"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/urn:catalog:0c672f22-3b06-4ac1-adfa-f9a1626aa1e9",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"urn:catalog:0c672f22-3b06-4ac1-adfa-f9a1626aa1e9"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"dctTitle\": \"asdasd\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/urn:catalog:b8119125-6bee-413d-b02b-a8c0056319c1",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"urn:catalog:b8119125-6bee-413d-b02b-a8c0056319c1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/urn:catalog:b8119125-6bee-413d-b02b-a8c0056319c1",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"urn:catalog:b8119125-6bee-413d-b02b-a8c0056319c1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"foafHomePage\": \"superfoaf\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Main",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"foafHomePage\": \"superfoaf\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/catalogs/main",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"catalogs",
+										"main"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Dataset",
+					"item": [
+						{
+							"name": "Get all",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": []\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Catalog",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets/catalog/urn:catalog:e4a1a62e-af27-4b27-9999-4eef1718e993",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets",
+										"catalog",
+										"urn:catalog:e4a1a62e-af27-4b27-9999-4eef1718e993"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets/urn:dataset:35ec00ad-b326-4658-93e1-0014481a4ec4",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets",
+										"urn:dataset:35ec00ad-b326-4658-93e1-0014481a4ec4"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dctTitle\": \"superfoaf\",\n    \"catalogId\": \"urn:catalog:cffbf0b5-e988-4019-a857-92e90c4b21aa\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"dctTitle\": \"asdasdasdasd\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets/urn:dataset:35ec00ad-b326-4658-93e1-0014481a4ec4",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets",
+										"urn:dataset:35ec00ad-b326-4658-93e1-0014481a4ec4"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/datasets/urn:uuid:7367541b-d9e1-499a-8262-93e568cddc2f",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"datasets",
+										"urn:uuid:7367541b-d9e1-499a-8262-93e568cddc2f"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DataService",
+					"item": [
+						{
+							"name": "Get all",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": [\n        \"urn:data-service:ce35de3b-2229-4a80-91d1-190802b40243\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Catalog",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/catalog/urn:catalog:04e2b493-3597-4360-9ffa-1bb78661e114",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"catalog",
+										"urn:catalog:04e2b493-3597-4360-9ffa-1bb78661e114"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/urn:data-service:4acbf984-12a6-4230-a97f-de108d8fceb1",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"urn:data-service:4acbf984-12a6-4230-a97f-de108d8fceb1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get main",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/main",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"main"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dcatEndpointUrl\": \"superfoaf\",\n    \"catalogId\": \"urn:catalog:04e2b493-3597-4360-9ffa-1bb78661e114\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create main",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dcatEndpointUrl\": \"main\",\n    \"catalogId\": \"urn:catalog:e4a290ed-1f5d-444c-88dd-5c48098cf5eb\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/main",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"main"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"dctTitle\": \"asdasdkansldknaslkdnal\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/urn:data-service:4acbf984-12a6-4230-a97f-de108d8fceb1",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"urn:data-service:4acbf984-12a6-4230-a97f-de108d8fceb1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/data-services/urn:data-service:b3401b35-2d2e-47e4-ab45-bd6178918cdf",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"data-services",
+										"urn:data-service:b3401b35-2d2e-47e4-ab45-bd6178918cdf"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Distributions",
+					"item": [
+						{
+							"name": "Get all",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": []\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Dataset",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/dataset/urn:dataset:eac36830-0da2-4018-8732-fca155f51066",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"dataset",
+										"urn:dataset:eac36830-0da2-4018-8732-fca155f51066"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Dataset DctFormats",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/dataset/urn:dataset:eac36830-0da2-4018-8732-fca155f51066/format/http+push",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"dataset",
+										"urn:dataset:eac36830-0da2-4018-8732-fca155f51066",
+										"format",
+										"http+push"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dctTitle\": \"superfoaf\",\n    \"dcatAccessService\": \"urn:data-service:3a14db63-3b99-4f40-8244-c58d93ae9e60\", \n    \"datasetId\": \"urn:dataset:eac36830-0da2-4018-8732-fca155f51066\",\n    \"dctFormats\": \"http+push\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"dctTitle\": \"asdasdkansldknaslkdnal\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/distributions/urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"distributions",
+										"urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Policies",
+					"item": [
+						{
+							"name": "Get all",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": []\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by Entity id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies/entity/urn:uuid:123",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies",
+										"entity",
+										"urn:uuid:123"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies/urn:odrl-policy:be1542d1-6b77-4ad9-8aba-fe399d026d17",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies",
+										"urn:odrl-policy:be1542d1-6b77-4ad9-8aba-fe399d026d17"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"odrlOffer\": {\n        \"permission\": [\n            {\n                \"action\": \"use\"\n            }\n        ]\n    },\n    \"entityId\": \"urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635\", \n    \"entityType\": \"Catalog\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies/urn:odrl-policy:5fc12cc0-9998-4b3b-be32-f83f288733e3",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies",
+										"urn:odrl-policy:5fc12cc0-9998-4b3b-be32-f83f288733e3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete all by entity",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/odrl-policies/entity/urn:uuid:123",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"odrl-policies",
+										"entity",
+										"urn:uuid:123"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Policies Templates",
+					"item": [
+						{
+							"name": "Get all",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": []\n}"
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Batch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": []\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates/batch",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates",
+										"batch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get multiple by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates/whatever",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates",
+										"whatever"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get by id and version",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates/whatever/4.0",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates",
+										"whatever",
+										"4.0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"version\":\"2.0\",\n    \"title\": \"asd\",\n    \"description\": \"asdasd\",\n    \"content\": {\n        \"permission\": [\n            {\n                \"action\": \"use\", \n                \"constraint\": [\n                    {\n                        \"leftOperand\": \"bla\",\n                        \"operator\": \"eq\",\n                        \"rightOperand\": \"$bla\"\n                    }\n                ]\n            }\n        ]\n    },\n    \"parameters\": {\n        \"$bla\": {\n            \"id\": \"hola\", \n            \"dataType\": \"string\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Instantiate Odrl Offer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": \"policy-1\",\n    \"version\": \"1.0\",\n    \"parameters\": {\n        \"$bla\": \"hola\"\n    },\n    \"entityId\": \"urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635\",\n    \"entityType\": \"Catalog\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates/instantiate-odrl-offer",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates",
+										"instantiate-odrl-offer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete multiple by id",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/policy-templates/urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0/a",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"policy-templates",
+										"urn:distribution:11f037c6-5084-422e-bfb3-2096516a3bc0",
+										"a"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Peer Catalogs",
+					"item": [
+						{
+							"name": "Get by peer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CatalogProvider}}/api/v1/catalog-agent/peer-catalogs/did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ",
+									"host": [
+										"{{CatalogProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalog-agent",
+										"peer-catalogs",
+										"did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "DSP",
+			"item": [
+				{
+					"name": "Catalog Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/dspace/2025/1/context.jsonld\"\n    ],\n    \"@type\": \"CatalogRequestMessage\",\n    \"filter\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{CatalogProvider}}/dsp/current/catalog/request",
+							"host": [
+								"{{CatalogProvider}}"
+							],
+							"path": [
+								"dsp",
+								"current",
+								"catalog",
+								"request"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Catalog Request Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/dspace/2025/1/context.jsonld\"\n    ],\n    \"@type\": \"CatalogRequestMessage\",\n    \"filter\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:1100/dsp/current/catalog/request",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1100",
+							"path": [
+								"dsp",
+								"current",
+								"catalog",
+								"request"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Dataset Request By Id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/dspace/2025/1/context.jsonld\"\n    ],\n    \"@type\": \"DatasetRequestMessage\",\n    \"dataset\": \"urn:dataset:d58e3c46-5c22-44e1-8614-5b4fc30bb572\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{CatalogProvider}}/dsp/current/catalog/datasets/urn:dataset:d58e3c46-5c22-44e1-8614-5b4fc30bb572",
+							"host": [
+								"{{CatalogProvider}}"
+							],
+							"path": [
+								"dsp",
+								"current",
+								"catalog",
+								"datasets",
+								"urn:dataset:d58e3c46-5c22-44e1-8614-5b4fc30bb572"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DSP Rpc",
+			"item": [
+				{
+					"name": "Catalog Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"associatedAgentPeer\": \"did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ\",\n    \"filter\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{CatalogProvider}}/dsp/current/catalog/rpc/setup-catalog-request",
+							"host": [
+								"{{CatalogProvider}}"
+							],
+							"path": [
+								"dsp",
+								"current",
+								"catalog",
+								"rpc",
+								"setup-catalog-request"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Dataset Request By Id",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"associatedAgentPeer\": \"did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ\",\n    \"dataset\": \"urn:dataset:828b4b4d-931e-45dd-b40b-b15251fa6487\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{CatalogProvider}}/dsp/current/catalog/rpc/setup-dataset-request",
+							"host": [
+								"{{CatalogProvider}}"
+							],
+							"path": [
+								"dsp",
+								"current",
+								"catalog",
+								"rpc",
+								"setup-dataset-request"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "OpenAPI",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{CatalogProvider}}/api/v1/catalog/openapi.json",
+					"host": [
+						"{{CatalogProvider}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"catalog",
+						"openapi.json"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "CATALOG",
+			"value": ""
+		},
+		{
+			"key": "DATASET",
+			"value": ""
+		},
+		{
+			"key": "DATA_SERVICE",
+			"value": ""
+		}
+	]
+}

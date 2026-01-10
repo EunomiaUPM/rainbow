@@ -2,7 +2,8 @@ pub(crate) mod odrl_policies;
 
 use crate::data::entities::odrl_offer;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
+use crate::entities::policy_templates::types::ParameterDefinition;
+use rainbow_common::dsp_common::odrl::OdrlPolicyInfo;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use urn::Urn;
@@ -30,6 +31,12 @@ pub struct NewOdrlPolicyDto {
     pub odrl_offer: OdrlPolicyInfo,
     pub entity_id: Urn,
     pub entity_type: CatalogEntityTypes,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_template_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_template_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instantiation_parameters: Option<serde_json::Value>,
 }
 
 impl Display for CatalogEntityTypes {
@@ -47,7 +54,15 @@ impl Display for CatalogEntityTypes {
 
 impl From<NewOdrlPolicyDto> for NewOdrlOfferModel {
     fn from(dto: NewOdrlPolicyDto) -> Self {
-        Self { id: dto.id, odrl_offer: dto.odrl_offer, entity_id: dto.entity_id, entity_type: dto.entity_type }
+        Self {
+            id: dto.id,
+            odrl_offer: dto.odrl_offer,
+            entity_id: dto.entity_id,
+            entity_type: dto.entity_type,
+            source_template_id: dto.source_template_id,
+            source_template_version: dto.source_template_version,
+            instantiation_parameters: dto.instantiation_parameters,
+        }
     }
 }
 

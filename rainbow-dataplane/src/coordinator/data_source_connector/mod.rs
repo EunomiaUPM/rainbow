@@ -1,6 +1,6 @@
 pub mod data_source_connector;
 
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
+use rainbow_common::dsp_common::data_address::DataAddress;
 use urn::Urn;
 
 #[async_trait::async_trait]

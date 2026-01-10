@@ -40,7 +40,6 @@ impl MigratorTrait for CoreProviderMigration {
         let mut dataplane_migrations = get_dataplane_migrations();
         //let mut datahub_migrations = get_datahub_migrations();
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
-
         //migrations.append(&mut transfer_provider_migrations);
         migrations.append(&mut catalog_migrations);
         //migrations.append(&mut contract_negotiation_provider_migrations);

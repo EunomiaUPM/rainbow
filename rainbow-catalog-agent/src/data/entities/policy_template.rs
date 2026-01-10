@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
@@ -24,27 +25,42 @@ use urn::UrnBuilder;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "policy_templates")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub title: Option<String>,
-    pub description: Option<String>,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub version: String,
+    pub date: DateTimeWithTimeZone,
+    pub author: String,
+    pub title: Option<serde_json::Value>,
+    pub description: Option<serde_json::Value>,
     pub content: serde_json::Value,
-    pub operand_options: Option<serde_json::Value>,
-    pub created_at: DateTimeWithTimeZone,
+    pub parameters: serde_json::Value,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::odrl_offer::Entity")]
+    OdrlOffers,
+}
+
+impl Related<super::odrl_offer::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::OdrlOffers.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
 
 #[derive(Clone)]
 pub struct NewPolicyTemplateModel {
     pub id: Option<String>,
-    pub title: Option<String>,
-    pub description: Option<String>,
+    pub version: Option<String>,
+    pub date: Option<DateTimeWithTimeZone>,
+    pub author: Option<String>,
+    pub title: Option<serde_json::Value>,
+    pub description: Option<serde_json::Value>,
     pub content: serde_json::Value,
-    pub operand_options: Option<serde_json::Value>,
+    pub parameters: serde_json::Value,
 }
 
 impl From<NewPolicyTemplateModel> for ActiveModel {
@@ -57,11 +73,13 @@ impl From<NewPolicyTemplateModel> for ActiveModel {
         .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone().to_string()).to_string()),
+            version: ActiveValue::Set(dto.version.unwrap_or("1.0".to_string())),
+            date: ActiveValue::Set(dto.date.unwrap_or(chrono::Utc::now().into())),
+            author: ActiveValue::Set(dto.author.unwrap_or("".to_string())),
             title: ActiveValue::Set(dto.title),
             description: ActiveValue::Set(dto.description),
             content: ActiveValue::Set(dto.content),
-            operand_options: ActiveValue::Set(dto.operand_options),
-            created_at: ActiveValue::Set(chrono::Utc::now().into()),
+            parameters: ActiveValue::Set(dto.parameters),
         }
     }
 }

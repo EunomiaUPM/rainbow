@@ -25,12 +25,13 @@ use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
-use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use serde::Deserialize;
+use serde_json::json;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{error, info};
 
 pub struct RainbowEventsSubscriptionRouter<T>
 where
@@ -96,7 +97,14 @@ where
                 Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
                 Err(e) => match e.downcast::<SubscriptionErrors>() {
                     Ok(e_) => e_.into_response(),
-                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                    Err(_) => (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({
+                            "message": "Internal Server Error",
+                            "error_code": 5000
+                        })),
+                    )
+                        .into_response(),
                 },
             }
         } else {
@@ -105,7 +113,14 @@ where
                 Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
                 Err(e) => match e.downcast::<SubscriptionErrors>() {
                     Ok(e_) => e_.into_response(),
-                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                    Err(_) => (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({
+                            "message": "Internal Server Error",
+                            "error_code": 5000
+                        })),
+                    )
+                        .into_response(),
                 },
             }
         }
@@ -128,7 +143,14 @@ where
             Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -154,7 +176,14 @@ where
             Ok(subscriptions) => (StatusCode::ACCEPTED, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -174,7 +203,14 @@ where
             Ok(subscriptions) => (StatusCode::CREATED, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -195,7 +231,14 @@ where
             Ok(subscriptions) => (StatusCode::NO_CONTENT, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }

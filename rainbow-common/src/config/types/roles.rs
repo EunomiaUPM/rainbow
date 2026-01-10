@@ -20,6 +20,7 @@
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use std::ops::Not;
 use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
@@ -27,6 +28,18 @@ pub enum RoleConfig {
     NotDefined,
     Consumer,
     Provider,
+}
+
+impl Not for RoleConfig {
+    type Output = RoleConfig;
+
+    fn not(self) -> Self::Output {
+        match self {
+            RoleConfig::NotDefined => self,
+            RoleConfig::Consumer => RoleConfig::Provider,
+            RoleConfig::Provider => RoleConfig::Consumer,
+        }
+    }
 }
 
 impl FromStr for RoleConfig {

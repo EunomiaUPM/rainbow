@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 /*
  *
  *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
@@ -31,7 +33,7 @@ const INFO: &str = r"
 
 Starting Rainbow Transfer Agent Server 🌈🌈
 UPM Dataspace agent
-Show some love on https://github.com/ging/rainbow
+Show some love on https://github.com/EunomiaUPM/rainbow
 ----------
 
 ";

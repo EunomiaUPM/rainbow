@@ -1,5 +1,5 @@
 use crate::coordinator::data_source_connector::DataSourceConnectorTrait;
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
+use rainbow_common::dsp_common::data_address::DataAddress;
 use urn::Urn;
 
 pub struct DataSourceConnector;

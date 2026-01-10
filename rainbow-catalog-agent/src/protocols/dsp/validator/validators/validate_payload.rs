@@ -20,7 +20,7 @@
 use crate::protocols::dsp::protocol_types::CatalogMessageTrait;
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::sync::Arc;
 
 pub struct ValidatePayloadService {
@@ -49,7 +49,7 @@ impl ValidatePayload for ValidatePayloadService {
         &self,
         uri_id: &String,
         payload: &dyn CatalogMessageTrait,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()> {
         todo!()
     }

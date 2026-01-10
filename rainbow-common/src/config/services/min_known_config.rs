@@ -17,9 +17,10 @@
  *
  */
 
-use crate::config::services::SsiAuthConfig;
+use crate::config::services::{CatalogConfig, ContractsConfig, SsiAuthConfig, TransferConfig};
 use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ExtraHostsTrait};
 use crate::config::types::{CommonHostsConfig, HostType};
+use crate::config::ApplicationConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -40,5 +41,53 @@ impl MinKnownConfig {
 impl From<SsiAuthConfig> for MinKnownConfig {
     fn from(value: SsiAuthConfig) -> Self {
         Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+    }
+}
+
+impl From<CatalogConfig> for MinKnownConfig {
+    fn from(value: CatalogConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+    }
+}
+
+impl From<&CatalogConfig> for MinKnownConfig {
+    fn from(value: &CatalogConfig) -> Self {
+        value.clone().into()
+    }
+}
+
+impl From<ContractsConfig> for MinKnownConfig {
+    fn from(value: ContractsConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+    }
+}
+
+impl From<&ContractsConfig> for MinKnownConfig {
+    fn from(value: &ContractsConfig) -> Self {
+        value.clone().into()
+    }
+}
+
+impl From<TransferConfig> for MinKnownConfig {
+    fn from(value: TransferConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+    }
+}
+
+impl From<&TransferConfig> for MinKnownConfig {
+    fn from(value: &TransferConfig) -> Self {
+        value.clone().into()
+    }
+}
+
+impl From<ApplicationConfig> for MinKnownConfig {
+    fn from(value: ApplicationConfig) -> Self {
+        Self { hosts: value.monolith().common().hosts.clone(), api_version: value.monolith().get_api_version() }
+    }
+}
+
+impl From<&ApplicationConfig> for MinKnownConfig {
+    fn from(value: &ApplicationConfig) -> Self {
+        value.clone().into()
     }
 }

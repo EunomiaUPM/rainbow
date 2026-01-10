@@ -16,9 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::protocols::dsp::protocol_types::CatalogMessageTrait;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]
 pub trait ValidatePayload: Send + Sync + 'static {
@@ -33,7 +32,7 @@ pub trait ValidatePayload: Send + Sync + 'static {
         &self,
         uri_id: &String,
         payload: &dyn CatalogMessageTrait,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()>;
     /// Validates if Header Bearer token corresponds to associated_consumer in db
     async fn validate_auth(&self, payload: &dyn CatalogMessageTrait) -> anyhow::Result<()>; // db call

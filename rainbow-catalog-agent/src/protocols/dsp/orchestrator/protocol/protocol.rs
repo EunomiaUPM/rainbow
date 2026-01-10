@@ -20,12 +20,10 @@
 use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{
-    CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
-};
+use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::types::catalog_definition::Catalog;
+use crate::protocols::dsp::types::dataset_definition::Dataset;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use rainbow_common::protocol::catalog::catalog_definition::Catalog;
-use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
@@ -48,7 +46,7 @@ impl ProtocolOrchestratorService {
 impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_catalog_request(
         &self,
-        input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
+        _input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
     ) -> anyhow::Result<Catalog> {
         let catalog = self.persistence.get_catalog().await?;
         Ok(catalog)

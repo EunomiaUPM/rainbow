@@ -48,7 +48,7 @@ pub struct NegotiationHttpWorker {}
 impl NegotiationHttpWorker {
     pub async fn spawn(config: &ContractsConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
-        let well_known_router = WellKnownRoot::get_router()?;
+        let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
@@ -145,10 +145,7 @@ pub async fn create_root_http_router(config: &ContractsConfig) -> anyhow::Result
             format!("{}/agreements", router_str.as_str()).as_str(),
             agreement_router.router(),
         )
-        .nest(
-            format!("{}/dsp/current/negotiations", router_str.as_str()).as_str(),
-            dsp_router,
-        );
+        .nest("/dsp/current/negotiations", dsp_router);
 
     Ok(router)
 }

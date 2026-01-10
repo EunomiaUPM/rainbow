@@ -18,6 +18,7 @@
  */
 
 mod api;
+pub mod cache;
 mod client;
 pub mod database;
 mod host;

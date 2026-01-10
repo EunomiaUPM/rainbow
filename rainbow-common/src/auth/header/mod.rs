@@ -22,7 +22,6 @@ use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::Response;
 use std::sync::Arc;
-use tracing::debug;
 
 #[derive(Debug, Clone)]
 pub struct RequestInfo {

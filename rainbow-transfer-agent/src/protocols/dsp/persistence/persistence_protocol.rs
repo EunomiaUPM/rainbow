@@ -24,9 +24,11 @@ use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
     TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
 };
+use crate::protocols::dsp::transfer_types::TransferState;
+use anyhow::bail;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::errors::ErrorLog;
-use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -145,7 +147,7 @@ impl TransferPersistenceTrait for TransferPersistenceForProtocolService {
         // update
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
         // role
-        let role = transfer_process.inner.role.parse::<TransferRoles>()?;
+        let role = transfer_process.inner.role.parse::<RoleConfig>()?;
         let state_attribute = transfer_process
             .inner
             .state_attribute
@@ -157,13 +159,23 @@ impl TransferPersistenceTrait for TransferPersistenceForProtocolService {
             TransferProcessMessageType::TransferStartMessage => match &state_attribute {
                 TransferStateAttribute::OnRequest => TransferStateAttribute::OnRequest,
                 _ => match &role {
-                    TransferRoles::Provider => TransferStateAttribute::ByConsumer,
-                    TransferRoles::Consumer => TransferStateAttribute::ByProvider,
+                    RoleConfig::Provider => TransferStateAttribute::ByConsumer,
+                    RoleConfig::Consumer => TransferStateAttribute::ByProvider,
+                    _ => {
+                        let err = CommonErrors::parse_new("Process service not found");
+                        error!("{}", err.log());
+                        bail!(err)
+                    }
                 },
             },
             _ => match &role {
-                TransferRoles::Provider => TransferStateAttribute::ByConsumer,
-                TransferRoles::Consumer => TransferStateAttribute::ByProvider,
+                RoleConfig::Provider => TransferStateAttribute::ByConsumer,
+                RoleConfig::Consumer => TransferStateAttribute::ByProvider,
+                _ => {
+                    let err = CommonErrors::parse_new("Process service not found");
+                    error!("{}", err.log());
+                    bail!(err)
+                }
             },
         };
 

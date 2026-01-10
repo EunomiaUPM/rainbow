@@ -1,0 +1,936 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Rainbow Catalog Agent API - DSP Protocol",
+    "description": "OpenAPI specification for the Rainbow Catalog Agent DSP Protocol and RPC endpoints.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/dsp/current",
+      "description": "Base path for the DSP protocol"
+    }
+  ],
+  "tags": [
+    {
+      "name": "DSP Protocol",
+      "description": "Standard Dataspace Protocol endpoints"
+    },
+    {
+      "name": "DSP RPC",
+      "description": "Remote Procedure Call endpoints for orchestrator interaction"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/catalog/request": {
+      "post": {
+        "tags": [
+          "DSP Protocol"
+        ],
+        "summary": "Request catalog (DSP)",
+        "operationId": "protocolRequestCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMessageWrapper_CatalogRequestMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catalog returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/datasets/{id}": {
+      "get": {
+        "tags": [
+          "DSP Protocol"
+        ],
+        "summary": "Request dataset (DSP) - GET with Body (Non-standard)",
+        "description": "Currently implemented as a GET request that accepts a body in the Rust code.\nNote: GET requests with bodies are not standard in OpenAPI/HTTP, but this reflects the implementation.\n",
+        "operationId": "protocolRequestDataset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogMessageWrapper_DatasetRequestMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dataset returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dataset"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/rpc/setup-catalog-request": {
+      "post": {
+        "tags": [
+          "DSP RPC"
+        ],
+        "summary": "Setup catalog request (RPC)",
+        "operationId": "rpcSetupCatalogRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpcCatalogRequestMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catalog returned from peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/catalog/rpc/setup-dataset-request": {
+      "post": {
+        "tags": [
+          "DSP RPC"
+        ],
+        "summary": "Setup dataset request (RPC)",
+        "operationId": "rpcSetupDatasetRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpcDatasetRequestMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dataset returned from peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dataset"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorInfo"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorInfo"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorInfo"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorInfo": {
+        "type": "object",
+        "required": [
+          "message",
+          "error_code",
+          "cause"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "error_code": {
+            "type": "integer"
+          },
+          "details": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "message": "Resource not found",
+          "error_code": 3200,
+          "status_code": 404,
+          "cause": "Catalog with ID urn:uuid:123 not found"
+        }
+      },
+      "CatalogMessageWrapper_CatalogRequestMessageDto": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "@type": {
+            "type": "string"
+          },
+          "filter": {
+            "type": "object",
+            "description": "Filter criteria for catalog request"
+          }
+        },
+        "required": [
+          "@type"
+        ],
+        "example": {
+          "@context": [
+            "https://w3id.org/dspace/2025/1/context.jsonld"
+          ],
+          "@type": "CatalogRequestMessage",
+          "filter": []
+        }
+      },
+      "CatalogMessageWrapper_DatasetRequestMessage": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "@type": {
+            "type": "string"
+          },
+          "dataset": {
+            "type": "string",
+            "format": "urn",
+            "description": "ID of the dataset requested"
+          }
+        },
+        "required": [
+          "@type"
+        ],
+        "example": {
+          "@context": [
+            "https://w3id.org/dspace/2025/1/context.jsonld"
+          ],
+          "@type": "DatasetRequestMessage",
+          "dataset": "urn:dataset:d58e3c46-5c22-44e1-8614-5b4fc30bb572"
+        }
+      },
+      "RpcCatalogRequestMessageDto": {
+        "type": "object",
+        "properties": {
+          "associatedAgentPeer": {
+            "type": "string"
+          },
+          "filter": {
+            "type": "object"
+          }
+        },
+        "example": {
+          "associatedAgentPeer": "did:jwk:eyJrdHkiOiJSU0Ei...",
+          "filter": []
+        }
+      },
+      "RpcDatasetRequestMessageDto": {
+        "type": "object",
+        "properties": {
+          "associatedAgentPeer": {
+            "type": "string"
+          },
+          "dataset": {
+            "type": "string",
+            "format": "urn"
+          }
+        },
+        "example": {
+          "associatedAgentPeer": "did:jwk:eyJrdHkiOiJSU0Ei...",
+          "dataset": "urn:dataset:828b4b4d-931e-45dd-b40b-b15251fa6487"
+        }
+      },
+      "Catalog": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string",
+            "format": "urn"
+          },
+          "homepage": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "keyword": {
+            "type": "string"
+          },
+          "conformsTo": {
+            "type": "string"
+          },
+          "creator": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "issued": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modified": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "participantId": {
+            "type": "string"
+          },
+          "hasPolicy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlOffer"
+            }
+          },
+          "extraFields": {
+            "type": "object"
+          },
+          "catalog": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CatalogMinimized"
+                }
+              }
+            ]
+          },
+          "dataset": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Dataset"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DatasetMinimized"
+                }
+              }
+            ]
+          },
+          "service": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DataService"
+              },
+              {
+                "$ref": "#/components/schemas/DataServiceMinimized"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DataService"
+                }
+              }
+            ]
+          }
+        },
+        "example": {
+          "@context": [
+            "https://w3id.org/dspace/2025/1/context.jsonld"
+          ],
+          "@type": "Catalog",
+          "@id": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+          "identifier": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+          "issued": "2026-01-09T10:49:53.822684",
+          "catalog": [
+            {
+              "@type": "Catalog",
+              "@id": "urn:catalog:4958f37d-17cf-44e7-ae18-1f26b6fe15ff",
+              "homepage": "superfoaf",
+              "identifier": "urn:catalog:4958f37d-17cf-44e7-ae18-1f26b6fe15ff",
+              "issued": "2026-01-10T14:23:16.619801",
+              "dataset": [
+                {
+                  "@type": "Dataset",
+                  "@id": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+                  "identifier": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+                  "issued": "2026-01-10T14:23:29.091150",
+                  "title": "superfoaf",
+                  "hasPolicy": [
+                    {
+                      "@id": "urn:odrl-policy:3953b047-0aa5-4649-a0bd-0522f77d018b",
+                      "permission": [
+                        {
+                          "action": "use"
+                        }
+                      ],
+                      "@type": "Offer"
+                    }
+                  ],
+                  "distribution": [
+                    {
+                      "@type": "Distribution",
+                      "@id": "urn:distribution:77116828-c4dd-4632-8946-969bb7903819",
+                      "accessService": {
+                        "@type": "DataService",
+                        "@id": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+                        "endpointURL": "http://127.0.0.1:1200/dsp/current"
+                      },
+                      "issued": "2026-01-10T14:24:29.424022",
+                      "title": "superfoaf",
+                      "formats": "http+push"
+                    }
+                  ]
+                }
+              ],
+              "service": []
+            }
+          ],
+          "dataset": [],
+          "service": {
+            "@type": "DataService",
+            "@id": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+            "endpointURL": "http://127.0.0.1:1200/dsp/current"
+          }
+        }
+      },
+      "CatalogMinimized": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string",
+            "format": "urn"
+          },
+          "homepage": {
+            "type": "string"
+          }
+        }
+      },
+      "Dataset": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          },
+          "hasPolicy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlOffer"
+            }
+          },
+          "distribution": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Distribution"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DistributionMinimized"
+                }
+              }
+            ]
+          },
+          "conformsTo": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "@context": [
+            "https://w3id.org/dspace/2025/1/context.jsonld"
+          ],
+          "@type": "Dataset",
+          "@id": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+          "identifier": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+          "issued": "2026-01-10T14:23:29.091150",
+          "title": "superfoaf",
+          "hasPolicy": [
+            {
+              "@id": "urn:odrl-policy:3953b047-0aa5-4649-a0bd-0522f77d018b",
+              "permission": [
+                {
+                  "action": "use"
+                }
+              ],
+              "@type": "Offer"
+            }
+          ],
+          "distribution": [
+            {
+              "@type": "Distribution",
+              "@id": "urn:distribution:77116828-c4dd-4632-8946-969bb7903819",
+              "accessService": {
+                "@type": "DataService",
+                "@id": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+                "endpointURL": "http://127.0.0.1:1200/dsp/current"
+              },
+              "issued": "2026-01-10T14:24:29.424022",
+              "title": "superfoaf",
+              "formats": "http+push"
+            }
+          ]
+        }
+      },
+      "DatasetMinimized": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          }
+        }
+      },
+      "DataService": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          },
+          "endpointURL": {
+            "type": "string"
+          },
+          "endpointDescription": {
+            "type": "string"
+          }
+        }
+      },
+      "DataServiceMinimized": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          }
+        }
+      },
+      "Distribution": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          },
+          "accessService": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataService"
+            }
+          }
+        }
+      },
+      "DistributionMinimized": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "@id": {
+            "type": "string"
+          }
+        }
+      },
+      "OdrlOffer": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "enum": [
+              "Offer",
+              "Agreement"
+            ]
+          },
+          "@id": {
+            "type": "string",
+            "format": "urn"
+          },
+          "target": {
+            "type": "string",
+            "format": "urn"
+          },
+          "profile": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "permission": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlPermission"
+            }
+          },
+          "obligation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlObligation"
+            }
+          },
+          "prohibition": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlObligation"
+            }
+          }
+        }
+      },
+      "OdrlPermission": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "constraint": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          },
+          "duty": {
+            "$ref": "#/components/schemas/OdrlDuty"
+          }
+        }
+      },
+      "OdrlDuty": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "constraint": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          }
+        }
+      },
+      "OdrlObligation": {
+        "$ref": "#/components/schemas/OdrlDuty"
+      },
+      "OdrlConstraint": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/OdrlAtomicConstraint"
+          },
+          {
+            "$ref": "#/components/schemas/OdrlLogicalConstraint"
+          }
+        ]
+      },
+      "OdrlAtomicConstraint": {
+        "type": "object",
+        "required": [
+          "rightOperand",
+          "leftOperand",
+          "operator"
+        ],
+        "properties": {
+          "leftOperand": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "gt",
+              "gteq",
+              "lteq",
+              "hasPart",
+              "isA",
+              "isAllOf",
+              "isAnyOf",
+              "isNoneOf",
+              "isPartOf",
+              "lt",
+              "termLteq",
+              "neq"
+            ]
+          },
+          "rightOperand": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          }
+        }
+      },
+      "OdrlLogicalConstraint": {
+        "type": "object",
+        "properties": {
+          "and": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          },
+          "andSequence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          },
+          "or": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          },
+          "xone": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdrlConstraint"
+            }
+          }
+        }
+      }
+    }
+  }
+}

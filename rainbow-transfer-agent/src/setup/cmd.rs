@@ -17,9 +17,10 @@
  *
  */
 
-use crate::setup::application::TransferApplication;
+use crate::setup::boot::TransferBoot;
 use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
@@ -53,10 +54,15 @@ impl TransferCommands {
         let cli = TransferCli::parse();
         match cli.command {
             TransferCliCommands::Start(args) => {
-                let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current Transfer Agent Config:\n{}", table);
-                TransferApplication::run(&config).await?;
+                let init = BootstrapInit::<TransferBoot>::new(RoleConfig::NotDefined, args.env_file);
+                let step1 = init.next_step().await?; // Init -> Config
+                let step2 = step1.0.next_step().await?; // Config -> ServicesStarted (Background)
+                let step3 = step2.0.next_step().await?; // Services -> Participant
+                let step4 = step3.0.next_step().await?; // Participant -> Catalog
+                let step5 = step4.0.next_step().await?; // Catalog -> DataService
+                let step6 = step5.0.next_step().await?; // DataService -> PolicyTemplates
+                let step_finalized = step6.0.next_step().await?;
+                let _ = step_finalized.0.next_step().await?;
             }
             TransferCliCommands::Setup(args) => {
                 let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);

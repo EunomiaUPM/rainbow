@@ -20,8 +20,10 @@ use crate::config::types::HostConfig;
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
+use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fs;
@@ -95,6 +97,17 @@ pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Resul
             let error = CommonErrors::module_new(module);
             error!("{}", error.log());
             bail!(error)
+        }
+    }
+}
+
+pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Response> {
+    match input {
+        Ok(Json(data)) => Ok(data),
+        Err(err) => {
+            let e = CommonErrors::format_new(BadFormat::Received, &format!("{}", err.body_text()));
+            error!("{}", e.log());
+            Err(e.into_response())
         }
     }
 }

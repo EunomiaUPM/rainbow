@@ -23,6 +23,7 @@ pub(crate) mod http;
 pub(crate) mod orchestrator;
 mod persistence;
 pub(crate) mod protocol_types;
+pub(crate) mod transfer_types;
 pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;

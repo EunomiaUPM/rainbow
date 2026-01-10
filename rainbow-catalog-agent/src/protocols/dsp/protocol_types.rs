@@ -17,10 +17,10 @@
  *
  */
 
-use rainbow_common::protocol::context_field::ContextField;
+use crate::protocols::dsp::types::CatalogDspTraitDefinition;
+use rainbow_common::dsp_common::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
-use std::str::FromStr;
 use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -28,7 +28,7 @@ use urn::Urn;
 #[serde(deny_unknown_fields)]
 pub struct CatalogMessageWrapper<T>
 where
-    T: CatalogMessageTrait,
+    T: CatalogDspTraitDefinition,
 {
     #[serde(rename = "@context")]
     pub context: ContextField,
@@ -49,20 +49,7 @@ pub struct CatalogRequestMessageDto {
 
 impl CatalogMessageTrait for CatalogRequestMessageDto {}
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct CatalogMessageDto {
-    #[serde(rename = "@id")]
-    pub id: Urn,
-    pub participant_id: String,
-    pub catalog: String,
-    pub dataset: String,
-    pub distribution: String,
-    pub service: Urn,
-}
-
-impl CatalogMessageTrait for CatalogMessageDto {}
+impl CatalogDspTraitDefinition for CatalogRequestMessageDto {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -73,15 +60,7 @@ pub struct DatasetRequestMessage {
 
 impl CatalogMessageTrait for DatasetRequestMessage {}
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct DatasetMessageDto {
-    pub distribution: Urn,
-    pub has_policy: Urn,
-}
-
-impl CatalogMessageTrait for DatasetMessageDto {}
+impl CatalogDspTraitDefinition for DatasetRequestMessage {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -92,6 +71,8 @@ pub struct CatalogErrorDto {
 }
 
 impl CatalogMessageTrait for CatalogErrorDto {}
+
+impl CatalogDspTraitDefinition for CatalogErrorDto {}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum CatalogMessageType {
