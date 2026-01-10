@@ -1,0 +1,3017 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Rainbow Catalog Agent API - Entity Management",
+        "description": "OpenAPI specification for the Rainbow Catalog Agent Entity Management endpoints.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/v1/catalog-agent",
+            "description": "Base path for the catalog agent API"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Catalogs",
+            "description": "Manage catalog entities"
+        },
+        {
+            "name": "Data Services",
+            "description": "Manage data service entities"
+        },
+        {
+            "name": "Datasets",
+            "description": "Manage dataset entities"
+        },
+        {
+            "name": "Distributions",
+            "description": "Manage distribution entities"
+        },
+        {
+            "name": "ODRL Policies",
+            "description": "Manage ODRL policies and offers"
+        },
+        {
+            "name": "Policy Templates",
+            "description": "Manage policy templates"
+        },
+        {
+            "name": "Peer Catalogs",
+            "description": "Access remote peer catalogs"
+        }
+    ],
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ],
+    "paths": {
+        "/catalogs": {
+            "get": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Get all catalogs",
+                "operationId": "getAllCatalogs",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/WithMainCatalogParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of catalogs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CatalogDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Create a new catalog",
+                "operationId": "createCatalog",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewCatalogDto"
+                            },
+                            "example": {
+                                "dctTitle": "My New Catalog",
+                                "dctCreator": "My Organization",
+                                "dspaceParticipantId": "urn:uuid:my-participant-id"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Catalog created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CatalogDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/catalogs/main": {
+            "get": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Get main catalog",
+                "operationId": "getMainCatalog",
+                "responses": {
+                    "200": {
+                        "description": "Main catalog",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CatalogDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Create main catalog",
+                "operationId": "createMainCatalog",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewCatalogDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Main catalog created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CatalogDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/catalogs/batch": {
+            "post": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Get batch catalogs",
+                "operationId": "getBatchCatalogs",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequests"
+                            },
+                            "example": {
+                                "ids": [
+                                    "urn:uuid:c1",
+                                    "urn:uuid:c2"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of catalogs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CatalogDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/catalogs/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Get catalog by ID",
+                "operationId": "getCatalogById",
+                "responses": {
+                    "200": {
+                        "description": "Catalog found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CatalogDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Update catalog by ID",
+                "operationId": "updateCatalogById",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EditCatalogDto"
+                            },
+                            "example": {
+                                "dctTitle": "Updated Catalog Title"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Catalog updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CatalogDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Catalogs"
+                ],
+                "summary": "Delete catalog by ID",
+                "operationId": "deleteCatalogById",
+                "responses": {
+                    "202": {
+                        "description": "Catalog deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/data-services": {
+            "get": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Get all data services",
+                "operationId": "getAllDataServices",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of data services",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DataServiceDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Create data service",
+                "operationId": "createDataService",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewDataServiceDto"
+                            },
+                            "example": {
+                                "dcatEndpointUrl": "http://example.com/api",
+                                "catalogId": "urn:uuid:my-catalog-id",
+                                "dctTitle": "My Data Service"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data service created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataServiceDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/data-services/catalog/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Get data services by catalog ID",
+                "operationId": "getDataServicesByCatalogId",
+                "responses": {
+                    "200": {
+                        "description": "List of data services",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DataServiceDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/data-services/batch": {
+            "post": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Get batch data services",
+                "operationId": "getBatchDataServices",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequests"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of data services",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DataServiceDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/data-services/main": {
+            "get": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Get main data service",
+                "operationId": "getMainDataService",
+                "responses": {
+                    "200": {
+                        "description": "Main data service",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataServiceDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Create main data service",
+                "operationId": "createMainDataService",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewDataServiceDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Main data service created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataServiceDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/data-services/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Get data service by ID",
+                "operationId": "getDataServiceById",
+                "responses": {
+                    "200": {
+                        "description": "Data service found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataServiceDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Update data service by ID",
+                "operationId": "updateDataServiceById",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EditDataServiceDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data service updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataServiceDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Data Services"
+                ],
+                "summary": "Delete data service by ID",
+                "operationId": "deleteDataServiceById",
+                "responses": {
+                    "202": {
+                        "description": "Data service deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/datasets": {
+            "get": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Get all datasets",
+                "operationId": "getAllDatasets",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of datasets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DatasetDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Create dataset",
+                "operationId": "createDataset",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewDatasetDto"
+                            },
+                            "example": {
+                                "catalogId": "urn:uuid:my-catalog-id",
+                                "dctTitle": "My Dataset"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dataset created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DatasetDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/datasets/catalog/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Get datasets by catalog ID",
+                "operationId": "getDatasetsByCatalogId",
+                "responses": {
+                    "200": {
+                        "description": "List of datasets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DatasetDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/datasets/batch": {
+            "post": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Get batch datasets",
+                "operationId": "getBatchDatasets",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequests"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of datasets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DatasetDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/datasets/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Get dataset by ID",
+                "operationId": "getDatasetById",
+                "responses": {
+                    "200": {
+                        "description": "Dataset found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DatasetDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Update dataset by ID",
+                "operationId": "updateDatasetById",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EditDatasetDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dataset updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DatasetDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Datasets"
+                ],
+                "summary": "Delete dataset by ID",
+                "operationId": "deleteDatasetById",
+                "responses": {
+                    "202": {
+                        "description": "Dataset deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/distributions": {
+            "get": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Get all distributions",
+                "operationId": "getAllDistributions",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of distributions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DistributionDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Create distribution",
+                "operationId": "createDistribution",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewDistributionDto"
+                            },
+                            "example": {
+                                "datasetId": "urn:uuid:my-dataset-id",
+                                "dcatAccessService": "http://example.com/access",
+                                "dctTitle": "My Distribution",
+                                "dctFormats": "Http+Pull"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Distribution created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DistributionDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/distributions/dataset/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Get distributions by dataset ID",
+                "operationId": "getDistributionsByDatasetId",
+                "responses": {
+                    "200": {
+                        "description": "List of distributions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DistributionDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/distributions/dataset/{id}/format/{format}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                },
+                {
+                    "name": "format",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string",
+                        "description": "Format in 'PROTOCOL+ACTION' e.g. 'Http+Pull', 'Ngsi-LD+Push'"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Get distribution by dataset ID and format",
+                "operationId": "getDistributionByDatasetIdAndFormat",
+                "responses": {
+                    "200": {
+                        "description": "Distribution found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DistributionDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/distributions/batch": {
+            "post": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Get batch distributions",
+                "operationId": "getBatchDistributions",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequests"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of distributions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DistributionDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/distributions/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Get distribution by ID",
+                "operationId": "getDistributionById",
+                "responses": {
+                    "200": {
+                        "description": "Distribution found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DistributionDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Update distribution by ID",
+                "operationId": "updateDistributionById",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EditDistributionDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Distribution updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DistributionDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Distributions"
+                ],
+                "summary": "Delete distribution by ID",
+                "operationId": "deleteDistributionById",
+                "responses": {
+                    "202": {
+                        "description": "Distribution deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/odrl-policies": {
+            "get": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Get all ODRL policies",
+                "operationId": "getAllOdrlPolicies",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of ODRL policies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OdrlPolicyDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Create ODRL policy",
+                "operationId": "createOdrlPolicy",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewOdrlPolicyDto"
+                            },
+                            "example": {
+                                "entityId": "urn:uuid:my-dataset-id",
+                                "entityType": "Dataset",
+                                "odrlOffer": {
+                                    "profile": [
+                                        "http://www.w3.org/ns/odrl/2/"
+                                    ],
+                                    "permission": [
+                                        {
+                                            "action": "http://www.w3.org/ns/odrl/2/use"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "ODRL policy created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OdrlPolicyDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/odrl-policies/batch": {
+            "post": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Get batch ODRL policies",
+                "operationId": "getBatchOdrlPolicies",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequests"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of ODRL policies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OdrlPolicyDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/odrl-policies/entity/{entity_id}": {
+            "parameters": [
+                {
+                    "name": "entity_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Get ODRL policies by entity ID",
+                "operationId": "getOdrlPoliciesByEntity",
+                "responses": {
+                    "200": {
+                        "description": "List of ODRL policies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OdrlPolicyDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Delete ODRL policies by entity ID",
+                "operationId": "deleteOdrlPoliciesByEntity",
+                "responses": {
+                    "202": {
+                        "description": "Policies deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/odrl-policies/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Get ODRL policy by ID",
+                "operationId": "getOdrlPolicyById",
+                "responses": {
+                    "200": {
+                        "description": "ODRL policy found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OdrlPolicyDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "ODRL Policies"
+                ],
+                "summary": "Delete ODRL policy by ID",
+                "operationId": "deleteOdrlPolicyById",
+                "responses": {
+                    "202": {
+                        "description": "Policy deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/policy-templates": {
+            "get": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Get all policy templates",
+                "operationId": "getAllPolicyTemplates",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of policy templates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PolicyTemplateDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Create policy template",
+                "operationId": "createPolicyTemplate",
+                "parameters": [
+                    {
+                        "name": "silent",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewPolicyTemplateDto"
+                            },
+                            "example": {
+                                "id": "my-template",
+                                "version": "1.0",
+                                "content": {
+                                    "permission": [
+                                        {
+                                            "action": "use"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Policy template created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PolicyTemplateDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "406": {
+                        "description": "Not acceptable (Silent mode error)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorInfo"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/policy-templates/batch": {
+            "post": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Get batch policy templates",
+                "operationId": "getBatchPolicyTemplates",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchRequestsAsString"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "List of policy templates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PolicyTemplateDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/policy-templates/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Get policy template by ID (all versions)",
+                "operationId": "getPolicyTemplateById",
+                "responses": {
+                    "200": {
+                        "description": "List of policy templates (versions)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PolicyTemplateDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/policy-templates/{id}/{version}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                },
+                {
+                    "name": "version",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Get policy template by ID and version",
+                "operationId": "getPolicyTemplateByIdAndVersion",
+                "responses": {
+                    "200": {
+                        "description": "Policy template found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PolicyTemplateDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Delete policy template by ID and version",
+                "operationId": "deletePolicyTemplateByIdAndVersion",
+                "responses": {
+                    "202": {
+                        "description": "Policy template deleted (Accepted)"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/policy-templates/instantiate-odrl-offer": {
+            "post": {
+                "tags": [
+                    "Policy Templates"
+                ],
+                "summary": "Instantiate ODRL offer from template",
+                "operationId": "instantiateOdrlOffer",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewPolicyInstantiationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Instantiated (Accepted)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OdrlPolicyDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/peer-catalogs/{peer_id}": {
+            "parameters": [
+                {
+                    "name": "peer_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Peer Catalogs"
+                ],
+                "summary": "Get remote peer catalog",
+                "operationId": "getPeerCatalog",
+                "responses": {
+                    "200": {
+                        "description": "Peer catalog found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Catalog"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "parameters": {
+            "LimitParam": {
+                "name": "limit",
+                "in": "query",
+                "schema": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            },
+            "PageParam": {
+                "name": "page",
+                "in": "query",
+                "schema": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            },
+            "WithMainCatalogParam": {
+                "name": "with_main_catalog",
+                "in": "query",
+                "schema": {
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "IdPath": {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
+        "responses": {
+            "BadRequest": {
+                "description": "Bad Request",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorInfo"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Not Found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorInfo"
+                        }
+                    }
+                }
+            },
+            "InternalServerError": {
+                "description": "Internal Server Error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorInfo"
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "ErrorInfo": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "error_code",
+                    "cause"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "error_code": {
+                        "type": "integer"
+                    },
+                    "details": {
+                        "type": "string"
+                    },
+                    "cause": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "message": "Resource not found",
+                    "error_code": 3200,
+                    "status_code": 404,
+                    "cause": "Catalog with ID urn:uuid:123 not found"
+                }
+            },
+            "BatchRequests": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "urn"
+                        }
+                    }
+                }
+            },
+            "BatchRequestsAsString": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "CatalogDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "foafHomePage": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctIdentifier": {
+                        "type": "string"
+                    },
+                    "dctIssued": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctModified": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dspaceParticipantId": {
+                        "type": "string"
+                    },
+                    "dspaceMainCatalog": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctIdentifier": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "dctIssued": "2026-01-09T10:49:53.822684Z",
+                    "dctModified": null,
+                    "dctTitle": null,
+                    "dspaceMainCatalog": true,
+                    "dspaceParticipantId": "did:jwk:eyJrdHkiOiJSU0Ei...",
+                    "foafHomePage": null,
+                    "id": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635"
+                }
+            },
+            "NewCatalogDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "foafHomePage": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dspaceParticipantId": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "dctConformsTo": "string",
+                    "dctCreator": "string",
+                    "dctTitle": "string",
+                    "foafHomePage": "string"
+                }
+            },
+            "EditCatalogDto": {
+                "type": "object",
+                "properties": {
+                    "foafHomePage": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "dctConformsTo": "string",
+                    "dctCreator": "string",
+                    "dctTitle": "string",
+                    "foafHomePage": "string"
+                }
+            },
+            "DataServiceDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dcatEndpointDescription": {
+                        "type": "string"
+                    },
+                    "dcatEndpointUrl": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctIdentifier": {
+                        "type": "string"
+                    },
+                    "dctIssued": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctModified": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "catalogId": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dspaceMainDataService": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "catalogId": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "dcatEndpointDescription": null,
+                    "dcatEndpointUrl": "http://127.0.0.1:1200/dsp/current",
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctIdentifier": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+                    "dctIssued": "2026-01-09T10:49:53.895893Z",
+                    "dctModified": null,
+                    "dctTitle": null,
+                    "dspaceMainDataService": true,
+                    "id": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f"
+                }
+            },
+            "NewDataServiceDto": {
+                "type": "object",
+                "required": [
+                    "dcatEndpointUrl",
+                    "catalogId"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dcatEndpointDescription": {
+                        "type": "string"
+                    },
+                    "dcatEndpointUrl": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "catalogId": {
+                        "type": "string",
+                        "format": "urn"
+                    }
+                },
+                "example": {
+                    "catalogId": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "dcatEndpointDescription": null,
+                    "dcatEndpointUrl": "http://127.0.0.1:1200/dsp/current",
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctTitle": null
+                }
+            },
+            "EditDataServiceDto": {
+                "type": "object",
+                "properties": {
+                    "dcatEndpointDescription": {
+                        "type": "string"
+                    },
+                    "dcatEndpointUrl": {
+                        "type": "string"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "dcatEndpointDescription": null,
+                    "dcatEndpointUrl": "http://127.0.0.1:1200/dsp/current",
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctTitle": null
+                }
+            },
+            "DatasetDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctIdentifier": {
+                        "type": "string"
+                    },
+                    "dctIssued": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctModified": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "catalogId": {
+                        "type": "string",
+                        "format": "urn"
+                    }
+                },
+                "example": {
+                    "catalogId": "urn:catalog:4958f37d-17cf-44e7-ae18-1f26b6fe15ff",
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctIdentifier": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+                    "dctIssued": "2026-01-10T14:23:29.091150Z",
+                    "dctModified": null,
+                    "dctTitle": "superfoaf",
+                    "id": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec"
+                }
+            },
+            "NewDatasetDto": {
+                "type": "object",
+                "required": [
+                    "catalogId"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "catalogId": {
+                        "type": "string",
+                        "format": "urn"
+                    }
+                },
+                "example": {
+                    "catalogId": "urn:catalog:4958f37d-17cf-44e7-ae18-1f26b6fe15ff",
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctTitle": "superfoaf"
+                }
+            },
+            "EditDatasetDto": {
+                "type": "object",
+                "properties": {
+                    "dctConformsTo": {
+                        "type": "string"
+                    },
+                    "dctCreator": {
+                        "type": "string"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "dctConformsTo": null,
+                    "dctCreator": null,
+                    "dctDescription": null,
+                    "dctTitle": "superfoaf"
+                }
+            },
+            "DistributionDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dctIssued": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctModified": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "dctFormat": {
+                        "type": "string",
+                        "description": "Format in protocol+action format"
+                    },
+                    "dcatAccessService": {
+                        "type": "string"
+                    },
+                    "datasetId": {
+                        "type": "string",
+                        "format": "urn"
+                    }
+                },
+                "example": {
+                    "datasetId": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+                    "dcatAccessService": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+                    "dctDescription": null,
+                    "dctFormat": "Http+Push",
+                    "dctIssued": "2026-01-10T14:24:29.424022Z",
+                    "dctModified": null,
+                    "dctTitle": "superfoaf",
+                    "id": "urn:distribution:77116828-c4dd-4632-8946-969bb7903819"
+                }
+            },
+            "NewDistributionDto": {
+                "type": "object",
+                "required": [
+                    "dcatAccessService",
+                    "datasetId"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "dctFormats": {
+                        "type": "string"
+                    },
+                    "dcatAccessService": {
+                        "type": "string"
+                    },
+                    "datasetId": {
+                        "type": "string",
+                        "format": "urn"
+                    }
+                },
+                "example": {
+                    "datasetId": "urn:dataset:10825ca3-a75e-43bd-9a82-603759cb8dec",
+                    "dcatAccessService": "urn:data-service:37840ca3-79f6-4542-8394-0c57dd93650f",
+                    "dctDescription": null,
+                    "dctFormat": "Http+Push",
+                    "dctTitle": "superfoaf"
+                }
+            },
+            "EditDistributionDto": {
+                "type": "object",
+                "properties": {
+                    "dctTitle": {
+                        "type": "string"
+                    },
+                    "dctDescription": {
+                        "type": "string"
+                    },
+                    "dcatAccessService": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "dctDescription": null,
+                    "dctFormat": "Http+Push",
+                    "dctTitle": "superfoaf"
+                }
+            },
+            "OdrlPolicyDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "odrlOffer": {
+                        "$ref": "#/components/schemas/OdrlPolicyInfo"
+                    },
+                    "entity": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "entityType": {
+                        "type": "string",
+                        "enum": [
+                            "Distribution",
+                            "DataService",
+                            "Catalog",
+                            "Dataset"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "sourceTemplateId": {
+                        "type": "string"
+                    },
+                    "sourceTemplateVersion": {
+                        "type": "string"
+                    },
+                    "instantiationParameters": {
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "createdAt": "2026-01-10T14:40:30.978559Z",
+                    "entity": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "entityType": "Catalog",
+                    "id": "urn:odrl-policy:abad083e-78a8-4f90-aaca-7c5d6af6c251",
+                    "instantiationParameters": {
+                        "$bla": "hola"
+                    },
+                    "odrlOffer": {
+                        "permission": [
+                            {
+                                "action": "use",
+                                "constraint": [
+                                    {
+                                        "leftOperand": "bla",
+                                        "operator": "eq",
+                                        "rightOperand": "hola"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "sourceTemplateId": "policy-1",
+                    "sourceTemplateVersion": "1.0"
+                }
+            },
+            "NewOdrlPolicyDto": {
+                "type": "object",
+                "required": [
+                    "odrlOffer",
+                    "entityId",
+                    "entityType"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "odrlOffer": {
+                        "$ref": "#/components/schemas/OdrlPolicyInfo"
+                    },
+                    "entityId": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "entityType": {
+                        "type": "string",
+                        "enum": [
+                            "Distribution",
+                            "DataService",
+                            "Catalog",
+                            "Dataset"
+                        ]
+                    },
+                    "sourceTemplateId": {
+                        "type": "string"
+                    },
+                    "sourceTemplateVersion": {
+                        "type": "string"
+                    },
+                    "instantiationParameters": {
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "entity": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "entityType": "Catalog",
+                    "odrlOffer": {
+                        "permission": [
+                            {
+                                "action": "use",
+                                "constraint": [
+                                    {
+                                        "leftOperand": "bla",
+                                        "operator": "eq",
+                                        "rightOperand": "hola"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "OdrlPolicyInfo": {
+                "type": "object",
+                "properties": {
+                    "profile": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "permission": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlPermission"
+                        }
+                    },
+                    "obligation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlObligation"
+                        }
+                    },
+                    "prohibition": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlObligation"
+                        }
+                    }
+                }
+            },
+            "OdrlPermission": {
+                "type": "object",
+                "required": [
+                    "action"
+                ],
+                "properties": {
+                    "action": {
+                        "type": "string"
+                    },
+                    "constraint": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    },
+                    "duty": {
+                        "$ref": "#/components/schemas/OdrlDuty"
+                    }
+                }
+            },
+            "OdrlDuty": {
+                "type": "object",
+                "required": [
+                    "action"
+                ],
+                "properties": {
+                    "action": {
+                        "type": "string"
+                    },
+                    "constraint": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    }
+                }
+            },
+            "OdrlObligation": {
+                "$ref": "#/components/schemas/OdrlDuty"
+            },
+            "OdrlConstraint": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/OdrlAtomicConstraint"
+                    },
+                    {
+                        "$ref": "#/components/schemas/OdrlLogicalConstraint"
+                    }
+                ]
+            },
+            "OdrlAtomicConstraint": {
+                "type": "object",
+                "required": [
+                    "rightOperand",
+                    "leftOperand",
+                    "operator"
+                ],
+                "properties": {
+                    "leftOperand": {
+                        "type": "string"
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "eq",
+                            "gt",
+                            "gteq",
+                            "lteq",
+                            "hasPart",
+                            "isA",
+                            "isAllOf",
+                            "isAnyOf",
+                            "isNoneOf",
+                            "isPartOf",
+                            "lt",
+                            "termLteq",
+                            "neq"
+                        ]
+                    },
+                    "rightOperand": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "array",
+                                "items": {}
+                            }
+                        ]
+                    }
+                }
+            },
+            "OdrlLogicalConstraint": {
+                "type": "object",
+                "properties": {
+                    "and": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    },
+                    "andSequence": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    },
+                    "or": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    },
+                    "xone": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlConstraint"
+                        }
+                    }
+                }
+            },
+            "PolicyTemplateDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "title": {
+                        "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "description": {
+                        "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "author": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "$ref": "#/components/schemas/OdrlPolicyInfo"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ParameterDefinition"
+                        }
+                    }
+                },
+                "example": {
+                    "author": "",
+                    "content": {
+                        "permission": [
+                            {
+                                "action": "use",
+                                "constraint": [
+                                    {
+                                        "leftOperand": "bla",
+                                        "operator": "eq",
+                                        "rightOperand": "$bla"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "date": "2026-01-09T13:25:40.004265Z",
+                    "description": "Mi example super policy",
+                    "id": "policy-1",
+                    "parameters": {
+                        "$bla": {
+                            "dataType": "string",
+                            "restrictions": {},
+                            "ui": {
+                                "hidden": false
+                            }
+                        }
+                    },
+                    "title": "Mi example policy",
+                    "version": "1.0"
+                }
+            },
+            "NewPolicyTemplateDto": {
+                "type": "object",
+                "required": [
+                    "content"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "title": {
+                        "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "description": {
+                        "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "author": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "$ref": "#/components/schemas/OdrlPolicyInfo"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ParameterDefinition"
+                        }
+                    }
+                },
+                "example": {
+                    "author": "",
+                    "content": {
+                        "permission": [
+                            {
+                                "action": "use",
+                                "constraint": [
+                                    {
+                                        "leftOperand": "bla",
+                                        "operator": "eq",
+                                        "rightOperand": "$bla"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "date": "2026-01-09T13:25:40.004265Z",
+                    "description": "Mi example super policy",
+                    "id": "policy-1",
+                    "parameters": {
+                        "$bla": {
+                            "dataType": "string",
+                            "restrictions": {},
+                            "ui": {
+                                "hidden": false
+                            }
+                        }
+                    },
+                    "title": "Mi example policy",
+                    "version": "1.0"
+                }
+            },
+            "NewPolicyInstantiationDto": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "version",
+                    "parameters",
+                    "entityId",
+                    "entityType"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/PolicyTemplateAllowedDefaultValues"
+                        }
+                    },
+                    "entityId": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "entityType": {
+                        "type": "string",
+                        "enum": [
+                            "Distribution",
+                            "DataService",
+                            "Catalog",
+                            "Dataset"
+                        ]
+                    }
+                },
+                "example": {
+                    "id": "policy-1",
+                    "version": "1.0",
+                    "parameters": {
+                        "$bla": "hola"
+                    },
+                    "entityId": "urn:catalog:35d10981-1d0b-4204-b32e-847b827ce635",
+                    "entityType": "Catalog"
+                }
+            },
+            "LocalizedText": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
+                }
+            },
+            "ParameterDefinition": {
+                "type": "object",
+                "properties": {}
+            },
+            "PolicyTemplateAllowedDefaultValues": {
+                "oneOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "number"
+                    }
+                ]
+            },
+            "Catalog": {
+                "type": "object",
+                "properties": {
+                    "@context": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "homepage": {
+                        "type": "string"
+                    },
+                    "theme": {
+                        "type": "string"
+                    },
+                    "keyword": {
+                        "type": "string"
+                    },
+                    "conformsTo": {
+                        "type": "string"
+                    },
+                    "creator": {
+                        "type": "string"
+                    },
+                    "identifier": {
+                        "type": "string"
+                    },
+                    "issued": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "modified": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "participantId": {
+                        "type": "string"
+                    },
+                    "hasPolicy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlOffer"
+                        }
+                    },
+                    "extraFields": {
+                        "type": "object"
+                    },
+                    "catalog": {
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Catalog"
+                                }
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CatalogMinimized"
+                                }
+                            }
+                        ]
+                    },
+                    "dataset": {
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Dataset"
+                                }
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DatasetMinimized"
+                                }
+                            }
+                        ]
+                    },
+                    "service": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DataService"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataServiceMinimized"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DataService"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "CatalogMinimized": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "homepage": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Dataset": {
+                "type": "object",
+                "properties": {
+                    "@context": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    },
+                    "hasPolicy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlOffer"
+                        }
+                    },
+                    "distribution": {
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Distribution"
+                                }
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DistributionMinimized"
+                                }
+                            }
+                        ]
+                    },
+                    "conformsTo": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DatasetMinimized": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DataService": {
+                "type": "object",
+                "properties": {
+                    "@context": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    },
+                    "endpointURL": {
+                        "type": "string"
+                    },
+                    "endpointDescription": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DataServiceMinimized": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Distribution": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    },
+                    "accessService": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DataService"
+                        }
+                    }
+                }
+            },
+            "DistributionMinimized": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string"
+                    },
+                    "@id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "OdrlOffer": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string",
+                        "enum": [
+                            "Offer",
+                            "Agreement"
+                        ]
+                    },
+                    "@id": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "target": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "profile": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "permission": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlPermission"
+                        }
+                    },
+                    "obligation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlObligation"
+                        }
+                    },
+                    "prohibition": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OdrlObligation"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
