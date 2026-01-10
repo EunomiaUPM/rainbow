@@ -1,0 +1,46 @@
+---
+title: "ADR-03-2: Bypass Proxy & Peer Discovery (RPC)"
+description: "ADR-03-2: Bypass Proxy & Peer Discovery (RPC)"
+---
+
+**Date:** January 02, 2026  
+**Status:** Accepted  
+**Context:** Federation / Inter-Agent Communication
+
+## Context and Problem Statement
+
+In a distributed agent ecosystem, agents often need to consume catalogs from peers directly—a "Bypass" scenario where no central federator is involved. This presents a challenge: the agent must resolve a peer's physical location and specific protocol version solely from their decentralized identity (DID). Furthermore, querying remote agents over the public internet introduces latency that can degrade the user experience of the local agent.
+
+## Decision
+
+We have decided to design a `CatalogRPCOrchestratorService` to handle this outbound logic. The discovery flow leverages the infrastructure defined in ADR-004. When a catalog request for a specific DID is initiated:
+1.  The system resolves the peer's `base_url` via the internal Identity Service (`mates`).
+2.  It queries the peer's `/.well-known/dspace-version` endpoint.
+3.  It parses the response to extract the specific path for protocol version `2025-1`.
+
+To mitigate network latency, we are introducing a **Proxy Cache**. Unlike the local catalog, which is persisted in SQL, remote catalogs are treated as ephemeral data. They are stored in Redis with a configurable TTL (e.g., 1 hour) under the key `peer-catalog:{participant-id}`. The implementation uses a *Read-Through* pattern: the service checks the cache first; on a miss, it executes the discovery and HTTP request sequence, caches the result, and then returns it.
+
+## RPC Interface
+
+The system exposes an internal RPC endpoint that wraps the DSP response, providing necessary context to the frontend or calling service.
+
+**Internal RPC Response Structure:**
+
+```json
+{
+    "request": { 
+        "associatedAgentPeer": "did:web:example-agent",
+        "timestamp": "2026-01-02T10:00:00Z"
+    },
+    "response": {
+        "@context": ["[https://w3id.org/dspace/2025/1/context.jsonld](https://w3id.org/dspace/2025/1/context.jsonld)"],
+        "@type": "Catalog",
+        "dataset": [ ... ],
+        "service": {
+            "endpointURL": "http://remote-agent/dsp/current"
+        }
+    }
+}
+```
+
+This architecture allows the agent to seamlessly federate with others while maintaining high performance through aggressive caching of remote assets.
