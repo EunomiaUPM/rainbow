@@ -1,0 +1,1 @@
+# Rainbow Project: Architecture Decision Log & Implementation Journal

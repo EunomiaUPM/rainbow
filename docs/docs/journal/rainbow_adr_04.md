@@ -1,0 +1,60 @@
+# ADR-004: Unified Configuration, Type-State Bootstrapping & Discovery
+
+**Date:** December 23, 2025  
+**Status:** Accepted  
+**Context:** Core Architecture / Identity & Discovery  
+**DSP Compliance:** v2025-1 (Sections 4.3 & 4.4)
+
+## Context and Problem Statement
+
+The Dataspace Connector faced a significant operational challenge due to the fragmentation of its configuration management. Critical parameters were scattered across inconsistent environment variables and disparate configuration files, making the system brittle and difficult to manage in production. Furthermore, adherence to the **Eclipse Dataspace Protocol (DSP) v2025-1**, specifically sections 4.3 and 4.4, introduced strict requirements for service discovery. It is no longer sufficient to serve a static file; the connector must dynamically project its capabilities via a `/.well-known/dspace-version` endpoint. This endpoint must accurately reflect the supported protocol versions, transport bindings (HTTPS), and authentication profiles (such as GNAP4VP) based on the current runtime configuration. Additionally, the system required a mechanism to auto-generate root structures (DataService and Catalog) and update its DID document upon startup if acting as a `did:web`.
+
+## Decision
+
+We have decided to implement a centralized configuration subsystem within the `rainbow-common` crate. This system unifies all configuration sources into a "Base File + Environment Override" model. A canonical `config.yaml` file will act as the single source of truth for immutable parameters regarding identity, server binding, and protocol behavior. Any changes to these parameters will require a pod restart, ensuring runtime immutability.
+
+To manage the startup sequence safely, we have adopted the **Type-State Pattern** for the bootstrapping logic. Instead of a generic initialization loop, we defined a `BootstrapStep` trait. This architectural pattern forces the application to traverse a linear, compile-time checked state machine: transitioning from `Init`, to `ConfigLoaded`, to `DbReady`, and finally to `Live`. This ensures that the application cannot physically serve traffic unless the configuration has been validated and the database connection established.
+
+```rust
+// The core abstraction for the state machine
+pub trait BootstrapStep {
+    type NextState;
+    // Consumes 'self' to ensure the previous state is invalidated
+    async fn next_step(self) -> Result<Self::NextState, String>;
+}
+
+// The states that carry data forward
+pub struct System<S> { pub state: S }
+pub struct Init;
+pub struct ConfigLoaded(pub AppConfig);
+pub struct DbReady(pub AppConfig, pub DbConnection);
+```
+
+During the DbReady phase, the BootstrapService executes critical business logic: it verifies the existence of the Root DataService using a persistent UUID. If this service is absent, the bootloader seeds the database using the public_base_url defined in the configuration. This seeded data is then used to drive the discovery endpoint, ensuring that the capabilities advertised in /.well-known match exactly what the running instance can support.
+
+Implementation Plan
+The discovery response will be implemented not as a static file, but as a dynamic projection of the internal configuration state. This ensures strict compliance with DSP standards.
+
+Target Response for /.well-known/dspace-version:
+
+
+```json
+{
+  "protocolVersions": [
+    {
+      "version": "2025-1",
+      "path": "/api/v1/dsp",
+      "binding": "HTTPS",
+      "serviceId": "urn:uuid:root-data-service-id",
+      "identifierType": "did:web",
+      "auth": {
+        "protocol": "DSP",
+        "version": "1.0",
+        "profile": ["GNAP4VP"]
+      }
+    }
+  ]
+}
+```
+
+This restructuring allows the agent to maintain a local catalog populated by internal governance rules while simultaneously exposing an API capable of proxying external catalogs, all within a strictly typed and validated environment.
