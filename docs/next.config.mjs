@@ -9,6 +9,8 @@ const config = {
   images: {
     unoptimized: true,
   },
+  basePath: "/rainbow"
+
 };
 
 export default withMDX(config);
