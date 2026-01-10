@@ -10,6 +10,7 @@ const config = {
     unoptimized: true,
   },
   basePath: "/rainbow"
+
 };
 
 export default withMDX(config);
