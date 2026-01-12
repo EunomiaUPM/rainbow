@@ -10,7 +10,7 @@ members = [
     "rainbow-business-gateway",
     "rainbow-catalog-agent",
     "rainbow-negotiation-agent",
-    "rainbow-transfer-agent",
+    "rainbow-transfer-agent", "rainbow-connector",
 ]
 exclude = [
     "static",
