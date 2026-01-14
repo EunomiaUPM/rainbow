@@ -1,0 +1,112 @@
+---
+title: "ADR-02-1: Advanced Data Access Configuration, Polymorphic Drivers, and Secret Management"
+description: "ADR-02-1: Advanced Data Access Configuration, Polymorphic Drivers, and Secret Management"
+---
+
+**Date:** January 14, 2026<br />
+**Status:** Accepted<br />
+**Context:** Data Plane Provisioning / Connector Architecture<br />
+**Authors:** Architecture Team
+
+## Context and Problem Statement
+
+The current implementation of data service definitions within the Rainbow Agent is insufficiently expressive for complex production environments. At present, our system relies heavily on the basic DCAT `DataService` model, which is primarily designed for static metadata cataloging rather than operational provisioning. The existing model effectively supports simple "Pull" mechanisms via static URLs but lacks the depth required to model sophisticated authentication flows (such as OAuth2 negotiation), complex authorization schemas, or "Push" topologies (Pub/Sub architectures like Kafka or Webhooks).
+
+Furthermore, the current architecture exposes connection details (URLs, potential credentials) in public Data Transfer Objects (DTOs), which presents a security risk. There is no clear separation between the *definition* of how to access data and the *instance* of that access with specific credentials. We lack a state machine capable of managing the lifecycle of a connection—authenticating, subscribing, maintaining a heartbeat, and unsubscribing.
+
+To support the vision of an autonomous Agent capable of negotiating and provisioning its own data planes, we must transition from a passive metadata description to an active **Data Access Configuration** system. This system must be polymorphic to support various protocols (HTTP, FTP, Kafka, S3), secure to handle sensitive credentials via external vaults, and flexible enough to support both request-response (Pull) and event-driven (Push) interaction models.
+
+## Decision
+
+We have decided to engineer a new subsystem called **Data Access Configuration**, which effectively replaces the operational role of the DCAT `DataService`. This subsystem is built upon the concept of **"Drivers"**—formally modeled as `ConnectorTemplates`—and their runtime realizations, `ConnectorInstances`.
+
+A `ConnectorInstance` will maintain a strict 1-to-1 relationship with a Catalog `Distribution`. While the public catalog will still expose standard DCAT properties, this private internal layer will hold the rigorous configuration required to actually move data. This architecture allows us to treat connection logic as a "Provisioning Manifest," a sequence of steps (Authentication  Access  Subscription) that the Data Plane must execute to establish a valid data channel.
+
+### 1. Conceptual Model: Templates and Instances
+
+The core design pattern chosen is the **Blueprint-Instance** pattern.
+
+#### The Blueprint: `ConnectorTemplate`
+
+The `ConnectorTemplate` acts as the Driver definition. It is an immutable definition, loaded at boot time or via administrative APIs, that describes *how* to interact with a specific type of technology. It defines the protocol (e.g., HTTP REST, Kafka Consumer), the authentication mechanism (e.g., OAuth2, API Key), and the interaction mode (Push vs. Pull). Crucially, the template defines a set of **Parameters** (`parameters`) that must be supplied to use the driver. These parameters act as a contract, specifying types (String, Int, Boolean, Secret) and validation rules (Regex, Min/Max).
+
+#### The Realization: `ConnectorInstance`
+
+The `ConnectorInstance` represents a configured connection ready for use. It is created by combining a `ConnectorTemplate` with a `ConnectorInstantiationDto`, which provides the specific arguments for the template's parameters. This instance is the entity that the Data Plane Process will read to configure its internal state machine. It holds the resolved configuration, references to secrets (stored securely, not in plaintext), and the runtime context (such as subscription IDs or current offsets).
+
+### 2. Domain Modeling and Polymorphism
+
+To achieve the required flexibility, we are employing extensive polymorphism in the data structures, leveraging Rust's algebraic data types (Enums) and `serde`'s tagging capabilities.
+
+**Authentication:**
+We will support a pluggable authentication model. The `AuthenticationConfig` enum allows the template to define whether the connection uses `NoAuth`, `BasicAuth`, `BearerToken`, `ApiKey`, or `OAuth2`. Each variant carries its own configuration struct. For example, `OAuth2` carries details about the grant type, token URL, and client credentials, while `ApiKey` specifies whether the key is sent in the header or query string.
+
+**Interaction & Lifecycle:**
+The system distinguishes between `PULL` and `PUSH` modes via an `InteractionConfig` enum.
+
+* **PULL Mode:** Defines a `dataAccess` lifecycle, specifying the protocol (e.g., HTTP GET, FTP RETR) and a `scheduler` configuration (Interval or Cron) to dictate how often the agent should poll for data.
+* **PUSH Mode:** Defines a `subscribe` and `unsubscribe` lifecycle. This allows the agent to provision a webhook or join a topic. It includes logic for extracting a subscription ID from the response body or headers, which is then needed for the unsubscription phase.
+
+**Secret Management:**
+We are introducing a wrapper type, `SecretString`, to abstract the storage of sensitive data. This type can represent data in `Plain` text (for development), `Base64`, or crucially, a `VaultRef`. A `VaultRef` contains a path and key pointing to an external secrets engine (Hashicorp Vault). The application logic will resolve these secrets only at the moment of use, ensuring that sensitive values are never persisted in the database columns.
+
+### 3. Validation Strategy: The Visitor Pattern
+
+Validating a template and its instantiation is complex because parameters can be injected into deep, nested structures (e.g., a URL template like `https://api.site.com/{{TARGET_VERSION}}/data`). To handle this, we have decided to implement the **Visitor Pattern**.
+
+We define a `Templatable` trait that allows a `VariableCollector` visitor to traverse the entire object graph of a `ConnectorTemplate` (Authentication, Interaction, Metadata). This visitor uses regex inspection to identify all placeholders (`{{VAR_NAME}}`). We then validate that every variable discovered by the visitor is either:
+
+1. Defined explicitly in the Template's `parameters` list.
+2. Or, belongs to a whitelist of **System Variables** injected by the runtime (e.g., `SYS_CALLBACK_URL`, `SYS_INSTANCE_ID`, `SYS_TIMESTAMP`).
+
+This ensures semantic correctness at definition time: a template cannot be saved if it references a variable that the user cannot provide.
+
+### 4. Instantiation Workflow and "Dry Run"
+
+The creation of a `ConnectorInstance` is a high-security operation. The API endpoint receives a `ConnectorInstantiationDto` containing the reference to the blueprint and the map of arguments.
+
+We are introducing a **Dry Run** capability (`dry_run: true` flag in the DTO). When this flag is set, the `ConnectorManager` performs all validation steps—checking parameter types, validating regex constraints, ensuring required arguments are present, and resolving the template—but halts before persistence. This allows the frontend or CLI to pre-validate configuration forms without side effects.
+
+If `dry_run` is false, the manager proceeds to:
+
+1. **Secret Provisioning:** Iterate through arguments defined as `type: SECRET`. These values are sent to the implemented `SecretVaultTrait` (e.g., Hashicorp Vault), and the returned reference path is stored in the instance configuration instead of the actual value.
+2. **Persistence:** The fully resolved configuration is serialized into `json_binary` and stored in the database.
+3. **Event Logging:** An initial `INIT` event is written to the `connector_events` table.
+
+### 5. Persistence Layer Design
+
+We are utilizing **PostgreSQL** with **SeaORM** for persistence. The schema design reflects the polymorphic nature of the domain.
+
+* **`connector_templates` Table:** Stores the blueprint. The core definitions (Auth, Interaction, Params) are stored in a `json_binary` column named `definition`. This allows for schema evolution without heavy migrations as new drivers are added. A unique index on `name` + `version` enforces immutability.
+* **`connector_instances` Table:** Stores the runtime configuration. It links to a Template ID and a Distribution ID. It contains two critical JSONB columns: `configuration_values` (the resolved arguments and vault references) and `runtime_context` (ephemeral state like last read offset).
+* **`connector_events` Table:** Implementing a dedicated event log is crucial for debugging the state machine. This table stores a history of state transitions, errors, and heartbeats linked to an instance ID, utilizing `ON DELETE CASCADE` to clean up logs if an instance is removed.
+
+### 6. Architecture and Folder Structure
+
+The implementation will follow a Hexagonal (Ports and Adapters) architecture to separate the core domain from external concerns.
+
+* **`src/data`**: Contains the pure domain entities (`ConnectorTemplate`, `ConnectorInstance`), DTOs, and the Visitor Pattern logic. It is strictly strictly independent of HTTP or Database frameworks.
+* **`src/facades`**: Defines the Traits for external dependencies, specifically `SecretVaultTrait` and `RepositoryTrait`. Implementations for Hashicorp Vault and Postgres reside here.
+* **`src/http`**: Contains the Axum/Actix routers and handlers that expose the REST API.
+* **`src/setup`**: Manages the Dependency Injection container and the bootloader logic that ingests YAML templates from disk into the database.
+
+## Implementation Plan
+
+1. **Data Layer Implementation:** Define all Rust structs (`SecretString`, `AuthenticationConfig`, etc.) ensuring proper `serde` derivation. Implement the `Templatable` trait and the `VariableCollector` visitor to validate template integrity.
+2. **Database Migration:** Execute the SeaORM migrations to create the three core tables. Verify JSONB constraints.
+3. **Vault Integration:** Implement the `SecretVaultTrait` with a specific adapter for Hashicorp Vault (using the official Rust client or HTTP REST). Create a `MockVault` for local testing.
+4. **Manager Logic:** Implement the `ConnectorManager` service. This service orchestrates the flow: Template Lookup  Validation  Secret Offloading  Persistence.
+5. **API Exposure:** Create the secured endpoints for creating instances and listing templates. Integrate with the existing `rainbow-authority` system for request authentication.
+
+## Consequences
+
+**Positive:**
+
+* **Security:** Credentials are no longer exposed in DTOs or stored in plaintext in the database.
+* **Flexibility:** The agent can now support any protocol (Push or Pull) simply by defining a new JSON Driver, without code changes.
+* **Reliability:** The rigorous validation (Visitor Pattern + Type Checking) prevents misconfigured connections at creation time.
+
+**Negative:**
+
+* **Complexity:** The domain model is significantly more complex than the previous strings-based approach. Debugging JSONB serialization issues can be challenging.
+* **Operational Overhead:** Requires a running Hashicorp Vault instance for production environments, adding to the deployment footprint.
