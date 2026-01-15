@@ -10,14 +10,15 @@ use serde_json::json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectorMetadata {
-    pub name: String,
-    pub author: String,
-    pub version: String,
-    pub created_at: DateTimeWithTimeZone,
+    pub name: Option<String>,
+    pub author: Option<String>,
+    pub version: Option<String>,
+    pub created_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectorTemplateDto {
+    #[serde(flatten)]
     pub metadata: ConnectorMetadata,
     pub authentication: AuthenticationConfig,
     pub interaction: InteractionConfig,
@@ -32,10 +33,9 @@ impl TryFrom<ConnectorTemplateDto> for NewConnectorTemplateModel {
         let interaction = serde_json::to_value(value.interaction)?;
         let parameters = serde_json::to_value(value.parameters)?;
         Ok(Self {
-            id: None,
-            name: value.metadata.name.clone(),
-            version: value.metadata.version.clone(),
-            author: value.metadata.author.clone(),
+            name: Option::from(value.metadata.name.clone()),
+            version: Option::from(value.metadata.version.clone()),
+            author: Option::from(value.metadata.author.clone()),
             spec: json!({
                 "authentication": authentication,
                 "interaction": interaction,

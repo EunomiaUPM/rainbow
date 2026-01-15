@@ -34,7 +34,6 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(ConnectorTemplates::Table)
-                    .col(ColumnDef::new(ConnectorTemplates::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(ConnectorTemplates::Name).string().not_null())
                     .col(ColumnDef::new(ConnectorTemplates::Version).string().not_null())
                     .col(ColumnDef::new(ConnectorTemplates::Author).string().not_null())
@@ -65,7 +64,6 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum ConnectorTemplates {
     Table,
-    Id,
     Name,
     Version,
     Author,

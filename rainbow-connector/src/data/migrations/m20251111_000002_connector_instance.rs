@@ -15,7 +15,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ConnectorInstances::Table)
                     .col(ColumnDef::new(ConnectorInstances::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(ConnectorInstances::TemplateId).string().not_null())
+                    .col(ColumnDef::new(ConnectorInstances::TemplateName).string().not_null())
                     .col(ColumnDef::new(ConnectorInstances::TemplateVersion).string().not_null())
                     .col(ColumnDef::new(ConnectorInstances::DistributionId).string().not_null())
                     .col(ColumnDef::new(ConnectorInstances::CreatedAt).timestamp_with_time_zone().not_null())
@@ -24,8 +24,17 @@ impl MigrationTrait for Migration {
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_instance_template")
-                            .from(ConnectorInstances::Table, ConnectorInstances::TemplateId)
-                            .to(ConnectorTemplates::Table, ConnectorTemplates::Id)
+                            .from(
+                                ConnectorInstances::Table,
+                                (
+                                    ConnectorInstances::TemplateName,
+                                    ConnectorInstances::TemplateVersion,
+                                ),
+                            )
+                            .to(
+                                ConnectorTemplates::Table,
+                                (ConnectorTemplates::Name, ConnectorTemplates::Version),
+                            )
                             .on_delete(ForeignKeyAction::Restrict),
                     )
                     .to_owned(),
@@ -42,7 +51,7 @@ impl MigrationTrait for Migration {
 pub enum ConnectorInstances {
     Table,
     Id,
-    TemplateId,
+    TemplateName,
     TemplateVersion,
     DistributionId,
     CurrentState,
@@ -56,7 +65,6 @@ pub enum ConnectorInstances {
 #[derive(Iden)]
 pub enum ConnectorTemplates {
     Table,
-    Id,
     Name,
     Version,
     Author,

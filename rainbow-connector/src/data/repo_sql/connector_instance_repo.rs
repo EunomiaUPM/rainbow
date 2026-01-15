@@ -50,7 +50,7 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
         version: &String,
     ) -> anyhow::Result<Option<connector_instances::Model>, ConnectorAgentRepoErrors> {
         let result = connector_instances::Entity::find()
-            .filter(connector_instances::Column::TemplateId.eq(name))
+            .filter(connector_instances::Column::TemplateName.eq(name))
             .filter(connector_instances::Column::TemplateVersion.eq(version))
             .one(&self.db_connection)
             .await;

@@ -2,16 +2,15 @@ use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
-use urn::{Urn, UrnBuilder};
+use urn::UrnBuilder;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "connector_templates")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: String,
-    #[sea_orm(primary_key, auto_increment = false)]
     pub name: String,
+    #[sea_orm(primary_key, auto_increment = false)]
     pub version: String,
     pub author: String,
     pub created_at: DateTimeWithTimeZone,
@@ -34,10 +33,9 @@ impl ActiveModelBehavior for ActiveModel {}
 
 #[derive(Clone)]
 pub struct NewConnectorTemplateModel {
-    pub id: Option<Urn>,
-    pub name: String,
-    pub version: String,
-    pub author: String,
+    pub name: Option<String>,
+    pub version: Option<String>,
+    pub author: Option<String>,
     pub spec: Json,
 }
 
@@ -51,10 +49,9 @@ impl From<NewConnectorTemplateModel> for ActiveModel {
         .expect("UrnBuilder failed");
 
         Self {
-            id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn).to_string()),
-            name: ActiveValue::Set(dto.name),
-            version: ActiveValue::Set(dto.version),
-            author: ActiveValue::Set(dto.author),
+            name: ActiveValue::Set(dto.name.clone().unwrap_or(new_urn.to_string()).to_string()),
+            version: ActiveValue::Set(dto.name.clone().unwrap_or("1.0".to_string()).to_string()),
+            author: ActiveValue::Set(dto.name.clone().unwrap_or("admin".to_string()).to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),
             spec: ActiveValue::Set(dto.spec),
         }

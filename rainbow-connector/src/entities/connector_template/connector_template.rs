@@ -39,10 +39,10 @@ impl ConnectorTemplateEntitiesService {
 
         Ok(ConnectorTemplateDto {
             metadata: ConnectorMetadata {
-                name: model.name,
-                author: model.author,
-                version: model.version,
-                created_at: model.created_at,
+                name: Option::from(model.name),
+                author: Option::from(model.author),
+                version: Option::from(model.version),
+                created_at: Some(model.created_at),
             },
             authentication,
             interaction,
@@ -73,7 +73,7 @@ impl ConnectorTemplateEntitiesTrait for ConnectorTemplateEntitiesService {
     }
 
     async fn get_templates_by_id(&self, template_id: &String) -> anyhow::Result<Vec<ConnectorTemplateDto>> {
-        let models = self.repo.get_templates_repo().get_templates_by_id(template_id).await.map_err(|e| {
+        let models = self.repo.get_templates_repo().get_templates_by_name(template_id).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());
             err

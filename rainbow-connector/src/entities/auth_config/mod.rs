@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AuthenticationConfig {
     NoAuth,
     BasicAuth(BasicAuthConfig),
@@ -31,6 +32,7 @@ pub struct BasicAuthConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApiKeyLocation {
     Header,
     Query,

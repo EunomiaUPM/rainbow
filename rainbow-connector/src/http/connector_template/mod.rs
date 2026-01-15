@@ -2,16 +2,16 @@
 use crate::entities::connector_template::{ConnectorTemplateDto, ConnectorTemplateEntitiesTrait};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::errors::error_adapter::CustomToResponse;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::utils::extract_payload;
 use serde::Deserialize;
 use std::sync::Arc;
-use axum::http::StatusCode;
-use rainbow_common::errors::CommonErrors;
-use rainbow_common::errors::error_adapter::CustomToResponse;
-use rainbow_common::utils::extract_payload;
 
 #[derive(Clone)]
 pub struct ConnectorTemplateRouter {

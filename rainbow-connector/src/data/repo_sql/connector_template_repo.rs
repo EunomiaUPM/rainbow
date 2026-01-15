@@ -31,13 +31,13 @@ impl ConnectorTemplateRepoTrait for ConnectorTemplateRepoForSql {
         }
     }
 
-    async fn get_templates_by_id(
+    async fn get_templates_by_name(
         &self,
-        template_id: &String,
+        template_name: &String,
     ) -> anyhow::Result<Vec<connector_templates::Model>, ConnectorAgentRepoErrors> {
-        let id_str = template_id.to_string();
+        let id_str = template_name.to_string();
         let result = connector_templates::Entity::find()
-            .filter(connector_templates::Column::Id.eq(id_str.clone()))
+            .filter(connector_templates::Column::Name.eq(id_str.clone()))
             .all(&self.db_connection)
             .await;
 

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "content")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SecretSource {
     Plain(String),
     Base64(String),
@@ -11,6 +12,7 @@ pub enum SecretSource {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecretString {
+    #[serde(flatten)]
     pub source: SecretSource,
 }
 

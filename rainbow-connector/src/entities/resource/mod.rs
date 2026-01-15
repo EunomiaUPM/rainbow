@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "protocol")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ProtocolSpec {
     Http(HttpSpec),
     Kafka(KafkaSpec),
@@ -11,6 +12,7 @@ pub enum ProtocolSpec {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpSpec {
     pub url_template: String, // Soporta {{VARS}}
     pub method: String,
@@ -19,6 +21,7 @@ pub struct HttpSpec {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KafkaSpec {
     pub brokers: Vec<String>,
     pub topic: String,

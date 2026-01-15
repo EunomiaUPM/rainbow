@@ -29,9 +29,9 @@ pub trait ConnectorTemplateRepoTrait: Send + Sync {
         new_template_model: &NewConnectorTemplateModel,
     ) -> anyhow::Result<connector_templates::Model, ConnectorAgentRepoErrors>;
 
-    async fn get_templates_by_id(
+    async fn get_templates_by_name(
         &self,
-        template_id: &String,
+        template_name: &String,
     ) -> anyhow::Result<Vec<connector_templates::Model>, ConnectorAgentRepoErrors>;
 
     async fn get_template_by_name_and_version(
