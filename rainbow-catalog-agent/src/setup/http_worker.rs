@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::cache::factory_redis::CatalogAgentCacheForRedis;
 use crate::data::factory_sql::CatalogAgentRepoForSql;
 use crate::entities::catalogs::catalogs::CatalogEntities;
@@ -48,7 +47,9 @@ use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::health::HealthRouter;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::well_known::WellKnownRoot;
+use rainbow_connector::ConnectorSetup;
 use sea_orm::Database;
+use std::ops::Deref;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
@@ -164,6 +165,9 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     let peer_catalog_service = Arc::new(PeerCatalogEntities::new(catalog_agent_cache.clone()));
     let peer_catalog_router = PeerCatalogEntityRouter::new(peer_catalog_service.clone());
 
+    // connector module
+    let connector_router = ConnectorSetup::new().build_control_router(config.deref()).await;
+
     // dsp
     let dsp_router = CatalogDSP::new(
         catalog_controller_service.clone(),
@@ -178,37 +182,39 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     .build_router()
     .await?;
 
-    let router_str = format!("{}/catalog-agent", config.get_api_version());
+    let catalog_router_str = format!("{}/catalog-agent", config.get_api_version());
+    let connector_router_str = format!("{}/connector", config.get_api_version());
     let router = Router::new()
         .nest(
-            format!("{}/catalogs", router_str.as_str()).as_str(),
+            format!("{}/catalogs", catalog_router_str.as_str()).as_str(),
             catalog_router.router(),
         )
         .nest(
-            format!("{}/data-services", router_str.as_str()).as_str(),
+            format!("{}/data-services", catalog_router_str.as_str()).as_str(),
             data_services_router.router(),
         )
         .nest(
-            format!("{}/datasets", router_str.as_str()).as_str(),
+            format!("{}/datasets", catalog_router_str.as_str()).as_str(),
             datasets_router.router(),
         )
         .nest(
-            format!("{}/distributions", router_str.as_str()).as_str(),
+            format!("{}/distributions", catalog_router_str.as_str()).as_str(),
             distributions_router.router(),
         )
         .nest(
-            format!("{}/odrl-policies", router_str.as_str()).as_str(),
+            format!("{}/odrl-policies", catalog_router_str.as_str()).as_str(),
             odrl_offer_router.router(),
         )
         .nest(
-            format!("{}/policy-templates", router_str.as_str()).as_str(),
+            format!("{}/policy-templates", catalog_router_str.as_str()).as_str(),
             policy_templates_router.router(),
         )
         .nest(
-            format!("{}/peer-catalogs", router_str.as_str()).as_str(),
+            format!("{}/peer-catalogs", catalog_router_str.as_str()).as_str(),
             peer_catalog_router.router(),
         )
-        .nest("/dsp/current/catalog", dsp_router);
+        .nest("/dsp/current/catalog", dsp_router)
+        .nest(connector_router_str.as_str(), connector_router);
 
     Ok(router)
 }

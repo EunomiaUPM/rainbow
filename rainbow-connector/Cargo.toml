@@ -29,3 +29,5 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 mockall = { workspace = true }
 url = { workspace = true }
+uuid = { workspace = true }
+async-trait = "0.1.89"
