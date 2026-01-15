@@ -8,6 +8,10 @@ use axum::{Json, Router};
 use rainbow_common::config::services::CatalogConfig;
 use serde::Deserialize;
 use std::sync::Arc;
+use axum::http::StatusCode;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::error_adapter::CustomToResponse;
+use rainbow_common::utils::extract_payload;
 
 #[derive(Clone)]
 pub struct ConnectorTemplateRouter {
@@ -51,30 +55,53 @@ impl ConnectorTemplateRouter {
         State(state): State<ConnectorTemplateRouter>,
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
-        "ok"
+        match state.service.get_all_templates(params.limit, params.page).await {
+            Ok(templates) => (StatusCode::OK, Json(templates)).into_response(),
+            Err(err) => err.to_response(),
+        }
     }
     async fn handle_create_template(
         State(state): State<ConnectorTemplateRouter>,
         input: Result<Json<ConnectorTemplateDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        "ok"
+        let input = match extract_payload(input) {
+            Ok(v) => v,
+            Err(e) => return e,
+        };
+        match state.service.create_template(&input).await {
+            Ok(template) => (StatusCode::OK, Json(template)).into_response(),
+            Err(err) => err.to_response(),
+        }
     }
     async fn handle_get_templates_by_id(
         State(state): State<ConnectorTemplateRouter>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        "ok"
+        match state.service.get_templates_by_id(&id).await {
+            Ok(templates) => (StatusCode::OK, Json(templates)).into_response(),
+            Err(err) => err.to_response(),
+        }
     }
     async fn handle_get_template_by_name_and_version(
         State(state): State<ConnectorTemplateRouter>,
         Path((name, version)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        "ok"
+        match state.service.get_template_by_name_and_version(&name, &version).await {
+            Ok(Some(template)) => (StatusCode::OK, Json(template)).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new("main", "Main Catalog not found");
+                err.into_response()
+            }
+            Err(err) => err.to_response(),
+        }
     }
     async fn handle_delete_template_by_name_and_version(
         State(state): State<ConnectorTemplateRouter>,
         Path((name, version)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        "ok"
+        match state.service.delete_template_by_name_and_version(&name, &version).await {
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
+            Err(err) => err.to_response(),
+        }
     }
 }

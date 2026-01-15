@@ -22,6 +22,7 @@ use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::DatabaseConfigTrait;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_connector::get_connector_migrations;
 
 pub struct CatalogAgentMigration;
 
@@ -29,7 +30,9 @@ impl MigratorTrait for CatalogAgentMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
+        let mut connector_migrations = get_connector_migrations();
         migrations.append(&mut catalog_migrations);
+        migrations.append(&mut connector_migrations);
         migrations
     }
 }

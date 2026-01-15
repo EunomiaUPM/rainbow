@@ -26,6 +26,7 @@ use rainbow_events::data::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_connector::get_connector_migrations;
 
 pub struct CoreConsumerMigration;
 
@@ -33,6 +34,7 @@ impl MigratorTrait for CoreConsumerMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
+        let mut connector_migrations = get_connector_migrations();
         //let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_consumer_migrations();
@@ -40,6 +42,7 @@ impl MigratorTrait for CoreConsumerMigration {
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
 
         migrations.append(&mut catalog_migrations);
+        migrations.append(&mut connector_migrations);
         //migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);

@@ -18,6 +18,7 @@ rainbow_auth = { version = "0.3.8", path = "../rainbow-auth", default-features =
 rainbow_events = { version = "0.3.8", path = "../rainbow-events", default-features = false }
 rainbow_transfer_agent = { version = "0.3.8", path = "../rainbow-transfer-agent", default-features = false }
 rainbow_catalog_agent = { version = "0.3.8", path = "../rainbow-catalog-agent", default-features = false }
+rainbow_connector = { version = "0.3.8", path = "../rainbow-connector", default-features = false }
 
 
 clap = { workspace = true }
