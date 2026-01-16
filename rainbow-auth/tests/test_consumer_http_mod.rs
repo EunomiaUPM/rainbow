@@ -2,65 +2,106 @@
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use anyhow::Result;
     use axum::{
-        Json, Router, body::Body, extract::State, http::{Request, StatusCode}, response::IntoResponse, routing::post
+        body::Body,
+        extract::State,
+        http::{Request, StatusCode},
+        response::IntoResponse,
+        routing::post,
+        Json, Router
+    };
+    use rainbow_auth::ssi_auth::consumer::http::RainbowAuthConsumerRouter;
+    use rainbow_auth::ssi_auth::{
+        common::types::ssi::{dids::DidsInfo, keys::KeyDefinition},
+        consumer::core::Manager
     };
     use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-    use tower::ServiceExt;
-    use tracing::error;
-    use std::sync::Arc;
-    use sea_orm_migration::async_trait::{self, async_trait};
-    use anyhow::Result;
-    use serde_json::json;
-    use rainbow_auth::ssi_auth::{common::types::ssi::{dids::DidsInfo, keys::KeyDefinition}, consumer::core::Manager};
-    use rainbow_auth::ssi_auth::consumer::http::RainbowAuthConsumerRouter;
+    use rainbow_db::auth_consumer::entities::{
+        auth_interaction, auth_request, authority_request, mates
+    };
     use rainbow_db::auth_consumer::repo_factory::{factory_trait::AuthRepoFactoryTrait, traits::*};
     use rainbow_db::common::BasicRepoTrait;
-    use rainbow_db::auth_consumer::entities::{
-        mates, auth_request, auth_interaction, authority_request,
-    };
+    use sea_orm_migration::async_trait::{self, async_trait};
+    use serde_json::json;
+    use tower::ServiceExt;
+    use tracing::error;
 
     // Mock
 
-    struct MockRepo { should_fail: bool }
+    struct MockRepo {
+        should_fail: bool
+    }
 
     #[async_trait]
     impl BasicRepoTrait<mates::Model, mates::NewModel> for MockRepo {
         async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<mates::Model>> {
-            if self.should_fail { anyhow::bail!("DB error") } else { Ok(vec![]) }
-        }
-        async fn get_by_id(&self, _: &str) -> Result<Option<mates::Model>> {
-            if self.should_fail { anyhow::bail!("DB error") } else { Ok(Some(mates::Model {
-                participant_id: "id".into(), participant_slug: "slug".into(), participant_type: "type".into(),
-                base_url: "url".into(), token: None,
-                saved_at: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-                last_interaction: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-                is_me: false,
-            })) }
-        }
-        async fn create(&self, _: mates::NewModel) -> Result<mates::Model> { Ok(mates::Model {
-            participant_id: "id".into(), participant_slug: "slug".into(), participant_type: "type".into(),
-            base_url: "url".into(), token: None,
-            saved_at: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-            last_interaction: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-            is_me: false,
-        }) }
-        async fn update(&self, model: mates::Model) -> Result<mates::Model> { Ok(model) }
-        async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
-    }
-
-    #[async_trait]
-    impl BasicRepoTrait<auth_request::Model, auth_request::NewModel> for MockRepo {
-        async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<auth_request::Model>> {    
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
                 Ok(vec![])
             }
         }
-        async fn get_by_id(&self, _: &str) -> Result<Option<auth_request::Model>> {
-            Ok(None)
+        async fn get_by_id(&self, _: &str) -> Result<Option<mates::Model>> {
+            if self.should_fail {
+                anyhow::bail!("DB error")
+            } else {
+                Ok(Some(mates::Model {
+                    participant_id: "id".into(),
+                    participant_slug: "slug".into(),
+                    participant_type: "type".into(),
+                    base_url: "url".into(),
+                    token: None,
+                    saved_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap(),
+                    last_interaction: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap(),
+                    is_me: false
+                }))
+            }
         }
+        async fn create(&self, _: mates::NewModel) -> Result<mates::Model> {
+            Ok(mates::Model {
+                participant_id: "id".into(),
+                participant_slug: "slug".into(),
+                participant_type: "type".into(),
+                base_url: "url".into(),
+                token: None,
+                saved_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                last_interaction: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                is_me: false
+            })
+        }
+        async fn update(&self, model: mates::Model) -> Result<mates::Model> { Ok(model) }
+        async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+    }
+
+    #[async_trait]
+    impl BasicRepoTrait<auth_request::Model, auth_request::NewModel> for MockRepo {
+        async fn get_all(
+            &self,
+            _: Option<u64>,
+            _: Option<u64>
+        ) -> Result<Vec<auth_request::Model>> {
+            if self.should_fail {
+                anyhow::bail!("DB error")
+            } else {
+                Ok(vec![])
+            }
+        }
+        async fn get_by_id(&self, _: &str) -> Result<Option<auth_request::Model>> { Ok(None) }
         async fn create(&self, _: auth_request::NewModel) -> Result<auth_request::Model> {
             Ok(auth_request::Model {
                 id: "id".into(),
@@ -71,32 +112,32 @@ mod tests {
                 token: None,
                 status: "status".into(),
                 created_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
-                        .unwrap()
-                        .and_hms_opt(0, 0, 0)
-                        .unwrap(),
-                ended_at: None,
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                ended_at: None
             })
         }
         async fn update(&self, model: auth_request::Model) -> Result<auth_request::Model> {
             Ok(model)
         }
-        async fn delete(&self, _: &str) -> Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
     }
 
     #[async_trait]
     impl BasicRepoTrait<auth_interaction::Model, auth_interaction::NewModel> for MockRepo {
-        async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<auth_interaction::Model>> {     
+        async fn get_all(
+            &self,
+            _: Option<u64>,
+            _: Option<u64>
+        ) -> Result<Vec<auth_interaction::Model>> {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
                 Ok(vec![])
             }
         }
-        async fn get_by_id(&self, _: &str) -> Result<Option<auth_interaction::Model>> {
-            Ok(None)
-        }
+        async fn get_by_id(&self, _: &str) -> Result<Option<auth_interaction::Model>> { Ok(None) }
         async fn create(&self, _: auth_interaction::NewModel) -> Result<auth_interaction::Model> {
             Ok(auth_interaction::Model {
                 id: "iid".into(),
@@ -112,29 +153,29 @@ mod tests {
                 continue_wait: Some(30), // CORRECTO: Option<i64>
                 as_nonce: Some("as_nonce".to_string()),
                 interact_ref: Some("ref".to_string()),
-                hash: Some("hash".to_string()),
+                hash: Some("hash".to_string())
             })
         }
         async fn update(&self, model: auth_interaction::Model) -> Result<auth_interaction::Model> {
             Ok(model)
         }
-        async fn delete(&self, _: &str) -> Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
     }
 
     #[async_trait]
     impl BasicRepoTrait<authority_request::Model, authority_request::NewModel> for MockRepo {
-        async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<authority_request::Model>> {   
+        async fn get_all(
+            &self,
+            _: Option<u64>,
+            _: Option<u64>
+        ) -> Result<Vec<authority_request::Model>> {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
                 Ok(vec![])
             }
         }
-        async fn get_by_id(&self, _: &str) -> Result<Option<authority_request::Model>> {
-            Ok(None)
-        }
+        async fn get_by_id(&self, _: &str) -> Result<Option<authority_request::Model>> { Ok(None) }
         async fn create(&self, _: authority_request::NewModel) -> Result<authority_request::Model> {
             Ok(authority_request::Model {
                 id: "aid".into(),
@@ -146,33 +187,39 @@ mod tests {
                 vc_uri: None,
                 status: "status".into(),
                 created_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
-                        .unwrap()
-                        .and_hms_opt(0, 0, 0)
-                        .unwrap(),
-                ended_at: None,
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                ended_at: None
             })
         }
-        async fn update(&self, model: authority_request::Model) -> Result<authority_request::Model> {
+        async fn update(
+            &self,
+            model: authority_request::Model
+        ) -> Result<authority_request::Model> {
             Ok(model)
         }
-        async fn delete(&self, _: &str) -> Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
     }
 
-    #[async_trait] impl AuthInteractionRepoTrait for MockRepo {}
-    #[async_trait] impl AuthRequestRepoTrait for MockRepo {}
-    
+    #[async_trait]
+    impl AuthInteractionRepoTrait for MockRepo {}
+    #[async_trait]
+    impl AuthRequestRepoTrait for MockRepo {}
+
     #[async_trait::async_trait]
-    impl BasicRepoTrait<
-        rainbow_db::auth_consumer::entities::auth_verification::Model,
-        rainbow_db::auth_consumer::entities::auth_verification::NewModel
-    > for MockRepo {
+    impl
+        BasicRepoTrait<
+            rainbow_db::auth_consumer::entities::auth_verification::Model,
+            rainbow_db::auth_consumer::entities::auth_verification::NewModel
+        > for MockRepo
+    {
         async fn get_all(
             &self,
             _: Option<u64>,
             _: Option<u64>
-        ) -> anyhow::Result<Vec<rainbow_db::auth_consumer::entities::auth_verification::Model>> { 
+        ) -> anyhow::Result<Vec<rainbow_db::auth_consumer::entities::auth_verification::Model>>
+        {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
@@ -183,7 +230,8 @@ mod tests {
         async fn get_by_id(
             &self,
             _: &str
-        ) -> anyhow::Result<Option<rainbow_db::auth_consumer::entities::auth_verification::Model>> {
+        ) -> anyhow::Result<Option<rainbow_db::auth_consumer::entities::auth_verification::Model>>
+        {
             Ok(None)
         }
 
@@ -191,7 +239,7 @@ mod tests {
             &self,
             _: rainbow_db::auth_consumer::entities::auth_verification::NewModel
         ) -> anyhow::Result<rainbow_db::auth_consumer::entities::auth_verification::Model> {
-            Ok(rainbow_db::auth_consumer::entities::auth_verification::Model {  
+            Ok(rainbow_db::auth_consumer::entities::auth_verification::Model {
                 id: "vid".to_string(),
                 uri: "uri".to_string(),
                 scheme: "scheme".to_string(),
@@ -204,10 +252,10 @@ mod tests {
                 response_uri: "response_uri".to_string(),
                 status: "pending".to_string(),
                 created_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
-                        .unwrap()
-                        .and_hms_opt(0, 0, 0)
-                        .unwrap(),
-                ended_at: None,
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                ended_at: None
             })
         }
 
@@ -218,24 +266,25 @@ mod tests {
             Ok(model)
         }
 
-        async fn delete(&self, _: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
-
-    #[async_trait] impl AuthVerificationRepoTrait for MockRepo {}
+    #[async_trait]
+    impl AuthVerificationRepoTrait for MockRepo {}
 
     #[async_trait::async_trait]
-    impl BasicRepoTrait<
-        rainbow_db::auth_consumer::entities::auth_token_requirements::Model,
-        rainbow_db::auth_consumer::entities::auth_token_requirements::Model
-    > for MockRepo {
+    impl
+        BasicRepoTrait<
+            rainbow_db::auth_consumer::entities::auth_token_requirements::Model,
+            rainbow_db::auth_consumer::entities::auth_token_requirements::Model
+        > for MockRepo
+    {
         async fn get_all(
             &self,
             _: Option<u64>,
             _: Option<u64>
-        ) -> anyhow::Result<Vec<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>> {     
+        ) -> anyhow::Result<Vec<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>>
+        {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
@@ -246,14 +295,17 @@ mod tests {
         async fn get_by_id(
             &self,
             _: &str
-        ) -> anyhow::Result<Option<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>> {
+        ) -> anyhow::Result<
+            Option<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>
+        > {
             Ok(None)
         }
 
         async fn create(
             &self,
             _: rainbow_db::auth_consumer::entities::auth_token_requirements::Model
-        ) -> anyhow::Result<rainbow_db::auth_consumer::entities::auth_token_requirements::Model> {
+        ) -> anyhow::Result<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>
+        {
             Ok(rainbow_db::auth_consumer::entities::auth_token_requirements::Model {
                 id: "token_req_id".to_string(),
                 r#type: "access".to_string(),
@@ -263,26 +315,26 @@ mod tests {
                 identifier: Some("identifier123".to_string()),
                 privileges: Some(vec!["admin".to_string(), "user".to_string()]),
                 label: Some("Test Label".to_string()),
-                flags: Some(vec!["flag1".to_string(), "flag2".to_string()]),
+                flags: Some(vec!["flag1".to_string(), "flag2".to_string()])
             })
         }
 
         async fn update(
             &self,
             model: rainbow_db::auth_consumer::entities::auth_token_requirements::Model
-        ) -> anyhow::Result<rainbow_db::auth_consumer::entities::auth_token_requirements::Model> {
+        ) -> anyhow::Result<rainbow_db::auth_consumer::entities::auth_token_requirements::Model>
+        {
             Ok(model)
         }
 
-        async fn delete(&self, _: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _: &str) -> anyhow::Result<()> { Ok(()) }
     }
-    #[async_trait] impl AuthTokenRequirementsRepoTrait for MockRepo {}
-    
+    #[async_trait]
+    impl AuthTokenRequirementsRepoTrait for MockRepo {}
+
     #[async_trait::async_trait]
     impl MatesRepoTrait for MockRepo {
-        async fn get_me(&self) -> Result<Option<mates::Model>> {    
+        async fn get_me(&self) -> Result<Option<mates::Model>> {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
@@ -290,14 +342,25 @@ mod tests {
             }
         }
         async fn get_by_token(&self, _: &str) -> Result<Option<mates::Model>> { Ok(None) }
-        async fn force_create(&self, _: mates::NewModel) -> Result<mates::Model> { Ok(mates::Model {
-            participant_id: "id".into(), participant_slug: "slug".into(), participant_type: "type".into(),
-            base_url: "url".into(), token: None,
-            saved_at: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-            last_interaction: chrono::NaiveDate::from_ymd_opt(1970,1,1).unwrap().and_hms_opt(0,0,0).unwrap(),
-            is_me: false,
-        }) }
-        async fn get_batch(&self, _: &Vec<urn::Urn>) -> Result<Vec<mates::Model>> { 
+        async fn force_create(&self, _: mates::NewModel) -> Result<mates::Model> {
+            Ok(mates::Model {
+                participant_id: "id".into(),
+                participant_slug: "slug".into(),
+                participant_type: "type".into(),
+                base_url: "url".into(),
+                token: None,
+                saved_at: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                last_interaction: chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                is_me: false
+            })
+        }
+        async fn get_batch(&self, _: &Vec<urn::Urn>) -> Result<Vec<mates::Model>> {
             if self.should_fail {
                 anyhow::bail!("DB error")
             } else {
@@ -306,17 +369,32 @@ mod tests {
         }
     }
 
-    #[async_trait] impl AuthorityRequestRepoTrait for MockRepo {}
+    #[async_trait]
+    impl AuthorityRequestRepoTrait for MockRepo {}
 
     #[derive(Clone)]
-    struct MockRepoFactory { should_fail: bool }
+    struct MockRepoFactory {
+        should_fail: bool
+    }
     impl AuthRepoFactoryTrait for MockRepoFactory {
-        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
-        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
-        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
-        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
-        fn mates(&self) -> Arc<dyn MatesRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
-        fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait> { Arc::new(MockRepo { should_fail: self.should_fail }) }
+        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
+        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
+        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
+        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
+        fn mates(&self) -> Arc<dyn MatesRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
+        fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait> {
+            Arc::new(MockRepo { should_fail: self.should_fail })
+        }
     }
 
     fn build_router(should_fail: bool) -> Router {
@@ -326,7 +404,12 @@ mod tests {
         RainbowAuthConsumerRouter::new(manager).router()
     }
 
-    async fn send_request(router: Router, method: &str, uri: &str, body: Option<String>) -> StatusCode {
+    async fn send_request(
+        router: Router,
+        method: &str,
+        uri: &str,
+        body: Option<String>
+    ) -> StatusCode {
         let req = Request::builder()
             .method(method)
             .uri(uri)
@@ -335,10 +418,10 @@ mod tests {
             .unwrap();
         router.oneshot(req).await.unwrap().status()
     }
- 
+
     #[derive(Clone)]
     struct MockManager {
-        should_fail: bool,
+        should_fail: bool
     }
 
     impl MockManager {
@@ -365,27 +448,32 @@ mod tests {
                 Ok(())
             }
         }
-
     }
 
     async fn wallet_register(State(manager): State<Arc<MockManager>>) -> impl IntoResponse {
         match manager.register_wallet().await {
             Ok(_) => StatusCode::CREATED,
-            Err(code) => code,
+            Err(code) => code
         }
     }
 
-    async fn delete_key_handler(State(manager): State<Arc<MockManager>>, Json(payload): Json<KeyDefinition>) -> impl IntoResponse {
+    async fn delete_key_handler(
+        State(manager): State<Arc<MockManager>>,
+        Json(payload): Json<KeyDefinition>
+    ) -> impl IntoResponse {
         match manager.delete_key(payload).await {
             Ok(_) => StatusCode::CREATED,
-            Err(code) => code,
+            Err(code) => code
         }
     }
 
-    async fn delete_did_handler(State(manager): State<Arc<MockManager>>, Json(payload): Json<DidsInfo>) -> impl IntoResponse {
+    async fn delete_did_handler(
+        State(manager): State<Arc<MockManager>>,
+        Json(payload): Json<DidsInfo>
+    ) -> impl IntoResponse {
         match manager.delete_did(payload).await {
             Ok(_) => StatusCode::CREATED,
-            Err(code) => code,
+            Err(code) => code
         }
     }
 
@@ -414,10 +502,17 @@ mod tests {
             ("/api/v1/authority/request/test-id", "GET"),
         ];
         for (uri, method) in routes {
-            let status = send_request(router.clone(), method, uri, Some(json!({}).to_string())).await;
+            let status =
+                send_request(router.clone(), method, uri, Some(json!({}).to_string())).await;
             println!("{:?}", status);
-            assert!(status.is_success() || status == StatusCode::NOT_FOUND || status == StatusCode::BAD_REQUEST
-                || status == StatusCode::BAD_GATEWAY || status == StatusCode::PRECONDITION_FAILED || status == StatusCode::UNPROCESSABLE_ENTITY);
+            assert!(
+                status.is_success()
+                    || status == StatusCode::NOT_FOUND
+                    || status == StatusCode::BAD_REQUEST
+                    || status == StatusCode::BAD_GATEWAY
+                    || status == StatusCode::PRECONDITION_FAILED
+                    || status == StatusCode::UNPROCESSABLE_ENTITY
+            );
         }
     }
 
@@ -431,14 +526,17 @@ mod tests {
     #[tokio::test]
     async fn test_wallet_register_success() {
         let manager = Arc::new(MockManager { should_fail: false });
-        let router = Router::new().route("/api/v1/wallet/register", post(wallet_register)).with_state(manager);
+        let router = Router::new()
+            .route("/api/v1/wallet/register", post(wallet_register))
+            .with_state(manager);
         let status = send_request(router, "POST", "/api/v1/wallet/register", None).await;
         assert_eq!(status, StatusCode::CREATED);
     }
-    
+
     #[tokio::test]
     async fn test_wallet_register_error() {
-        let status = send_request(build_router(true), "POST", "/api/v1/wallet/register", None).await;
+        let status =
+            send_request(build_router(true), "POST", "/api/v1/wallet/register", None).await;
         assert_eq!(status, StatusCode::BAD_GATEWAY);
     }
 
@@ -452,10 +550,10 @@ mod tests {
             "keyPair": { "public": "ABCDEF123456" },
             "keyset_handle": null
         });
-        let status = send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
         assert!(status == StatusCode::CREATED || status == StatusCode::PRECONDITION_FAILED);
     }
-
 
     #[tokio::test]
     async fn test_delete_key_with_mock_manager() {
@@ -471,7 +569,8 @@ mod tests {
             "keyset_handle": null
         });
 
-        let status = send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
         assert_eq!(status, StatusCode::CREATED);
     }
 
@@ -485,12 +584,13 @@ mod tests {
             "keyPair": { "public": "ABCDEF123456" },
             "keyset_handle": null
         });
-        let status = send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
         println!("{:?}", status);
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::PRECONDITION_FAILED
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
         );
     }
 
@@ -504,84 +604,172 @@ mod tests {
         "keyPair": { "public": "ABCDEF123456" },
         "keyset_handle": null
         });
-        let status = send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/key", Some(payload.to_string())).await;
         assert!(
-            status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::PRECONDITION_FAILED,
-            "Expected error status, got {:?}", status
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED,
+            "Expected error status, got {:?}",
+            status
         );
     }
 
     #[tokio::test]
     async fn test_wallet_login_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/wallet/login", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/login",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::BAD_GATEWAY);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::BAD_GATEWAY
+        );
     }
 
     #[tokio::test]
     async fn test_wallet_login_error() {
         let router = build_router(true);
-        let status = send_request(router, "POST", "/api/v1/wallet/login", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/login",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_wallet_logout_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/wallet/logout", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::BAD_GATEWAY);
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/logout",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::BAD_GATEWAY
+        );
     }
 
     #[tokio::test]
     async fn test_wallet_logout_error() {
         let router = build_router(true);
-        let status = send_request(router, "POST", "/api/v1/wallet/logout", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/logout",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_wallet_onboard_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/wallet/onboard", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/onboard",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::BAD_GATEWAY);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::BAD_GATEWAY
+        );
     }
 
     #[tokio::test]
     async fn test_wallet_onboard_error() {
         let router = build_router(true);
-        let status = send_request(router, "POST", "/api/v1/wallet/onboard", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/onboard",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_wallet_partial_onboard_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/wallet/partial-onboard", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::BAD_GATEWAY);
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/partial-onboard",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::BAD_GATEWAY
+        );
     }
 
     #[tokio::test]
     async fn test_wallet_partial_onboard_error() {
         let router = build_router(true);
-        let status = send_request(router, "POST", "/api/v1/wallet/partial-onboard", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/partial-onboard",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_wallet_did_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/wallet/did", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/did",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::PRECONDITION_FAILED);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     #[tokio::test]
     async fn test_wallet_did_error() {
         let router = build_router(true);
-        let status = send_request(router, "POST", "/api/v1/wallet/did", Some(serde_json::json!({}).to_string())).await;
-        assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::PRECONDITION_FAILED);
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/wallet/did",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     // PROVIDER TESTS
@@ -594,9 +782,19 @@ mod tests {
             "url": "https://provider.example.com",
             "actions": "read,write"
         });
-        let status = send_request(router, "POST", "/api/v1/request/onboard/provider", Some(payload.to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/request/onboard/provider",
+            Some(payload.to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::BAD_GATEWAY);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::BAD_GATEWAY
+        );
     }
 
     #[tokio::test]
@@ -608,11 +806,17 @@ mod tests {
             "url": "https://provider.example.com",
             "actions": "read,write"
         });
-        let status = send_request(router, "POST", "/api/v1/request/onboard/provider", Some(payload.to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/request/onboard/provider",
+            Some(payload.to_string())
+        )
+        .await;
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::PRECONDITION_FAILED
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
         );
     }
 
@@ -620,28 +824,54 @@ mod tests {
     #[tokio::test]
     async fn test_callback_test_id_interact_ref_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/callback/test-id?hash=abc&interact_ref=xyz", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/callback/test-id?hash=abc&interact_ref=xyz",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_callback_test_id_interact_ref_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/callback/test-id?hash=abc&interact_ref=xyz", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/callback/test-id?hash=abc&interact_ref=xyz",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::NOT_FOUND);
+        assert!(
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_callback_test_id_success() {
-        let router = build_router(false); 
+        let router = build_router(false);
         let payload = serde_json::json!({
             "interact_ref": "xyz",
             "hash": "abc"
         });
-        let status = send_request(router, "POST", "/api/v1/callback/test-id", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/callback/test-id", Some(payload.to_string()))
+                .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
@@ -651,12 +881,14 @@ mod tests {
             "interact_ref": "xyz",
             "hash": "abc"
         });
-        let status = send_request(router, "POST", "/api/v1/callback/test-id", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/callback/test-id", Some(payload.to_string()))
+                .await;
         println!("{:?}", status);
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::NOT_FOUND
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::NOT_FOUND
         );
     }
 
@@ -670,13 +902,14 @@ mod tests {
             "url": "https://example.com",
             "vc_type": "VerifiableCredential"
         });
-        let status = send_request(router, "POST", "/api/v1/authority/beg", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/authority/beg", Some(payload.to_string())).await;
         println!("{:?}", status);
         assert!(
             status.is_success()
-            || status == StatusCode::BAD_REQUEST
-            || status == StatusCode::NOT_FOUND
-            || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+                || status == StatusCode::INTERNAL_SERVER_ERROR
         );
     }
 
@@ -689,7 +922,8 @@ mod tests {
             "url": "https://example.com",
             "vc_type": "VerifiableCredential"
         });
-        let status = send_request(router, "POST", "/api/v1/authority/beg", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/authority/beg", Some(payload.to_string())).await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
@@ -702,8 +936,19 @@ mod tests {
             "url": "https://example.com",
             "vc_type": "VerifiableCredential"
         });
-        let status = send_request(router, "POST", "/api/v1/authority/beg/oidc", Some(payload.to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND || status == StatusCode::INTERNAL_SERVER_ERROR);
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/authority/beg/oidc",
+            Some(payload.to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+        );
     }
 
     #[tokio::test]
@@ -715,7 +960,13 @@ mod tests {
             "url": "https://example.com",
             "vc_type": "VerifiableCredential"
         });
-        let status = send_request(router, "POST", "/api/v1/authority/beg/oidc", Some(payload.to_string())).await;
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/authority/beg/oidc",
+            Some(payload.to_string())
+        )
+        .await;
         println!("{:?}", status);
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -723,52 +974,114 @@ mod tests {
     #[tokio::test]
     async fn test_authority_all_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/authority/request/all", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/authority/request/all",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_authority_all_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/authority/request/all", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/authority/request/all",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_authority_test_id_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/authority/request/test-id", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/authority/request/test-id",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_authority_test_id_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/authority/request/test-id", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/authority/request/test-id",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
-        assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::NOT_FOUND);
+        assert!(
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     // MATES TESTS
     #[tokio::test]
     async fn test_mates_mates_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/mates", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_mates_mates_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/mates", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[tokio::test]
     async fn test_mates_batch_success() {
         let router = build_router(false);
-        let status = send_request(router, "POST", "/api/v1/mates/batch", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "POST",
+            "/api/v1/mates/batch",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
@@ -777,26 +1090,43 @@ mod tests {
         let payload = serde_json::json!({
             "ids": ["urn:example:mate1", "urn:example:mate2"]
         });
-        let status = send_request(router, "POST", "/api/v1/mates/batch", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/mates/batch", Some(payload.to_string())).await;
         println!("{:?}", status);
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::PRECONDITION_FAILED
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
         );
     }
 
     #[tokio::test]
     async fn test_mates_me_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/mates/me", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates/me",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn test_mates_me_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/mates/me", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates/me",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         println!("{:?}", status);
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -804,13 +1134,29 @@ mod tests {
     #[tokio::test]
     async fn test_mates_test_id_success() {
         let router = build_router(false);
-        let status = send_request(router, "GET", "/api/v1/mates/test-id", Some(serde_json::json!({}).to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates/test-id",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
     #[tokio::test]
     async fn test_mates_test_id_error() {
         let router = build_router(true);
-        let status = send_request(router, "GET", "/api/v1/mates/test-id", Some(serde_json::json!({}).to_string())).await;
+        let status = send_request(
+            router,
+            "GET",
+            "/api/v1/mates/test-id",
+            Some(serde_json::json!({}).to_string())
+        )
+        .await;
         assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR);
     }
 
@@ -820,8 +1166,14 @@ mod tests {
         let payload = serde_json::json!({
             "token": "valid-token"
         });
-        let status = send_request(router, "POST", "/api/v1/verify/mate/token", Some(payload.to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND);
+        let status =
+            send_request(router, "POST", "/api/v1/verify/mate/token", Some(payload.to_string()))
+                .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
@@ -830,12 +1182,14 @@ mod tests {
         let payload = serde_json::json!({
             "token": "invalid-token"
         });
-        let status = send_request(router, "POST", "/api/v1/verify/mate/token", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/verify/mate/token", Some(payload.to_string()))
+                .await;
         println!("{:?}", status);
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::NOT_FOUND
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::NOT_FOUND
         );
     }
 
@@ -846,8 +1200,15 @@ mod tests {
         let payload = serde_json::json!({
             "uri": "https://issuer.example.com"
         });
-        let status = send_request(router, "POST", "/api/v1/process/oidc4vci", Some(payload.to_string())).await;
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND || status == StatusCode::PRECONDITION_FAILED);
+        let status =
+            send_request(router, "POST", "/api/v1/process/oidc4vci", Some(payload.to_string()))
+                .await;
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     #[tokio::test]
@@ -856,8 +1217,14 @@ mod tests {
         let payload = serde_json::json!({
             "uri": "https://issuer.example.com"
         });
-        let status = send_request(router, "POST", "/api/v1/process/oidc4vci", Some(payload.to_string())).await;
-        assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::PRECONDITION_FAILED);
+        let status =
+            send_request(router, "POST", "/api/v1/process/oidc4vci", Some(payload.to_string()))
+                .await;
+        assert!(
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     #[tokio::test]
@@ -866,9 +1233,16 @@ mod tests {
         let payload = serde_json::json!({
             "uri": "https://issuer.example.com"
         });
-        let status = send_request(router, "POST", "/api/v1/process/oidc4vp", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/process/oidc4vp", Some(payload.to_string()))
+                .await;
         println!("{:?}", status);
-        assert!(status.is_success() || status == StatusCode::BAD_REQUEST || status == StatusCode::NOT_FOUND || status == StatusCode::PRECONDITION_FAILED);
+        assert!(
+            status.is_success()
+                || status == StatusCode::BAD_REQUEST
+                || status == StatusCode::NOT_FOUND
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     #[tokio::test]
@@ -877,8 +1251,14 @@ mod tests {
         let payload = serde_json::json!({
             "uri": "https://issuer.example.com"
         });
-        let status = send_request(router, "POST", "/api/v1/process/oidc4vp", Some(payload.to_string())).await;
-        assert!(status == StatusCode::BAD_GATEWAY || status == StatusCode::INTERNAL_SERVER_ERROR || status == StatusCode::PRECONDITION_FAILED);
+        let status =
+            send_request(router, "POST", "/api/v1/process/oidc4vp", Some(payload.to_string()))
+                .await;
+        assert!(
+            status == StatusCode::BAD_GATEWAY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
+        );
     }
 
     #[tokio::test]
@@ -888,7 +1268,8 @@ mod tests {
             "did": "did:example:123",
             "method": "did:web"
         });
-        let status = send_request(router, "DELETE", "/api/v1/wallet/did", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/did", Some(payload.to_string())).await;
         assert!(status == StatusCode::CREATED || status == StatusCode::UNPROCESSABLE_ENTITY);
     }
 
@@ -899,11 +1280,12 @@ mod tests {
             "did": "did:example:123",
             "method": "did:web"
         });
-        let status = send_request(router, "DELETE", "/api/v1/wallet/did", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/did", Some(payload.to_string())).await;
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::UNPROCESSABLE_ENTITY
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::UNPROCESSABLE_ENTITY
         );
     }
 
@@ -921,8 +1303,8 @@ mod tests {
         println!("{:?}", status);
         assert!(
             status == StatusCode::BAD_GATEWAY
-            || status == StatusCode::INTERNAL_SERVER_ERROR
-            || status == StatusCode::PRECONDITION_FAILED
+                || status == StatusCode::INTERNAL_SERVER_ERROR
+                || status == StatusCode::PRECONDITION_FAILED
         );
     }
 
@@ -932,7 +1314,8 @@ mod tests {
         let payload = serde_json::json!({
             "ids": ["urn:example:mate1", "urn:example:mate2"]
         });
-        let status = send_request(router, "POST", "/api/v1/mates/batch", Some(payload.to_string())).await;
+        let status =
+            send_request(router, "POST", "/api/v1/mates/batch", Some(payload.to_string())).await;
         assert!(status.is_success() || status == StatusCode::BAD_REQUEST);
     }
 
@@ -953,14 +1336,16 @@ mod tests {
     #[tokio::test]
     async fn test_delete_key_invalid_payload() {
         let router = build_router(false);
-        let status = send_request(router, "DELETE", "/api/v1/wallet/key", Some("{}".to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/key", Some("{}".to_string())).await;
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[tokio::test]
     async fn test_delete_did_invalid_payload() {
         let router = build_router(false);
-        let status = send_request(router, "DELETE", "/api/v1/wallet/did", Some("{}".to_string())).await;
+        let status =
+            send_request(router, "DELETE", "/api/v1/wallet/did", Some("{}".to_string())).await;
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     }
 }

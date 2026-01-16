@@ -1,14 +1,22 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_request.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_request.rs'
 
 #[cfg(test)]
 mod tests {
-    use rainbow_auth::ssi_auth::common::types::gnap::{GrantRequest, grant_request::{AccessTokenRequirements4GR, Finish4Interact, Interact4GR}};
+    use rainbow_auth::ssi_auth::common::types::gnap::{
+        grant_request::{AccessTokenRequirements4GR, Finish4Interact, Interact4GR},
+        GrantRequest
+    };
     use serde_json::json;
 
     #[test]
     fn test_pr_oidc_creation() {
         let client = json!({"client_id": "abc"});
-        let gr = GrantRequest::pr_oidc(client.clone(), "redirect".to_string(), Some("https://callback".to_string()));
+        let gr = GrantRequest::pr_oidc(
+            client.clone(),
+            "redirect".to_string(),
+            Some("https://callback".to_string())
+        );
         assert_eq!(gr.client, client);
         assert!(gr.interact.is_some());
     }
@@ -16,7 +24,12 @@ mod tests {
     #[test]
     fn test_vc_oidc_creation() {
         let client = json!({"client_id": "xyz"});
-        let gr = GrantRequest::vc_oidc(client.clone(), "redirect".to_string(), None, "vc-type".to_string());
+        let gr = GrantRequest::vc_oidc(
+            client.clone(),
+            "redirect".to_string(),
+            None,
+            "vc-type".to_string()
+        );
         assert_eq!(gr.access_token.access.r#type, "vc-type");
     }
 
@@ -70,7 +83,7 @@ mod tests {
             subject: None,
             client,
             user: None,
-            interact: None,
+            interact: None
         };
         gr.update_callback("https://new-callback".to_string());
         // interact sigue siendo None
@@ -100,7 +113,7 @@ mod tests {
             method: "redirect".to_string(),
             uri: Some("uri".to_string()),
             nonce: "nonce".to_string(),
-            hash_method: None,
+            hash_method: None
         };
         assert!(finish.hash_method.is_none());
     }

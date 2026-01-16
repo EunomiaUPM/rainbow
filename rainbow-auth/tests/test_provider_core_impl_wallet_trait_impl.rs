@@ -1,32 +1,36 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\provider\core\impls\wallet_trait_impl.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\provider\core\impls\wallet_trait_impl.rs'
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use axum::async_trait;
     use rainbow_auth::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
     use rainbow_auth::ssi_auth::common::types::oidc::{InputDescriptor, Vpd};
     use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;
     use rainbow_auth::ssi_auth::provider::core::Manager;
     use rainbow_common::config::provider_config::ApplicationProviderConfig;
-    use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
-    use std::sync::Arc;
-    use rainbow_db::auth_provider::repo_factory::traits::{
-        AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
-        AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait,
+    use rainbow_db::auth_provider::entities::business_mates::{Model, NewModel};
+    use rainbow_db::auth_provider::entities::mates::{
+        Model as MatesModel, NewModel as MatesNewModel
     };
     use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
-    use rainbow_db::auth_provider::entities::business_mates::{Model, NewModel};
+    use rainbow_db::auth_provider::repo_factory::traits::{
+        AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+        AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait
+    };
     use rainbow_db::common::BasicRepoTrait;
-    use rainbow_db::auth_provider::entities::mates::{Model as MatesModel, NewModel as MatesNewModel};
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     // Mocks
     pub struct MockMatesRepo;
 
     #[async_trait]
     impl BasicRepoTrait<MatesModel, MatesNewModel> for MockMatesRepo {
-        async fn create(&self, item: MatesNewModel) -> anyhow::Result<MatesModel> {   
-        Ok(MatesModel {
+        async fn create(&self, item: MatesNewModel) -> anyhow::Result<MatesModel> {
+            Ok(MatesModel {
                 participant_id: item.participant_id,
                 participant_slug: item.participant_slug,
                 participant_type: item.participant_type,
@@ -34,32 +38,28 @@ mod tests {
                 token: item.token,
                 saved_at: chrono::Utc::now().naive_utc(),
                 last_interaction: chrono::Utc::now().naive_utc(),
-                is_me: item.is_me,
+                is_me: item.is_me
             })
         }
 
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<MatesModel>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<MatesModel>> {
             Ok(vec![])
         }
 
-        async fn get_by_id(&self, _id: &str) -> anyhow::Result<Option<MatesModel>> {
-            Ok(None)
-        }
+        async fn get_by_id(&self, _id: &str) -> anyhow::Result<Option<MatesModel>> { Ok(None) }
 
-        async fn update(&self, model: MatesModel) -> anyhow::Result<MatesModel> {
-            Ok(model)
-        }
+        async fn update(&self, model: MatesModel) -> anyhow::Result<MatesModel> { Ok(model) }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
     #[async_trait]
     impl MatesRepoTrait for MockMatesRepo {
-        async fn get_me(&self) -> anyhow::Result<Option<MatesModel>> {
-            Ok(None)
-        }
+        async fn get_me(&self) -> anyhow::Result<Option<MatesModel>> { Ok(None) }
 
         async fn get_by_token(&self, _token: &str) -> anyhow::Result<Option<MatesModel>> {
             Ok(None)
@@ -73,7 +73,7 @@ mod tests {
             Ok(vec![])
         }
     }
-    
+
     #[derive(Clone)]
     pub struct MockBusinessMatesRepo;
 
@@ -85,11 +85,15 @@ mod tests {
                 participant_id: item.participant_id,
                 token: item.token,
                 saved_at: chrono::Utc::now().naive_utc(),
-                last_interaction: chrono::Utc::now().naive_utc(),
+                last_interaction: chrono::Utc::now().naive_utc()
             })
         }
 
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<Model>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<Model>> {
             Ok(vec![]) // Devuelve una lista vacía
         }
 
@@ -108,34 +112,22 @@ mod tests {
 
     #[async_trait]
     impl BusinessMatesRepoTrait for MockBusinessMatesRepo {
-        async fn get_by_token(&self, _token: &str) -> anyhow::Result<Option<Model>> {
-            Ok(None)
-        }
+        async fn get_by_token(&self, _token: &str) -> anyhow::Result<Option<Model>> { Ok(None) }
 
         async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model> {
             self.create(mate).await
         }
     }
-    
+
     #[derive(Clone)]
     pub struct MockRepoFactory;
 
     impl AuthRepoFactoryTrait for MockRepoFactory {
-        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
-            unimplemented!()
-        }
-        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
-            unimplemented!()
-        }
-        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> {
-            unimplemented!()
-        }
-        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
-            unimplemented!()
-        }
-        fn mates(&self) -> Arc<dyn MatesRepoTrait> {
-            Arc::new(MockMatesRepo)
-        }
+        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> { unimplemented!() }
+        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> { unimplemented!() }
+        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> { unimplemented!() }
+        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> { unimplemented!() }
+        fn mates(&self) -> Arc<dyn MatesRepoTrait> { Arc::new(MockMatesRepo) }
         fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> {
             Arc::new(MockBusinessMatesRepo)
         }
@@ -145,7 +137,8 @@ mod tests {
         let mut config = ApplicationProviderConfig::default();
 
         config.ssi_wallet_config.wallet_api_protocol = "http".to_string();
-        config.ssi_wallet_config.wallet_api_url = base_url.replace("http://", "").replace("https://", "");
+        config.ssi_wallet_config.wallet_api_url =
+            base_url.replace("http://", "").replace("https://", "");
         config.ssi_wallet_config.wallet_api_port = None; // O Some("7001".to_string()) si quieres incluir puerto
         config.ssi_wallet_config.wallet_type = "email".to_string();
         config.ssi_wallet_config.wallet_name = "TestWallet".to_string();
@@ -155,8 +148,7 @@ mod tests {
         config
     }
 
-
-    //Tests
+    // Tests
 
     #[tokio::test]
     async fn test_register_wallet_success() {
@@ -200,12 +192,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_wallet_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
         use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         // Crear un JWT válido con campo exp y sub
         let payload = json!({
@@ -243,10 +236,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_wallet_error() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -266,10 +260,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_logout_wallet_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -299,10 +294,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_logout_wallet_error() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -322,13 +318,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
-        use serde_json::json;
+
         use base64::engine::general_purpose::URL_SAFE_NO_PAD;
         use base64::Engine;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use serde_json::json;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -389,7 +386,8 @@ mod tests {
         // Mock retrieve_keys with correct KeyDefinition structure
         Mock::given(method("GET"))
             .and(path("/wallet-api/wallet/wallet-id-123/keys"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(r#"
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                r#"
                 [
                     {
                         "algorithm": "RSA",
@@ -399,10 +397,10 @@ mod tests {
                         "keyset_handle": null
                     }
                 ]
-            "#))
+            "#
+            ))
             .mount(&mock_server)
             .await;
-
 
         // Mock retrieve_wallet_dids
         Mock::given(method("GET"))
@@ -466,10 +464,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_fails_on_login() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -490,13 +489,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_partial_onboard_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::method;
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
-        use serde_json::json;
+
         use base64::engine::general_purpose::URL_SAFE_NO_PAD;
         use base64::Engine;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use serde_json::json;
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -543,13 +543,15 @@ mod tests {
         // Mock retrieve_keys
         Mock::given(method("GET"))
             .and(path("/wallet-api/wallet/wallet-id-123/keys"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(r#"[{
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                r#"[{
                 "algorithm": "RSA",
                 "cryptoProvider": "OpenSSL",
                 "keyId": { "id": "key-123" },
                 "keyPair": {},
                 "keyset_handle": null
-            }]"#))
+            }]"#
+            ))
             .mount(&mock_server)
             .await;
 
@@ -570,10 +572,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_partial_onboard_fails_on_login() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::method;
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -594,8 +597,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_wallet_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -610,7 +614,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -622,8 +626,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_wallet_error_when_empty() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -637,9 +642,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_did_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo};
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -660,8 +666,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -672,9 +678,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_did_error_when_no_dids() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -689,7 +696,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![], // sin DIDs
+                dids: vec![] // sin DIDs
             });
         }
 
@@ -699,8 +706,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_token_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -719,8 +727,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_token_error_when_none() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -734,9 +743,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_did_doc_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo};
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
 
         let config = mock_config("http://localhost");
@@ -758,8 +768,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -771,9 +781,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_did_doc_error_when_no_dids() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -788,7 +799,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![], // without DIDs
+                dids: vec![] // without DIDs
             });
         }
 
@@ -798,9 +809,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_key_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
 
         let config = mock_config("http://localhost");
@@ -815,7 +827,7 @@ mod tests {
                 crypto_provider: "OpenSSL".to_string(),
                 key_id: KeyInfo { id: "key-123".to_string() },
                 key_pair: json!({}),
-                keyset_handle: None,
+                keyset_handle: None
             });
         }
 
@@ -827,8 +839,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_key_error_when_none() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -842,11 +855,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_info_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -887,10 +901,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_info_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -916,10 +931,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_keys_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -936,14 +952,15 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
         // Mock of endpoint /wallet-api/wallet/wallet-id-123/keys
         Mock::given(method("GET"))
             .and(path("/wallet-api/wallet/wallet-id-123/keys"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(r#"
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                r#"
                 [
                     {
                         "algorithm": "RSA",
@@ -953,7 +970,8 @@ mod tests {
                         "keyset_handle": null
                     }
                 ]
-            "#))
+            "#
+            ))
             .mount(&mock_server)
             .await;
 
@@ -968,10 +986,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_keys_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -988,7 +1007,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1005,11 +1024,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_dids_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1026,7 +1046,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1057,10 +1077,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_dids_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1077,7 +1098,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1094,10 +1115,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_key_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1114,7 +1136,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1131,10 +1153,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_key_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1151,7 +1174,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1168,11 +1191,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1189,7 +1213,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
         {
@@ -1197,9 +1221,11 @@ mod tests {
             key_data.push(rainbow_auth::ssi_auth::common::types::ssi::keys::KeyDefinition {
                 algorithm: "RSA".to_string(),
                 crypto_provider: "OpenSSL".to_string(),
-                key_id: rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo { id: "key-123".to_string() },
+                key_id: rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo {
+                    id: "key-123".to_string()
+                },
                 key_pair: json!({}),
-                keyset_handle: None,
+                keyset_handle: None
             });
         }
 
@@ -1218,11 +1244,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1239,7 +1266,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
         {
@@ -1247,9 +1274,11 @@ mod tests {
             key_data.push(rainbow_auth::ssi_auth::common::types::ssi::keys::KeyDefinition {
                 algorithm: "RSA".to_string(),
                 crypto_provider: "OpenSSL".to_string(),
-                key_id: rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo { id: "key-123".to_string() },
+                key_id: rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo {
+                    id: "key-123".to_string()
+                },
                 key_pair: json!({}),
-                keyset_handle: None,
+                keyset_handle: None
             });
         }
 
@@ -1268,10 +1297,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         // Start mock server
         let mock_server = MockServer::start().await;
@@ -1304,8 +1334,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -1315,10 +1345,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1349,8 +1380,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -1360,12 +1391,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_key_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1390,7 +1422,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1399,7 +1431,7 @@ mod tests {
             crypto_provider: "OpenSSL".to_string(),
             key_id: KeyInfo { id: "key-123".to_string() },
             key_pair: json!({}),
-            keyset_handle: None,
+            keyset_handle: None
         };
 
         {
@@ -1417,12 +1449,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_key_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1446,7 +1479,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1455,7 +1488,7 @@ mod tests {
             crypto_provider: "OpenSSL".to_string(),
             key_id: KeyInfo { id: "key-123".to_string() },
             key_pair: json!({}),
-            keyset_handle: None,
+            keyset_handle: None
         };
 
         {
@@ -1468,16 +1501,20 @@ mod tests {
 
         // Verify that the key is still present in the internal state
         let key_data = manager.key_data.lock().await;
-        assert!(key_data.contains(&key), "Expected key to remain after failed deletion");
+        assert!(
+            key_data.contains(&key),
+            "Expected key to remain after failed deletion"
+        );
     }
 
     #[tokio::test]
     async fn test_delete_did_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1499,7 +1536,7 @@ mod tests {
             alias: "Test alias".to_string(),
             key_id: "key-123".to_string(),
             default: true,
-            created_on: "2023-01-01".to_string(),
+            created_on: "2023-01-01".to_string()
         };
 
         {
@@ -1511,7 +1548,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![did_info.clone()],
+                dids: vec![did_info.clone()]
             });
         }
 
@@ -1528,11 +1565,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_did_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
-        use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1553,7 +1591,7 @@ mod tests {
             alias: "Test alias".to_string(),
             key_id: "key-123".to_string(),
             default: true,
-            created_on: "2023-01-01".to_string(),
+            created_on: "2023-01-01".to_string()
         };
 
         {
@@ -1565,7 +1603,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![did_info.clone()],
+                dids: vec![did_info.clone()]
             });
         }
 
@@ -1582,11 +1620,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_credential_offer_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1607,7 +1646,9 @@ mod tests {
         });
 
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolveCredentialOffer"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolveCredentialOffer"
+            ))
             .respond_with(ResponseTemplate::new(200).set_body_json(response_body.clone()))
             .mount(&mock_server)
             .await;
@@ -1625,12 +1666,16 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
         let result = manager.resolve_credential_offer("mock-uri".to_string()).await;
-        assert!(result.is_ok(), "Expected Ok(CredentialOfferResponse), got: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Expected Ok(CredentialOfferResponse), got: {:?}",
+            result
+        );
 
         let offer = result.unwrap();
         assert_eq!(offer.credential_issuer, "https://issuer.example.com");
@@ -1638,16 +1683,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_credential_offer_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Endpoint mockup with 500 error
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolveCredentialOffer"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolveCredentialOffer"
+            ))
             .respond_with(ResponseTemplate::new(500))
             .mount(&mock_server)
             .await;
@@ -1665,7 +1713,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1675,17 +1723,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_credential_issuer_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock endpoint with 200 response and valid JSON body
         Mock::given(method("GET"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolveIssuerOpenIDMetadata"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolveIssuerOpenIDMetadata"
+            ))
             .and(query_param("issuer", "https://issuer.example.com"))
             .respond_with(ResponseTemplate::new(200).set_body_json(json!({
                 "issuer": "https://issuer.example.com",
@@ -1710,26 +1761,30 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
-        let result = manager.resolve_credential_issuer("https://issuer.example.com".to_string()).await;
+        let result =
+            manager.resolve_credential_issuer("https://issuer.example.com".to_string()).await;
         assert!(result.is_ok(), "Expected Ok(()), got: {:?}", result);
     }
 
     #[tokio::test]
     async fn test_resolve_credential_issuer_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Endpoint mockup with 500 error
         Mock::given(method("GET"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolveIssuerOpenIDMetadata"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolveIssuerOpenIDMetadata"
+            ))
             .and(query_param("issuer", "https://issuer.example.com"))
             .respond_with(ResponseTemplate::new(500))
             .mount(&mock_server)
@@ -1748,21 +1803,23 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
-        let result = manager.resolve_credential_issuer("https://issuer.example.com".to_string()).await;
+        let result =
+            manager.resolve_credential_issuer("https://issuer.example.com".to_string()).await;
         assert!(result.is_err(), "Expected Err, got: {:?}", result);
     }
 
     #[tokio::test]
     async fn test_use_offer_req_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1797,8 +1854,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -1808,10 +1865,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_use_offer_req_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path, query_param};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path, query_param};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -1844,8 +1902,8 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
@@ -1855,16 +1913,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_join_exchange_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock endpoint with 200 response and text body
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolvePresentationRequest"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolvePresentationRequest"
+            ))
             .respond_with(ResponseTemplate::new(200).set_body_string("exchange-success"))
             .mount(&mock_server)
             .await;
@@ -1882,7 +1943,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1893,16 +1954,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_join_exchange_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Endpoint mockup with 500 error
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/resolvePresentationRequest"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/resolvePresentationRequest"
+            ))
             .respond_with(ResponseTemplate::new(500))
             .mount(&mock_server)
             .await;
@@ -1920,7 +1984,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1930,8 +1994,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_parse_vpd_success() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
         use urlencoding::encode;
 
@@ -1965,8 +2030,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_parse_vpd_invalid_json() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use urlencoding::encode;
 
         let config = mock_config("http://localhost");
@@ -1984,18 +2050,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_matching_vcs_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock endpoint with 200 response and a valid VC
-        Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+        Mock::given(method("POST",),)
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition",
+            ),)
+            .respond_with(ResponseTemplate::new(200,).set_body_json(json!([
                 {
                     "id": "vc-id-001",
                     "addedOn": "2023-01-01T00:00:00Z",
@@ -2025,10 +2094,9 @@ mod tests {
                         "name": "TestWallet"
                     }"#
                 }
-            ])))
-            .mount(&mock_server)
+            ]),),)
+            .mount(&mock_server,)
             .await;
-
 
         let config = mock_config(&mock_server.uri());
         let repo = Arc::new(MockRepoFactory);
@@ -2043,17 +2111,17 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
         let vpd = Vpd {
             id: "vpd-id".to_string(),
-            input_descriptors: vec![InputDescriptor { 
+            input_descriptors: vec![InputDescriptor {
                 id: "descriptor-1".to_string(),
                 constraints: None,
-                format: None,
-            }],
+                format: None
+            }]
         };
 
         let result = manager.get_matching_vcs(vpd).await;
@@ -2065,19 +2133,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_matching_vcs_no_match() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock endpoint with 200 response but without VC
-        Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(json!([])))
-            .mount(&mock_server)
+        Mock::given(method("POST",),)
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition",
+            ),)
+            .respond_with(ResponseTemplate::new(200,).set_body_json(json!([]),),)
+            .mount(&mock_server,)
             .await;
 
         let config = mock_config(&mock_server.uri());
@@ -2093,37 +2164,44 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
         let vpd = Vpd {
             id: "vpd-id".to_string(),
-            input_descriptors: vec![InputDescriptor {        
+            input_descriptors: vec![InputDescriptor {
                 id: "descriptor-1".to_string(),
                 constraints: None,
-                format: None,
-            }],
+                format: None
+            }]
         };
 
         let result = manager.get_matching_vcs(vpd).await;
-        assert!(result.is_err(), "Expected Err due to no matching VCs, got: {:?}", result);
+        assert!(
+            result.is_err(),
+            "Expected Err due to no matching VCs, got: {:?}",
+            result
+        );
     }
 
     #[tokio::test]
     async fn test_match_vc4vp_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock of the endpoint with valid VC
-        Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+        Mock::given(method("POST",),)
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition",
+            ),)
+            .respond_with(ResponseTemplate::new(200,).set_body_json(json!([
                 {
                     "id": "vc-id-001",
                     "addedOn": "2023-01-01T00:00:00Z",
@@ -2134,8 +2212,8 @@ mod tests {
                     "pending": false,
                     "wallet": "{}"
                 }
-            ])))
-            .mount(&mock_server)
+            ]),),)
+            .mount(&mock_server,)
             .await;
 
         let config = mock_config(&mock_server.uri());
@@ -2151,7 +2229,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -2174,19 +2252,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_match_vc4vp_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Endpoint mockup with 500 error
-        Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition"))
-            .respond_with(ResponseTemplate::new(500))
-            .mount(&mock_server)
+        Mock::given(method("POST",),)
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/matchCredentialsForPresentationDefinition",
+            ),)
+            .respond_with(ResponseTemplate::new(500,),)
+            .mount(&mock_server,)
             .await;
 
         let config = mock_config(&mock_server.uri());
@@ -2202,7 +2283,7 @@ mod tests {
                 created_on: "2023-01-01".to_string(),
                 added_on: "2023-01-01".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -2222,17 +2303,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_present_vp_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Mock of the endpoint with a 200 response and a correct `redirectUri` field
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/usePresentationRequest"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/usePresentationRequest"
+            ))
             .respond_with(ResponseTemplate::new(200).set_body_json(json!({
                 "redirectUri": "https://example.com/redirect"
             })))
@@ -2258,12 +2342,13 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
-        let result = manager.present_vp("mock-request".to_string(), vec!["vc-id-001".to_string()]).await;
+        let result =
+            manager.present_vp("mock-request".to_string(), vec!["vc-id-001".to_string()]).await;
         assert!(result.is_ok(), "Expected Ok(RedirectResponse), got: {:?}", result);
 
         let redirect = result.unwrap();
@@ -2272,16 +2357,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_present_vp_error_response() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
         // Endpoint mockup with 500 error
         Mock::given(method("POST"))
-            .and(path("/wallet-api/wallet/wallet-id-123/exchange/usePresentationRequest"))
+            .and(path(
+                "/wallet-api/wallet/wallet-id-123/exchange/usePresentationRequest"
+            ))
             .respond_with(ResponseTemplate::new(500))
             .mount(&mock_server)
             .await;
@@ -2305,19 +2393,21 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "key-123".to_string(),
                     default: true,
-                    created_on: "2023-01-01".to_string(),
-                }],
+                    created_on: "2023-01-01".to_string()
+                }]
             });
         }
 
-        let result = manager.present_vp("mock-request".to_string(), vec!["vc-id-001".to_string()]).await;
+        let result =
+            manager.present_vp("mock-request".to_string(), vec!["vc-id-001".to_string()]).await;
         assert!(result.is_err(), "Expected Err due to server error, got: {:?}", result);
     }
 
     #[tokio::test]
     async fn test_token_expired_true() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -2336,8 +2426,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_token_expired_none() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -2349,18 +2440,23 @@ mod tests {
         }
 
         let result = manager.token_expired().await;
-        assert!(result.is_err(), "Expected Err due to missing token, got: {:?}", result);
+        assert!(
+            result.is_err(),
+            "Expected Err due to missing token, got: {:?}",
+            result
+        );
     }
 
     #[tokio::test]
     async fn test_update_token_success() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
-        use serde_json::json;
+
         use base64::engine::general_purpose::URL_SAFE_NO_PAD;
         use base64::Engine;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -2397,10 +2493,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_token_error() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -2416,18 +2513,23 @@ mod tests {
         let manager = Manager::new(repo, config);
 
         let result = manager.update_token().await;
-        assert!(result.is_err(), "Expected Err due to login failure, got: {:?}", result);
+        assert!(
+            result.is_err(),
+            "Expected Err due to login failure, got: {:?}",
+            result
+        );
     }
 
     #[tokio::test]
     async fn test_ok_token_expired_and_updated() {
-        use wiremock::{Mock, MockServer, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
-        use serde_json::json;
+
         use base64::engine::general_purpose::URL_SAFE_NO_PAD;
         use base64::Engine;
+        use rainbow_auth::ssi_auth::provider::core::Manager;
+        use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -2469,8 +2571,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_ok_token_not_expired() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -2481,7 +2584,8 @@ mod tests {
             let future_timestamp = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
-                .as_secs() + 3600; // Add 1 hour
+                .as_secs()
+                + 3600; // Add 1 hour
             session.token_exp = Some(future_timestamp);
         }
 
@@ -2491,8 +2595,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_ok_token_missing() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);
@@ -2504,6 +2609,10 @@ mod tests {
         }
 
         let result = manager.ok().await;
-        assert!(result.is_err(), "Expected Err due to missing token, got: {:?}", result);
+        assert!(
+            result.is_err(),
+            "Expected Err due to missing token, got: {:?}",
+            result
+        );
     }
 }

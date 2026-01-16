@@ -1,31 +1,42 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\core\impls\consumer_trait_impl.rs' 
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\consumer\core\impls\consumer_trait_impl.rs'
 
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use rainbow_auth::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
-    use rainbow_db::common::BasicRepoTrait;
-    use rainbow_db::auth_consumer::entities::auth_verification::{Model, NewModel};
+
     use axum::async_trait;
-    use mockall::mock;
-    use serde_json::json;
-    use mockall::{predicate::*};
     use base64::Engine;
     use chrono::{self};
+    use mockall::mock;
     use mockall::predicate::eq;
-    use rainbow_auth::ssi_auth::consumer::core::traits::consumer_trait::{MockRainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerManagerTrait};
-    use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
-    use sha2::{Digest, Sha256};
-    use rainbow_auth::ssi_auth::consumer::core::{Manager};
+    use mockall::predicate::*;
+    use rainbow_auth::ssi_auth::common::types::entities::{
+        ReachAuthority, ReachMethod, WhatEntity
+    };
+    use rainbow_auth::ssi_auth::consumer::core::traits::consumer_trait::{
+        MockRainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerManagerTrait
+    };
+    use rainbow_auth::ssi_auth::consumer::core::Manager;
     use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-    use rainbow_db::{auth_consumer::repo_factory::{factory_trait::AuthRepoFactoryTrait, traits::{AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait}}};
-    use rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait;
-    use rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait;
-    use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
-    use rainbow_db::auth_consumer::entities::auth_interaction::{Model as InteractionModel, NewModel as NewInteractionModel};
+    use rainbow_db::auth_consumer::entities::auth_interaction::{
+        Model as InteractionModel, NewModel as NewInteractionModel
+    };
     use rainbow_db::auth_consumer::entities::auth_token_requirements::Model as TokenModel;
+    use rainbow_db::auth_consumer::entities::auth_verification::{Model, NewModel};
+    use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
+    use rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait;
+    use rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait;
+    use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
+    use rainbow_db::auth_consumer::repo_factory::{
+        factory_trait::AuthRepoFactoryTrait,
+        traits::{AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait}
+    };
+    use rainbow_db::common::BasicRepoTrait;
+    use serde_json::json;
+    use sha2::{Digest, Sha256};
     use urn::Urn;
-    
+
     // === Mocks ===
     mock! {
         pub AuthorityRepo {}
@@ -150,13 +161,11 @@ mod tests {
             fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
             fn mates(&self) -> Arc<dyn MatesRepoTrait>;
             fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
-        }    
+        }
     }
 
     impl Clone for MockRepoFactory {
-        fn clone(&self) -> Self {
-            Self::new()
-        }
+        fn clone(&self) -> Self { Self::new() }
     }
 
     #[tokio::test]
@@ -168,15 +177,17 @@ mod tests {
             .with(
                 eq("http://provider.com".to_string()),
                 eq("provider_id".to_string()),
-                eq("provider_slug".to_string()),
+                eq("provider_slug".to_string())
             )
             .returning(|_, _, _| Ok("http://example.com/callback".to_string()));
-    
-        let result = manager.request_onboard_provider(
-            "http://provider.com".to_string(),
-            "provider_id".to_string(),
-            "provider_slug".to_string(),
-        ).await;
+
+        let result = manager
+            .request_onboard_provider(
+                "http://provider.com".to_string(),
+                "provider_id".to_string(),
+                "provider_slug".to_string()
+            )
+            .await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "http://example.com/callback");
@@ -184,7 +195,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_request_onboard_provider_error_handling() {
-        // Create mock  
+        // Create mock
         let mut manager = MockRainbowSSIAuthConsumerManagerTrait::new();
 
         // Set the expectation for the function to fail, not return OK.
@@ -197,19 +208,18 @@ mod tests {
             })
             .times(1)
             .returning(|_, _, _| {
-
-            // Return an error to force the failure branch
-            Err(anyhow::anyhow!("Database error"))
-        });
+                // Return an error to force the failure branch
+                Err(anyhow::anyhow!("Database error"))
+            });
 
         // Call to the function to test
         let result = manager
             .request_onboard_provider(
                 "http://provider.com".to_string(),
                 "provider_id".to_string(),
-                "provider_slug".to_string(),
+                "provider_slug".to_string()
             )
-        .await;
+            .await;
 
         // Verify the result: it should be Err
         assert!(result.is_err(), "Error was expected but it was Ok");
@@ -233,7 +243,8 @@ mod tests {
         let as_nonce = "as_nonce456";
         let grant_endpoint = "https://provider.com/grant";
 
-        let hash_input = format!("{}\n{}\n{}\n{}", client_nonce, as_nonce, interact_ref, grant_endpoint);
+        let hash_input =
+            format!("{}\n{}\n{}\n{}", client_nonce, as_nonce, interact_ref, grant_endpoint);
         let mut hasher = Sha256::new();
         hasher.update(hash_input.as_bytes());
         let calculated_hash = URL_SAFE_NO_PAD.encode(hasher.finalize());
@@ -253,14 +264,16 @@ mod tests {
                 uri: "https://callback".to_string(),
                 hints: None,
                 hash_method: "push".to_string(),
-                start: vec!["start".to_string()],
+                start: vec!["start".to_string()]
             }))
         });
 
         mock_interaction_repo.expect_update().returning(|model| Ok(model));
 
         let mut mock_factory = MockRepoFactory::new();
-        mock_factory.expect_interaction().return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
+        mock_factory
+            .expect_interaction()
+            .return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_factory), config);
@@ -294,14 +307,16 @@ mod tests {
                 uri: "https://callback".to_string(),
                 hints: None,
                 hash_method: "push".to_string(),
-                start: vec!["start".to_string()],
+                start: vec!["start".to_string()]
             }))
         });
 
         mock_interaction_repo.expect_update().returning(|model| Ok(model));
 
         let mut mock_factory = MockRepoFactory::new();
-        mock_factory.expect_interaction().return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
+        mock_factory
+            .expect_interaction()
+            .return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_factory), config);
@@ -314,9 +329,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_continue_request_success() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -363,7 +378,7 @@ mod tests {
                 uri: "https://callback".to_string(),
                 hints: None,
                 hash_method: "push".to_string(),
-                start: vec!["start".to_string()],
+                start: vec!["start".to_string()]
             }))
         });
 
@@ -382,14 +397,13 @@ mod tests {
                     .unwrap()
                     .and_hms_opt(12, 0, 0)
                     .unwrap(),
-                ended_at: None,
+                ended_at: None
             }))
         });
 
         mock_request_repo.expect_update().returning(|model| Ok(model));
 
         mock_mates_repo.expect_force_create().returning(|model| {
-    
             Ok(rainbow_db::auth_consumer::entities::mates::Model {
                 participant_id: model.participant_id,
                 participant_slug: model.participant_slug,
@@ -404,21 +418,20 @@ mod tests {
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
                     .unwrap(),
-                is_me: model.is_me,
+                is_me: model.is_me
             })
-
-    });
+        });
 
         // Inject the repos into the factory
-        mock_repo_factory.expect_interaction().return_const(
-            Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>
-        );
-        mock_repo_factory.expect_request().return_const(
-            Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>
-        );
-        mock_repo_factory.expect_mates().return_const(
-            Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>
-        );
+        mock_repo_factory
+            .expect_interaction()
+            .return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
+        mock_repo_factory
+            .expect_request()
+            .return_const(Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>);
+        mock_repo_factory
+            .expect_mates()
+            .return_const(Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let mut manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -438,9 +451,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_continue_request_error_response() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
         use serde_json::json;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -483,7 +496,7 @@ mod tests {
                 uri: "https://callback".to_string(),
                 hints: None,
                 hash_method: "push".to_string(),
-                start: vec!["start".to_string()],
+                start: vec!["start".to_string()]
             }))
         });
 
@@ -502,26 +515,26 @@ mod tests {
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
                     .unwrap(),
-                ended_at: None,
+                ended_at: None
             }))
         });
 
         mock_request_repo.expect_update().returning(|model| Ok(model));
 
         // Mock dunks (will not be used in this test because it fails before)
-        mock_mates_repo.expect_force_create().returning(|_| {
-            unreachable!("No debería llamarse en caso de error")
-        });
+        mock_mates_repo
+            .expect_force_create()
+            .returning(|_| unreachable!("No debería llamarse en caso de error"));
 
-        mock_repo_factory.expect_interaction().return_const(
-            Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>
-        );
-        mock_repo_factory.expect_request().return_const(
-            Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>
-        );
-        mock_repo_factory.expect_mates().return_const(
-            Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>
-        );
+        mock_repo_factory
+            .expect_interaction()
+            .return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
+        mock_repo_factory
+            .expect_request()
+            .return_const(Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>);
+        mock_repo_factory
+            .expect_mates()
+            .return_const(Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let mut manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -534,7 +547,7 @@ mod tests {
         let error_msg = format!("{}", result.unwrap_err());
         assert!(error_msg.contains("Provider Error"));
     }
-    
+
     #[tokio::test]
     async fn test_save_mate_success() {
         let mut mock_repo_factory = MockRepoFactory::new();
@@ -546,7 +559,7 @@ mod tests {
             participant_type: "Provider".to_string(),
             base_url: "https://provider.com".to_string(),
             token: Some("access_token_value".to_string()),
-            is_me: false,
+            is_me: false
         };
 
         let expected_model = mates::Model {
@@ -556,17 +569,21 @@ mod tests {
             base_url: new_mate.base_url.clone(),
             token: new_mate.token.clone(),
             is_me: new_mate.is_me,
-            saved_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-            last_interaction: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
+            saved_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            last_interaction: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap()
         };
 
-        mock_mates_repo.expect_force_create().returning(move |_| {
-            Ok(expected_model.clone())
-        });
+        mock_mates_repo.expect_force_create().returning(move |_| Ok(expected_model.clone()));
 
-        mock_repo_factory.expect_mates().return_const(
-            Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>
-        );
+        mock_repo_factory
+            .expect_mates()
+            .return_const(Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -574,16 +591,25 @@ mod tests {
         let result = manager.save_mate(new_mate).await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), mates::Model {
-            participant_id: "provider123".to_string(),
-            participant_slug: "provider-slug".to_string(),
-            participant_type: "Provider".to_string(),
-            base_url: "https://provider.com".to_string(),
-            token: Some("access_token_value".to_string()),
-            is_me: false,
-            saved_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-            last_interaction: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-        });
+        assert_eq!(
+            result.unwrap(),
+            mates::Model {
+                participant_id: "provider123".to_string(),
+                participant_slug: "provider-slug".to_string(),
+                participant_type: "Provider".to_string(),
+                base_url: "https://provider.com".to_string(),
+                token: Some("access_token_value".to_string()),
+                is_me: false,
+                saved_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                last_interaction: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+            }
+        );
     }
 
     #[tokio::test]
@@ -597,16 +623,14 @@ mod tests {
             participant_type: "Provider".to_string(),
             base_url: "https://provider.com".to_string(),
             token: Some("access_token_value".to_string()),
-            is_me: false,
+            is_me: false
         };
 
-        mock_mates_repo.expect_force_create().returning(|_| {
-            Err(anyhow::anyhow!("DB error"))
-        });
+        mock_mates_repo.expect_force_create().returning(|_| Err(anyhow::anyhow!("DB error")));
 
-        mock_repo_factory.expect_mates().return_const(
-            Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>
-        );
+        mock_repo_factory
+            .expect_mates()
+            .return_const(Arc::new(mock_mates_repo) as Arc<dyn MatesRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -635,10 +659,12 @@ mod tests {
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
                     .unwrap(),
-                ended_at: Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
-                    .unwrap()
-                    .and_hms_opt(0, 0, 0)
-                    .unwrap()),
+                ended_at: Some(
+                    chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap()
+                ),
                 uri: model.uri,
                 scheme: model.scheme,
                 response_type: model.response_type,
@@ -647,14 +673,14 @@ mod tests {
                 pd_uri: model.pd_uri,
                 client_id_scheme: model.client_id_scheme,
                 nonce: model.nonce,
-                response_uri: model.response_uri,
+                response_uri: model.response_uri
             })
         });
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_verification().return_const(
-            Arc::new(mock_verification_repo) as Arc<dyn AuthVerificationRepoTrait>
-        );
+        mock_repo_factory
+            .expect_verification()
+            .return_const(Arc::new(mock_verification_repo) as Arc<dyn AuthVerificationRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -677,9 +703,9 @@ mod tests {
         mock_verification_repo.expect_create().never();
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_verification().return_const(
-            Arc::new(mock_verification_repo) as Arc<dyn AuthVerificationRepoTrait>
-        );
+        mock_repo_factory
+            .expect_verification()
+            .return_const(Arc::new(mock_verification_repo) as Arc<dyn AuthVerificationRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -690,7 +716,7 @@ mod tests {
 
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        
+
         assert!(
             error_msg.contains("Provider Error"),
             "Mensaje de error inesperado: {}",
@@ -698,65 +724,70 @@ mod tests {
         );
     }
 
-
     #[tokio::test]
     async fn test_beg_credential_success_until_http() {
         let payload = ReachAuthority {
             id: "auth-id".to_string(),
             slug: "auth-slug".to_string(),
             url: "https://authority.com/grant".to_string(),
-            vc_type: "VerifiableCredential".to_string(),
+            vc_type: "VerifiableCredential".to_string()
         };
 
         let method = ReachMethod::Oidc;
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
-        mock_authority_repo.expect_create().returning(|model| Ok(rainbow_db::auth_consumer::entities::authority_request::Model {
-            id: model.id.clone(),
-            authority_id: model.authority_id.clone(),
-            authority_slug: model.authority_slug.clone(),
-            grant_endpoint: model.grant_endpoint.clone(),
-            vc_type: model.vc_type.clone(),
-            status: "Created".to_string(),
-            assigned_id: None,
-            vc_uri: Some("vc_uri".to_string()),
-            created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+        mock_authority_repo.expect_create().returning(|model| {
+            Ok(rainbow_db::auth_consumer::entities::authority_request::Model {
+                id: model.id.clone(),
+                authority_id: model.authority_id.clone(),
+                authority_slug: model.authority_slug.clone(),
+                grant_endpoint: model.grant_endpoint.clone(),
+                vc_type: model.vc_type.clone(),
+                status: "Created".to_string(),
+                assigned_id: None,
+                vc_uri: Some("vc_uri".to_string()),
+                created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
                     .unwrap(),
-            ended_at: Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
-                    .unwrap()
-                    .and_hms_opt(0, 0, 0)
-                    .unwrap()),
-        }));
+                ended_at: Some(
+                    chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap()
+                )
+            })
+        });
         mock_authority_repo.expect_update().returning(|model| Ok(model));
 
         let mut mock_interaction_repo = MockInteractionRepo::new();
-        mock_interaction_repo.expect_create().returning(|model| Ok(rainbow_db::auth_consumer::entities::auth_interaction::Model {
-            id: model.id.clone(),
-            start: model.start.clone(),
-            method: model.method.clone(),
-            uri: model.uri.clone(),
-            hash_method: "hash_method".to_string(),
-            hints: None,
-            grant_endpoint: model.grant_endpoint.clone(),
-            client_nonce: "nonce123".to_string(),
-            as_nonce: Some("as_nonce".to_string()),
-            continue_token: None,
-            continue_endpoint: None,
-            continue_wait: Some(5),
-            interact_ref: Some("interact_ref".to_string()),
-            hash: Some("hash".to_string()),
-        }));
+        mock_interaction_repo.expect_create().returning(|model| {
+            Ok(rainbow_db::auth_consumer::entities::auth_interaction::Model {
+                id: model.id.clone(),
+                start: model.start.clone(),
+                method: model.method.clone(),
+                uri: model.uri.clone(),
+                hash_method: "hash_method".to_string(),
+                hints: None,
+                grant_endpoint: model.grant_endpoint.clone(),
+                client_nonce: "nonce123".to_string(),
+                as_nonce: Some("as_nonce".to_string()),
+                continue_token: None,
+                continue_endpoint: None,
+                continue_wait: Some(5),
+                interact_ref: Some("interact_ref".to_string()),
+                hash: Some("hash".to_string())
+            })
+        });
         mock_interaction_repo.expect_update().returning(|model| Ok(model));
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_authority().return_const(
-            Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>
-        );
-        mock_repo_factory.expect_interaction().return_const(
-            Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>
-        );
+        mock_repo_factory
+            .expect_authority()
+            .return_const(Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>);
+        mock_repo_factory
+            .expect_interaction()
+            .return_const(Arc::new(mock_interaction_repo) as Arc<dyn AuthInteractionRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -780,20 +811,20 @@ mod tests {
             id: "auth-id".to_string(),
             slug: "auth-slug".to_string(),
             url: "https://authority.com/grant".to_string(),
-            vc_type: "VerifiableCredential".to_string(),
+            vc_type: "VerifiableCredential".to_string()
         };
 
         let method = ReachMethod::Oidc;
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
-        mock_authority_repo.expect_create().returning(|_model| {
-            Err(anyhow::anyhow!("Error al crear autoridad"))
-        });
+        mock_authority_repo
+            .expect_create()
+            .returning(|_model| Err(anyhow::anyhow!("Error al crear autoridad")));
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_authority().return_const(
-            Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>
-        );
+        mock_repo_factory
+            .expect_authority()
+            .return_const(Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -812,30 +843,36 @@ mod tests {
         let id = "provider-id".to_string();
 
         let mut mock_request_repo = MockAuthRequestRepo::new();
-        mock_request_repo.expect_get_by_id()
+        mock_request_repo
+            .expect_get_by_id()
             .withf(|input_id| *input_id.to_string() == "provider-id".to_string())
-            .returning(|_| Ok(Some(auth_request::Model {
-                id: "provider-id".to_string(),
-                provider_id: "provider123".to_string(),
-                provider_slug: "slug".to_string(),
-                grant_endpoint: "https://provider.com".to_string(),
-                assigned_id: Some("assigned".to_string()),
-                token: Some("token".to_string()),
-                status: "Pending".to_string(),
-                created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-                ended_at: None,
-            })));
+            .returning(|_| {
+                Ok(Some(auth_request::Model {
+                    id: "provider-id".to_string(),
+                    provider_id: "provider123".to_string(),
+                    provider_slug: "slug".to_string(),
+                    grant_endpoint: "https://provider.com".to_string(),
+                    assigned_id: Some("assigned".to_string()),
+                    token: Some("token".to_string()),
+                    status: "Pending".to_string(),
+                    created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap(),
+                    ended_at: None
+                }))
+            });
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
         mock_authority_repo.expect_get_by_id().returning(|_| Ok(None));
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_request().return_const(
-            Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>
-        );
-        mock_repo_factory.expect_authority().return_const(
-            Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>
-        );
+        mock_repo_factory
+            .expect_request()
+            .return_const(Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>);
+        mock_repo_factory
+            .expect_authority()
+            .return_const(Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -857,28 +894,34 @@ mod tests {
         mock_request_repo.expect_get_by_id().returning(|_| Ok(None));
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
-        mock_authority_repo.expect_get_by_id()
+        mock_authority_repo
+            .expect_get_by_id()
             .withf(|input_id| *input_id.to_string() == "authority-id".to_string())
-            .returning(|_| Ok(Some(authority_request::Model {
-                id: "authority-id".to_string(),
-                authority_id: "auth123".to_string(),
-                authority_slug: "slug".to_string(),
-                grant_endpoint: "https://authority.com".to_string(),
-                vc_type: "VerifiableCredential".to_string(),
-                status: "Pending".to_string(),
-                assigned_id: Some("assigned".to_string()),
-                vc_uri: Some("vc_uri".to_string()),
-                created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-                ended_at: None,
-            })));
+            .returning(|_| {
+                Ok(Some(authority_request::Model {
+                    id: "authority-id".to_string(),
+                    authority_id: "auth123".to_string(),
+                    authority_slug: "slug".to_string(),
+                    grant_endpoint: "https://authority.com".to_string(),
+                    vc_type: "VerifiableCredential".to_string(),
+                    status: "Pending".to_string(),
+                    assigned_id: Some("assigned".to_string()),
+                    vc_uri: Some("vc_uri".to_string()),
+                    created_at: chrono::NaiveDate::from_ymd_opt(2023, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap(),
+                    ended_at: None
+                }))
+            });
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_request().return_const(
-            Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>
-        );
-        mock_repo_factory.expect_authority().return_const(
-            Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>
-        );
+        mock_repo_factory
+            .expect_request()
+            .return_const(Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>);
+        mock_repo_factory
+            .expect_authority()
+            .return_const(Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);
@@ -897,22 +940,24 @@ mod tests {
         let id = "non-existent-id".to_string();
 
         let mut mock_request_repo = MockAuthRequestRepo::new();
-        mock_request_repo.expect_get_by_id()
+        mock_request_repo
+            .expect_get_by_id()
             .withf(|input_id| *input_id.to_string() == "non-existent-id".to_string())
             .returning(|_| Ok(None));
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
-        mock_authority_repo.expect_get_by_id()
+        mock_authority_repo
+            .expect_get_by_id()
             .withf(|input_id| *input_id.to_string() == "non-existent-id".to_string())
             .returning(|_| Ok(None));
 
         let mut mock_repo_factory = MockRepoFactory::new();
-        mock_repo_factory.expect_request().return_const(
-            Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>
-        );
-        mock_repo_factory.expect_authority().return_const(
-            Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>
-        );
+        mock_repo_factory
+            .expect_request()
+            .return_const(Arc::new(mock_request_repo) as Arc<dyn AuthRequestRepoTrait>);
+        mock_repo_factory
+            .expect_authority()
+            .return_const(Arc::new(mock_authority_repo) as Arc<dyn AuthorityRequestRepoTrait>);
 
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(Arc::new(mock_repo_factory), config);

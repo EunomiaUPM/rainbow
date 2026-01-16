@@ -1,15 +1,11 @@
 // Tests corresponding to 'rainbow-auth\src\ssi_auth\common\errors'
 
-use axum::{
-    http::{StatusCode},
-    response::{IntoResponse},
-};
-use rainbow_common::errors::{ErrorInfo, ErrorLog};
-use rainbow_auth::ssi_auth::common::errors::AuthErrors;
-use rainbow_common::errors::CommonErrors;
-use rainbow_auth::ssi_auth::common::errors::CustomToResponse;
 use anyhow::anyhow;
-
+use axum::{http::StatusCode, response::IntoResponse};
+use rainbow_auth::ssi_auth::common::errors::AuthErrors;
+use rainbow_auth::ssi_auth::common::errors::CustomToResponse;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{ErrorInfo, ErrorLog};
 
 #[cfg(test)]
 mod tests {
@@ -28,7 +24,9 @@ mod tests {
         let error = AuthErrors::wallet_new(url.clone(), method.clone(), http_code, cause.clone());
 
         // Verify that the error information is correct
-        if let AuthErrors::WalletError { info, http_code: code, url: u, method: m, cause: c } = error {
+        if let AuthErrors::WalletError { info, http_code: code, url: u, method: m, cause: c } =
+            error
+        {
             assert_eq!(info.message, "Unexpected response from the Wallet");
             assert_eq!(info.error_code, 2100);
             assert_eq!(info.status_code, StatusCode::BAD_GATEWAY);
@@ -73,7 +71,7 @@ mod tests {
 
         // Verify that the response body contains the error information
         let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-        axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
+            axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
         });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Unexpected response from the Wallet");
@@ -91,7 +89,7 @@ mod tests {
 
         // Verify that the response body contains the error information
         let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-        axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
+            axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
         });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Invalid petition");
@@ -128,13 +126,13 @@ mod tests {
     }
 
     // Test for 'error_adapter.rs'
-    
+
     fn dummy_error_info(status: StatusCode) -> ErrorInfo {
         ErrorInfo {
             message: "Test error".to_string(),
             error_code: 4001,
             status_code: status,
-            details: Some("Details about the error".to_string()),
+            details: Some("Details about the error".to_string())
         }
     }
 
@@ -145,7 +143,7 @@ mod tests {
             http_code: Some(400),
             url: "http://example.com".to_string(),
             method: "GET".to_string(),
-            cause: "Invalid request".to_string(),
+            cause: "Invalid request".to_string()
         });
         let response = error.to_response();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -158,7 +156,7 @@ mod tests {
             http_code: 401,
             url: "http://wallet.example.com".to_string(),
             method: "POST".to_string(),
-            cause: Some("Wallet not found".to_string()),
+            cause: Some("Wallet not found".to_string())
         });
         let response = error.to_response();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
@@ -168,7 +166,7 @@ mod tests {
     fn test_auth_security_error_response() {
         let error = anyhow!(AuthErrors::SecurityError {
             info: dummy_error_info(StatusCode::FORBIDDEN),
-            cause: Some("Invalid token".to_string()),
+            cause: Some("Invalid token".to_string())
         });
         let response = error.to_response();
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
