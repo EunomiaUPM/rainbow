@@ -233,12 +233,11 @@ impl WalletServiceTrait for WaltIdService {
             }
         };
 
-        let participant_type = self.config.get_role().to_string();
         let base_url = self.config.hosts().get_host(HostType::Http);
         let minion = mates::NewModel {
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),
-            participant_type,
+            participant_type: "Both".to_string(),
             base_url,
             is_me: true,
             token: None,

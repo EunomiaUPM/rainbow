@@ -18,7 +18,6 @@
  */
 
 use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ApiConfig, CommonHostsConfig};
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +25,6 @@ use serde::{Deserialize, Serialize};
 pub struct CommonConfig {
     pub hosts: CommonHostsConfig,
     pub db: DatabaseConfig,
-    pub role: RoleConfig,
     pub api: ApiConfig,
     pub keys_path: String,
     pub is_local: bool,
@@ -38,9 +36,6 @@ impl CommonConfig {
     }
     pub fn db(&self) -> &DatabaseConfig {
         &self.db
-    }
-    pub fn role(&self) -> &RoleConfig {
-        &self.role
     }
     pub fn api(&self) -> &ApiConfig {
         &self.api

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreGaiaSelfIssuerTrait;
+
 use crate::ssi::common::errors::CustomToResponse;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -24,6 +24,7 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use std::sync::Arc;
+use crate::ssi::common::core::traits::CoreGaiaSelfIssuerTrait;
 
 pub struct GaiaSelfIssuerRouter {
     self_issuer: Arc<dyn CoreGaiaSelfIssuerTrait>,

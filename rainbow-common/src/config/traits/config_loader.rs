@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::services::CommonConfig;
-use crate::config::types::roles::RoleConfig;
 use crate::config::ApplicationConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use serde::de::DeserializeOwned;
@@ -27,12 +27,12 @@ use tracing::error;
 
 pub trait ConfigLoader: Sized + DeserializeOwned {
     fn default(common_config: CommonConfig) -> Self;
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self;
-    fn global_load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<ApplicationConfig> {
-        ApplicationConfig::load(role, env_file)
+    fn load(env_file: Option<String>) -> Self;
+    fn global_load(env_file: Option<String>) -> anyhow::Result<ApplicationConfig> {
+        ApplicationConfig::load(env_file)
     }
 
-    fn local_load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self> {
+    fn local_load(env_file: Option<String>) -> anyhow::Result<Self> {
         if let Some(file) = env_file {
             let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(file);
             let data = fs::read_to_string(&path).expect("Cannot read local config");
@@ -43,7 +43,7 @@ pub trait ConfigLoader: Sized + DeserializeOwned {
             })?;
             Ok(config)
         } else {
-            Ok(Self::default(ApplicationConfig::common(role)))
+            Ok(Self::default(ApplicationConfig::common()))
         }
     }
 }

@@ -22,3 +22,5 @@ pub mod jwt;
 pub mod entities;
 pub mod gnap;
 pub mod vc_issuing;
+pub mod business;
+pub mod vcs;

@@ -36,3 +36,4 @@ pub mod protocol;
 pub mod schemas;
 pub mod utils;
 pub mod well_known;
+pub mod vault;

@@ -17,8 +17,8 @@
  *
  */
 
-use crate::ssi::provider::utils::create_opaque_token;
 use serde::{Deserialize, Serialize};
+use crate::ssi::common::utils::create_opaque_token;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct IssuingToken {

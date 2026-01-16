@@ -27,7 +27,7 @@ pub struct CoreProviderSeeding;
 
 impl CoreProviderSeeding {
     pub async fn run(config: &ApplicationConfig) -> anyhow::Result<()> {
-        let db_url = config.get_mono_db();
+        let db_url = config.mono();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
 
         let catalog_repo = CatalogRepoForSql::new(db_connection);

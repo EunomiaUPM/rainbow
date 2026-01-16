@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreVcRequesterTrait;
+
 use crate::ssi::common::errors::CustomToResponse;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::gnap::CallbackBody;
@@ -31,6 +31,7 @@ use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::error;
+use crate::ssi::common::core::traits::CoreVcRequesterTrait;
 
 pub struct VcRequesterRouter {
     requester: Arc<dyn CoreVcRequesterTrait>,

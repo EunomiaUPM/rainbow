@@ -18,15 +18,13 @@
  */
 
 use rainbow_auth::ssi::consumer::data::migrations::get_auth_consumer_migrations;
-use rainbow_common::config::traits::MonoConfigTrait;
-use rainbow_common::config::ApplicationConfig;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
-use sea_orm::Database;
+use sea_orm::DatabaseConnection;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
 pub struct CoreConsumerMigration;
@@ -54,10 +52,7 @@ impl MigratorTrait for CoreConsumerMigration {
 }
 
 impl CoreConsumerMigration {
-    pub async fn run(config: &ApplicationConfig) -> anyhow::Result<()> {
-        let db_url = config.get_mono_db();
-        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
-
+    pub async fn run(db_connection: DatabaseConnection) -> anyhow::Result<()> {
         Self::refresh(&db_connection).await?;
         Ok(())
     }

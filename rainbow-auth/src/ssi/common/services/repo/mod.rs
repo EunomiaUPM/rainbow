@@ -17,4 +17,5 @@
  *
  */
 pub mod subtraits;
-pub mod repos;
+pub mod postgres;
+pub mod repo_trait;

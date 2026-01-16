@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreWalletTrait;
+
+use crate::ssi::common::core::traits::CoreWalletTrait;
 use crate::ssi::common::errors::CustomToResponse;
 use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition, OidcUri};
 use axum::extract::rejection::JsonRejection;

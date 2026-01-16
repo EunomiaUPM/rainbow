@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
 use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::{CommonConfigTrait, RoleTrait};
-use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::{CommonHostsConfig, WalletConfig};
 use rainbow_common::utils::read;
 use serde_json::{json, Value};
@@ -29,7 +29,6 @@ pub struct WaltIdConfig {
     hosts: CommonHostsConfig,
     wallet: WalletConfig,
     keys_path: String,
-    role: RoleConfig,
 }
 
 impl From<SsiAuthConfig> for WaltIdConfig {
@@ -38,7 +37,6 @@ impl From<SsiAuthConfig> for WaltIdConfig {
             hosts: value.common().hosts.clone(),
             wallet: value.wallet(),
             keys_path: value.common().keys_path.to_string(),
-            role: value.get_role().clone(),
         }
     }
 }
@@ -86,8 +84,5 @@ impl WaltIdConfigTrait for WaltIdConfig {
     }
     fn hosts(&self) -> &CommonHostsConfig {
         &self.hosts
-    }
-    fn get_role(&self) -> RoleConfig {
-        self.role
     }
 }

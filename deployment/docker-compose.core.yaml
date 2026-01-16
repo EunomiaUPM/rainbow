@@ -1,6 +1,5 @@
 version: "3.5"
 services:
-
   ds_core_provider:
     # platform: linux/amd64
     container_name: "ds_core_provider"
@@ -24,14 +23,59 @@ services:
       POSTGRES_DB: ds_consumer
     ports:
       - "1300:5432"
-
-  ds_authority:
-    container_name: "ds_authority"
-    image: "postgres"
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: ds_authority
-      POSTGRES_USER: ds_authority
-      POSTGRES_DB: ds_authority
+  provider_vault:
+    image: hashicorp/vault:1.21
+    container_name: vault-provider
     ports:
-      - "1450:5432"
+      - "8201:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault/provider/config:/vault/config
+      - ./vault/provider/data:/vault/file
+    environment:
+      VAULT_LOCAL_CONFIG: >
+        {
+          "storage": { "file": { "path": "/vault/file" } },
+          "listener": [{
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_cert_file": "/vault/config/vault-cert.pem",
+              "tls_key_file": "/vault/config/vault-key.pem",
+              "tls_ca_file": "/vault/config/vault-ca.pem"
+            }
+          }],
+          "ui": true,
+          "api_addr": "https://127.0.0.1:8200",
+          "default_lease_ttl": "168h",
+          "max_lease_ttl": "720h"
+        }
+    command: server
+  consumer_vault:
+    image: hashicorp/vault:1.21
+    container_name: vault-consumer
+    ports:
+      - "8201:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault/consumer/config:/vault/config
+      - ./vault/consumer/data:/vault/file
+    environment:
+      VAULT_LOCAL_CONFIG: >
+        {
+          "storage": { "file": { "path": "/vault/file" } },
+          "listener": [{
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_cert_file": "/vault/config/vault-cert.pem",
+              "tls_key_file": "/vault/config/vault-key.pem",
+              "tls_ca_file": "/vault/config/vault-ca.pem"
+            }
+          }],
+          "ui": true,
+          "api_addr": "https://127.0.0.1:8200",
+          "default_lease_ttl": "168h",
+          "max_lease_ttl": "720h"
+        }
+    command: server

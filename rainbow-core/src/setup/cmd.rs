@@ -27,6 +27,8 @@ use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
 use tracing::debug;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -73,7 +75,9 @@ impl CoreCommands {
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
-                    CoreProviderMigration::run(&config).await?;
+                    let vault = VaultService::new();
+                    let db_connection = vault.get_connection(config.mono()).await;
+                    CoreProviderMigration::run(db_connection).await?;
                     match config.is_mono_catalog_datahub() {
                         true => {}
                         false => {

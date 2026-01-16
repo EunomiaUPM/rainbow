@@ -20,6 +20,11 @@ mod wallet_router;
 mod vc_requester_router;
 mod mate_router;
 mod gaia_self_issuer_router;
+pub mod onboarder_router;
+pub mod gatekeeper_router;
+pub mod verifier_router;
+pub mod business_router;
+pub mod core_router;
 
 pub use wallet_router::WalletRouter;
 pub use vc_requester_router::VcRequesterRouter;

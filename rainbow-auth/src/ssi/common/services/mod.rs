@@ -23,3 +23,7 @@ pub mod vc_requester;
 pub mod callback;
 pub mod repo;
 pub mod gaia_self_issuer;
+pub mod onboarder;
+pub mod gatekeeper;
+pub mod verifier;
+pub mod business;

@@ -16,14 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
-    RoleTrait,
 };
 use serde::{Deserialize, Serialize};
-use crate::config::types::roles::RoleConfig;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GatewayConfig {
@@ -72,10 +71,10 @@ impl ConfigLoader for GatewayConfig {
         }
     }
 
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        match Self::global_load(role, env_file.clone()) {
+    fn load(env_file: Option<String>) -> Self {
+        match Self::global_load(env_file.clone()) {
             Ok(data) => data.gateway(),
-            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
+            Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
         }
     }
 }
@@ -94,5 +93,4 @@ impl IsLocalTrait for GatewayConfig {}
 
 impl KeysPathTrait for GatewayConfig {}
 
-impl RoleTrait for GatewayConfig {}
 impl ApiConfigTrait for GatewayConfig {}

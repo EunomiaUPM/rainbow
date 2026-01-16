@@ -16,13 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
-    RoleTrait,
 };
-use crate::config::types::roles::RoleConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -61,10 +60,10 @@ impl ConfigLoader for TransferConfig {
         }
     }
 
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        match Self::global_load(role, env_file.clone()) {
+    fn load(env_file: Option<String>) -> Self {
+        match Self::global_load(env_file.clone()) {
             Ok(data) => data.transfer(),
-            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
+            Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
         }
     }
 }
@@ -82,7 +81,5 @@ impl DatabaseConfigTrait for TransferConfig {}
 impl IsLocalTrait for TransferConfig {}
 
 impl KeysPathTrait for TransferConfig {}
-
-impl RoleTrait for TransferConfig {}
 
 impl ApiConfigTrait for TransferConfig {}

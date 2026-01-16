@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreMateTrait;
+
 use crate::ssi::common::errors::CustomToResponse;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -27,6 +27,7 @@ use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use std::sync::Arc;
+use crate::ssi::common::core::traits::CoreMateTrait;
 
 pub struct MateRouter {
     mater: Arc<dyn CoreMateTrait>,

@@ -18,3 +18,4 @@
  */
 pub mod cmd;
 pub mod app;
+pub(crate) mod migrations;

@@ -29,3 +29,11 @@ pub enum ReachMethod {
     Oidc,
     CrossUser,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReachProvider {
+    pub id: String,
+    pub slug: String,
+    pub url: String,
+    pub actions: String,
+}

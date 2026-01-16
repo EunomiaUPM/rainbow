@@ -18,7 +18,7 @@
  */
 
 use super::access_token::AccessToken;
-use crate::ssi::provider::data::entities::recv_interaction;
+use crate::ssi::common::data::entities::recv_interaction;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

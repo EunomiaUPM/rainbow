@@ -24,7 +24,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::fs;
+use std::{env, fs};
 use tracing::{error, info};
 use urn::Urn;
 use uuid::Uuid;
@@ -97,4 +97,26 @@ pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Resul
             bail!(error)
         }
     }
+}
+
+pub fn read_json<T>(path: &str) -> anyhow::Result<T>
+where
+    T: DeserializeOwned
+{
+    let data = read(path)?;
+    let json = serde_json::from_str(&data)?;
+    Ok(json)
+}
+
+pub fn expect_from_env(env: &str) -> String {
+    let result = env::var(env);
+    let data = match result {
+        Ok(data) => Some(data),
+        Err(e) => {
+            let error = CommonErrors::env_new(format!("{} not found -> {}", &env, e.to_string()));
+            error!("{}", error.log());
+            None
+        }
+    };
+    data.expect("Error with env variable")
 }

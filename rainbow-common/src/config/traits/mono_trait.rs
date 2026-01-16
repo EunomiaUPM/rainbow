@@ -16,11 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::services::MonolithConfig;
 
 pub trait MonoConfigTrait {
-    fn get_mono_host(&self) -> String;
-    fn get_weird_mono_port(&self) -> String;
-    fn get_mono_db(&self) -> String;
-    fn is_mono_local(&self) -> bool;
+    fn mono(&self) -> &MonolithConfig;
     fn is_mono_catalog_datahub(&self) -> bool;
 }

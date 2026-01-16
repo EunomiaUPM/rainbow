@@ -18,8 +18,8 @@
  */
 
 use crate::ssi::common::types::vc_issuing::vc_type::VcType;
-use crate::ssi::provider::utils::create_opaque_token;
 use serde::{Deserialize, Serialize};
+use crate::ssi::common::utils::create_opaque_token;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VCCredOffer {
