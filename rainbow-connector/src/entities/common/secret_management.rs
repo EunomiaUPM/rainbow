@@ -17,8 +17,11 @@ pub struct SecretString {
 }
 
 impl SecretString {
-    pub fn resolve(&self) -> anyhow::Result<String> {
+    pub async fn resolve(&self) -> anyhow::Result<String> {
         // Vault or base decode
         Ok("<fake_resolving>".to_string())
+    }
+    async fn write_in_vault(&self) -> anyhow::Result<()> {
+        Ok(())
     }
 }

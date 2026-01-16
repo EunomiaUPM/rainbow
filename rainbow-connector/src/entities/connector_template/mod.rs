@@ -1,4 +1,5 @@
 pub(crate) mod connector_template;
+pub(crate) mod validator;
 
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
 use crate::entities::auth_config::AuthenticationConfig;
