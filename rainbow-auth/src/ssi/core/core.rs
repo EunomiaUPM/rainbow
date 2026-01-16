@@ -17,7 +17,6 @@
 
 use std::sync::Arc;
 
-use derive_builder::Builder;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use tracing::error;
@@ -36,7 +35,6 @@ use crate::ssi::services::vc_requester::VcRequesterTrait;
 use crate::ssi::services::verifier::VerifierTrait;
 use crate::ssi::services::wallet::WalletServiceTrait;
 
-#[derive(Builder)]
 pub struct AuthCore {
     vc_requester: Arc<dyn VcRequesterTrait>,
     onboarder: Arc<dyn OnboarderTrait>,
