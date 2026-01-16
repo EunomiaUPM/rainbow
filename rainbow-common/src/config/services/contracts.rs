@@ -22,6 +22,7 @@ use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
 };
+use crate::config::types::roles::RoleConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

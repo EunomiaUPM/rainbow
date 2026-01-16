@@ -12,13 +12,7 @@ mod tests {
         fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
         let mut cmd = cargo_bin_cmd!("rainbow_auth");
-        cmd.env("TEST_MODE", "true")
-            .arg("provider")
-            .arg("start")
-            .arg("--env-file")
-            .arg(env_path)
-            .assert()
-            .success();
+        cmd.env("TEST_MODE", "true").arg("provider").arg("start").arg("--env-file").arg(env_path).assert().success();
 
         fs::remove_file(env_path).unwrap();
     }
@@ -29,13 +23,7 @@ mod tests {
         fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
         let mut cmd = cargo_bin_cmd!("rainbow_auth");
-        cmd.env("TEST_MODE", "true")
-            .arg("provider")
-            .arg("setup")
-            .arg("--env-file")
-            .arg(env_path)
-            .assert()
-            .success();
+        cmd.env("TEST_MODE", "true").arg("provider").arg("setup").arg("--env-file").arg(env_path).assert().success();
 
         fs::remove_file(env_path).unwrap();
     }
@@ -46,13 +34,7 @@ mod tests {
         fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
         let mut cmd = cargo_bin_cmd!("rainbow_auth");
-        cmd.env("TEST_MODE", "true")
-            .arg("consumer")
-            .arg("start")
-            .arg("--env-file")
-            .arg(&env_path)
-            .assert()
-            .success();
+        cmd.env("TEST_MODE", "true").arg("consumer").arg("start").arg("--env-file").arg(&env_path).assert().success();
 
         fs::remove_file(env_path).unwrap();
     }
@@ -63,13 +45,7 @@ mod tests {
         fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
         let mut cmd = cargo_bin_cmd!("rainbow_auth");
-        cmd.env("TEST_MODE", "true")
-            .arg("consumer")
-            .arg("setup")
-            .arg("--env-file")
-            .arg(env_path)
-            .assert()
-            .success();
+        cmd.env("TEST_MODE", "true").arg("consumer").arg("setup").arg("--env-file").arg(env_path).assert().success();
 
         fs::remove_file(env_path).unwrap();
     }

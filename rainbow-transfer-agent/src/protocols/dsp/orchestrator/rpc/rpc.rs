@@ -1,4 +1,24 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::entities::transfer_process::TransferProcessDto;
+use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
     RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
@@ -10,9 +30,9 @@ use crate::protocols::dsp::protocol_types::{
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
-use rainbow_common::config::services::TransferConfig;
+use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -20,19 +40,19 @@ use urn::Urn;
 #[allow(unused)]
 pub struct RPCOrchestratorService {
     validator: Arc<dyn ValidationRpcSteps>,
-    pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub _config: Arc<TransferConfig>,
-    pub http_client: Arc<HttpClient>,
+    persistence_service: Arc<dyn TransferPersistenceTrait>,
+    http_client: Arc<HttpClient>,
+    facades: Arc<dyn FacadeTrait>,
 }
 
 impl RPCOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationRpcSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        _config: Arc<TransferConfig>,
         http_client: Arc<HttpClient>,
+        facades: Arc<dyn FacadeTrait>,
     ) -> RPCOrchestratorService {
-        RPCOrchestratorService { validator, persistence_service, _config, http_client }
+        RPCOrchestratorService { validator, persistence_service, http_client, facades }
     }
 }
 
@@ -46,9 +66,6 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // get from input
         let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> = input.clone().into();
         let provider_address = input.provider_address.clone();
-        // validate
-        // self.state_machine_service.validate_transition(None, Arc::new(request_body.dto.clone())).await?;
-        // self.validator_service.validate(None, Arc::new(request_body.dto.clone())).await?;
         // create url
         let peer_url = format!("{}/transfers/request", provider_address);
         // request
@@ -66,6 +83,19 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 serde_json::to_value(request_body.clone()).unwrap(),
             )
             .await?;
+
+        // data plane post hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_request_post(
+                &Urn::from_str(transfer_process.inner.id.as_str())?,
+                &request_body.dto.format.parse::<DctFormats>()?,
+                &None,
+                &request_body.dto.data_address,
+            )
+            .await?;
+
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
         Ok(response)
@@ -75,7 +105,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferStartMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferStartMessageDto>> {
-        self.validator.transfer_start_rpc(input).await?;
+        // self.validator.transfer_start_rpc(input).await?;
         // get from input
         let input_data_address = input.data_address.clone();
         let input_transfer_id = input.consumer_pid.clone();
@@ -96,6 +126,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             _ => "providerPid",
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_start_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+            .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -104,6 +140,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 peer_url_id,
                 "start",
             )
+            .await?;
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_start_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
         let response =
@@ -138,6 +180,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             _ => "providerPid",
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_suspension_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+            .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -146,6 +194,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 peer_url_id,
                 "suspension",
             )
+            .await?;
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_suspension_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
         let response =
@@ -176,6 +230,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             _ => "providerPid",
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_completion_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+            .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -184,6 +244,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 peer_url_id,
                 "completion",
             )
+            .await?;
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_completion_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
         let response =
@@ -218,6 +284,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             _ => "providerPid",
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_termination_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+            .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -226,6 +298,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 peer_url_id,
                 "termination",
             )
+            .await?;
+        // data plane hook
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_termination_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
         let response =

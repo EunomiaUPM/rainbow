@@ -22,6 +22,7 @@ use crate::gateway::provider_gateway::RainbowProviderGateway;
 use crate::subscriptions::consumer_subscriptions::RainbowConsumerGatewaySubscriptions;
 use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscriptions;
 use crate::subscriptions::MicroserviceSubscriptionKey;
+use anyhow::Context;
 use axum::serve;
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
@@ -30,6 +31,8 @@ use rainbow_common::config::traits::{ConfigLoader, HostConfigTrait, IsLocalTrait
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use std::cmp::PartialEq;
+use std::fs;
+use std::path::Path;
 use std::process::Command;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
@@ -136,23 +139,44 @@ impl GatewayCommands {
     fn build_frontend(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<()> {
         let role = role.to_string().to_lowercase();
         let cwd = format!("./../gui/{}", role);
-        let env_file = format!("./../{}", env_file.expect("env file is required"));
-        // build react application
+
+        // 1. Build react application
         let mut cmd = Command::new("npm")
             .current_dir(&cwd)
-            .env("ENV_FILE", env_file)
             .args(["run", "build", "-w", role.as_str()])
             .spawn()
-            .expect("failed to execute process");
-        cmd.wait()?;
+            .context("Failed to spawn npm build process")?;
+
+        cmd.wait().context("Failed to wait for npm build")?;
         debug!("Build command finished successfully");
-        // copy into static
+
+        // 2. Rutas
         let origin = format!("{}/dist", cwd);
         let destination = format!("./src/static/{}", role);
+        let dest_path = Path::new(&destination);
+
+        // 3. Clean
+        if dest_path.exists() {
+            debug!("Cleaning content of: {}", destination);
+            for entry in fs::read_dir(dest_path).context("Failed to read destination dir")? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_dir() {
+                    fs::remove_dir_all(&path).context("Failed to remove subdir")?;
+                } else {
+                    fs::remove_file(&path).context("Failed to remove file")?;
+                }
+            }
+        } else {
+            fs::create_dir_all(dest_path).context("Failed to create destination dir")?;
+        }
+
+        // 4. Copy content
         let mut options = CopyOptions::new();
         options.overwrite = true;
         options.copy_inside = true;
-        copy(origin, destination, &options).expect("failed to execute copy process");
+        let _ = copy(&origin, &destination, &options).context("Failed to execute copy process")?;
+
         debug!("Copy command finished successfully");
 
         Ok(())

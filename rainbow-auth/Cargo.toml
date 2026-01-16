@@ -54,3 +54,5 @@ futures = "0.3"
 assert_cmd = "2.0"
 derive_builder = { workspace = true }
 cargo-binutils = "0.3"
+tokio-util = "0.7.17"
+async-trait = "0.1.89"

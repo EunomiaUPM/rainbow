@@ -18,6 +18,7 @@
  */
 
 mod api_trait;
+mod cache_trait;
 mod common_trait;
 mod config_loader;
 mod database_trait;
@@ -27,6 +28,7 @@ mod host_config_trait;
 mod mono_trait;
 
 pub use api_trait::ApiConfigTrait;
+pub use cache_trait::CacheConfigTrait;
 pub use common_trait::CommonConfigTrait;
 pub use config_loader::ConfigLoader;
 pub use database_trait::DatabaseConfigTrait;

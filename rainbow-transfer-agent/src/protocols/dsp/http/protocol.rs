@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use axum::{
     extract::{rejection::JsonRejection, FromRef, Path, State},
     http::StatusCode,
@@ -15,14 +34,12 @@ use crate::protocols::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
-use rainbow_common::config::services::TransferConfig;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::CommonErrors;
-use rainbow_common::protocol::context_field::ContextField;
 
 #[derive(Clone)]
 pub struct DspRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
-    config: Arc<TransferConfig>,
 }
 
 impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
@@ -31,15 +48,9 @@ impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
     }
 }
 
-impl FromRef<DspRouter> for Arc<TransferConfig> {
-    fn from_ref(state: &DspRouter) -> Self {
-        state.config.clone()
-    }
-}
-
 impl DspRouter {
-    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<TransferConfig>) -> Self {
-        Self { orchestrator: service, config }
+    pub fn new(service: Arc<dyn OrchestratorTrait>) -> Self {
+        Self { orchestrator: service }
     }
 
     pub fn router(self) -> Router {

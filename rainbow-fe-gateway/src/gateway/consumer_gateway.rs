@@ -26,10 +26,11 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
 use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use rust_embed::Embed;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
@@ -41,7 +42,7 @@ pub struct RainbowConsumerGateway {
 }
 
 #[derive(Embed)]
-#[folder = "src/static/consumer"]
+#[folder = "src/static/consumer/dist"]
 pub struct RainbowConsumerReactApp;
 
 impl RainbowConsumerGateway {
@@ -67,7 +68,7 @@ impl RainbowConsumerGateway {
             .route("/incoming-notification", post(Self::incoming_notification));
 
         if self.config.is_production() {
-            router = router.fallback(Self::static_path_handler);
+            router = router.route("/fe-config", get(Self::config_handler)).fallback(Self::static_path_handler);
         }
 
         router.layer(cors).with_state((self.config, self.client, self.notification_tx))
@@ -101,6 +102,20 @@ impl RainbowConsumerGateway {
                     .unwrap(),
             },
         }
+    }
+
+    async fn config_handler(
+        State((config, _client, _notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+    ) -> impl IntoResponse {
+        let gateway_host = config.common().hosts.http.url.clone();
+        let gateway_port = config.common().hosts.http.port.clone().unwrap_or("80".to_string());
+        let config_role = config.common().role.to_string();
+        let json = json!({
+            "gateway_host": gateway_host,
+            "gateway_port": gateway_port,
+            "config_role": config_role,
+        });
+        (StatusCode::OK, Json(json).into_response())
     }
 
     async fn proxy_handler_with_extra(
@@ -139,7 +154,7 @@ impl RainbowConsumerGateway {
             "data-services" => config.transfer().get_host(HostType::Http),
             "distributions" => config.transfer().get_host(HostType::Http),
             "request" => config.transfer().get_host(HostType::Http),
-            
+
             "contract-negotiation" => config.contracts().get_host(HostType::Http),
             "mates" => config.ssi_auth().get_host(HostType::Http),
             "negotiations" => config.contracts().get_host(HostType::Http),

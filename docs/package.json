@@ -3,40 +3,34 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "build": "next build",
+    "dev": "next dev",
+    "start": "serve out",
+    "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "postinstall": "fumadocs-mdx",
+    "generate:api": "bun ./src/scripts/generate-openapi.mts"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.7.0",
-    "@docusaurus/preset-classic": "^3.7.0",
-    "@mdx-js/react": "^3.1.0",
-    "@svgr/webpack": "^8.1.0",
-    "clsx": "^2.1.1",
-    "docusaurus-plugin-openapi-docs": "^4.3.3",
-    "docusaurus-theme-openapi-docs": "^4.3.3",
-    "file-loader": "^6.2.0",
-    "prism-react-renderer": "^2.4.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "url-loader": "^4.1.1"
+    "@orama/orama": "^3.1.18",
+    "fumadocs-core": "16.4.6",
+    "fumadocs-mdx": "14.2.4",
+    "fumadocs-openapi": "^10.2.4",
+    "fumadocs-ui": "16.4.6",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "shiki": "^3.21.0"
   },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.6",
+    "serve": "^14.2.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
   }
 }

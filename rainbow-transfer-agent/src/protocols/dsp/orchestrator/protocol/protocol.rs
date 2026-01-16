@@ -1,27 +1,50 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageTrait, TransferProcessMessageWrapper,
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
+use std::str::FromStr;
 
+use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use rainbow_common::config::services::TransferConfig;
+use anyhow::anyhow;
+use rainbow_common::dcat_formats::DctFormats;
 use std::sync::Arc;
+use urn::Urn;
 
 pub struct ProtocolOrchestratorService {
+    facades: Arc<dyn FacadeTrait>,
     validator: Arc<dyn ValidationDspSteps>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub _config: Arc<TransferConfig>,
 }
 
 impl ProtocolOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationDspSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        _config: Arc<TransferConfig>,
+        facades: Arc<dyn FacadeTrait>,
     ) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService { validator, persistence_service, _config }
+        ProtocolOrchestratorService { validator, persistence_service, facades }
     }
 }
 
@@ -44,8 +67,18 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         let input = Arc::new(input.clone());
         self.validator.on_transfer_request(&input).await?;
 
+        // resolve data service
+        let agreement_id = input.dto.get_agreement_id().ok_or(anyhow!("no agreement id"))?;
+        let dct_formats = input.dto.format.parse::<DctFormats>()?;
+        let data_service = self
+            .facades
+            .get_data_service_facade()
+            .await
+            .resolve_data_service_by_agreement_id(&agreement_id, Option::from(&dct_formats))
+            .await?;
+
         // check idempotency
-        let consumer_pid = input.dto.get_consumer_pid().unwrap();
+        let consumer_pid = input.dto.get_consumer_pid().ok_or(anyhow!("no consumer id"))?;
         let process_result = self
             .persistence_service
             .get_transfer_process_service()
@@ -69,9 +102,25 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 None,
                 None,
                 Arc::new(input.dto.clone()),
-                serde_json::to_value(input).unwrap(),
+                serde_json::to_value(&input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades
+            .get_data_plane_facade()
+            .await
+            .on_transfer_request_post(
+                &id,
+                &dct_formats,
+                &Some(data_service),
+                &input.dto.data_address,
+            )
+            .await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok((transfer_process_dto, false))
     }
@@ -82,7 +131,16 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         input: &TransferProcessMessageWrapper<TransferStartMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_start(id, input).await?;
-
+        let dpid = Urn::from_str(id.as_str())?;
+        let transfer_process = self
+            .persistence_service
+            .get_transfer_process_service()
+            .await?
+            .get_transfer_process_by_key_value(&dpid)
+            .await?;
+        let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_start_pre(&transfer_process_id).await?;
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -91,6 +149,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        self.facades.get_data_plane_facade().await.on_transfer_start_post(&transfer_process_id).await?;
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -101,7 +164,17 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         input: &TransferProcessMessageWrapper<TransferSuspensionMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_suspension(id, input).await?;
+        let dpid = Urn::from_str(id.as_str())?;
+        let transfer_process = self
+            .persistence_service
+            .get_transfer_process_service()
+            .await?
+            .get_transfer_process_by_key_value(&dpid)
+            .await?;
+        let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_suspension_pre(&transfer_process_id).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -110,6 +183,12 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        self.facades.get_data_plane_facade().await.on_transfer_suspension_post(&transfer_process_id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -120,7 +199,17 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         input: &TransferProcessMessageWrapper<TransferCompletionMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_completion(id, input).await?;
+        let dpid = Urn::from_str(id.as_str())?;
+        let transfer_process = self
+            .persistence_service
+            .get_transfer_process_service()
+            .await?
+            .get_transfer_process_by_key_value(&dpid)
+            .await?;
+        let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_completion_pre(&transfer_process_id).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -129,6 +218,12 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        self.facades.get_data_plane_facade().await.on_transfer_completion_post(&transfer_process_id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -139,7 +234,17 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         input: &TransferProcessMessageWrapper<TransferTerminationMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_termination(id, input).await?;
+        let dpid = Urn::from_str(id.as_str())?;
+        let transfer_process = self
+            .persistence_service
+            .get_transfer_process_service()
+            .await?
+            .get_transfer_process_by_key_value(&dpid)
+            .await?;
+        let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_termination_pre(&transfer_process_id).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -148,6 +253,12 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        self.facades.get_data_plane_facade().await.on_transfer_termination_post(&transfer_process_id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }

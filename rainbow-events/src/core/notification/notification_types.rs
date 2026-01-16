@@ -17,8 +17,8 @@
  *
  */
 
+use crate::data::entities::notification;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::events::entities::notification;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use urn::Urn;

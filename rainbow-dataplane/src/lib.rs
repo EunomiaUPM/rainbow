@@ -1,3 +1,4 @@
+#![allow(unused)]
 /*
  *
  *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
@@ -18,6 +19,12 @@
  */
 
 pub mod coordinator;
-pub mod data_plane_info;
+pub(crate) mod data;
+pub(crate) mod entities;
+pub(crate) mod errors;
+pub(crate) mod facades;
 pub mod http;
+pub mod setup;
 pub mod testing_proxy;
+
+pub use data::migrations::get_dataplane_migrations;

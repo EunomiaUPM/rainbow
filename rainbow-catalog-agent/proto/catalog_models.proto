@@ -1,0 +1,319 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+import "google/protobuf/struct.proto";
+
+// ---------------------------------------------------------
+// Enums
+// ---------------------------------------------------------
+
+enum CatalogEntityType {
+  CATALOG_ENTITY_TYPE_UNSPECIFIED = 0;
+  CATALOG_ENTITY_TYPE_DISTRIBUTION = 1;
+  CATALOG_ENTITY_TYPE_DATA_SERVICE = 2;
+  CATALOG_ENTITY_TYPE_CATALOG = 3;
+  CATALOG_ENTITY_TYPE_DATASET = 4;
+}
+
+// ---------------------------------------------------------
+// Shared Data Models (Entities)
+// ---------------------------------------------------------
+
+// catalog::Model
+message Catalog {
+  string id = 1;
+  optional string foaf_home_page = 2;
+  optional string dct_conforms_to = 3;
+  optional string dct_creator = 4;
+  optional string dct_identifier = 5;
+  string dct_issued = 6;
+  optional string dct_modified = 7;
+  optional string dct_title = 8;
+  optional string dspace_participant_id = 9;
+  bool dspace_main_catalog = 10;
+}
+
+// dataservice::Model
+message DataService {
+  string id = 1;
+  optional string dcat_endpoint_description = 2;
+  string dcat_endpoint_url = 3;
+  optional string dct_conforms_to = 4;
+  optional string dct_creator = 5;
+  optional string dct_identifier = 6;
+  string dct_issued = 7;
+  optional string dct_modified = 8;
+  optional string dct_title = 9;
+  optional string dct_description = 10;
+  string catalog_id = 11;
+}
+
+// dataset::Model
+message Dataset {
+  string id = 1;
+  optional string dct_conforms_to = 2;
+  optional string dct_creator = 3;
+  optional string dct_identifier = 4;
+  string dct_issued = 5;
+  optional string dct_modified = 6;
+  optional string dct_title = 7;
+  optional string dct_description = 8;
+  string catalog_id = 9;
+}
+
+// distribution::Model
+message Distribution {
+  string id = 1;
+  string dct_issued = 2;
+  optional string dct_modified = 3;
+  optional string dct_title = 4;
+  optional string dct_description = 5;
+  string dcat_access_service = 6;
+  string dataset_id = 7;
+  optional string dct_format = 8;
+}
+
+// policy_template::Model
+message PolicyTemplate {
+  string id = 1;
+  string version = 2;
+  string date = 3;
+  string author = 4;
+
+  optional google.protobuf.Value title = 5;
+  optional google.protobuf.Value description = 6;
+
+  google.protobuf.Struct content = 7; // ODRL Content
+  google.protobuf.Struct parameters = 8;
+}
+
+// odrl_offer::Model
+message OdrlPolicy {
+  string id = 1;
+  google.protobuf.Struct odrl_offer = 2;
+  string entity_id = 3;
+  CatalogEntityType entity_type = 4;
+  string created_at = 5;
+  optional string source_template_id = 6;
+  optional string source_template_version = 7;
+  optional google.protobuf.Struct instantiation_parameters = 8;
+}
+
+// ---------------------------------------------------------
+// List Responses
+// ---------------------------------------------------------
+
+message CatalogListResponse {
+  repeated Catalog catalogs = 1;
+}
+
+message DataServiceListResponse {
+  repeated DataService data_services = 1;
+}
+
+message DatasetListResponse {
+  repeated Dataset datasets = 1;
+}
+
+message DistributionListResponse {
+  repeated Distribution distributions = 1;
+}
+
+message PolicyTemplateListResponse {
+  repeated PolicyTemplate policy_templates = 1;
+}
+
+message OdrlPolicyListResponse {
+  repeated OdrlPolicy policies = 1;
+}
+
+// ---------------------------------------------------------
+// Common Requests
+// ---------------------------------------------------------
+
+message GetAllRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message GetBatchRequest {
+  repeated string ids = 1;
+}
+
+message GetByIdRequest {
+  string id = 1;
+}
+
+message DeleteByIdRequest {
+  string id = 1;
+}
+
+message GetByParentIdRequest {
+  string parent_id = 1;
+}
+
+message GetByEntityIdRequest {
+  string entity_id = 1;
+}
+
+message DeleteByEntityIdRequest {
+  string entity_id = 1;
+}
+
+// [NEW] Requests for Versioning support
+message GetByVersionRequest {
+  string id = 1;
+  string version = 2;
+}
+
+message DeleteByVersionRequest {
+  string id = 1;
+  string version = 2;
+}
+
+// ---------------------------------------------------------
+// Specific Request/Response Objects
+// ---------------------------------------------------------
+
+// --- Catalog ---
+
+message GetAllCatalogsRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+  bool with_main_catalog = 3;
+}
+
+message CatalogResponse {
+  optional Catalog catalog = 1;
+}
+
+message CreateCatalogRequest {
+  optional string id = 1;
+  optional string foaf_home_page = 2;
+  optional string dct_conforms_to = 3;
+  optional string dct_creator = 4;
+  optional string dct_title = 5;
+  optional string dspace_participant_id = 6;
+}
+
+message PutCatalogRequest {
+  string id = 1;
+  optional string foaf_home_page = 2;
+  optional string dct_conforms_to = 3;
+  optional string dct_creator = 4;
+  optional string dct_title = 5;
+}
+
+// --- DataService ---
+
+message DataServiceResponse {
+  optional DataService data_service = 1;
+}
+
+message CreateDataServiceRequest {
+  optional string id = 1;
+  optional string dcat_endpoint_description = 2;
+  string dcat_endpoint_url = 3;
+  optional string dct_conforms_to = 4;
+  optional string dct_creator = 5;
+  optional string dct_title = 6;
+  optional string dct_description = 7;
+  string catalog_id = 8;
+}
+
+message PutDataServiceRequest {
+  string id = 1;
+  optional string dcat_endpoint_description = 2;
+  optional string dcat_endpoint_url = 3;
+  optional string dct_conforms_to = 4;
+  optional string dct_creator = 5;
+  optional string dct_title = 6;
+  optional string dct_description = 7;
+}
+
+// --- Dataset ---
+
+message DatasetResponse {
+  optional Dataset dataset = 1;
+}
+
+message CreateDatasetRequest {
+  optional string id = 1;
+  optional string dct_conforms_to = 2;
+  optional string dct_creator = 3;
+  optional string dct_title = 4;
+  optional string dct_description = 5;
+  string catalog_id = 6;
+}
+
+message PutDatasetRequest {
+  string id = 1;
+  optional string dct_conforms_to = 2;
+  optional string dct_creator = 3;
+  optional string dct_title = 4;
+  optional string dct_description = 5;
+}
+
+// --- Distribution ---
+
+message DistributionResponse {
+  optional Distribution distribution = 1;
+}
+
+message GetDistributionByFormatRequest {
+  string dataset_id = 1;
+  string dct_formats = 2;
+}
+
+message CreateDistributionRequest {
+  optional string id = 1;
+  optional string dct_title = 2;
+  optional string dct_description = 3;
+  string dct_formats = 4;
+  string dcat_access_service = 5;
+  string dataset_id = 6;
+}
+
+message PutDistributionRequest {
+  string id = 1;
+  optional string dct_title = 2;
+  optional string dct_description = 3;
+  optional string dcat_access_service = 4;
+}
+
+// --- PolicyTemplate ---
+
+message PolicyTemplateResponse {
+  optional PolicyTemplate policy_template = 1;
+}
+
+message CreatePolicyTemplateRequest {
+  optional string id = 1;
+  optional string version = 2;
+  optional string author = 3;
+  optional string date = 4;
+
+  optional google.protobuf.Value title = 5;
+  optional google.protobuf.Value description = 6;
+
+  google.protobuf.Struct content = 7;
+  google.protobuf.Struct parameters = 8;
+}
+
+// --- OdrlPolicy ---
+
+message OdrlPolicyResponse {
+  optional OdrlPolicy policy = 1;
+}
+
+message CreateOdrlPolicyRequest {
+  optional string id = 1;
+  google.protobuf.Struct odrl_offer = 2;
+  string entity_id = 3;
+  CatalogEntityType entity_type = 4;
+
+  optional string source_template_id = 5;
+  optional string source_template_version = 6;
+  optional google.protobuf.Struct instantiation_parameters = 7;
+}

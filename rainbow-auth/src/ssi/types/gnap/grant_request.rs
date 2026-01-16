@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use crate::ssi::common::data::entities::req_interaction;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -30,7 +31,7 @@ pub struct GrantRequest {
     pub client: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
-    pub interact: Option<Interact4GR>
+    pub interact: Option<Interact4GR>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -39,8 +40,8 @@ pub struct AccessTokenRequirements4GR {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>, // REQUIRED if used as part of a request for multiple access tokens
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flags: Option<Vec<String>> /* A set of flags that indicate desired attributes or behavior to be attached
-                                    * to the access token by the AS */
+    pub flags: Option<Vec<String>>, /* A set of flags that indicate desired attributes or behavior to be attached
+                                     * to the access token by the AS */
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -55,7 +56,7 @@ pub struct Access4AT {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub identifier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub privileges: Option<Vec<String>>
+    pub privileges: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -65,7 +66,7 @@ pub struct Subject4GR {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assertion_formats: Option<Vec<String>>, // REQUIRED if assertions are requested
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sub_ids: Option<Value> // If omitted assume that subject information requests are about the current user
+    pub sub_ids: Option<Value>, // If omitted assume that subject information requests are about the current user
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -73,7 +74,7 @@ pub struct Interact4GR {
     pub start: Vec<String>,
     pub finish: Finish4Interact, // REQUIRED because DataSpace Protocol is based on redirects
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hints: Option<String>
+    pub hints: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -83,7 +84,7 @@ pub struct Finish4Interact {
     pub uri: Option<String>, // REQUIRED for redirect and push methods
     pub nonce: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hash_method: Option<String>
+    pub hash_method: Option<String>,
 }
 
 impl GrantRequest {
@@ -93,52 +94,36 @@ impl GrantRequest {
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default_oidc(int_model))
+            interact: Some(Interact4GR::default_oidc(int_model)),
         }
     }
-    pub fn pr_oidc(
-        client: Value,
-        method: String,
-        uri: Option<String>,
-        nonce: Option<String>
-    ) -> Self {
+    pub fn pr_oidc(client: Value, method: String, uri: Option<String>, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4oidc(method, uri, nonce))
+            interact: Some(Interact4GR::default4oidc(method, uri, nonce)),
         }
     }
 
-    pub fn vc_oidc(
-        client: Value,
-        method: String,
-        uri: Option<String>,
-        vc_type: String,
-        nonce: Option<String>
-    ) -> Self {
+    pub fn vc_oidc(client: Value, method: String, uri: Option<String>, vc_type: String, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(vc_type),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4oidc(method, uri, nonce))
+            interact: Some(Interact4GR::default4oidc(method, uri, nonce)),
         }
     }
 
-    pub fn vc_cross_user(
-        client: Value,
-        uri: Option<String>,
-        vc_type: String,
-        nonce: Option<String>
-    ) -> Self {
+    pub fn vc_cross_user(client: Value, uri: Option<String>, vc_type: String, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(vc_type),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4cross_user(uri, nonce))
+            interact: Some(Interact4GR::default4cross_user(uri, nonce)),
         }
     }
 
@@ -169,10 +154,10 @@ impl AccessTokenRequirements4GR {
                 locations: None,
                 datatypes: None,
                 identifier: None,
-                privileges: None
+                privileges: None,
             },
             label: None,
-            flags: Some(vec!["Bearer".to_string()])
+            flags: Some(vec!["Bearer".to_string()]),
         }
     }
 
@@ -184,10 +169,10 @@ impl AccessTokenRequirements4GR {
                 locations: None,
                 datatypes: None,
                 identifier: None,
-                privileges: None
+                privileges: None,
             },
             label: None,
-            flags: None
+            flags: None,
         }
     }
 
@@ -199,10 +184,10 @@ impl AccessTokenRequirements4GR {
                 locations: None,
                 datatypes: None,
                 identifier: None,
-                privileges: None
+                privileges: None,
             },
             label: None,
-            flags: None
+            flags: None,
         }
     }
 }
@@ -215,42 +200,33 @@ impl Interact4GR {
                 method: int_model.method.clone(),
                 uri: Some(int_model.uri.clone()),
                 nonce: int_model.client_nonce.clone(),
-                hash_method: int_model.hash.clone()
+                hash_method: int_model.hash.clone(),
             },
-            hints: None
+            hints: None,
         }
     }
 
     pub fn default4oidc(method: String, uri: Option<String>, nonce: Option<String>) -> Self {
-        let nonce = nonce.unwrap_or(
-            rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect()
-        );
+        let nonce = nonce.unwrap_or(rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect());
 
         Self {
             start: vec![String::from("oidc4vp")],
-            finish: Finish4Interact {
-                method,
-                uri,
-                nonce,
-                hash_method: Some("sha-256".to_string())
-            },
-            hints: None
+            finish: Finish4Interact { method, uri, nonce, hash_method: Some("sha-256".to_string()) },
+            hints: None,
         }
     }
 
     pub fn default4cross_user(uri: Option<String>, nonce: Option<String>) -> Self {
-        let nonce = nonce.unwrap_or(
-            rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect()
-        );
+        let nonce = nonce.unwrap_or(rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect());
         Self {
             start: vec![String::from("cross-user")],
             finish: Finish4Interact {
                 method: "push".to_string(),
                 uri,
                 nonce,
-                hash_method: Some("sha-256".to_string())
+                hash_method: Some("sha-256".to_string()),
             },
-            hints: None
+            hints: None,
         }
     }
 }

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package negotiation_agent.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "models.proto";
+
+service NegotiationAgentMessagesService {
+  rpc GetAllNegotiationMessages (GetAllNegotiationMessagesRequest) returns (NegotiationMessageListResponse);
+  rpc GetMessagesByProcessId (GetMessagesByProcessIdRequest) returns (NegotiationMessageListResponse);
+  rpc GetNegotiationMessageById (GetNegotiationMessageByIdRequest) returns (NegotiationMessageResponse);
+  rpc CreateNegotiationMessage (CreateNegotiationMessageRequest) returns (NegotiationMessageResponse);
+  rpc DeleteNegotiationMessage (DeleteNegotiationMessageRequest) returns (google.protobuf.Empty);
+}
+
+message GetAllNegotiationMessagesRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message GetMessagesByProcessIdRequest {
+  string process_id = 1;
+}
+
+message GetNegotiationMessageByIdRequest {
+  string id = 1;
+}
+
+message CreateNegotiationMessageRequest {
+  optional string id = 1;
+  string negotiation_agent_process_id = 2;
+  string direction = 3;
+  string protocol = 4;
+  string message_type = 5;
+  string state_transition_from = 6;
+  string state_transition_to = 7;
+  google.protobuf.Struct payload = 8;
+}
+
+message DeleteNegotiationMessageRequest {
+  string id = 1;
+}
+
+message NegotiationMessageListResponse {
+  repeated NegotiationMessage messages = 1;
+}
+
+message NegotiationMessageResponse {
+  NegotiationMessage message = 1;
+}

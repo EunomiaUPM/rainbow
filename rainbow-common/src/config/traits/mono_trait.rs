@@ -19,6 +19,5 @@
 use crate::config::services::MonolithConfig;
 
 pub trait MonoConfigTrait {
-    fn mono(&self) -> &MonolithConfig;
     fn is_mono_catalog_datahub(&self) -> bool;
 }

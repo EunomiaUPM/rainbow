@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package negotiation_agent.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "models.proto";
+
+service NegotiationAgentProcessesService {
+  rpc GetAllNegotiationProcesses (GetAllNegotiationProcessesRequest) returns (NegotiationProcessListResponse);
+  rpc GetBatchNegotiationProcesses (GetBatchNegotiationProcessesRequest) returns (NegotiationProcessListResponse);
+  rpc GetNegotiationProcessById (GetNegotiationProcessByIdRequest) returns (NegotiationProcessResponse);
+  rpc GetNegotiationProcessByKeyId (GetNegotiationProcessByKeyIdRequest) returns (NegotiationProcessResponse);
+  rpc GetNegotiationProcessByKeyValue (GetNegotiationProcessByKeyValueRequest) returns (NegotiationProcessResponse);
+  rpc CreateNegotiationProcess (CreateNegotiationProcessRequest) returns (NegotiationProcessResponse);
+  rpc PutNegotiationProcess (PutNegotiationProcessRequest) returns (NegotiationProcessResponse);
+  rpc DeleteNegotiationProcess (DeleteNegotiationProcessRequest) returns (google.protobuf.Empty);
+}
+
+message GetAllNegotiationProcessesRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message GetBatchNegotiationProcessesRequest {
+  repeated string ids = 1;
+}
+
+message NegotiationProcessListResponse {
+  repeated NegotiationProcess processes = 1;
+}
+
+message GetNegotiationProcessByIdRequest {
+  string id = 1;
+}
+
+message GetNegotiationProcessByKeyIdRequest {
+  string key_id = 1;
+  string id = 2;
+}
+
+message GetNegotiationProcessByKeyValueRequest {
+  string id = 1;
+}
+
+message NegotiationProcessResponse {
+  NegotiationProcess process = 1;
+}
+
+message CreateNegotiationProcessRequest {
+  optional string id = 1;
+  string state = 2;
+  optional string state_attribute = 3;
+  string associated_agent_peer = 4;
+  string protocol = 5;
+  optional string callback_address = 6;
+  string role = 7;
+  google.protobuf.Struct properties = 8;
+  map<string, string> identifiers = 9;
+}
+
+message PutNegotiationProcessRequest {
+  string id = 1;
+  optional string state = 2;
+  optional string state_attribute = 3;
+  optional google.protobuf.Struct properties = 4;
+  optional google.protobuf.Struct error_details = 5;
+  map<string, string> identifiers = 6;
+}
+
+message DeleteNegotiationProcessRequest {
+  string id = 1;
+}

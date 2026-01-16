@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,

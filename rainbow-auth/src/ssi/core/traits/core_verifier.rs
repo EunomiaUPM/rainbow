@@ -33,11 +33,7 @@ pub trait CoreVerifierTrait: Send + Sync + 'static {
         let ver_model = self.repo().verification_rcv().get_by_state(&state).await?;
         Ok(self.verifier().get_vpd(&ver_model))
     }
-    async fn verify(
-        &self,
-        state: String,
-        payload: VerifyPayload
-    ) -> anyhow::Result<Option<String>> {
+    async fn verify(&self, state: String, payload: VerifyPayload) -> anyhow::Result<Option<String>> {
         let mut ver_model = self.repo().verification_rcv().get_by_state(&state).await?;
         let result = self.verifier().verify_all(&mut ver_model, &payload);
         match self.repo().interaction_rcv().get_by_some_id(&ver_model.id).await? {

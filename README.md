@@ -1,6 +1,6 @@
 # Rainbow 🌈🌈<br>Dataspace Protocol Agent
 
-![Rainbow front](./docs/static/img/rainbow.png)
+![Rainbow front](docs_old/static/img/rainbow.png)
 
 ## What is Rainbow
 
@@ -181,7 +181,7 @@ The notebook covers the following flow:
 
 ## Architecture
 
-![arquitectura.png](./docs/static/img/arquitectura.png)
+![arquitectura.png](docs_old/static/img/arquitectura.png)
 
 - **Client** — Any client (machine or human) connecting to a consumer to access the dataspace via the high-level Consumer API
 - **Consumer ↔ Provider** — Communication via the low-level API, an improved implementation of the Dataspace Protocol

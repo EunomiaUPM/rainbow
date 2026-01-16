@@ -24,9 +24,7 @@ mod tests {
         let error = AuthErrors::wallet_new(url.clone(), method.clone(), http_code, cause.clone());
 
         // Verify that the error information is correct
-        if let AuthErrors::WalletError { info, http_code: code, url: u, method: m, cause: c } =
-            error
-        {
+        if let AuthErrors::WalletError { info, http_code: code, url: u, method: m, cause: c } = error {
             assert_eq!(info.message, "Unexpected response from the Wallet");
             assert_eq!(info.error_code, 2100);
             assert_eq!(info.status_code, StatusCode::BAD_GATEWAY);
@@ -70,9 +68,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_GATEWAY);
 
         // Verify that the response body contains the error information
-        let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
-        });
+        let body = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async { axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap() });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Unexpected response from the Wallet");
     }
@@ -88,9 +86,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
 
         // Verify that the response body contains the error information
-        let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
-        });
+        let body = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async { axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap() });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Invalid petition");
     }
@@ -132,7 +130,7 @@ mod tests {
             message: "Test error".to_string(),
             error_code: 4001,
             status_code: status,
-            details: Some("Details about the error".to_string())
+            details: Some("Details about the error".to_string()),
         }
     }
 

@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+import "google/protobuf/empty.proto";
+import "catalog_models.proto";
+
+// ---------------------------------------------------------
+// Catalog Service
+// ---------------------------------------------------------
+
+service CatalogEntityService {
+  rpc GetAllCatalogs (GetAllCatalogsRequest) returns (CatalogListResponse);
+  rpc GetBatchCatalogs (GetBatchRequest) returns (CatalogListResponse);
+  rpc GetCatalogById (GetByIdRequest) returns (CatalogResponse);
+  rpc GetMainCatalog (google.protobuf.Empty) returns (CatalogResponse);
+
+  rpc CreateCatalog (CreateCatalogRequest) returns (CatalogResponse);
+  rpc CreateMainCatalog (CreateCatalogRequest) returns (CatalogResponse);
+
+  rpc PutCatalogById (PutCatalogRequest) returns (CatalogResponse);
+  rpc DeleteCatalogById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Data Service Service
+// ---------------------------------------------------------
+
+service DataServiceEntityService {
+  rpc GetAllDataServices (GetAllRequest) returns (DataServiceListResponse);
+  rpc GetBatchDataServices (GetBatchRequest) returns (DataServiceListResponse);
+  rpc GetDataServicesByCatalogId (GetByParentIdRequest) returns (DataServiceListResponse);
+  rpc GetDataServiceById (GetByIdRequest) returns (DataServiceResponse);
+  rpc GetMainDataService(google.protobuf.Empty) returns (DataServiceResponse);
+
+  rpc CreateDataService (CreateDataServiceRequest) returns (DataServiceResponse);
+  rpc CreateMainMainCatalog (CreateDataServiceRequest) returns (DataServiceResponse);
+
+  rpc PutDataServiceById (PutDataServiceRequest) returns (DataServiceResponse);
+  rpc DeleteDataServiceById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Dataset Service
+// ---------------------------------------------------------
+
+service DatasetEntityService {
+  rpc GetAllDatasets (GetAllRequest) returns (DatasetListResponse);
+  rpc GetBatchDatasets (GetBatchRequest) returns (DatasetListResponse);
+  rpc GetDatasetsByCatalogId (GetByParentIdRequest) returns (DatasetListResponse);
+  rpc GetDatasetById (GetByIdRequest) returns (DatasetResponse);
+
+  rpc CreateDataset (CreateDatasetRequest) returns (DatasetResponse);
+  rpc PutDatasetById (PutDatasetRequest) returns (DatasetResponse);
+  rpc DeleteDatasetById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Distribution Service
+// ---------------------------------------------------------
+
+service DistributionEntityService {
+  rpc GetAllDistributions (GetAllRequest) returns (DistributionListResponse);
+  rpc GetBatchDistributions (GetBatchRequest) returns (DistributionListResponse);
+  rpc GetDistributionsByDatasetId (GetByParentIdRequest) returns (DistributionListResponse);
+
+  rpc GetDistributionByDatasetAndFormat (GetDistributionByFormatRequest) returns (DistributionResponse);
+
+  rpc GetDistributionById (GetByIdRequest) returns (DistributionResponse);
+  rpc CreateDistribution (CreateDistributionRequest) returns (DistributionResponse);
+  rpc PutDistributionById (PutDistributionRequest) returns (DistributionResponse);
+  rpc DeleteDistributionById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Policy Template Service
+// ---------------------------------------------------------
+
+service PolicyTemplateEntityService {
+  rpc GetAllPolicyTemplates (GetAllRequest) returns (PolicyTemplateListResponse);
+  rpc GetBatchPolicyTemplates (GetBatchRequest) returns (PolicyTemplateListResponse);
+  rpc GetPolicyTemplatesById (GetByIdRequest) returns (PolicyTemplateListResponse);
+  rpc GetPolicyTemplateByVersion (GetByVersionRequest) returns (PolicyTemplateResponse);
+  rpc CreatePolicyTemplate (CreatePolicyTemplateRequest) returns (PolicyTemplateResponse);
+  rpc DeletePolicyTemplateByVersion (DeleteByVersionRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// ODRL Policy Service
+// ---------------------------------------------------------
+
+service OdrlPolicyEntityService {
+  rpc GetAllOdrlOffers (GetAllRequest) returns (OdrlPolicyListResponse);
+  rpc GetBatchOdrlOffers (GetBatchRequest) returns (OdrlPolicyListResponse);
+  rpc GetAllOdrlOffersByEntity (GetByEntityIdRequest) returns (OdrlPolicyListResponse);
+  rpc GetOdrlOfferById (GetByIdRequest) returns (OdrlPolicyResponse);
+
+  rpc CreateOdrlOffer (CreateOdrlPolicyRequest) returns (OdrlPolicyResponse);
+  rpc DeleteOdrlOfferById (DeleteByIdRequest) returns (google.protobuf.Empty);
+  rpc DeleteOdrlOffersByEntity (DeleteByEntityIdRequest) returns (google.protobuf.Empty);
+}

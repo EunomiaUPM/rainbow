@@ -3,8 +3,11 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
     use anyhow::Result;
     use axum::async_trait;
     use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
@@ -15,6 +18,7 @@ mod tests {
         common::{
             errors::AuthErrors,
             types::gnap::{
+<<<<<<< HEAD
                 grant_request::{
                     Access4AT, AccessTokenRequirements4GR, Finish4Interact, Interact4GR
                 },
@@ -22,12 +26,20 @@ mod tests {
             }
         },
         provider::core::Manager
+=======
+                grant_request::{Access4AT, AccessTokenRequirements4GR, Finish4Interact, Interact4GR},
+                GrantRequest, GrantResponse,
+            },
+        },
+        provider::core::Manager,
+>>>>>>> origin/main
     };
     use rainbow_common::{
         config::{
             database::DbType,
             global_config::{DatabaseConfig, HostConfig},
             provider_config::ApplicationProviderConfig,
+<<<<<<< HEAD
             ConfigRoles
         },
         errors::CommonErrors,
@@ -35,20 +47,34 @@ mod tests {
     };
     use rainbow_db::auth_provider::entities::auth_interaction::{
         Model as InteractionModel, NewModel as NewInteractionModel
+=======
+            ConfigRoles,
+        },
+        errors::CommonErrors,
+        ssi::{ClientConfig, DisplayInfo, SSIWalletConfig},
+    };
+    use rainbow_db::auth_provider::entities::auth_interaction::{
+        Model as InteractionModel, NewModel as NewInteractionModel,
+>>>>>>> origin/main
     };
     use rainbow_db::auth_provider::entities::auth_request::Model as RequestModel;
     use rainbow_db::auth_provider::entities::auth_request::{Model, NewModel};
     use rainbow_db::auth_provider::entities::auth_token_requirements::Model as TokenRequirementsModel;
     use rainbow_db::auth_provider::entities::auth_verification::NewModel as NewVerificationModel;
+<<<<<<< HEAD
     use rainbow_db::auth_provider::entities::mates::{
         Model as MateModel, NewModel as NewMateModel
     };
+=======
+    use rainbow_db::auth_provider::entities::mates::{Model as MateModel, NewModel as NewMateModel};
+>>>>>>> origin/main
     use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
     use rainbow_db::{
         auth_provider::{
             entities::auth_verification::Model as VerificationModel,
             repo_factory::traits::{
                 AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+<<<<<<< HEAD
                 AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait
             }
         },
@@ -56,6 +82,16 @@ mod tests {
     };
     use serde_json::json;
     use serde_json::Value;
+=======
+                AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait,
+            },
+        },
+        common::BasicRepoTrait,
+    };
+    use serde_json::json;
+    use serde_json::Value;
+    use std::sync::Arc;
+>>>>>>> origin/main
     use uuid::Uuid;
 
     // Mocks
@@ -97,20 +133,30 @@ mod tests {
     impl
         BasicRepoTrait<
             rainbow_db::auth_provider::entities::business_mates::Model,
+<<<<<<< HEAD
             rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
+            rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         > for MockBusinessMatesRepo
     {
         async fn get_all(
             &self,
             _limit: Option<u64>,
+<<<<<<< HEAD
             _offset: Option<u64>
         ) -> anyhow::Result<Vec<rainbow_db::auth_provider::entities::business_mates::Model>>
         {
+=======
+            _offset: Option<u64>,
+        ) -> anyhow::Result<Vec<rainbow_db::auth_provider::entities::business_mates::Model>> {
+>>>>>>> origin/main
             Ok(vec![])
         }
 
         async fn get_by_id(
             &self,
+<<<<<<< HEAD
             id: &str
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>>
         {
@@ -130,6 +176,30 @@ mod tests {
                     saved_at: Utc::now().naive_utc(),
                     last_interaction: Utc::now().naive_utc()
                 }))
+=======
+            id: &str,
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>> {
+            if id == "test-state" {
+                Ok(Some(
+                    rainbow_db::auth_provider::entities::business_mates::Model {
+                        id: id.to_string(),
+                        participant_id: "test-holder".to_string(),
+                        token: Some("token-abc".to_string()),
+                        saved_at: Utc::now().naive_utc(),
+                        last_interaction: Utc::now().naive_utc(),
+                    },
+                ))
+            } else if id == "test-state-fail" {
+                Ok(Some(
+                    rainbow_db::auth_provider::entities::business_mates::Model {
+                        id: id.to_string(),
+                        participant_id: "unknown-holder".to_string(),
+                        token: Some("token-abc".to_string()),
+                        saved_at: Utc::now().naive_utc(),
+                        last_interaction: Utc::now().naive_utc(),
+                    },
+                ))
+>>>>>>> origin/main
             } else {
                 Ok(None)
             }
@@ -137,14 +207,22 @@ mod tests {
 
         async fn create(
             &self,
+<<<<<<< HEAD
             _model: rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
+            _model: rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
 
         async fn update(
             &self,
+<<<<<<< HEAD
             _model: rainbow_db::auth_provider::entities::business_mates::Model
+=======
+            _model: rainbow_db::auth_provider::entities::business_mates::Model,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
@@ -156,15 +234,24 @@ mod tests {
     impl BusinessMatesRepoTrait for MockBusinessMatesRepo {
         async fn get_by_token(
             &self,
+<<<<<<< HEAD
             _token: &str
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>>
         {
+=======
+            _token: &str,
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>> {
+>>>>>>> origin/main
             unimplemented!()
         }
 
         async fn force_create(
             &self,
+<<<<<<< HEAD
             _mate: rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
+            _mate: rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
@@ -182,13 +269,20 @@ mod tests {
 
     #[async_trait]
     impl RainbowSSIAuthProviderManagerTrait for TestManager {
+<<<<<<< HEAD
         async fn verify_vp(
             &self,
             _model: VerificationModel,
             vp_token: String
         ) -> Result<(Vec<String>, String)> {
+=======
+        async fn verify_vp(&self, _model: VerificationModel, vp_token: String) -> Result<(Vec<String>, String)> {
+>>>>>>> origin/main
             if vp_token == "valid-vp-token" {
-                Ok((vec!["valid-vc-token".to_string()], "test-holder".to_string()))
+                Ok((
+                    vec!["valid-vc-token".to_string()],
+                    "test-holder".to_string(),
+                ))
             } else {
                 Err(AuthErrors::security_new(Some("VPT signature is incorrect".to_string())).into())
             }
@@ -248,12 +342,16 @@ mod tests {
 
         async fn manage_access(&self, _: GrantRequest) -> Result<GrantResponse> { todo!() }
 
+<<<<<<< HEAD
         async fn validate_continue_request(
             &self,
             _: String,
             _: String,
             _: String
         ) -> Result<InteractionModel> {
+=======
+        async fn validate_continue_request(&self, _: String, _: String, _: String) -> Result<InteractionModel> {
+>>>>>>> origin/main
             todo!()
         }
 
@@ -320,9 +418,13 @@ mod tests {
     pub struct MockMatesRepo;
 
     #[async_trait]
+<<<<<<< HEAD
     impl rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait
         for MockMatesRepo
     {
+=======
+    impl rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait for MockMatesRepo {
+>>>>>>> origin/main
         async fn force_create(&self, mate: NewMateModel) -> anyhow::Result<MateModel> {
             Ok(MateModel {
                 participant_id: mate.participant_id,
@@ -336,7 +438,13 @@ mod tests {
             })
         }
 
+<<<<<<< HEAD
         async fn get_me(&self) -> anyhow::Result<Option<MateModel>> { unimplemented!() }
+=======
+        async fn get_me(&self) -> anyhow::Result<Option<MateModel>> {
+            unimplemented!()
+        }
+>>>>>>> origin/main
 
         async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<MateModel>> {
             if token == "valid-token" {
@@ -421,9 +529,14 @@ mod tests {
         async fn get_by_state(
             &self,
             _state: &str,
+<<<<<<< HEAD
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::auth_verification::Model,>,> {
             if _state == "test-state"
             {
+=======
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::auth_verification::Model>> {
+            if _state == "test-state" {
+>>>>>>> origin/main
                 Ok(Some(VerificationModel {
                     id: "mock-id".to_string(),
                     state: _state.to_string(),
@@ -443,6 +556,7 @@ mod tests {
             }
         }
 
+<<<<<<< HEAD
 
         async fn create_extra(
             &self,
@@ -455,6 +569,16 @@ mod tests {
             else
             {
                 Ok(model,)
+=======
+        async fn create_extra(
+            &self,
+            model: rainbow_db::auth_provider::entities::auth_verification::Model,
+        ) -> anyhow::Result<rainbow_db::auth_provider::entities::auth_verification::Model> {
+            if model.state == "fail-verification" {
+                Err(anyhow::anyhow!("Simulated DB failure in verification"))
+            } else {
+                Ok(model)
+>>>>>>> origin/main
             }
         }
     }
@@ -469,21 +593,33 @@ mod tests {
     impl AuthRepoFactoryTrait for MockAuthRepoFactory {
         fn request(
             &self,
+<<<<<<< HEAD
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_request_trait::AuthRequestRepoTrait,>
+=======
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_request_trait::AuthRequestRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockRequestRepo)
         }
 
         fn interaction(
             &self,
+<<<<<<< HEAD
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_interaction_trait::AuthInteractionRepoTrait,>
+=======
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_interaction_trait::AuthInteractionRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockInteractionRepo)
         }
 
         fn verification(
             &self,
+<<<<<<< HEAD
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_verification_trait::AuthVerificationRepoTrait,>
+=======
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_verification_trait::AuthVerificationRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockVerificationRepo)
         }
@@ -738,8 +874,13 @@ mod tests {
                 display: Some(DisplayInfo {
                     name: "test-display".to_string(),
                     uri: Some("localhost".to_string()),
+<<<<<<< HEAD
                     logo_uri: Some("localhost".to_string())
                 })
+=======
+                    logo_uri: Some("localhost".to_string()),
+                }),
+>>>>>>> origin/main
             },
             role: ConfigRoles::Provider,
             is_local: true
@@ -780,7 +921,11 @@ mod tests {
         encode(
             &header,
             &claims,
+<<<<<<< HEAD
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap()
+=======
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap(),
+>>>>>>> origin/main
         )
         .unwrap()
     }
@@ -896,11 +1041,15 @@ mod tests {
         assert!(result.is_ok(), "Expected success, got error: {:?}", result);
         let response = result.unwrap();
 
+<<<<<<< HEAD
         let uri = response
             .interact
             .as_ref()
             .and_then(|i| i.oidc4vp.clone())
             .expect("Expected oidc4vp URI in response");
+=======
+        let uri = response.interact.as_ref().and_then(|i| i.oidc4vp.clone()).expect("Expected oidc4vp URI in response");
+>>>>>>> origin/main
 
         assert!(uri.starts_with("openid4vp://authorize"));
 
@@ -1292,7 +1441,10 @@ mod tests {
         let json = result.unwrap();
 
         assert_eq!(json["id"], "mock-id");
-        assert_eq!(json["input_descriptors"][0]["id"], "DataspaceParticipantCredential");
+        assert_eq!(
+            json["input_descriptors"][0]["id"],
+            "DataspaceParticipantCredential"
+        );
 
         Ok(())
     }
@@ -1385,7 +1537,10 @@ mod tests {
         assert!(result.is_ok());
         let (vct, holder) = result.unwrap();
         assert!(!vct.is_empty());
-        assert!(holder.starts_with("did:jwk:"), "Holder should start with 'did:jwk:'");
+        assert!(
+            holder.starts_with("did:jwk:"),
+            "Holder should start with 'did:jwk:'"
+        );
 
         Ok(())
     }
@@ -1464,7 +1619,11 @@ mod tests {
         let token = encode(
             &header,
             &claims,
+<<<<<<< HEAD
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes())?
+=======
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes())?,
+>>>>>>> origin/main
         )?;
 
         let config = build_test_config();
@@ -1516,7 +1675,11 @@ mod tests {
         let token = encode(
             &header,
             &claims,
+<<<<<<< HEAD
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap()
+=======
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap(),
+>>>>>>> origin/main
         )
         .unwrap();
 

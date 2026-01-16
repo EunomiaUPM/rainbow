@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::data::factory_sql::TransferAgentRepoForSql;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
@@ -24,12 +43,12 @@ pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
     pub async fn spawn(config: &TransferConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
-        let well_known_router = WellKnownRoot::get_router()?;
+        let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
-        let addr = format!("{}:{}", host, port);
+        let addr = format!("{}{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
         tracing::info!("HTTP Transfer Service running on {}", addr);
@@ -84,7 +103,8 @@ pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<
         entities_controller_service.clone(),
         config.clone(),
     )
-    .build_router()?;
+    .build_router()
+    .await?;
 
     let router_str = format!("{}/transfer-agent", config.get_api_version());
     let router = Router::new()
@@ -96,9 +116,6 @@ pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<
             format!("{}/transfer-processes", router_str.as_str()).as_str(),
             entities_router.router(),
         )
-        .nest(
-            format!("{}/dsp/current/transfers", router_str.as_str()).as_str(),
-            dsp_router,
-        );
+        .nest("/dsp/current/transfers", dsp_router);
     Ok(router)
 }

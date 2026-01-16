@@ -1,13 +1,37 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 mod errors;
 pub(crate) mod facades;
 pub(crate) mod http;
 pub(crate) mod orchestrator;
 mod persistence;
 pub(crate) mod protocol_types;
+pub(crate) mod transfer_types;
 pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
+use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
+use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
+use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
+use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
@@ -23,6 +47,7 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::http_client::HttpClient;
+use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
 use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
@@ -43,6 +68,7 @@ impl TransferDSP {
     }
 }
 
+#[async_trait::async_trait]
 impl ProtocolPluginTrait for TransferDSP {
     fn name(&self) -> &'static str {
         "Dataspace Protocol"
@@ -56,9 +82,10 @@ impl ProtocolPluginTrait for TransferDSP {
         "DSP"
     }
 
-    fn build_router(&self) -> anyhow::Result<Router> {
+    async fn build_router(&self) -> anyhow::Result<Router> {
         let http_client = Arc::new(HttpClient::new(10, 10));
 
+        // Validator
         let validator_helper = Arc::new(ValidationHelperService::new(
             self.transfer_agent_process_entities.clone(),
         ));
@@ -80,6 +107,7 @@ impl ProtocolPluginTrait for TransferDSP {
             validator_helper.clone(),
         ));
 
+        // http service
         let persistence_protocol_service = Arc::new(TransferPersistenceForProtocolService::new(
             self.transfer_agent_message_service.clone(),
             self.transfer_agent_process_entities.clone(),
@@ -88,23 +116,48 @@ impl ProtocolPluginTrait for TransferDSP {
             self.transfer_agent_message_service.clone(),
             self.transfer_agent_process_entities.clone(),
         ));
+
+        // dataplane
+        let dataplane = DataplaneSetup::new();
+        let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone()).await;
+        let dataplane_strategy_factory = Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
+        let dataplane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
+            dataplane_strategy_factory.clone(),
+            self.transfer_agent_process_entities.clone(),
+        ));
+
+        // data service resolver
+        let data_service_resolver = Arc::new(DataServiceFacadeServiceForDSProtocol::new(
+            self.config.clone(),
+            http_client.clone(),
+        ));
+
+        // facades
+        let facades = Arc::new(FacadeService::new(
+            data_service_resolver.clone(),
+            dataplane_facade.clone(),
+        ));
+
+        // orchestrators
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
             dsp_validator.clone(),
             persistence_protocol_service.clone(),
-            self.config.clone(),
+            facades.clone(),
         ));
         let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
             rcp_validator.clone(),
             persistence_rpc_service,
-            self.config.clone(),
             http_client.clone(),
+            facades.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(
             http_orchestator.clone(),
             rpc_orchestator.clone(),
         ));
-        let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
-        let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
+
+        // router
+        let dsp_router = DspRouter::new(orchestrator_service.clone());
+        let rcp_router = RpcRouter::new(orchestrator_service.clone());
 
         Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))
     }

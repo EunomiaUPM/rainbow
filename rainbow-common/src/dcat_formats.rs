@@ -33,9 +33,9 @@ pub enum FormatProtocol {
     S3,
 }
 
-impl ToString for FormatProtocol {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for FormatProtocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             FormatProtocol::NgsiLd => "Ngsi-LD".to_string(),
             FormatProtocol::Http => "Http".to_string(),
             FormatProtocol::Quic => "Quic".to_string(),
@@ -43,7 +43,8 @@ impl ToString for FormatProtocol {
             FormatProtocol::Kafka => "Kafka".to_string(),
             FormatProtocol::Mqtt => "Mqtt".to_string(),
             FormatProtocol::S3 => "S3".to_string(),
-        }
+        };
+        write!(f, "{}", str)
     }
 }
 
@@ -64,18 +65,19 @@ impl FromStr for FormatProtocol {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum FormatAction {
     Push,
     Pull,
 }
 
-impl ToString for FormatAction {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for FormatAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             FormatAction::Push => "Push".to_string(),
             FormatAction::Pull => "Pull".to_string(),
-        }
+        };
+        write!(f, "{}", str)
     }
 }
 

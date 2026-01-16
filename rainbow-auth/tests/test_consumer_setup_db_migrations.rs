@@ -27,6 +27,7 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
                         .col(
                             sea_query::ColumnDef::new(sea_query::Alias::new("id"))
                                 .integer()
@@ -34,18 +35,26 @@ mod tests {
                                 .primary_key()
                         )
                         .to_owned()
+=======
+                        .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
+                        .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
                 .drop_table(
                     sea_query::Table::drop()
                         .table(sea_query::Alias::new("dummy"))
                         .if_exists()
                         .to_owned()
                 )
+=======
+                .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }
@@ -63,8 +72,12 @@ mod tests {
     #[tokio::test]
     async fn test_migrations_run_success_sqlite_memory() {
         let db_url = "sqlite::memory:";
+<<<<<<< HEAD
         let db_connection: DbConn =
             Database::connect(db_url).await.expect("Database can't connect");
+=======
+        let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
+>>>>>>> origin/main
 
         MockedMigrations::refresh(&db_connection).await.expect("Migration failed");
 
@@ -81,7 +94,9 @@ mod tests {
         #[async_trait::async_trait]
         impl MigrationTrait for FailingMigration {
             async fn up(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
-                Err(DbErr::Migration("Intentional failure for testing".to_owned()))
+                Err(DbErr::Migration(
+                    "Intentional failure for testing".to_owned(),
+                ))
             }
 
             async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> { Ok(()) }
@@ -98,8 +113,12 @@ mod tests {
         }
 
         let db_url = "sqlite::memory:";
+<<<<<<< HEAD
         let db_connection: DbConn =
             Database::connect(db_url).await.expect("Database can't connect");
+=======
+        let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
+>>>>>>> origin/main
 
         let result = FailingMigrator::refresh(&db_connection).await;
 
@@ -196,9 +215,7 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string()
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
-            .catch_unwind()
-            .await;
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
         assert!(result.is_err(), "Expected panic for invalid MySQL config");
     }
 
@@ -213,21 +230,26 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string()
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
-            .catch_unwind()
-            .await;
-        assert!(result.is_err(), "Expected panic for invalid Postgres config");
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
+        assert!(
+            result.is_err(),
+            "Expected panic for invalid Postgres config"
+        );
     }
 
     #[tokio::test]
     async fn test_up_and_down_should_succeed() {
-        let db = Database::connect("sqlite::memory:")
-            .await
-            .expect("Failed to connect to in-memory SQLite");
+        let db = Database::connect("sqlite::memory:").await.expect("Failed to connect to in-memory SQLite");
         let manager = SchemaManager::new(&db);
         let migration = TestMigration;
-        assert!(migration.up(&manager).await.is_ok(), "Expected up() to succeed");
-        assert!(migration.down(&manager).await.is_ok(), "Expected down() to succeed");
+        assert!(
+            migration.up(&manager).await.is_ok(),
+            "Expected up() to succeed"
+        );
+        assert!(
+            migration.down(&manager).await.is_ok(),
+            "Expected down() to succeed"
+        );
     }
 
     #[test]
@@ -236,6 +258,9 @@ mod tests {
         impl MigratorTrait for EmptyMigrator {
             fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> { vec![] }
         }
-        assert!(EmptyMigrator::migrations().is_empty(), "Expected empty migrations");
+        assert!(
+            EmptyMigrator::migrations().is_empty(),
+            "Expected empty migrations"
+        );
     }
 }

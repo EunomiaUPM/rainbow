@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MissingAction {

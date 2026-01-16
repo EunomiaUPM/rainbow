@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod error_adapter;
 mod error_log_trait;
 pub mod helpers;
 

@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use std::env;
     use std::panic::AssertUnwindSafe;
 
@@ -17,6 +18,20 @@ mod tests {
     use sea_orm_migration::MigrationName;
     use sea_orm_migration::{async_trait, SchemaManager};
     use sea_orm_migration::{MigrationTrait, MigratorTrait};
+=======
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::provider::setup::app::{create_ssi_provider_router, SSIAuthProviderApplication};
+    use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
+    use rainbow_common::config::{
+        database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig,
+    };
+    use sea_orm::{sea_query, DbErr};
+    use sea_orm_migration::MigrationName;
+    use sea_orm_migration::{async_trait, SchemaManager};
+    use sea_orm_migration::{MigrationTrait, MigratorTrait};
+    use std::env;
+    use std::panic::AssertUnwindSafe;
+>>>>>>> origin/main
 
     // Test
 
@@ -30,6 +45,7 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
                         .col(
                             sea_query::ColumnDef::new(sea_query::Alias::new("id"))
                                 .integer()
@@ -37,18 +53,26 @@ mod tests {
                                 .primary_key()
                         )
                         .to_owned()
+=======
+                        .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
+                        .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
                 .drop_table(
                     sea_query::Table::drop()
                         .table(sea_query::Alias::new("dummy"))
                         .if_exists()
                         .to_owned()
                 )
+=======
+                .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }

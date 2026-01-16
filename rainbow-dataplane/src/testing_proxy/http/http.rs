@@ -17,59 +17,50 @@
  *
  */
 
-use crate::coordinator::dataplane_process::DataPlaneProcessTrait;
+#![allow(unused)]
+use crate::entities::data_plane_process::{DataPlaneProcessDto, DataPlaneProcessEntitiesTrait};
 use axum::body::{to_bytes, Body};
-use axum::extract::{Path, Request, State};
+use axum::extract::{FromRef, Path, Request, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::any;
 use axum::Router;
 use hyper::Method;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
-use rainbow_common::config::services::TransferConfig;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::Response as ReqwestResponse;
 use reqwest::{Client, StatusCode};
 use std::sync::Arc;
 use tracing::info;
 
-pub struct TestingHTTPProxy<T>
-where
-    T: DataPlaneProcessTrait + Send + Sync + 'static,
-{
-    client: Client,
-    config: TransferConfig,
-    dataplane_service: Arc<T>,
-}
-
 #[derive(Clone)]
-#[allow(dead_code)]
-struct TestingHTTPProxyState<T>
-where
-    T: DataPlaneProcessTrait + Send + Sync + 'static,
-{
+pub struct TestingHTTPProxy {
     client: Client,
-    config: TransferConfig,
-    dataplane_service: Arc<T>,
+    dataplane_service: Arc<dyn DataPlaneProcessEntitiesTrait>,
 }
 
-impl<T> TestingHTTPProxy<T>
-where
-    T: DataPlaneProcessTrait + Send + Sync + 'static,
-{
-    pub fn new(config: TransferConfig, dataplane_service: Arc<T>) -> Self {
+impl FromRef<TestingHTTPProxy> for Client {
+    fn from_ref(input: &TestingHTTPProxy) -> Self {
+        input.client.clone()
+    }
+}
+
+impl FromRef<TestingHTTPProxy> for Arc<dyn DataPlaneProcessEntitiesTrait> {
+    fn from_ref(input: &TestingHTTPProxy) -> Self {
+        input.dataplane_service.clone()
+    }
+}
+
+impl TestingHTTPProxy {
+    pub fn new(dataplane_service: Arc<dyn DataPlaneProcessEntitiesTrait>) -> Self {
         let client = reqwest::Client::new();
-        Self { client, config, dataplane_service }
+        Self { client, dataplane_service }
     }
     pub fn router(self) -> Router {
-        Router::new().route("/data/:data_plane_id", any(Self::forward_request)).with_state((
-            self.client,
-            self.config,
-            self.dataplane_service,
-        ))
+        Router::new().route("/:data_plane_id", any(Self::forward_request)).with_state(self)
     }
 
     async fn forward_request(
-        State((client, _config, dataplane_service)): State<(Client, TransferConfig, Arc<T>)>,
+        State(state): State<TestingHTTPProxy>,
         Path(data_plane_id): Path<String>,
         mut req: Request,
     ) -> impl IntoResponse {
@@ -81,15 +72,18 @@ where
         };
 
         // PDP
-        let dataplane = match dataplane_service.get_dataplane_process_by_id(data_plane_id).await {
-            Ok(dataplane) => dataplane,
+        let dataplane = match state.dataplane_service.get_data_plane_process_by_id(&data_plane_id).await {
+            Ok(dataplane) => match dataplane {
+                Some(dataplane) => dataplane,
+                None => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
+            },
             Err(_) => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
         };
-        match dataplane.process_direction {
+        match dataplane.inner.direction.parse::<DataPlaneProcessDirection>().unwrap() {
             DataPlaneProcessDirection::PULL => {}
             _ => return (StatusCode::BAD_REQUEST, "wrong direction").into_response(),
         }
-        match dataplane.state {
+        match dataplane.inner.state.parse::<DataPlaneProcessState>().unwrap() {
             DataPlaneProcessState::STARTED => {}
             DataPlaneProcessState::REQUESTED => return (StatusCode::FORBIDDEN, "state requested").into_response(),
             DataPlaneProcessState::STOPPED => return (StatusCode::FORBIDDEN, "state stopped").into_response(),
@@ -101,7 +95,7 @@ where
         // ODRL Evaluator facade
 
         // forward request downstream
-        let next_hop = dataplane.downstream_hop.url;
+        let next_hop = dataplane.data_plane_fields.get("DownstreamHopUrl").unwrap().clone();
         let body = std::mem::take(req.body_mut());
         let body_bytes = match to_bytes(body, 2024) // MAX_BUFFER
             .await
@@ -113,7 +107,7 @@ where
             Ok(method) => method,
             Err(_) => return (StatusCode::BAD_REQUEST, "method not allowed").into_response(),
         };
-        let res = client.request(method, next_hop).body(body_bytes).send().await;
+        let res = state.client.request(method, next_hop).body(body_bytes).send().await;
 
         // Notify && transfer event
         // Notification
@@ -121,22 +115,22 @@ where
 
         // forward request upstream
         match res {
-            Ok(res) => forward_response(res),
+            Ok(res) => Self::forward_response_helper(res),
             Err(_) => return (StatusCode::BAD_REQUEST, "peer connection problem").into_response(),
         }
     }
-}
 
-pub fn forward_response(reqwest_response: ReqwestResponse) -> Response {
-    let status = reqwest_response.status();
-    let headers = reqwest_response.headers().clone();
-    let body_stream = reqwest_response.bytes_stream();
-    let body = Body::from_stream(body_stream);
-    let mut response = Response::builder().status(status);
-    let response_headers = response.headers_mut().unwrap();
-    for (key, value) in headers.iter() {
-        response_headers.insert(key, value.clone());
+    pub fn forward_response_helper(reqwest_response: ReqwestResponse) -> Response {
+        let status = reqwest_response.status();
+        let headers = reqwest_response.headers().clone();
+        let body_stream = reqwest_response.bytes_stream();
+        let body = Body::from_stream(body_stream);
+        let mut response = Response::builder().status(status);
+        let response_headers = response.headers_mut().unwrap();
+        for (key, value) in headers.iter() {
+            response_headers.insert(key, value.clone());
+        }
+
+        response.body(body).unwrap()
     }
-
-    response.body(body).unwrap()
 }

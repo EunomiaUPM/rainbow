@@ -5,7 +5,11 @@
 mod tests {
     use rainbow_auth::ssi_auth::common::types::gnap::{
         grant_request::{AccessTokenRequirements4GR, Finish4Interact, Interact4GR},
+<<<<<<< HEAD
         GrantRequest
+=======
+        GrantRequest,
+>>>>>>> origin/main
     };
     use serde_json::json;
 
@@ -15,7 +19,11 @@ mod tests {
         let gr = GrantRequest::pr_oidc(
             client.clone(),
             "redirect".to_string(),
+<<<<<<< HEAD
             Some("https://callback".to_string())
+=======
+            Some("https://callback".to_string()),
+>>>>>>> origin/main
         );
         assert_eq!(gr.client, client);
         assert!(gr.interact.is_some());
@@ -28,7 +36,11 @@ mod tests {
             client.clone(),
             "redirect".to_string(),
             None,
+<<<<<<< HEAD
             "vc-type".to_string()
+=======
+            "vc-type".to_string(),
+>>>>>>> origin/main
         );
         assert_eq!(gr.access_token.access.r#type, "vc-type");
     }
@@ -38,7 +50,10 @@ mod tests {
         let client = json!({});
         let mut gr = GrantRequest::pr_oidc(client, "redirect".to_string(), None);
         gr.update_callback("https://new-callback".to_string());
-        assert_eq!(gr.interact.unwrap().finish.uri.unwrap(), "https://new-callback");
+        assert_eq!(
+            gr.interact.unwrap().finish.uri.unwrap(),
+            "https://new-callback"
+        );
     }
 
     #[test]
@@ -46,7 +61,10 @@ mod tests {
         let client = json!({});
         let mut gr = GrantRequest::pr_oidc(client, "redirect".to_string(), None);
         gr.update_actions(vec!["read".to_string(), "write".to_string()]);
-        assert_eq!(gr.access_token.access.actions.unwrap(), vec!["read", "write"]);
+        assert_eq!(
+            gr.access_token.access.actions.unwrap(),
+            vec!["read", "write"]
+        );
     }
 
     #[test]

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Tests corresponding to
 // 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs'
 
@@ -5,6 +6,12 @@
 mod tests {
     use std::sync::Arc;
 
+=======
+// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs'
+
+#[cfg(test)]
+mod tests {
+>>>>>>> origin/main
     use anyhow::Result;
     use axum::async_trait;
     use base64::Engine;
@@ -18,9 +25,13 @@ mod tests {
     use rainbow_auth::ssi_auth::common::types::ssi::other::MatchingVCs;
     use rainbow_auth::ssi_auth::common::types::ssi::other::RedirectResponse;
     use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletSession};
+<<<<<<< HEAD
     use rainbow_auth::ssi_auth::common::{
         traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo
     };
+=======
+    use rainbow_auth::ssi_auth::common::{traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo};
+>>>>>>> origin/main
     use rainbow_auth::ssi_auth::consumer::core::Manager;
     use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
     use rainbow_common::config::database::DbType;
@@ -33,10 +44,18 @@ mod tests {
     use rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::{
+<<<<<<< HEAD
         AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait
     };
     use reqwest::Client;
     use serde_json::{json, Value};
+=======
+        AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+    };
+    use reqwest::Client;
+    use serde_json::{json, Value};
+    use std::sync::Arc;
+>>>>>>> origin/main
     use tokio::sync::Mutex;
 
     mock! {
@@ -156,9 +175,13 @@ mod tests {
         }
     }
 
+<<<<<<< HEAD
     pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(
         service: &T
     ) -> anyhow::Result<()> {
+=======
+    pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(service: &T) -> anyhow::Result<()> {
+>>>>>>> origin/main
         service.login_wallet().await?;
         service.retrieve_wallet_info().await?;
         service.retrieve_keys().await?;
@@ -170,6 +193,7 @@ mod tests {
     struct MockRepo;
 
     impl AuthRepoFactoryTrait for MockRepo {
+<<<<<<< HEAD
         fn request(
             &self
         ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthRequestRepoTrait>
@@ -188,10 +212,22 @@ mod tests {
             &self
         ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait>
         {
+=======
+        fn request(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthRequestRepoTrait> {
+            todo!()
+        }
+
+        fn interaction(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthInteractionRepoTrait> {
+            todo!()
+        }
+
+        fn verification(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait> {
+>>>>>>> origin/main
             todo!()
         }
 
         fn token_requirements(
+<<<<<<< HEAD
             &self
         ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait>
         {
@@ -208,6 +244,18 @@ mod tests {
             &self
         ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait>
         {
+=======
+            &self,
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait> {
+            todo!()
+        }
+
+        fn mates(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait> {
+            todo!()
+        }
+
+        fn authority(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait> {
+>>>>>>> origin/main
             todo!()
         }
     }
@@ -307,9 +355,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_wallet_success() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -342,9 +395,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_wallet_error_response() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -379,10 +437,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_wallet_success() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
         use serde_json::json;
+=======
+        use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+        use serde_json::json;
+        use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -428,6 +492,8 @@ mod tests {
     #[tokio::test]
     async fn test_login_wallet_invalid_jwt_format() {
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -460,6 +526,8 @@ mod tests {
     #[tokio::test]
     async fn test_logout_wallet_success() {
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -498,6 +566,8 @@ mod tests {
     #[tokio::test]
     async fn test_logout_wallet_error_response() {
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -549,8 +619,13 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "did:example:123".to_string(),
                     default: true,
+<<<<<<< HEAD
                     created_on: "did:example:123".to_string()
                 }]
+=======
+                    created_on: "did:example:123".to_string(),
+                }],
+>>>>>>> origin/main
             })
         });
         mock.expect_get_key().returning(|| {
@@ -559,7 +634,11 @@ mod tests {
                 algorithm: "Test algorithm".to_string(),
                 crypto_provider: "Test crypto_provider".to_string(),
                 key_pair: serde_json::Value::String("Test key_pair".to_string()),
+<<<<<<< HEAD
                 keyset_handle: None
+=======
+                keyset_handle: None,
+>>>>>>> origin/main
             })
         });
         mock.expect_delete_did().returning(|_| Ok(()));
@@ -575,11 +654,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_missing_did_error() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use rainbow_auth::ssi_auth::consumer::core::Manager;
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::consumer::core::Manager;
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
+>>>>>>> origin/main
 
         let config = ApplicationConsumerConfig::default();
         let repo = Arc::new(MockRepo);
@@ -1046,9 +1132,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path("/wallet-api/wallet/accounts/wallets");
+<<<<<<< HEAD
             then.status(500)
                 .header("content-type", "application/json")
                 .body("Internal Server Error");
+=======
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1160,9 +1250,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path(format!("/wallet-api/wallet/{}/keys", wallet_id));
+<<<<<<< HEAD
             then.status(500)
                 .header("content-type", "application/json")
                 .body("Internal Server Error");
+=======
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1280,9 +1374,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path(format!("/wallet-api/wallet/{}/dids", wallet_id));
+<<<<<<< HEAD
             then.status(500)
                 .header("content-type", "application/json")
                 .body("Internal Server Error");
+=======
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1379,10 +1477,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_key_http_error() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1431,12 +1533,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_success() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1502,12 +1608,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_conflict() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1571,10 +1681,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_success() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1635,10 +1749,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_error() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1697,11 +1815,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_key_success() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1770,12 +1892,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_key_error() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1977,9 +2103,13 @@ mod tests {
                     .header("content-type", "text/plain")
                     .header("accept", "text/plain")
                     .header("authorization", "Bearer mocked_token");
+<<<<<<< HEAD
                 then.status(200)
                     .header("content-type", "text/plain")
                     .body("Exchange joined successfully");
+=======
+                then.status(200).header("content-type", "text/plain").body("Exchange joined successfully");
+>>>>>>> origin/main
             })
             .await;
 
@@ -2030,11 +2160,18 @@ mod tests {
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
+<<<<<<< HEAD
             document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
                 .to_string(),
             key_id: "key1".to_string(),
             default: true,
             created_on: "2023-01-01T00:00:00Z".to_string()
+=======
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            key_id: "key1".to_string(),
+            default: true,
+            created_on: "2023-01-01T00:00:00Z".to_string(),
+>>>>>>> origin/main
         };
 
         let manager = Manager {
@@ -2189,7 +2326,10 @@ mod tests {
                 cause
             );
         } else {
-            panic!("Error no es del tipo esperado AuthErrors::WalletError: {:?}", err);
+            panic!(
+                "Error no es del tipo esperado AuthErrors::WalletError: {:?}",
+                err
+            );
         }
 
         // Verified that the mock was called
@@ -2244,7 +2384,11 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
+<<<<<<< HEAD
                 name: "test_db".to_string()
+=======
+                name: "test_db".to_string(),
+>>>>>>> origin/main
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -2256,16 +2400,28 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
+<<<<<<< HEAD
                 wallet_id: Some("mocked_wallet_id".to_string())
+=======
+                wallet_id: Some("mocked_wallet_id".to_string()),
+>>>>>>> origin/main
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
+<<<<<<< HEAD
                 display: None
             },
             role: ConfigRoles::Consumer,
             is_local: true,
             is_gateway_in_production: true
+=======
+                display: None,
+            },
+            role: ConfigRoles::Consumer,
+            is_local: true,
+            is_gateway_in_production: true,
+>>>>>>> origin/main
         };
 
         let did_info = DidsInfo {
@@ -2280,7 +2436,10 @@ mod tests {
 
         let binding = presentation_definition.to_string();
         let encoded_json = encode(&binding);
-        let vpd_url = format!("https://example.com/vpd?presentation_definition={}", encoded_json);
+        let vpd_url = format!(
+            "https://example.com/vpd?presentation_definition={}",
+            encoded_json
+        );
 
         let manager = Manager {
             wallet_session: tokio::sync::Mutex::new(WalletSession {
@@ -2328,7 +2487,10 @@ mod tests {
         // JSON mal formado (falta una comilla de cierre)
         let invalid_json = r#"{"id": "test-definition", "input_descriptors": [}"#;
         let encoded_json = encode(invalid_json);
-        let vpd_url = format!("https://example.com/vpd?presentation_definition={}", encoded_json);
+        let vpd_url = format!(
+            "https://example.com/vpd?presentation_definition={}",
+            encoded_json
+        );
 
         // Configuración dummy
         let config = ApplicationConsumerConfig {
@@ -2431,12 +2593,21 @@ mod tests {
 
         let mock = server
             .mock_async(|when, then| {
+<<<<<<< HEAD
                 when.method(POST,)
                     .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition",)
                     .header("content-type", "application/json",)
                     .header("accept", "application/json",)
                     .header("authorization", "Bearer mocked_token",);
                 then.status(200,).header("content-type", "application/json",).json_body(json!([
+=======
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(200).header("content-type", "application/json").json_body(json!([
+>>>>>>> origin/main
                     {
                         "addedOn": "2023-01-01T00:00:00Z",
                         "disclosures": "[]",
@@ -2454,8 +2625,13 @@ mod tests {
                         "pending": false,
                         "wallet": "mocked_wallet_id"
                     }
+<<<<<<< HEAD
                 ]),);
             },)
+=======
+                ]));
+            })
+>>>>>>> origin/main
             .await;
 
         let config = build_test_config(&server_address);
@@ -2488,6 +2664,7 @@ mod tests {
 
         let mock = server
             .mock_async(|when, then| {
+<<<<<<< HEAD
                 when.method(POST,)
                     .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition",)
                     .header("content-type", "application/json",)
@@ -2495,6 +2672,15 @@ mod tests {
                     .header("authorization", "Bearer mocked_token",);
                 then.status(500,).header("content-type", "application/json",).body("Internal Server Error",);
             },)
+=======
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(500).header("content-type", "application/json").body("Internal Server Error");
+            })
+>>>>>>> origin/main
             .await;
 
         let config = build_test_config(&server_address);
@@ -2564,9 +2750,13 @@ mod tests {
                     .header("content-type", "application/json")
                     .header("accept", "application/json")
                     .header("authorization", "Bearer mocked_token");
+<<<<<<< HEAD
                 then.status(500)
                     .header("content-type", "application/json")
                     .body("this is not a valid JSON");
+=======
+                then.status(500).header("content-type", "application/json").body("this is not a valid JSON");
+>>>>>>> origin/main
                 // fuerza fallo de deserialización
             })
             .await;
@@ -2584,14 +2774,22 @@ mod tests {
         {
             assert_eq!(*http_code, 500);
             assert!(
+<<<<<<< HEAD
                 cause
                     .as_ref()
                     .map_or(false, |msg| msg.contains("Petition to present credentials failed")),
+=======
+                cause.as_ref().map_or(false, |msg| msg
+                    .contains("Petition to present credentials failed")),
+>>>>>>> origin/main
                 "Mensaje de error inesperado en cause: {:?}",
                 cause
             );
         } else {
-            panic!("Error no es del tipo esperado AuthErrors::WalletError: {:?}", err);
+            panic!(
+                "Error no es del tipo esperado AuthErrors::WalletError: {:?}",
+                err
+            );
         }
 
         mock.assert_async().await;
@@ -2685,11 +2883,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_ok_token_expired_and_updated_successfully() {
+<<<<<<< HEAD
         use std::sync::Arc;
         use std::time::{SystemTime, UNIX_EPOCH};
 
         use mockito::Server;
         use serde_json::json;
+=======
+        use mockito::Server;
+        use serde_json::json;
+        use std::sync::Arc;
+        use std::time::{SystemTime, UNIX_EPOCH};
+>>>>>>> origin/main
 
         let mut server = Server::new_async().await;
 
@@ -2727,7 +2932,11 @@ mod tests {
                     "token": mock_token
                 })
                 .to_string()
+<<<<<<< HEAD
                 .into_bytes()
+=======
+                .into_bytes(),
+>>>>>>> origin/main
             )
             .create_async()
             .await;
@@ -2753,7 +2962,10 @@ mod tests {
         assert!(result.is_ok());
 
         let session = manager.wallet_session.lock().await;
-        assert_eq!(session.token.as_deref(), Some(&mock_token).map(|x| x.as_str()));
+        assert_eq!(
+            session.token.as_deref(),
+            Some(&mock_token).map(|x| x.as_str())
+        );
         assert_eq!(session.token_exp, Some(exp));
     }
 

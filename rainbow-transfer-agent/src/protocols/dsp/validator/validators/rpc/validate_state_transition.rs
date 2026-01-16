@@ -1,10 +1,29 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::protocols::dsp::protocol_types::{TransferProcessMessageType, TransferProcessState, TransferStateAttribute};
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::bail;
 use log::error;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::sync::Arc;
 
 pub struct ValidatedStateTransitionServiceForRcp {
@@ -19,14 +38,14 @@ impl ValidatedStateTransitionServiceForRcp {
 impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
     async fn validate_role_for_message(
         &self,
-        role: &TransferRoles,
+        role: &RoleConfig,
         message_type: &TransferProcessMessageType,
     ) -> anyhow::Result<()> {
         match (role, message_type) {
             // consumer can send all messages
-            (TransferRoles::Consumer, _) => {}
+            (RoleConfig::Consumer, _) => {}
             // provider cannot send TransferRequestMessage
-            (TransferRoles::Provider, TransferProcessMessageType::TransferRequestMessage) => {
+            (RoleConfig::Provider, TransferProcessMessageType::TransferRequestMessage) => {
                 let err = CommonErrors::parse_new(
                     "Only Consumer roles are allowed to send TransferProcessMessageType TransferRequestMessage",
                 );
@@ -34,7 +53,8 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
                 bail!(err)
             }
             // consumer can receive all messages but TransferRequestMessage
-            (TransferRoles::Provider, _) => {} // each other role should not be allowed
+            (RoleConfig::Provider, _) => {} // each other role should not be allowed
+            _ => {}
         }
         Ok(())
     }
@@ -127,7 +147,7 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
         current_state: &TransferProcessState,
         current_state_attribute: &TransferStateAttribute,
         message_type: &TransferProcessMessageType,
-        role: &TransferRoles,
+        role: &RoleConfig,
     ) -> anyhow::Result<()> {
         // if message is TransferStartMessage
         // if on request, ok
@@ -137,8 +157,8 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
             TransferProcessMessageType::TransferStartMessage => match current_state_attribute {
                 TransferStateAttribute::OnRequest => {}
                 t => match (t, role) {
-                    (TransferStateAttribute::ByConsumer, TransferRoles::Provider)
-                    | (TransferStateAttribute::ByProvider, TransferRoles::Consumer) => {
+                    (TransferStateAttribute::ByConsumer, RoleConfig::Provider)
+                    | (TransferStateAttribute::ByProvider, RoleConfig::Consumer) => {
                         let err = CommonErrors::parse_new(
                             format!(
                                 "TransferProcessMessageType {} is not allowed here. Current state is {} {}",

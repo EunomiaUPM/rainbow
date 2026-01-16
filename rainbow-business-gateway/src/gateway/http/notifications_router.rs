@@ -24,6 +24,8 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -31,8 +33,6 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 use tracing::error;
-use rainbow_common::config::services::GatewayConfig;
-use rainbow_common::config::types::HostType;
 
 pub struct BusinessNotificationsRouter {
     config: GatewayConfig,
@@ -68,11 +68,7 @@ impl BusinessNotificationsRouter {
             .with_state((self.config, self.client, self.notification_tx))
     }
     async fn subscription_handler(
-        State((config, client, _notification_tx)): State<(
-            GatewayConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((config, client, _notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Query(params): Query<Params>,
     ) -> axum::response::Response {
         let callback_address = match params.callback_address {
@@ -132,11 +128,7 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(
-            GatewayConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -191,11 +183,7 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(
-            GatewayConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

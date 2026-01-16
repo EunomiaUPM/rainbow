@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::Arc;
+use super::super::CallbackTrait;
 
 use anyhow::bail;
 use axum::async_trait;
@@ -36,7 +36,7 @@ use crate::ssi::types::enums::request::Body;
 use crate::ssi::types::gnap::{CallbackBody, RefBody};
 
 pub struct BasicCallbackService {
-    client: Arc<dyn ClientServiceTrait>
+    client: Arc<dyn ClientServiceTrait>,
 }
 
 impl BasicCallbackService {
@@ -47,11 +47,7 @@ impl BasicCallbackService {
 
 #[async_trait]
 impl CallbackTrait for BasicCallbackService {
-    fn check_callback(
-        &self,
-        int_model: &mut req_interaction::Model,
-        payload: &CallbackBody
-    ) -> anyhow::Result<()> {
+    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()> {
         info!("Checking callback");
 
         int_model.interact_ref = Some(payload.interact_ref.clone());

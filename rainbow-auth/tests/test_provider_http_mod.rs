@@ -2,12 +2,19 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use std::sync::Arc;
 
     use anyhow::Result;
     use axum::{
         body::Body,
         http::{Request, StatusCode}
+=======
+    use anyhow::Result;
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+>>>>>>> origin/main
     };
     use chrono::NaiveDateTime;
     use rainbow_auth::ssi_auth::provider::http::RainbowAuthProviderRouter;
@@ -15,6 +22,7 @@ mod tests {
         common::types::{
             gnap::{
                 grant_request::{Access4AT, AccessTokenRequirements4GR},
+<<<<<<< HEAD
                 GrantRequest, RefBody
             },
             ssi::keys::KeyInfo
@@ -34,16 +42,45 @@ mod tests {
     };
     use rainbow_db::auth_provider::entities::business_mates::{
         Model as BusinessMateModel, NewModel as BusinessMateNewModel
+=======
+                GrantRequest, RefBody,
+            },
+            ssi::keys::KeyInfo,
+        },
+        provider::core::Manager,
+    };
+    use rainbow_common::config::provider_config::ApplicationProviderConfig;
+    use rainbow_db::auth_provider::entities::auth_interaction::{
+        Model as AuthInteractionModel, NewModel as AuthInteractionNewModel,
+    };
+    use rainbow_db::auth_provider::entities::auth_request::{
+        Model as AuthRequestModel, NewModel as AuthRequestNewModel,
+    };
+    use rainbow_db::auth_provider::entities::auth_token_requirements::Model as AuthTokenReqModel;
+    use rainbow_db::auth_provider::entities::auth_verification::{
+        Model as AuthVerificationModel, NewModel as AuthVerificationNewModel,
+    };
+    use rainbow_db::auth_provider::entities::business_mates::{
+        Model as BusinessMateModel, NewModel as BusinessMateNewModel,
+>>>>>>> origin/main
     };
     use rainbow_db::auth_provider::entities::mates::{Model, NewModel};
     use rainbow_db::auth_provider::repo_factory::traits::*;
     use rainbow_db::common::BasicRepoTrait;
     use sea_orm_migration::async_trait;
+<<<<<<< HEAD
+=======
+    use std::sync::Arc;
+>>>>>>> origin/main
     use tower::ServiceExt;
 
     // Mocks
     struct MockMatesRepo {
+<<<<<<< HEAD
         should_fail: bool
+=======
+        should_fail: bool,
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
@@ -65,6 +102,7 @@ mod tests {
                     participant_type: "type123".to_string(),
                     base_url: Some("https://example.com".to_string()),
                     token: Some("token123".to_string()),
+<<<<<<< HEAD
                     saved_at: NaiveDateTime::parse_from_str(
                         "2025-01-01 00:00:00",
                         "%Y-%m-%d %H:%M:%S"
@@ -76,6 +114,12 @@ mod tests {
                     )
                     .unwrap(),
                     is_me: false
+=======
+                    saved_at: NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+                    last_interaction: NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+                        .unwrap(),
+                    is_me: false,
+>>>>>>> origin/main
                 }))
             } else {
                 Ok(None)
@@ -86,8 +130,15 @@ mod tests {
         }
         async fn update(&self, _: Model) -> Result<Model> {
             Err(anyhow::anyhow!("Not implemented"))
+<<<<<<< HEAD
         }
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        }
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
@@ -109,6 +160,7 @@ mod tests {
                     participant_type: "type-me".to_string(),
                     base_url: Some("https://me.example.com".to_string()),
                     token: Some("token-me".to_string()),
+<<<<<<< HEAD
                     saved_at: NaiveDateTime::parse_from_str(
                         "2025-01-01 00:00:00",
                         "%Y-%m-%d %H:%M:%S"
@@ -120,6 +172,12 @@ mod tests {
                     )
                     .unwrap(),
                     is_me: true
+=======
+                    saved_at: NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+                    last_interaction: NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+                        .unwrap(),
+                    is_me: true,
+>>>>>>> origin/main
                 }))
             }
         }
@@ -142,14 +200,26 @@ mod tests {
         async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<AuthRequestModel>> {
             Ok(vec![])
         }
+<<<<<<< HEAD
         async fn get_by_id(&self, _: &str) -> Result<Option<AuthRequestModel>> { Ok(None) }
+=======
+        async fn get_by_id(&self, _: &str) -> Result<Option<AuthRequestModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create(&self, _: AuthRequestNewModel) -> Result<AuthRequestModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
         async fn update(&self, _: AuthRequestModel) -> Result<AuthRequestModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
+<<<<<<< HEAD
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
@@ -159,6 +229,7 @@ mod tests {
 
     #[async_trait::async_trait]
     impl BasicRepoTrait<AuthInteractionModel, AuthInteractionNewModel> for MockInteractionRepo {
+<<<<<<< HEAD
         async fn get_all(
             &self,
             _: Option<u64>,
@@ -167,13 +238,27 @@ mod tests {
             Ok(vec![])
         }
         async fn get_by_id(&self, _: &str) -> Result<Option<AuthInteractionModel>> { Ok(None) }
+=======
+        async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<AuthInteractionModel>> {
+            Ok(vec![])
+        }
+        async fn get_by_id(&self, _: &str) -> Result<Option<AuthInteractionModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create(&self, _: AuthInteractionNewModel) -> Result<AuthInteractionModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
         async fn update(&self, _: AuthInteractionModel) -> Result<AuthInteractionModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
+<<<<<<< HEAD
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
@@ -181,13 +266,20 @@ mod tests {
         async fn get_by_reference(&self, _: &str) -> Result<Option<AuthInteractionModel>> {
             Ok(None)
         }
+<<<<<<< HEAD
         async fn get_by_cont_id(&self, _: &str) -> Result<Option<AuthInteractionModel>> { Ok(None) }
+=======
+        async fn get_by_cont_id(&self, _: &str) -> Result<Option<AuthInteractionModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
     }
 
     struct MockVerificationRepo;
 
     #[async_trait::async_trait]
     impl BasicRepoTrait<AuthVerificationModel, AuthVerificationNewModel> for MockVerificationRepo {
+<<<<<<< HEAD
         async fn get_all(
             &self,
             _: Option<u64>,
@@ -196,18 +288,38 @@ mod tests {
             Ok(vec![])
         }
         async fn get_by_id(&self, _: &str) -> Result<Option<AuthVerificationModel>> { Ok(None) }
+=======
+        async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<AuthVerificationModel>> {
+            Ok(vec![])
+        }
+        async fn get_by_id(&self, _: &str) -> Result<Option<AuthVerificationModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create(&self, _: AuthVerificationNewModel) -> Result<AuthVerificationModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
         async fn update(&self, _: AuthVerificationModel) -> Result<AuthVerificationModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
+<<<<<<< HEAD
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
     impl AuthVerificationRepoTrait for MockVerificationRepo {
+<<<<<<< HEAD
         async fn get_by_state(&self, _: &str) -> Result<Option<AuthVerificationModel>> { Ok(None) }
+=======
+        async fn get_by_state(&self, _: &str) -> Result<Option<AuthVerificationModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create_extra(&self, _: AuthVerificationModel) -> Result<AuthVerificationModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
@@ -220,14 +332,26 @@ mod tests {
         async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<AuthTokenReqModel>> {
             Ok(vec![])
         }
+<<<<<<< HEAD
         async fn get_by_id(&self, _: &str) -> Result<Option<AuthTokenReqModel>> { Ok(None) }
+=======
+        async fn get_by_id(&self, _: &str) -> Result<Option<AuthTokenReqModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create(&self, _: AuthTokenReqModel) -> Result<AuthTokenReqModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
         async fn update(&self, _: AuthTokenReqModel) -> Result<AuthTokenReqModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
+<<<<<<< HEAD
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
     #[async_trait::async_trait]
     impl AuthTokenRequirementsRepoTrait for MockTokenReqRepo {}
@@ -238,14 +362,26 @@ mod tests {
         async fn get_all(&self, _: Option<u64>, _: Option<u64>) -> Result<Vec<BusinessMateModel>> {
             Ok(vec![])
         }
+<<<<<<< HEAD
         async fn get_by_id(&self, _: &str) -> Result<Option<BusinessMateModel>> { Ok(None) }
+=======
+        async fn get_by_id(&self, _: &str) -> Result<Option<BusinessMateModel>> {
+            Ok(None)
+        }
+>>>>>>> origin/main
         async fn create(&self, _: BusinessMateNewModel) -> Result<BusinessMateModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
         async fn update(&self, _: BusinessMateModel) -> Result<BusinessMateModel> {
             Err(anyhow::anyhow!("Not implemented"))
         }
+<<<<<<< HEAD
         async fn delete(&self, _: &str) -> Result<()> { Ok(()) }
+=======
+        async fn delete(&self, _: &str) -> Result<()> {
+            Ok(())
+        }
+>>>>>>> origin/main
     }
 
     #[async_trait::async_trait]
@@ -263,18 +399,34 @@ mod tests {
         mates_repo: Arc<dyn MatesRepoTrait>
     }
 
+<<<<<<< HEAD
     impl rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait
         for MockRepoFactory
     {
         fn request(&self) -> Arc<dyn AuthRequestRepoTrait> { Arc::new(MockRequestRepo) }
         fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> { Arc::new(MockInteractionRepo) }
+=======
+    impl rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait for MockRepoFactory {
+        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
+            Arc::new(MockRequestRepo)
+        }
+        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
+            Arc::new(MockInteractionRepo)
+        }
+>>>>>>> origin/main
         fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> {
             Arc::new(MockVerificationRepo)
         }
         fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
             Arc::new(MockTokenReqRepo)
         }
+<<<<<<< HEAD
         fn mates(&self) -> Arc<dyn MatesRepoTrait> { self.mates_repo.clone() }
+=======
+        fn mates(&self) -> Arc<dyn MatesRepoTrait> {
+            self.mates_repo.clone()
+        }
+>>>>>>> origin/main
         fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> {
             Arc::new(MockBusinessMatesRepo)
         }
@@ -296,13 +448,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_mate_by_id_error_real_router() {
+<<<<<<< HEAD
         let repo =
             Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: true }) });
+=======
+        let repo = Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: true }) });
+>>>>>>> origin/main
         let config = mock_config("http://localhost");
         let manager = Arc::new(Manager::new(repo, config));
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -310,6 +467,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates/mate123").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -318,6 +478,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_mate_token_success_mocked() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use axum::Json;
@@ -328,13 +489,25 @@ mod tests {
         use rainbow_common::mates::mates::VerifyTokenRequest;
         use reqwest::StatusCode;
         use serde_json::json;
+=======
+        use axum::Json;
+        use axum::{body::Body, extract::State, http::Request, response::IntoResponse, routing::post, Router};
+        use rainbow_common::mates::mates::VerifyTokenRequest;
+        use reqwest::StatusCode;
+        use serde_json::json;
+        use std::sync::Arc;
+>>>>>>> origin/main
         use tower::ServiceExt;
 
         struct MockManager;
         impl MockManager {
             async fn verify_token(
                 &self,
+<<<<<<< HEAD
                 _token: String
+=======
+                _token: String,
+>>>>>>> origin/main
             ) -> Result<serde_json::Value, rainbow_common::errors::CommonErrors> {
                 Ok(json!({"participant_id": "mate123", "token": "valid"}))
             }
@@ -342,7 +515,11 @@ mod tests {
 
         async fn handler(
             State(manager): State<Arc<MockManager>>,
+<<<<<<< HEAD
             Json(payload): Json<VerifyTokenRequest>
+=======
+            Json(payload): Json<VerifyTokenRequest>,
+>>>>>>> origin/main
         ) -> impl IntoResponse {
             match manager.verify_token(payload.token).await {
                 Ok(res) => (StatusCode::OK, Json(res)).into_response(),
@@ -364,7 +541,11 @@ mod tests {
                     .uri("/api/v1/verify/mate/token")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -374,8 +555,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_mate_token_error() {
+<<<<<<< HEAD
         let repo =
             Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: true }) });
+=======
+        let repo = Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: true }) });
+>>>>>>> origin/main
         let config = mock_config("http://localhost");
         let manager = Arc::new(Manager::new(repo, config));
         let router = RainbowAuthProviderRouter::new(manager).router();
@@ -391,7 +576,11 @@ mod tests {
                     .uri("/api/v1/verify/mate/token")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -401,6 +590,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_business_mate_token_success_mocked() {
+<<<<<<< HEAD
         use std::sync::Arc;
 
         use axum::{
@@ -408,13 +598,22 @@ mod tests {
             Router
         };
         use rainbow_common::auth::business::RainbowBusinessLoginRequest;
+=======
+        use axum::{body::Body, extract::State, http::Request, response::IntoResponse, routing::post, Router};
+        use rainbow_common::auth::business::RainbowBusinessLoginRequest;
+        use std::sync::Arc;
+>>>>>>> origin/main
         use tower::ServiceExt;
 
         struct MockManager;
         impl MockManager {
             async fn retrieve_business_token(
                 &self,
+<<<<<<< HEAD
                 _id: String
+=======
+                _id: String,
+>>>>>>> origin/main
             ) -> Result<serde_json::Value, rainbow_common::errors::CommonErrors> {
                 Ok(serde_json::json!({"token": "mock-business-token"}))
             }
@@ -422,7 +621,11 @@ mod tests {
 
         async fn handler(
             State(manager): State<Arc<MockManager>>,
+<<<<<<< HEAD
             axum::Json(payload): axum::Json<RainbowBusinessLoginRequest>
+=======
+            axum::Json(payload): axum::Json<RainbowBusinessLoginRequest>,
+>>>>>>> origin/main
         ) -> impl IntoResponse {
             match manager.retrieve_business_token(payload.auth_request_id).await {
                 Ok(res) => (StatusCode::OK, axum::Json(res)).into_response(),
@@ -445,7 +648,11 @@ mod tests {
                     .uri("/api/v1/retrieve/business/token")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -455,14 +662,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_wallet_register_route_exists() {
+<<<<<<< HEAD
         let repo = Arc::new(MockRepoFactory {
             mates_repo: Arc::new(MockMatesRepo { should_fail: false })
         });
+=======
+        let repo = Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: false }) });
+>>>>>>> origin/main
         let config = mock_config("http://localhost");
         let manager = Arc::new(Manager::new(repo, config));
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -470,6 +682,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("POST").uri("/api/v1/wallet/register").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -478,17 +693,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all_mates_success() {
+<<<<<<< HEAD
         let repo = Arc::new(MockRepoFactory {
             mates_repo: Arc::new(MockMatesRepo { should_fail: false })
         });
+=======
+        let repo = Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: false }) });
+>>>>>>> origin/main
         let config = mock_config("http://localhost");
         let manager = Arc::new(Manager::new(repo, config));
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder().method("GET").uri("/api/v1/mates").body(Body::empty()).unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -497,16 +720,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_fast_login_route_exists() {
+<<<<<<< HEAD
         let repo = Arc::new(MockRepoFactory {
             mates_repo: Arc::new(MockMatesRepo { should_fail: false })
         });
+=======
+        let repo = Arc::new(MockRepoFactory { mates_repo: Arc::new(MockMatesRepo { should_fail: false }) });
+>>>>>>> origin/main
         let config = mock_config("http://localhost");
         let manager = Arc::new(Manager::new(repo, config));
         let router = RainbowAuthProviderRouter::new(manager).router();
 
+<<<<<<< HEAD
         let payload = rainbow_common::auth::business::RainbowBusinessLoginRequest {
             auth_request_id: "valid_id".to_string()
         };
+=======
+        let payload =
+            rainbow_common::auth::business::RainbowBusinessLoginRequest { auth_request_id: "valid_id".to_string() };
+>>>>>>> origin/main
         let body = serde_json::to_vec(&payload).unwrap();
 
         let response = router
@@ -516,7 +748,11 @@ mod tests {
                     .uri("/api/v1/business/login")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -546,7 +782,11 @@ mod tests {
                     .uri("/api/v1/continue/abc123")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -573,7 +813,11 @@ mod tests {
                     .uri("/api/v1/mates/batch")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -591,6 +835,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -598,6 +843,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates/me").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -614,6 +862,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -621,6 +870,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates/unknown").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -637,6 +889,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -644,6 +897,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/unknown/route").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -655,7 +911,11 @@ mod tests {
         extract::State,
         response::IntoResponse,
         routing::{get, post},
+<<<<<<< HEAD
         Router
+=======
+        Router,
+>>>>>>> origin/main
     };
     use rainbow_auth::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
     use rainbow_common::auth::business::RainbowBusinessLoginRequest;
@@ -664,13 +924,21 @@ mod tests {
 
     // Mock Manager para simular éxito y error
     struct MockManager {
+<<<<<<< HEAD
         fail: bool
+=======
+        fail: bool,
+>>>>>>> origin/main
     }
     impl MockManager {
         async fn register_wallet(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
             if self.fail {
                 Err(rainbow_common::errors::CommonErrors::database_new(Some(
+<<<<<<< HEAD
                     "fail".to_string()
+=======
+                    "fail".to_string(),
+>>>>>>> origin/main
                 )))
             } else {
                 Ok(())
@@ -681,6 +949,7 @@ mod tests {
         }
         async fn logout_wallet(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
             self.register_wallet().await
+<<<<<<< HEAD
         }
         async fn onboard_wallet(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
             self.register_wallet().await
@@ -774,6 +1043,89 @@ mod tests {
             if self.fail {
                 Err(rainbow_common::errors::CommonErrors::database_new(Some(
                     "fail".to_string()
+=======
+        }
+        async fn onboard_wallet(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn partial_onboard(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn register_key(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn register_did(&self) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn delete_key(&self, _k: KeyDefinition) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn delete_did(&self, _d: DidsInfo) -> Result<(), rainbow_common::errors::CommonErrors> {
+            self.register_wallet().await
+        }
+        async fn verify_token(
+            &self,
+            _token: String,
+        ) -> Result<serde_json::Value, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+                )))
+            } else {
+                Ok(json!({"participant_id": "mate123"}))
+            }
+        }
+        async fn retrieve_business_token(
+            &self,
+            _id: String,
+        ) -> Result<serde_json::Value, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+                )))
+            } else {
+                Ok(json!({"token": "business-token"}))
+            }
+        }
+        async fn fast_login(&self, _id: String) -> Result<String, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+                )))
+            } else {
+                Ok("https://redirect.example.com".to_string())
+            }
+        }
+        async fn generate_vp_def(
+            &self,
+            _state: String,
+        ) -> Result<serde_json::Value, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+                )))
+            } else {
+                Ok(json!({"vp_def": "definition"}))
+            }
+        }
+        async fn verify_all(
+            &self,
+            _state: String,
+            _vp_token: String,
+        ) -> Result<String, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+                )))
+            } else {
+                Ok("verification-id".to_string())
+            }
+        }
+        async fn end_verification(&self, _id: String) -> Result<Option<String>, rainbow_common::errors::CommonErrors> {
+            if self.fail {
+                Err(rainbow_common::errors::CommonErrors::database_new(Some(
+                    "fail".to_string(),
+>>>>>>> origin/main
                 )))
             } else {
                 Ok(Some("https://callback.example.com".to_string()))
@@ -785,7 +1137,11 @@ mod tests {
     async fn pd_handler(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.generate_vp_def("state123".to_string()).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn verify_handler(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
@@ -793,9 +1149,15 @@ mod tests {
             Ok(id) => match m.end_verification(id).await {
                 Ok(Some(uri)) => (StatusCode::OK, uri).into_response(),
                 Ok(None) => StatusCode::OK.into_response(),
+<<<<<<< HEAD
                 Err(e) => e.into_response()
             },
             Err(e) => e.into_response()
+=======
+                Err(e) => e.into_response(),
+            },
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
 
@@ -809,7 +1171,10 @@ mod tests {
             .route("/wallet/key", post(register_key).delete(delete_key))
             .route("/wallet/did", post(register_did).delete(delete_did))
             .route("/verify/mate/token", post(verify_mate_token))
-            .route("/retrieve/business/token", post(retrieve_business_mate_token))
+            .route(
+                "/retrieve/business/token",
+                post(retrieve_business_mate_token),
+            )
             .route("/business/login", post(fast_login))
             .route("/pd/state123", get(pd_handler))
             .route("/verify/state123", post(verify_handler))
@@ -819,42 +1184,67 @@ mod tests {
     async fn wallet_register(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.register_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn wallet_login(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.login_wallet().await {
             Ok(()) => StatusCode::OK.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn wallet_logout(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.logout_wallet().await {
             Ok(()) => StatusCode::OK.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn wallet_onboard(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.onboard_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn partial_onboard(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.partial_onboard().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn register_key(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.register_key().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn register_did(State(m): State<Arc<MockManager>>) -> impl IntoResponse {
         match m.register_did().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+<<<<<<< HEAD
             Err(e) => e.into_response()
         }
     }
@@ -874,33 +1264,72 @@ mod tests {
         match m.delete_did(payload).await {
             Ok(()) => StatusCode::CREATED.into_response(),
             Err(e) => e.into_response()
+=======
+            Err(e) => e.into_response(),
+        }
+    }
+    async fn delete_key(State(m): State<Arc<MockManager>>, Json(payload): Json<KeyDefinition>) -> impl IntoResponse {
+        match m.delete_key(payload).await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.into_response(),
+        }
+    }
+    async fn delete_did(State(m): State<Arc<MockManager>>, Json(payload): Json<DidsInfo>) -> impl IntoResponse {
+        match m.delete_did(payload).await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn verify_mate_token(
         State(m): State<Arc<MockManager>>,
+<<<<<<< HEAD
         Json(payload): Json<VerifyTokenRequest>
     ) -> impl IntoResponse {
         match m.verify_token(payload.token).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
             Err(e) => e.into_response()
+=======
+        Json(payload): Json<VerifyTokenRequest>,
+    ) -> impl IntoResponse {
+        match m.verify_token(payload.token).await {
+            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn retrieve_business_mate_token(
         State(m): State<Arc<MockManager>>,
+<<<<<<< HEAD
         Json(payload): Json<RainbowBusinessLoginRequest>
     ) -> impl IntoResponse {
         match m.retrieve_business_token(payload.auth_request_id).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
             Err(e) => e.into_response()
+=======
+        Json(payload): Json<RainbowBusinessLoginRequest>,
+    ) -> impl IntoResponse {
+        match m.retrieve_business_token(payload.auth_request_id).await {
+            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
     async fn fast_login(
         State(m): State<Arc<MockManager>>,
+<<<<<<< HEAD
         Json(payload): Json<RainbowBusinessLoginRequest>
     ) -> impl IntoResponse {
         match m.fast_login(payload.auth_request_id).await {
             Ok(uri) => (StatusCode::OK, uri).into_response(),
             Err(e) => e.into_response()
+=======
+        Json(payload): Json<RainbowBusinessLoginRequest>,
+    ) -> impl IntoResponse {
+        match m.fast_login(payload.auth_request_id).await {
+            Ok(uri) => (StatusCode::OK, uri).into_response(),
+            Err(e) => e.into_response(),
+>>>>>>> origin/main
         }
     }
 
@@ -920,7 +1349,11 @@ mod tests {
             "/retrieve/business/token",
             "/business/login",
             "/pd/state123",
+<<<<<<< HEAD
             "/verify/state123"
+=======
+            "/verify/state123",
+>>>>>>> origin/main
         ] {
             let method = if route.contains("verify")
                 || route.contains("wallet")
@@ -933,12 +1366,17 @@ mod tests {
             };
             let body = if route.contains("verify/mate/token") {
                 serde_json::to_vec(&VerifyTokenRequest { token: "valid".to_string() }).unwrap()
+<<<<<<< HEAD
             } else if route.contains("retrieve/business/token") || route.contains("business/login")
             {
                 serde_json::to_vec(&RainbowBusinessLoginRequest {
                     auth_request_id: "id".to_string()
                 })
                 .unwrap()
+=======
+            } else if route.contains("retrieve/business/token") || route.contains("business/login") {
+                serde_json::to_vec(&RainbowBusinessLoginRequest { auth_request_id: "id".to_string() }).unwrap()
+>>>>>>> origin/main
             } else {
                 vec![]
             };
@@ -950,7 +1388,11 @@ mod tests {
                         .uri(route)
                         .header("content-type", "application/json")
                         .body(Body::from(body))
+<<<<<<< HEAD
                         .unwrap()
+=======
+                        .unwrap(),
+>>>>>>> origin/main
                 )
                 .await
                 .unwrap();
@@ -963,6 +1405,7 @@ mod tests {
         let manager = Arc::new(MockManager { fail: true });
         let router = build_router(manager);
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -970,6 +1413,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("POST").uri("/wallet/register").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
         assert!(response.status().is_server_error());
@@ -985,6 +1431,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -992,6 +1439,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/did.json").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1039,7 +1489,11 @@ mod tests {
                     .uri("/api/v1/access")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1057,6 +1511,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -1064,6 +1519,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/pd/state123").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1094,7 +1552,11 @@ mod tests {
                     .uri("/api/v1/verify/state123")
                     .header("content-type", "application/x-www-form-urlencoded")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1163,8 +1625,14 @@ mod tests {
         };
 
         for (route, payload) in [
-            ("/api/v1/wallet/key", serde_json::to_vec(&key_payload).unwrap()),
-            ("/api/v1/wallet/did", serde_json::to_vec(&did_payload).unwrap())
+            (
+                "/api/v1/wallet/key",
+                serde_json::to_vec(&key_payload).unwrap(),
+            ),
+            (
+                "/api/v1/wallet/did",
+                serde_json::to_vec(&did_payload).unwrap(),
+            ),
         ] {
             let response = router
                 .clone()
@@ -1174,7 +1642,11 @@ mod tests {
                         .uri(route)
                         .header("content-type", "application/json")
                         .body(Body::from(payload))
+<<<<<<< HEAD
                         .unwrap()
+=======
+                        .unwrap(),
+>>>>>>> origin/main
                 )
                 .await
                 .unwrap();
@@ -1208,7 +1680,11 @@ mod tests {
                     .uri("/api/v1/mates/batch")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1225,6 +1701,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -1232,6 +1709,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates/me").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1248,6 +1728,7 @@ mod tests {
         let router = RainbowAuthProviderRouter::new(manager).router();
 
         let response = router
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -1255,6 +1736,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/mates/mate123").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1278,7 +1762,11 @@ mod tests {
             "/api/v1/did.json",
             "/api/v1/access",
             "/api/v1/pd/state123",
+<<<<<<< HEAD
             "/api/v1/verify/state123"
+=======
+            "/api/v1/verify/state123",
+>>>>>>> origin/main
         ] {
             let method =
                 if route.contains("did.json") || route.contains("pd") { "GET" } else { "POST" };
@@ -1296,7 +1784,11 @@ mod tests {
                         .uri(route)
                         .header("content-type", "application/json")
                         .body(Body::from(body.clone()))
+<<<<<<< HEAD
                         .unwrap()
+=======
+                        .unwrap(),
+>>>>>>> origin/main
                 )
                 .await
                 .unwrap();
@@ -1316,12 +1808,20 @@ mod tests {
                         .uri(route)
                         .header("content-type", "application/json")
                         .body(Body::from(body))
+<<<<<<< HEAD
                         .unwrap()
+=======
+                        .unwrap(),
+>>>>>>> origin/main
                 )
                 .await
                 .unwrap();
 
-            println!("FAIL route: {}, status: {:?}", route, response_fail.status());
+            println!(
+                "FAIL route: {}, status: {:?}",
+                route,
+                response_fail.status()
+            );
             assert!(
                 response_fail.status().is_server_error()
                     || response_fail.status() == StatusCode::NOT_FOUND
@@ -1335,7 +1835,11 @@ mod tests {
         use axum::{body::Body, http::Request};
         use rainbow_auth::ssi_auth::common::types::gnap::{
             grant_request::{Access4AT, AccessTokenRequirements4GR},
+<<<<<<< HEAD
             GrantRequest, RefBody
+=======
+            GrantRequest, RefBody,
+>>>>>>> origin/main
         };
         use tower::ServiceExt;
 
@@ -1345,7 +1849,11 @@ mod tests {
                 &self,
                 _id: String,
                 _ref: String,
+<<<<<<< HEAD
                 _token: String
+=======
+                _token: String,
+>>>>>>> origin/main
             ) -> Result<String, rainbow_common::errors::CommonErrors> {
                 Ok("interaction-model".to_string())
             }
@@ -1361,7 +1869,11 @@ mod tests {
                             locations: None,
                             datatypes: None,
                             identifier: None,
+<<<<<<< HEAD
                             privileges: None
+=======
+                            privileges: None,
+>>>>>>> origin/main
                         },
                         label: None,
                         flags: None
@@ -1375,7 +1887,11 @@ mod tests {
             async fn retrieve_data(
                 &self,
                 _req: GrantRequest,
+<<<<<<< HEAD
                 _int: String
+=======
+                _int: String,
+>>>>>>> origin/main
             ) -> Result<String, rainbow_common::errors::CommonErrors> {
                 Ok("mate-data".to_string())
             }
@@ -1388,18 +1904,22 @@ mod tests {
         }
 
         let manager = Arc::new(MockManager);
-        let router = axum::Router::new()
-            .route("/api/v1/continue/abc123", axum::routing::post(handler))
-            .with_state(manager);
+        let router =
+            axum::Router::new().route("/api/v1/continue/abc123", axum::routing::post(handler)).with_state(manager);
 
+<<<<<<< HEAD
         async fn handler(
             State(manager): State<Arc<MockManager>>,
             Json(payload): Json<RefBody>
         ) -> impl IntoResponse {
+=======
+        async fn handler(State(manager): State<Arc<MockManager>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
+>>>>>>> origin/main
             match manager
                 .validate_continue_request(
                     "abc123".to_string(),
                     payload.interact_ref,
+<<<<<<< HEAD
                     "token123".to_string()
                 )
                 .await
@@ -1407,6 +1927,18 @@ mod tests {
                 Ok(_) => (StatusCode::OK, Json(serde_json::json!({"status": "continued"})))
                     .into_response(),
                 Err(e) => e.into_response()
+=======
+                    "token123".to_string(),
+                )
+                .await
+            {
+                Ok(_) => (
+                    StatusCode::OK,
+                    Json(serde_json::json!({"status": "continued"})),
+                )
+                    .into_response(),
+                Err(e) => e.into_response(),
+>>>>>>> origin/main
             }
         }
 
@@ -1420,7 +1952,11 @@ mod tests {
                     .uri("/api/v1/continue/abc123")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1448,7 +1984,11 @@ mod tests {
                     .header("authorization", "GNAP token123")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1480,7 +2020,11 @@ mod tests {
                     .uri("/api/v1/verify/state123")
                     .header("content-type", "application/x-www-form-urlencoded")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1507,7 +2051,7 @@ mod tests {
             "/api/v1/wallet/login",
             "/api/v1/wallet/logout",
             "/api/v1/wallet/onboard",
-            "/api/v1/wallet/partial-onboard"
+            "/api/v1/wallet/partial-onboard",
         ] {
             let response = router
                 .clone()
@@ -1515,7 +2059,11 @@ mod tests {
                 .await
                 .unwrap();
 
-            println!("Wallet error route: {}, status: {:?}", route, response.status());
+            println!(
+                "Wallet error route: {}, status: {:?}",
+                route,
+                response.status()
+            );
             assert!(response.status().is_server_error());
         }
     }
@@ -1550,23 +2098,40 @@ mod tests {
             (
                 "/api/v1/wallet/key",
                 "POST",
+<<<<<<< HEAD
                 serde_json::to_vec(&key_payload).unwrap()
+=======
+                serde_json::to_vec(&key_payload).unwrap(),
+>>>>>>> origin/main
             ),
             (
                 "/api/v1/wallet/did",
                 "POST",
+<<<<<<< HEAD
                 serde_json::to_vec(&did_payload).unwrap()
+=======
+                serde_json::to_vec(&did_payload).unwrap(),
+>>>>>>> origin/main
             ),
             (
                 "/api/v1/wallet/key",
                 "DELETE",
+<<<<<<< HEAD
                 serde_json::to_vec(&key_payload).unwrap()
+=======
+                serde_json::to_vec(&key_payload).unwrap(),
+>>>>>>> origin/main
             ),
             (
                 "/api/v1/wallet/did",
                 "DELETE",
+<<<<<<< HEAD
                 serde_json::to_vec(&did_payload).unwrap()
             )
+=======
+                serde_json::to_vec(&did_payload).unwrap(),
+            ),
+>>>>>>> origin/main
         ] {
             let response = router
                 .clone()
@@ -1576,7 +2141,11 @@ mod tests {
                         .uri(route)
                         .header("content-type", "application/json")
                         .body(Body::from(payload))
+<<<<<<< HEAD
                         .unwrap()
+=======
+                        .unwrap(),
+>>>>>>> origin/main
                 )
                 .await
                 .unwrap();
@@ -1586,10 +2155,14 @@ mod tests {
                 route,
                 response.status()
             );
+<<<<<<< HEAD
             assert!(
                 response.status().is_server_error()
                     || response.status() == StatusCode::PRECONDITION_FAILED
             );
+=======
+            assert!(response.status().is_server_error() || response.status() == StatusCode::PRECONDITION_FAILED);
+>>>>>>> origin/main
         }
     }
 
@@ -1630,7 +2203,11 @@ mod tests {
                     .uri("/api/v1/access")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1650,6 +2227,7 @@ mod tests {
 
         let response = router
             .clone()
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -1657,6 +2235,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("GET").uri("/api/v1/pd/state123").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1684,7 +2265,11 @@ mod tests {
                     .uri("/api/v1/business/login")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
@@ -1705,6 +2290,7 @@ mod tests {
 
         let response = router
             .clone()
+<<<<<<< HEAD
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -1712,6 +2298,9 @@ mod tests {
                     .body(Body::empty())
                     .unwrap()
             )
+=======
+            .oneshot(Request::builder().method("POST").uri("/api/v1/nonexistent").body(Body::empty()).unwrap())
+>>>>>>> origin/main
             .await
             .unwrap();
 
@@ -1739,12 +2328,19 @@ mod tests {
                     .uri("/api/v1/retrieve/business/token")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
 
-        println!("Retrieve business token success status: {:?}", response.status());
+        println!(
+            "Retrieve business token success status: {:?}",
+            response.status()
+        );
         assert!(
             response.status().is_success()
                 || response.status() == StatusCode::NOT_FOUND
@@ -1771,12 +2367,19 @@ mod tests {
                     .uri("/api/v1/retrieve/business/token")
                     .header("content-type", "application/json")
                     .body(Body::from(body))
+<<<<<<< HEAD
                     .unwrap()
+=======
+                    .unwrap(),
+>>>>>>> origin/main
             )
             .await
             .unwrap();
 
-        println!("Retrieve business token error status: {:?}", response.status());
+        println!(
+            "Retrieve business token error status: {:?}",
+            response.status()
+        );
         assert!(
             response.status().is_server_error()
                 || response.status() == StatusCode::NOT_FOUND

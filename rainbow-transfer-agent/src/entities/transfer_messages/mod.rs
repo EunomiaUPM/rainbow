@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::data::entities::transfer_message::{self as transfer_message_model, NewTransferMessageModel};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
@@ -5,7 +24,6 @@ use urn::Urn;
 
 pub(crate) mod transfer_messages;
 
-// Wrapper de respuesta
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransferMessageDto {
@@ -13,7 +31,6 @@ pub struct TransferMessageDto {
     pub inner: transfer_message_model::Model,
 }
 
-// DTO de entrada para creación
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -28,7 +45,6 @@ pub struct NewTransferMessageDto {
     pub payload: Option<Json>,
 }
 
-// Conversión de DTO a Modelo de Dominio (para pasar al Repo)
 impl From<NewTransferMessageDto> for NewTransferMessageModel {
     fn from(dto: NewTransferMessageDto) -> Self {
         Self {

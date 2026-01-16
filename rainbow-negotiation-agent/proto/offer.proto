@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package negotiation_agent.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "models.proto";
+
+service NegotiationAgentOffersService {
+  rpc GetAllOffers (GetAllOffersRequest) returns (OfferListResponse);
+  rpc GetBatchOffers (GetBatchOffersRequest) returns (OfferListResponse);
+  rpc GetOffersByNegotiationProcess (GetOffersByNegotiationProcessRequest) returns (OfferListResponse);
+  rpc GetOfferById (GetOfferByIdRequest) returns (OfferResponse);
+  rpc GetOfferByNegotiationMessage (GetOfferByNegotiationMessageRequest) returns (OfferResponse);
+  rpc GetOfferByOfferId (GetOfferByOfferIdRequest) returns (OfferResponse);
+  rpc CreateOffer (CreateOfferRequest) returns (OfferResponse);
+  rpc DeleteOffer (DeleteOfferRequest) returns (google.protobuf.Empty);
+}
+
+message GetAllOffersRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message GetBatchOffersRequest {
+  repeated string ids = 1;
+}
+
+message GetOffersByNegotiationProcessRequest {
+  string process_id = 1;
+}
+
+message GetOfferByIdRequest {
+  string id = 1;
+}
+
+message GetOfferByNegotiationMessageRequest {
+  string message_id = 1;
+}
+
+message GetOfferByOfferIdRequest {
+  string offer_id = 1;
+}
+
+message CreateOfferRequest {
+  optional string id = 1;
+  string negotiation_agent_process_id = 2;
+  string negotiation_agent_message_id = 3;
+  string offer_id = 4;
+  google.protobuf.Struct offer_content = 5;
+}
+
+message DeleteOfferRequest {
+  string id = 1;
+}
+
+message OfferListResponse {
+  repeated Offer offers = 1;
+}
+
+message OfferResponse {
+  Offer offer = 1;
+}

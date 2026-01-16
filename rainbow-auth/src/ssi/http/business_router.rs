@@ -37,10 +37,7 @@ impl BusinessRouter {
     pub fn new(business: Arc<dyn CoreBusinessTrait>) -> Self { BusinessRouter { business } }
 
     pub fn router(self) -> Router {
-        Router::new()
-            .route("/login", post(Self::login))
-            .route("/token", post(Self::token))
-            .with_state(self.business)
+        Router::new().route("/login", post(Self::login)).route("/token", post(Self::token)).with_state(self.business)
     }
 
     async fn login(

@@ -4,7 +4,11 @@
 #[cfg(test)]
 mod tests {
     use rainbow_auth::ssi_auth::common::types::entities::{
+<<<<<<< HEAD
         ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity
+=======
+        ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity,
+>>>>>>> origin/main
     };
     use serde_json;
 

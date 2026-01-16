@@ -72,6 +72,12 @@ pub enum DataPlaneSDPConfigTypes {
     NextHopAddressScheme,
     #[serde(rename = "NextHopAddress")]
     NextHopAddress,
+    #[serde(rename = "NextHopConfigurationBody")]
+    NextHopConfigurationBody,
+    #[serde(rename = "NextHopAddressAuth")]
+    NextHopAddressAuth,
+    #[serde(rename = "NextHopAddressAuthType")]
+    NextHopAddressAuthType,
     #[serde(rename = "Direction")]
     Direction,
 }

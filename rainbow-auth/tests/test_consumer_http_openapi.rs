@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use std::sync::Arc;
 
     use actix_web::{http::StatusCode, test, web, App, HttpResponse};
@@ -9,6 +10,12 @@ mod tests {
     use rainbow_auth::ssi_auth::consumer::http::openapi::{
         get_open_api, route_openapi, OPENAPI_JSON
     };
+=======
+    use actix_web::{http::StatusCode, test, web, App, HttpResponse};
+    use axum::response::IntoResponse;
+    use rainbow_auth::ssi_auth::consumer::http::openapi::{get_open_api, route_openapi, OPENAPI_JSON};
+    use std::sync::Arc;
+>>>>>>> origin/main
     use utoipa_swagger_ui::{serve, Config};
 
     #[tokio::test]
@@ -17,11 +24,8 @@ mod tests {
         use tower::ServiceExt;
 
         let app = route_openapi();
-        let request = Request::builder()
-            .uri("/api/v1/auth/openapi")
-            .method("GET")
-            .body(axum::body::Body::empty())
-            .unwrap();
+        let request =
+            Request::builder().uri("/api/v1/auth/openapi").method("GET").body(axum::body::Body::empty()).unwrap();
 
         let response = app.oneshot(request).await.unwrap();
         assert_eq!(response.status(), axum::http::StatusCode::OK);
@@ -44,11 +48,8 @@ mod tests {
 
         let app = route_openapi();
 
-        let request = Request::builder()
-            .uri("/api/v1/auth/openapi.json")
-            .method("GET")
-            .body(axum::body::Body::empty())
-            .unwrap();
+        let request =
+            Request::builder().uri("/api/v1/auth/openapi.json").method("GET").body(axum::body::Body::empty()).unwrap();
 
         let response = app.oneshot(request).await.unwrap();
 
@@ -71,6 +72,7 @@ mod tests {
                 let config = config.clone();
                 async move {
                     match serve("/api/v1/auth/openapi.json", config) {
+<<<<<<< HEAD
                         Ok(Some(file)) => HttpResponse::Ok()
                             .content_type(file.content_type)
                             .body(file.bytes.to_vec()),
@@ -78,6 +80,13 @@ mod tests {
                     }
                 }
             })
+=======
+                        Ok(Some(file)) => HttpResponse::Ok().content_type(file.content_type).body(file.bytes.to_vec()),
+                        _ => HttpResponse::NotFound().finish(),
+                    }
+                }
+            }),
+>>>>>>> origin/main
         ))
         .await;
 

@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::data::entities::transfer_process::{
     self as transfer_process_model, EditTransferProcessModel, NewTransferProcessModel,
 };
@@ -27,7 +46,7 @@ impl TransferAgentProcessesService {
     async fn enrich_process(&self, process: transfer_process_model::Model) -> anyhow::Result<TransferProcessDto> {
         let process_urn = Urn::from_str(&process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
-                "Critical: Invalid URN found in database for process {}. Error: {}",
+                "Invalid URN found in database for process {}. Error: {}",
                 process.id, e
             ));
             error!("{}", err.log());

@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
@@ -6,9 +25,11 @@ use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
     TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
 };
+use crate::protocols::dsp::transfer_types::TransferState;
+use anyhow::bail;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::errors::ErrorLog;
-use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -124,7 +145,7 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
         // current state
         let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
         // role
-        let role = transfer_process.inner.role.parse::<TransferRoles>()?;
+        let role = transfer_process.inner.role.parse::<RoleConfig>()?;
         let state_attribute = transfer_process
             .inner
             .state_attribute
@@ -136,13 +157,23 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
             TransferProcessMessageType::TransferStartMessage => match &state_attribute {
                 TransferStateAttribute::OnRequest => TransferStateAttribute::OnRequest,
                 _ => match &role {
-                    TransferRoles::Provider => TransferStateAttribute::ByProvider,
-                    TransferRoles::Consumer => TransferStateAttribute::ByConsumer,
+                    RoleConfig::Provider => TransferStateAttribute::ByProvider,
+                    RoleConfig::Consumer => TransferStateAttribute::ByConsumer,
+                    _ => {
+                        let err = CommonErrors::parse_new("Process service not found");
+                        error!("{}", err.log());
+                        bail!(err)
+                    }
                 },
             },
             _ => match &role {
-                TransferRoles::Provider => TransferStateAttribute::ByProvider,
-                TransferRoles::Consumer => TransferStateAttribute::ByConsumer,
+                RoleConfig::Provider => TransferStateAttribute::ByProvider,
+                RoleConfig::Consumer => TransferStateAttribute::ByConsumer,
+                _ => {
+                    let err = CommonErrors::parse_new("Process service not found");
+                    error!("{}", err.log());
+                    bail!(err)
+                }
             },
         };
 

@@ -35,7 +35,7 @@ pub struct Model {
     pub success: Option<bool>,             // RESPONSE
     pub status: String,                    // DEFAULT
     pub created_at: chrono::NaiveDateTime, // DEFAULT
-    pub ended_at: Option<chrono::NaiveDateTime>  /* RESPONSE
+    pub ended_at: Option<chrono::NaiveDateTime>, /* RESPONSE
                                             * pub requirements: Value, TODO */
 }
 
@@ -43,15 +43,13 @@ pub struct Model {
 pub struct NewModel {
     pub id: String,       // REQUEST
     pub audience: String, // SEMI-RANDOM
-    pub vc_type: String   // REQUEST
+    pub vc_type: String,  // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
     fn to_active(self) -> ActiveModel {
-        let state: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let nonce: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let audience = format!("{}/{}", self.audience, &state);
         ActiveModel {
             id: ActiveValue::Set(self.id),
@@ -64,7 +62,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             success: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            ended_at: ActiveValue::Set(None)
+            ended_at: ActiveValue::Set(None),
         }
     }
 }
@@ -82,7 +80,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             success: ActiveValue::Set(self.success),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),
-            ended_at: ActiveValue::Set(self.ended_at)
+            ended_at: ActiveValue::Set(self.ended_at),
         }
     }
 }

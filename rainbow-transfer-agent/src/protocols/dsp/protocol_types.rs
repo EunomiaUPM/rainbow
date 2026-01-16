@@ -1,7 +1,26 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::entities::transfer_process::TransferProcessDto;
 use anyhow::bail;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
@@ -488,7 +507,7 @@ impl FromStr for TransferStateAttribute {
             "ByProvider" => Ok(TransferStateAttribute::ByProvider),
             v => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid or unknown TransferStateAttribute '{}'",
+                    "Invalid or unknown TransferStateAttribute '{}'",
                     v
                 ));
                 error!("{}", err.log());
@@ -505,8 +524,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let consumer_str = match value.identifiers.get("consumerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'consumerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'consumerPid' in TransferProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -515,7 +533,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for consumerPid '{}': {}",
+                    "Invalid URN format for consumerPid '{}': {}",
                     consumer_str, e
                 ));
                 error!("{}", err.log());
@@ -526,8 +544,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'providerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'providerPid' in TransferProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -536,7 +553,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for providerPid '{}': {}",
+                    "Invalid URN format for providerPid '{}': {}",
                     provider_str, e
                 ));
                 error!("{}", err.log());
@@ -548,7 +565,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(s) => s,
             Err(_) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid or unknown TransferProcessState '{}' in database model",
+                    "Invalid or unknown TransferProcessState '{}' in database model",
                     value.inner.state
                 ));
                 error!("{}", err.log());

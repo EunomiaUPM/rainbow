@@ -3,6 +3,7 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use std::env;
     use std::panic::AssertUnwindSafe;
 
@@ -10,12 +11,23 @@ mod tests {
     use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
     use rainbow_common::config::{
         database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig
+=======
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
+    use rainbow_common::config::{
+        database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig,
+>>>>>>> origin/main
     };
     use sea_orm::Database;
     use sea_orm::{sea_query, DbErr};
     use sea_orm_migration::MigrationName;
     use sea_orm_migration::{async_trait, SchemaManager};
     use sea_orm_migration::{MigrationTrait, MigratorTrait};
+<<<<<<< HEAD
+=======
+    use std::env;
+    use std::panic::AssertUnwindSafe;
+>>>>>>> origin/main
 
     struct TestMigration;
 
@@ -27,6 +39,7 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
                         .col(
                             sea_query::ColumnDef::new(sea_query::Alias::new("id"))
                                 .integer()
@@ -34,18 +47,26 @@ mod tests {
                                 .primary_key()
                         )
                         .to_owned()
+=======
+                        .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
+                        .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
                 .drop_table(
                     sea_query::Table::drop()
                         .table(sea_query::Alias::new("dummy"))
                         .if_exists()
                         .to_owned()
                 )
+=======
+                .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }
@@ -140,9 +161,7 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string()
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config))
-            .catch_unwind()
-            .await;
+        let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config)).catch_unwind().await;
         assert!(result.is_err(), "Expected panic for invalid MySQL config");
     }
 
@@ -157,21 +176,26 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string()
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config))
-            .catch_unwind()
-            .await;
-        assert!(result.is_err(), "Expected panic for invalid Postgres config");
+        let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config)).catch_unwind().await;
+        assert!(
+            result.is_err(),
+            "Expected panic for invalid Postgres config"
+        );
     }
 
     #[tokio::test]
     async fn test_up_and_down_should_succeed() {
-        let db = Database::connect("sqlite::memory:")
-            .await
-            .expect("Failed to connect to in-memory SQLite");
+        let db = Database::connect("sqlite::memory:").await.expect("Failed to connect to in-memory SQLite");
         let manager = SchemaManager::new(&db);
         let migration = TestMigration;
-        assert!(migration.up(&manager).await.is_ok(), "Expected up() to succeed");
-        assert!(migration.down(&manager).await.is_ok(), "Expected down() to succeed");
+        assert!(
+            migration.up(&manager).await.is_ok(),
+            "Expected up() to succeed"
+        );
+        assert!(
+            migration.down(&manager).await.is_ok(),
+            "Expected down() to succeed"
+        );
     }
 
     #[test]
@@ -180,6 +204,9 @@ mod tests {
         impl MigratorTrait for EmptyMigrator {
             fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> { vec![] }
         }
-        assert!(EmptyMigrator::migrations().is_empty(), "Expected empty migrations");
+        assert!(
+            EmptyMigrator::migrations().is_empty(),
+            "Expected empty migrations"
+        );
     }
 }

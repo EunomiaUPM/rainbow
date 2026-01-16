@@ -17,9 +17,9 @@
  *
  */
 
+use crate::config::traits::ExtraHostsTrait;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use crate::config::traits::ExtraHostsTrait;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HostConfig {

@@ -1,3 +1,4 @@
+#![allow(unused)]
 /*
  *
  *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
@@ -18,4 +19,6 @@
  */
 
 pub mod core;
+pub mod data;
+pub(crate) mod errors;
 pub mod http;
