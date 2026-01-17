@@ -130,7 +130,7 @@ impl ApplicationConfig {
         module.expect("Trying to access core mode without it being defined")
     }
 
-    pub fn load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self> {
+    pub fn load(env_file: Option<String>) -> anyhow::Result<Self> {
         if let Some(env_file) = env_file {
             let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
             debug!("Config file path: {}", path.display());

@@ -101,10 +101,9 @@ pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Resul
     }
 }
 
-<<<<<<< HEAD
 pub fn read_json<T>(path: &str) -> anyhow::Result<T>
 where
-    T: DeserializeOwned
+    T: DeserializeOwned,
 {
     let data = read(path)?;
     let json = serde_json::from_str(&data)?;
@@ -122,7 +121,8 @@ pub fn expect_from_env(env: &str) -> String {
         }
     };
     data.expect("Error with env variable")
-=======
+}
+
 pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Response> {
     match input {
         Ok(Json(data)) => Ok(data),
@@ -132,5 +132,4 @@ pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Re
             Err(e.into_response())
         }
     }
->>>>>>> origin/main
 }

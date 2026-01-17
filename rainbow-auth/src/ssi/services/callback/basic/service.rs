@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::sync::Arc;
 use super::super::CallbackTrait;
 
 use anyhow::bail;
@@ -28,7 +29,6 @@ use reqwest::Response;
 use sha2::{Digest, Sha256};
 use tracing::{error, info};
 
-use super::super::CallbackTrait;
 use crate::ssi::data::entities::req_interaction;
 use crate::ssi::errors::AuthErrors;
 use crate::ssi::services::client::ClientServiceTrait;

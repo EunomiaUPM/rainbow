@@ -23,12 +23,11 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
 use rainbow_common::config::traits::ApiConfigTrait;
-use rainbow_common::http::OpenapiRouter;
 use rainbow_common::utils::server_status;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{error, info, Level};
 use uuid::Uuid;
-
+use rainbow_common::openapi_http::OpenapiRouter;
 use crate::ssi::core::traits::AuthCoreTrait;
 use crate::ssi::core::AuthCore;
 use crate::ssi::http::business_router::BusinessRouter;

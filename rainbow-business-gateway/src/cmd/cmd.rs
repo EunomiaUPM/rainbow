@@ -25,7 +25,6 @@ use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
 use rainbow_common::config::services::GatewayConfig;
 use rainbow_common::config::traits::{ConfigLoader, HostConfigTrait, IsLocalTrait};
-use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use std::process::Command;
 use std::sync::Arc;
@@ -64,7 +63,7 @@ impl GatewayCommands {
         // run scripts
         match cli.command {
             GatewayCliCommands::Start(args) => {
-                let config = GatewayConfig::load(RoleConfig::Provider, args.env_file);
+                let config = GatewayConfig::load(args.env_file);
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
                 let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
                 let gateway_router = RainbowBusinessRouter::new(config.clone(), gateway_service).router();

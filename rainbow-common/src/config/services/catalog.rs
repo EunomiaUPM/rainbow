@@ -21,10 +21,9 @@ use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CacheConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait,
-    IsLocalTrait, KeysPathTrait, RoleTrait,
+    IsLocalTrait, KeysPathTrait,
 };
 use crate::config::types::cache::{CacheConfig, CacheType};
-use crate::config::types::roles::RoleConfig;
 use crate::config::types::HostConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::utils::get_host_helper;

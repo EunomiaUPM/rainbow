@@ -1,6 +1,5 @@
 pub mod shutdown;
 
-use crate::config::types::roles::RoleConfig;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use tokio::sync::broadcast;
@@ -9,7 +8,7 @@ use tokio::sync::broadcast;
 pub trait BootstrapServiceTrait: Send + Sync {
     type Config: Debug + Clone + Send + Sync;
 
-    async fn load_config(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config>;
+    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config>;
 
     fn enable_participant() -> bool {
         true
@@ -53,19 +52,17 @@ pub struct BootstrapCurrentState<S: BootstrapStepTrait>(pub S);
 pub struct BootstrapInit<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
     pub env_file: Option<String>,
-    pub role: RoleConfig,
 }
 
 impl<S: BootstrapServiceTrait> BootstrapInit<S> {
-    pub fn new(role: RoleConfig, env_file: Option<String>) -> Self {
-        Self { _marker: PhantomData, env_file, role }
+    pub fn new(env_file: Option<String>) -> Self {
+        Self { _marker: PhantomData, env_file }
     }
 }
 
 pub struct BootstrapConfigLoaded<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
     pub env_file: Option<String>,
-    pub role: RoleConfig,
 }
 
 pub struct BootstrapServicesStarted<S: BootstrapServiceTrait> {
@@ -115,7 +112,6 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapInit<S> {
         Ok(BootstrapCurrentState(BootstrapConfigLoaded {
             _marker: PhantomData,
             env_file: self.env_file,
-            role: self.role,
         }))
     }
 }
@@ -126,7 +122,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [2/8]: Configuration loading");
-        let config = S::load_config(self.role, self.env_file).await?;
+        let config = S::load_config(self.env_file).await?;
 
         tracing::info!("Step [3/8]: Starting Services in Background");
         let shutdown_tx = S::start_services_background(&config).await?;

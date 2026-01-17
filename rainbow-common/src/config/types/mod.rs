@@ -23,6 +23,7 @@ mod client;
 pub mod database;
 mod host;
 mod wallet;
+pub mod roles;
 
 pub use api::ApiConfig;
 pub use client::*;
