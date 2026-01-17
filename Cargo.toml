@@ -56,11 +56,7 @@ urlencoding = { version = "2.1.3" }
 sha2 = "0.10.9"
 rand = "0.8.5"
 jsonwebtoken = "9.3.1"
-<<<<<<< HEAD
 serde_norway = "0.9.42"
 vaultrs = "0.7.4"
 derive_builder = "0.20.2"
 rustls = { version = "0.23", features = ["ring"] }
-=======
-serde_norway = {version = "0.9.42"}
->>>>>>> origin/main
