@@ -21,7 +21,7 @@ use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CacheConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait,
-    IsLocalTrait, KeysPathTrait,
+    IsLocalTrait,
 };
 use crate::config::types::cache::{CacheConfig, CacheType};
 use crate::config::types::HostConfig;
@@ -125,8 +125,6 @@ impl HostConfigTrait for CatalogConfig {}
 impl DatabaseConfigTrait for CatalogConfig {}
 
 impl IsLocalTrait for CatalogConfig {}
-
-impl KeysPathTrait for CatalogConfig {}
 
 impl ApiConfigTrait for CatalogConfig {}
 

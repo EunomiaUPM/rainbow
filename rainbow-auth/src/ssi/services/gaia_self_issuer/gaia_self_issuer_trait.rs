@@ -14,18 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+use async_trait::async_trait;
 use serde_json::Value;
 
 use crate::ssi::types::vc_issuing::{
     AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer
 };
 
+#[async_trait]
 pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
     fn get_cred_offer_data(&self) -> VCCredOffer;
     fn get_issuer_data(&self) -> IssuerMetadata;
     fn get_oauth_server_data(&self) -> AuthServerMetadata;
     fn get_token(&self) -> IssuingToken;
     fn generate_issuing_uri(&self, id: &str) -> String;
-    fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
+    async fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
 }

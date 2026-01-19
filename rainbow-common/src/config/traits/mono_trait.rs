@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::config::services::MonolithConfig;
 
 pub trait MonoConfigTrait {
     fn is_mono_catalog_datahub(&self) -> bool;

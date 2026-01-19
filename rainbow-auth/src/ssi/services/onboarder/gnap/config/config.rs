@@ -26,7 +26,6 @@ use crate::ssi::utils::get_pretty_client_config_helper;
 pub struct GnapOnboarderConfig {
     host: CommonHostsConfig,
     client: ClientConfig,
-    keys_path: String,
     api_path: String
 }
 
@@ -35,16 +34,14 @@ impl From<SsiAuthConfig> for GnapOnboarderConfig {
         GnapOnboarderConfig {
             host: value.common().hosts.clone(),
             client: value.client(),
-            keys_path: value.common().keys_path.clone(),
             api_path: value.get_api_version().clone()
         }
     }
 }
 
 impl GnapOnboarderConfigTrait for GnapOnboarderConfig {
-    fn get_pretty_client_config(&self) -> anyhow::Result<Value> {
-        let path = format!("{}/cert.pem", self.keys_path);
-        get_pretty_client_config_helper(&self.client, &path)
+    fn get_pretty_client_config(&self, cert: &str) -> anyhow::Result<Value> {
+        get_pretty_client_config_helper(&self.client, &cert)
     }
     fn hosts(&self) -> &CommonHostsConfig { &self.host }
     fn get_api_path(&self) -> String { self.api_path.clone() }

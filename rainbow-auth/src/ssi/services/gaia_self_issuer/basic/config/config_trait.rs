@@ -22,7 +22,6 @@ use crate::ssi::types::enums::VcDataModelVersion;
 pub trait GaiaGaiaSelfIssuerConfigTrait {
     fn hosts(&self) -> &CommonHostsConfig;
     fn is_local(&self) -> bool;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
     fn get_api_path(&self) -> String;
     fn get_data_model_version(&self) -> VcDataModelVersion;
 }

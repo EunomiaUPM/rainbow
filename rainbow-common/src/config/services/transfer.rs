@@ -20,7 +20,7 @@
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
 };
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +79,5 @@ impl HostConfigTrait for TransferConfig {}
 impl DatabaseConfigTrait for TransferConfig {}
 
 impl IsLocalTrait for TransferConfig {}
-
-impl KeysPathTrait for TransferConfig {}
 
 impl ApiConfigTrait for TransferConfig {}

@@ -35,8 +35,8 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - ./vault/provider/config:/vault/config
-      - ./vault/provider/data:/vault/file
+      - ../vault/provider/config:/vault/config
+      - ../vault/provider/data:/vault/file
     environment:
       VAULT_LOCAL_CONFIG: >
         {
@@ -46,7 +46,6 @@ services:
               "address": "0.0.0.0:8200",
               "tls_cert_file": "/vault/config/vault-cert.pem",
               "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_ca_file": "/vault/config/vault-ca.pem"
             }
           }],
           "ui": true,
@@ -78,8 +77,8 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - ./vault/consumer/config:/vault/config
-      - ./vault/consumer/data:/vault/file
+      - ../vault/consumer/config:/vault/config
+      - ../vault/consumer/data:/vault/file
     environment:
       VAULT_LOCAL_CONFIG: >
         {
@@ -89,7 +88,6 @@ services:
               "address": "0.0.0.0:8200",
               "tls_cert_file": "/vault/config/vault-cert.pem",
               "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_ca_file": "/vault/config/vault-ca.pem"
             }
           }],
           "ui": true,

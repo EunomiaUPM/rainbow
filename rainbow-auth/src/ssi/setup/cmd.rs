@@ -32,19 +32,20 @@ use crate::ssi::setup::migrations::AuthMigrator;
 #[command(version = "0.1")]
 struct AuthCli {
     #[command(subcommand)]
-    command: AuthCliCommands
+    command: AuthCliCommands,
 }
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum AuthCliCommands {
     Start(AuthCliArgs),
-    Setup(AuthCliArgs)
+    Setup(AuthCliArgs),
+    Vault,
 }
 
 #[derive(Parser, Debug, PartialEq)]
 pub struct AuthCliArgs {
     #[arg(short, long)]
-    env_file: Option<String>
+    env_file: Option<String>,
 }
 
 pub struct AuthCommands;
@@ -59,20 +60,19 @@ impl AuthCommands {
         match cli.command {
             AuthCliCommands::Start(args) => {
                 let config = SsiAuthConfig::load(args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?)
-                    .collapse()
-                    .to_string();
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current Auth Config:\n{}", table);
                 Application::run(config, vault).await?;
             }
             AuthCliCommands::Setup(args) => {
                 let config = SsiAuthConfig::load(args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?)
-                    .collapse()
-                    .to_string();
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current Auth Config:\n{}", table);
                 let connection = vault.get_connection(config).await;
                 AuthMigrator::run(connection).await?;
+            }
+            AuthCliCommands::Vault => {
+                vault.write_all_secrets().await?;
             }
         }
 

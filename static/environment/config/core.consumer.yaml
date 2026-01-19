@@ -28,7 +28,6 @@ common_config: &common_config
   api:
     version: *api_version
     openapi_path: "../static/specs/openapi/auth/auth_consumer.json"
-  keys_path: "../static/certificates/consumer/"
   is_local: true
 
 # ==========================

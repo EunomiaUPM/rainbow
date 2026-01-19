@@ -14,17 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+use std::net::SocketAddr;
 use std::sync::Arc;
-
-use axum::{serve, Router};
-use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
-use rainbow_common::config::types::HostType;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
-use tokio::net::TcpListener;
-use tracing::info;
 
 use crate::ssi::core::AuthCore;
 use crate::ssi::http::AuthRouter;
@@ -47,27 +38,21 @@ use crate::ssi::services::verifier::basic_v1::VerifierService;
 use crate::ssi::services::wallet::waltid::config::WaltIdConfig;
 use crate::ssi::services::wallet::waltid::WaltIdService;
 use crate::ssi::services::wallet::WalletServiceTrait;
+use axum::{serve, Router};
+use axum_server::tls_rustls::RustlsConfig;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::HostType;
+use rainbow_common::utils::expect_from_env;
+use rainbow_common::vault::secrets::PemHelper;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
+use tokio::net::TcpListener;
+use tracing::{info, warn};
 
 pub struct Application {}
 
 impl Application {
-    pub async fn run(config: SsiAuthConfig, vault_service: VaultService) -> anyhow::Result<()> {
-        let server_message =
-            format!("Starting Auth Consumer server in {}", config.get_host(HostType::Http));
-        info!("{}", server_message);
-
-        let router = Self::create_router(&config, vault_service).await;
-
-        let listener = match config.is_local() {
-            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
-            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?
-        };
-
-        serve(listener, router).await?;
-
-        Ok(())
-    }
-
     pub async fn create_router(config: &SsiAuthConfig, vault: VaultService) -> Router {
         // CONFIGS
         let db_connection = vault.get_connection(config.clone()).await;
@@ -79,9 +64,18 @@ impl Application {
         let core_config = Arc::new(config.clone());
 
         // SERVICES
+        let vault = Arc::new(vault);
         let client = Arc::new(BasicClientService::new());
-        let vc_req = Arc::new(VCReqService::new(client.clone(), vc_req_config));
-        let onboarder = Arc::new(GnapOnboarderService::new(client.clone(), onboarder_config));
+        let vc_req = Arc::new(VCReqService::new(
+            client.clone(),
+            vault.clone(),
+            vc_req_config,
+        ));
+        let onboarder = Arc::new(GnapOnboarderService::new(
+            client.clone(),
+            vault.clone(),
+            onboarder_config,
+        ));
         let callback = Arc::new(BasicCallbackService::new(client.clone()));
         let repo = Arc::new(AuthRepoForSql::create_repo(db_connection));
         let gatekeeper = Arc::new(GnapGateKeeperService::new(gatekeeper_config));
@@ -91,17 +85,24 @@ impl Application {
         let gaia: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.is_gaia_active() {
             true => {
                 let gaia_config = GaiaSelfIssuerConfig::from(config.clone());
-                Some(Arc::new(BasicGaiaSelfIssuer::new(gaia_config)))
+                Some(Arc::new(BasicGaiaSelfIssuer::new(
+                    vault.clone(),
+                    gaia_config,
+                )))
             }
-            false => None
+            false => None,
         };
 
         let wallet: Option<Arc<dyn WalletServiceTrait>> = match config.is_wallet_active() {
             true => {
                 let walt_id_config = WaltIdConfig::from(config.clone());
-                Some(Arc::new(WaltIdService::new(client.clone(), walt_id_config)))
+                Some(Arc::new(WaltIdService::new(
+                    client.clone(),
+                    vault.clone(),
+                    walt_id_config,
+                )))
             }
-            false => None
+            false => None,
         };
 
         // CORE
@@ -115,9 +116,63 @@ impl Application {
             repo,
             core_config,
             wallet,
-            gaia
+            gaia,
         ));
 
         AuthRouter::new(core).router()
+    }
+
+    pub async fn run_basic(config: SsiAuthConfig, vault_service: VaultService) -> anyhow::Result<()> {
+        let server_message = format!(
+            "Starting Auth Consumer server in {}",
+            config.get_host(HostType::Http)
+        );
+        info!("{}", server_message);
+
+        let router = Self::create_router(&config, vault_service).await;
+
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
+        };
+
+        serve(listener, router).await?;
+
+        Ok(())
+    }
+
+    pub async fn run_tls(config: &SsiAuthConfig, vault: VaultService) -> anyhow::Result<()> {
+        let cert = expect_from_env("VAULT_CLIENT_CERT");
+        let pkey = expect_from_env("VAULT_CLIENT_KEY");
+        let cert: PemHelper = vault.read(None, &cert).await?;
+        let pkey: PemHelper = vault.read(None, &pkey).await?;
+
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("No se pudo instalar el proveedor de criptografía");
+
+        let tls_config = RustlsConfig::from_pem(
+            cert.data().as_bytes().to_vec(),
+            pkey.data().as_bytes().to_vec(),
+        )
+        .await?;
+
+        let router = Self::create_router(config, vault).await;
+
+        let addr_str = if config.is_local() { "127.0.0.1:443".to_string() } else { "0.0.0.0:443".to_string() };
+        let addr: SocketAddr = addr_str.parse()?;
+        info!("Starting Authority server with TLS in {}", addr);
+
+        axum_server::bind_rustls(addr, tls_config).serve(router.into_make_service()).await?;
+        Ok(())
+    }
+    pub async fn run(config: SsiAuthConfig, vault: VaultService) -> anyhow::Result<()> {
+        match Self::run_tls(&config, vault.clone()).await {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                warn!("TLS failed: {:?}, falling back to basic server", err);
+                Self::run_basic(config, vault).await
+            }
+        }
     }
 }

@@ -60,3 +60,4 @@ serde_norway = "0.9.42"
 vaultrs = "0.7.4"
 derive_builder = "0.20.2"
 rustls = { version = "0.23", features = ["ring"] }
+axum-server = { version = "0.8.0", features = ["tls-rustls"] }

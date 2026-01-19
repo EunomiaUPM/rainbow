@@ -16,15 +16,9 @@
  */
 
 use rainbow_common::config::types::{CommonHostsConfig, WalletConfig};
-use serde_json::Value;
 
 pub trait WaltIdConfigTrait {
     fn get_raw_wallet_config(&self) -> WalletConfig;
     fn get_wallet_api_url(&self) -> String;
-    fn get_wallet_register_data(&self) -> Value;
-    fn get_wallet_login_data(&self) -> Value;
-    fn get_cert(&self) -> anyhow::Result<String>;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
-    fn get_pub_key(&self) -> anyhow::Result<String>;
     fn hosts(&self) -> &CommonHostsConfig;
 }

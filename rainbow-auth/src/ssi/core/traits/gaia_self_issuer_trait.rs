@@ -47,6 +47,6 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     fn get_token(&self) -> IssuingToken { self.self_issuer().get_token() }
     async fn issue_cred(&self) -> anyhow::Result<Value> {
         let did = self.wallet().get_did().await?;
-        self.self_issuer().issue_cred(&did)
+        self.self_issuer().issue_cred(&did).await
     }
 }

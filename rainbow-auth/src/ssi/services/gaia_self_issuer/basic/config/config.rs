@@ -18,7 +18,6 @@
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::CommonHostsConfig;
-use rainbow_common::utils::read;
 
 use super::GaiaGaiaSelfIssuerConfigTrait;
 use crate::ssi::types::enums::VcDataModelVersion;
@@ -26,7 +25,6 @@ use crate::ssi::types::enums::VcDataModelVersion;
 pub struct GaiaSelfIssuerConfig {
     hosts: CommonHostsConfig,
     is_local: bool,
-    keys_path: String,
     api_path: String,
     vc_data_model: VcDataModelVersion
 }
@@ -37,7 +35,6 @@ impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
         Self {
             hosts: value.common().hosts.clone(),
             is_local: value.is_local(),
-            keys_path: value.common().keys_path.clone(),
             api_path,
             vc_data_model: VcDataModelVersion::V1
         }
@@ -47,18 +44,6 @@ impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
 impl GaiaGaiaSelfIssuerConfigTrait for GaiaSelfIssuerConfig {
     fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
     fn is_local(&self) -> bool { self.is_local }
-    // fn get_cert(&self) -> anyhow::Result<String> {
-    //     let path = format!("{}/cert.pem", self.keys_path);
-    //     read(&path)
-    // }
-    fn get_priv_key(&self) -> anyhow::Result<String> {
-        let path = format!("{}/private_key.pem", self.keys_path);
-        read(&path)
-    }
-    // fn get_pub_key(&self) -> anyhow::Result<String> {
-    //     let path = format!("{}/public_key.pem", self.keys_path);
-    //     read(&path)
-    // }
     fn get_api_path(&self) -> String { self.api_path.clone() }
     fn get_data_model_version(&self) -> VcDataModelVersion { self.vc_data_model.clone() }
 }

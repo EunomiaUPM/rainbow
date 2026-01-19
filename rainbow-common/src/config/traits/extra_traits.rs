@@ -25,9 +25,3 @@ pub trait IsLocalTrait: CommonConfigTrait {
     }
 }
 
-pub trait KeysPathTrait: CommonConfigTrait {
-    fn get_keys_path(&self) -> &str {
-        self.common().keys_path()
-    }
-}
-

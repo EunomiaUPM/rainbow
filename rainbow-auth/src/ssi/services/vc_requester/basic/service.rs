@@ -17,17 +17,6 @@
 
 use std::sync::Arc;
 
-use anyhow::bail;
-use axum::async_trait;
-use rainbow_common::config::traits::ExtraHostsTrait;
-use rainbow_common::config::types::HostType;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::get_from_opt;
-use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
-use reqwest::Response;
-use tracing::{error, info};
-use url::Url;
-
 use super::super::VcRequesterTrait;
 use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
 use crate::ssi::data::entities::{mates, req_interaction, req_vc, req_verification};
@@ -36,15 +25,29 @@ use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::types::enums::request::Body;
 use crate::ssi::types::gnap::{GrantRequest, GrantResponse};
 use crate::ssi::utils::{get_query_param, trim_4_base};
+use anyhow::bail;
+use axum::async_trait;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::utils::{expect_from_env, get_from_opt};
+use rainbow_common::vault::secrets::PemHelper;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
+use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
+use reqwest::Response;
+use tracing::{error, info};
+use url::Url;
 
 pub struct VCReqService {
     client: Arc<dyn ClientServiceTrait>,
+    vault: Arc<VaultService>,
     config: VCRequesterConfig,
 }
 
 impl VCReqService {
-    pub fn new(client: Arc<dyn ClientServiceTrait>, config: VCRequesterConfig) -> Self {
-        VCReqService { client, config }
+    pub fn new(client: Arc<dyn ClientServiceTrait>, vault: Arc<VaultService>, config: VCRequesterConfig) -> Self {
+        VCReqService { client, config, vault }
     }
 }
 
@@ -90,7 +93,9 @@ impl VcRequesterTrait for VCReqService {
     ) -> anyhow::Result<Option<String>> {
         info!("Sending grant request request to authority");
 
-        let client = self.config.get_pretty_client_config()?;
+        let cert = expect_from_env("VAULT_F_CERT");
+        let cert: PemHelper = self.vault.read(None, &cert).await?;
+        let client = self.config.get_pretty_client_config(&cert.data())?;
 
         let grant_request = match method {
             ReachMethod::Oidc => GrantRequest::vc_oidc(

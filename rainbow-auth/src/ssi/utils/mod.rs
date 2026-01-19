@@ -22,7 +22,6 @@ use base64::Engine;
 use rainbow_common::config::types::{ClientConfig, HostConfig};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::read;
 use rand::Rng;
 use serde_json::{json, Value};
 use tracing::error;
@@ -63,9 +62,8 @@ pub fn get_host_url(host_config: &HostConfig) -> String {
 
 pub fn get_pretty_client_config_helper(
     client_config: &ClientConfig,
-    path: &str
+    cert: &str
 ) -> anyhow::Result<Value> {
-    let cert = read(&path)?;
     let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
 
     let key = json!({

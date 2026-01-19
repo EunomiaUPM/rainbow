@@ -18,9 +18,7 @@
  */
 
 use crate::config::services::CommonConfig;
-use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
-};
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -45,7 +43,5 @@ impl HostConfigTrait for MonolithConfig {}
 impl DatabaseConfigTrait for MonolithConfig {}
 
 impl IsLocalTrait for MonolithConfig {}
-
-impl KeysPathTrait for MonolithConfig {}
 
 impl ApiConfigTrait for MonolithConfig {}

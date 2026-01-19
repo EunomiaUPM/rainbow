@@ -23,9 +23,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WalletConfig {
     pub api: HostConfig,
-    pub r#type: String,
-    pub name: String,
-    pub email: String,
-    pub password: String,
     pub id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SemiWalletSecrets {
+    r#type: String,
+    email: String,
+    password: String
 }

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::services::{
     CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
 };
@@ -156,8 +157,7 @@ impl ApplicationConfig {
             HostConfig { protocol: "http".to_string(), url: "127.0.0.1".to_string(), port: Some("1200".to_string()) };
         let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
         let db = DatabaseConfig { db_type: DbType::Postgres, url: "127.0.0.1".to_string(), port: "1400".to_string() };
-        let keys_path = "static/certificates/".to_string();
         let api = ApiConfig { version: "v1".to_string(), openapi_path: "/static/specs/openapi/auth".to_string() };
-        CommonConfig { hosts, db, api, keys_path, is_local: true }
+        CommonConfig { hosts, db, api, is_local: true }
     }
 }

@@ -17,41 +17,43 @@
 
 use std::sync::Arc;
 
-use anyhow::bail;
-use axum::async_trait;
-use rainbow_common::config::traits::ExtraHostsTrait;
-use rainbow_common::config::types::HostType;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::get_from_opt;
-use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
-use reqwest::Response;
-use tracing::{error, info};
-use url::Url;
-
 use super::super::OnboarderTrait;
 use crate::ssi::data::entities::req_request;
 use crate::ssi::data::entities::{mates, req_interaction, req_verification, token_requirements};
 use crate::ssi::services::client::ClientServiceTrait;
-use crate::ssi::services::onboarder::gnap::config::{
-    GnapOnboarderConfig, GnapOnboarderConfigTrait
-};
+use crate::ssi::services::onboarder::gnap::config::{GnapOnboarderConfig, GnapOnboarderConfigTrait};
 use crate::ssi::types::entities::ReachProvider;
 use crate::ssi::types::enums::request::Body;
 use crate::ssi::types::gnap::{AccessToken, GrantRequest, GrantResponse};
 use crate::ssi::utils::get_query_param;
 use crate::ssi::utils::trim_4_base;
+use anyhow::bail;
+use axum::async_trait;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::utils::{expect_from_env, get_from_opt};
+use rainbow_common::vault::vault_rs::VaultService;
+use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
+use reqwest::Response;
+use tracing::{error, info};
+use url::Url;
+use rainbow_common::vault::secrets::PemHelper;
+use rainbow_common::vault::VaultTrait;
 
 pub struct GnapOnboarderService {
     client: Arc<dyn ClientServiceTrait>,
-    config: GnapOnboarderConfig
+    vault: Arc<VaultService>,
+    config: GnapOnboarderConfig,
 }
 
 impl GnapOnboarderService {
     pub fn new(
         client: Arc<dyn ClientServiceTrait>,
-        config: GnapOnboarderConfig
+        vault: Arc<VaultService>,
+        config: GnapOnboarderConfig,
     ) -> GnapOnboarderService {
-        GnapOnboarderService { client, config }
+        GnapOnboarderService { client, vault, config }
     }
 }
 
@@ -59,11 +61,11 @@ impl GnapOnboarderService {
 impl OnboarderTrait for GnapOnboarderService {
     fn start(
         &self,
-        payload: &ReachProvider
+        payload: &ReachProvider,
     ) -> (
         req_request::NewModel,
         req_interaction::NewModel,
-        token_requirements::Model
+        token_requirements::Model,
     ) {
         info!("Starting process to request consumer onboarding");
 
@@ -79,7 +81,7 @@ impl OnboarderTrait for GnapOnboarderService {
             id: id.clone(),
             provider_id: payload.id.clone(),
             provider_slug: payload.slug.clone(),
-            grant_endpoint: payload.url.clone()
+            grant_endpoint: payload.url.clone(),
         };
 
         let int_model = req_interaction::NewModel {
@@ -89,7 +91,7 @@ impl OnboarderTrait for GnapOnboarderService {
             uri: callback_uri.clone(),
             hash_method: Some("sha-256".to_string()),
             hints: None,
-            grant_endpoint: payload.url.clone()
+            grant_endpoint: payload.url.clone(),
         };
 
         let token_model = token_requirements::Model {
@@ -101,7 +103,7 @@ impl OnboarderTrait for GnapOnboarderService {
             identifier: None,
             privileges: None,
             label: None,
-            flags: None
+            flags: None,
         };
 
         (req_model, int_model, token_model)
@@ -110,11 +112,14 @@ impl OnboarderTrait for GnapOnboarderService {
     async fn send_req(
         &self,
         req_model: &mut req_request::Model,
-        int_model: &mut req_interaction::Model
+        int_model: &mut req_interaction::Model,
     ) -> anyhow::Result<()> {
         info!("Sending onboarding request");
 
-        let client = self.config.get_pretty_client_config()?;
+        let cert = expect_from_env("VAULT_F_CERT");
+        let cert: PemHelper = self.vault.read(None, &cert).await?;
+        let client = self.config.get_pretty_client_config(&cert.data())?;
+        
         let grant_request = GrantRequest::prov_oidc(client, int_model);
 
         let mut headers = HeaderMap::new();
@@ -126,7 +131,7 @@ impl OnboarderTrait for GnapOnboarderService {
             .post(
                 &int_model.grant_endpoint,
                 Some(headers),
-                Body::Json(serde_json::to_value(grant_request)?)
+                Body::Json(serde_json::to_value(grant_request)?),
             )
             .await?;
 
@@ -142,7 +147,7 @@ impl OnboarderTrait for GnapOnboarderService {
                     &int_model.grant_endpoint,
                     "POST",
                     http_code,
-                    &error_res.error.unwrap()
+                    &error_res.error.unwrap(),
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -163,10 +168,7 @@ impl OnboarderTrait for GnapOnboarderService {
         Ok(())
     }
 
-    fn save_verification(
-        &self,
-        int_model: &req_interaction::Model
-    ) -> anyhow::Result<req_verification::NewModel> {
+    fn save_verification(&self, int_model: &req_interaction::Model) -> anyhow::Result<req_verification::NewModel> {
         info!("Saving verification data");
 
         let uri = get_from_opt(&int_model.oidc_vp_uri, "oidc4vp")?;
@@ -191,15 +193,11 @@ impl OnboarderTrait for GnapOnboarderService {
             pd_uri,
             client_id_scheme,
             nonce,
-            response_uri
+            response_uri,
         })
     }
 
-    async fn manage_res(
-        &self,
-        req_model: &mut req_request::Model,
-        res: Response
-    ) -> anyhow::Result<mates::NewModel> {
+    async fn manage_res(&self, req_model: &mut req_request::Model, res: Response) -> anyhow::Result<mates::NewModel> {
         info!("Managing response");
         let token = match res.status().as_u16() {
             200 => {
@@ -214,7 +212,7 @@ impl OnboarderTrait for GnapOnboarderService {
                     "provider/continue",
                     "POST",
                     http_code,
-                    &error_res.error.unwrap_or("Error with authority continue request".to_string())
+                    &error_res.error.unwrap_or("Error with authority continue request".to_string()),
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -231,7 +229,7 @@ impl OnboarderTrait for GnapOnboarderService {
             participant_type: "Provider".to_string(),
             base_url,
             token: req_model.token.clone(),
-            is_me: false
+            is_me: false,
         };
         Ok(mates)
     }

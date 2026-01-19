@@ -18,8 +18,6 @@
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::{CommonHostsConfig, WalletConfig};
-use rainbow_common::utils::read;
-use serde_json::{json, Value};
 
 use crate::ssi::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
 
@@ -27,7 +25,6 @@ use crate::ssi::services::wallet::waltid::config::config_trait::WaltIdConfigTrai
 pub struct WaltIdConfig {
     hosts: CommonHostsConfig,
     wallet: WalletConfig,
-    keys_path: String
 }
 
 impl From<SsiAuthConfig> for WaltIdConfig {
@@ -35,7 +32,6 @@ impl From<SsiAuthConfig> for WaltIdConfig {
         WaltIdConfig {
             hosts: value.common().hosts.clone(),
             wallet: value.wallet(),
-            keys_path: value.common().keys_path.to_string()
         }
     }
 }
@@ -49,35 +45,6 @@ impl WaltIdConfigTrait for WaltIdConfig {
             None => format!("{}://{}", data.protocol, data.url)
         }
     }
-    fn get_wallet_register_data(&self) -> Value {
-        let data = self.get_raw_wallet_config();
-        json!({
-            "type": data.r#type,
-            "name": data.name,
-            "email": data.email,
-            "password": data.password,
-        })
-    }
-    fn get_wallet_login_data(&self) -> Value {
-        let data = self.get_raw_wallet_config();
-        json!({
-            "type": data.r#type,
-            "email": data.email,
-            "password": data.password,
-        })
-    }
 
-    fn get_cert(&self) -> anyhow::Result<String> {
-        let path = format!("{}/cert.pem", self.keys_path);
-        read(&path)
-    }
-    fn get_priv_key(&self) -> anyhow::Result<String> {
-        let path = format!("{}/private_key.pem", self.keys_path);
-        read(&path)
-    }
-    fn get_pub_key(&self) -> anyhow::Result<String> {
-        let path = format!("{}/public_key.pem", self.keys_path);
-        read(&path)
-    }
     fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
 }
