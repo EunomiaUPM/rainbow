@@ -17,16 +17,8 @@
  *
  */
 
-use rainbow_auth::ssi::provider::data::migrations::get_auth_provider_migrations;
-use rainbow_db::catalog::migrations::get_catalog_migrations;
-use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
-use rainbow_db::datahub::migrations::get_datahub_migrations;
-use rainbow_db::dataplane::migrations::get_dataplane_migrations;
-use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
+use rainbow_auth::ssi::data::migrations::migrator::get_auth_migrations;
 use rainbow_catalog_agent::get_catalog_migrations;
-use rainbow_common::config::traits::MonoConfigTrait;
-use rainbow_common::config::ApplicationConfig;
 use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_events::data::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
@@ -38,21 +30,18 @@ pub struct CoreProviderMigration;
 impl MigratorTrait for CoreProviderMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
-        //let mut transfer_provider_migrations = get_transfer_provider_migrations();
         let mut catalog_migrations = get_catalog_migrations();
         //let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
-        let mut auth_migrations = get_auth_provider_migrations();
+        let mut auth_migrations = get_auth_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
-        //let mut datahub_migrations = get_datahub_migrations();
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
-        //migrations.append(&mut transfer_provider_migrations);
+
         migrations.append(&mut catalog_migrations);
         //migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
         migrations.append(&mut dataplane_migrations);
-        //migrations.append(&mut datahub_migrations);
         migrations.append(&mut transfer_agent_migrations);
         migrations
     }

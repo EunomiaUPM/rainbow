@@ -36,9 +36,8 @@ Show some love on https://github.com/EunomiaUPM/rainbow
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .parse("debug,sqlx::query=off")?;
+    let filter =
+        EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
     tracing_subscriber::fmt()
         .event_format(tracing_subscriber::fmt::format().with_line_number(true))
         .with_env_filter(filter)

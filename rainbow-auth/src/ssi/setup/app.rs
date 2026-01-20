@@ -50,12 +50,12 @@ use rainbow_common::vault::VaultTrait;
 use tokio::net::TcpListener;
 use tracing::{info, warn};
 
-pub struct Application {}
+pub struct AuthApplication {}
 
-impl Application {
-    pub async fn create_router(config: &SsiAuthConfig, vault: VaultService) -> Router {
+impl AuthApplication {
+    pub async fn create_router(config: &SsiAuthConfig, vault: Arc<VaultService>) -> Router {
         // CONFIGS
-        let db_connection = vault.get_connection(config.clone()).await;
+        let db_connection = vault.get_db_connection(config.clone()).await;
         let vc_req_config = VCRequesterConfig::from(config.clone());
         let onboarder_config = GnapOnboarderConfig::from(config.clone());
         let gatekeeper_config = GnapGateKeeperConfig::from(config.clone());
@@ -64,7 +64,6 @@ impl Application {
         let core_config = Arc::new(config.clone());
 
         // SERVICES
-        let vault = Arc::new(vault);
         let client = Arc::new(BasicClientService::new());
         let vc_req = Arc::new(VCReqService::new(
             client.clone(),
@@ -122,7 +121,7 @@ impl Application {
         AuthRouter::new(core).router()
     }
 
-    pub async fn run_basic(config: SsiAuthConfig, vault_service: VaultService) -> anyhow::Result<()> {
+    pub async fn run_basic(config: SsiAuthConfig, vault_service: Arc<VaultService>) -> anyhow::Result<()> {
         let server_message = format!(
             "Starting Auth Consumer server in {}",
             config.get_host(HostType::Http)
@@ -141,7 +140,7 @@ impl Application {
         Ok(())
     }
 
-    pub async fn run_tls(config: &SsiAuthConfig, vault: VaultService) -> anyhow::Result<()> {
+    pub async fn run_tls(config: &SsiAuthConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         let cert = expect_from_env("VAULT_CLIENT_CERT");
         let pkey = expect_from_env("VAULT_CLIENT_KEY");
         let cert: PemHelper = vault.read(None, &cert).await?;
@@ -166,7 +165,7 @@ impl Application {
         axum_server::bind_rustls(addr, tls_config).serve(router.into_make_service()).await?;
         Ok(())
     }
-    pub async fn run(config: SsiAuthConfig, vault: VaultService) -> anyhow::Result<()> {
+    pub async fn run(config: SsiAuthConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         match Self::run_tls(&config, vault.clone()).await {
             Ok(_) => Ok(()),
             Err(err) => {

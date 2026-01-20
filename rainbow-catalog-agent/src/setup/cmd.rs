@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::setup::boot::CatalogAgentBoot;
 use crate::setup::db_migrations::CatalogAgentMigration;
 use clap::{Parser, Subcommand};
@@ -24,6 +23,8 @@ use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::vault::vault_rs::VaultService;
+use std::sync::Arc;
 use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
@@ -54,7 +55,7 @@ impl CatalogCommands {
         let cli = CatalogCli::parse();
         match cli.command {
             CatalogCliCommands::Start(args) => {
-                let init = BootstrapInit::<CatalogAgentBoot>::new(RoleConfig::NotDefined, args.env_file);
+                let init = BootstrapInit::<CatalogAgentBoot>::new(args.env_file);
                 let step1 = init.next_step().await?; // Init -> Config
                 let step2 = step1.0.next_step().await?; // Config -> ServicesStarted (Background)
                 let step3 = step2.0.next_step().await?; // Services -> Participant
@@ -65,10 +66,11 @@ impl CatalogCommands {
                 let _ = step_finalized.0.next_step().await?;
             }
             CatalogCliCommands::Setup(args) => {
-                let config = CatalogConfig::load(RoleConfig::NotDefined, args.env_file);
+                let config = CatalogConfig::load(args.env_file);
+                let vault = Arc::new(VaultService::new());
                 let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current Catalog Agent Config:\n{}", table);
-                CatalogAgentMigration::run(&config).await?;
+                CatalogAgentMigration::run(&config, vault.clone()).await?;
             }
         }
         Ok(())

@@ -24,5 +24,5 @@ pub struct AuthJwtClaims {
     pub iat: u64,
     pub jti: String,
     pub iss: String,
-    pub aud: String
+    pub aud: String,
 }

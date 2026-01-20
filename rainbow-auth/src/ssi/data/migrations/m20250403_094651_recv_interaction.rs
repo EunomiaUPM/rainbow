@@ -19,7 +19,9 @@ use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_recv_interaction" }
+    fn name(&self) -> &str {
+        "m20250403_094651_recv_interaction"
+    }
 }
 
 #[async_trait::async_trait]
@@ -43,7 +45,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(RecvInteraction::ASNonce).string())
                     .col(ColumnDef::new(RecvInteraction::InteractRef).string())
                     .col(ColumnDef::new(RecvInteraction::Hash).string())
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -69,5 +71,5 @@ pub enum RecvInteraction {
     ContinueToken,
     Hash,
     HashMethod,
-    Hints
+    Hints,
 }

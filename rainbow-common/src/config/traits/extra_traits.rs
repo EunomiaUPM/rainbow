@@ -24,4 +24,3 @@ pub trait IsLocalTrait: CommonConfigTrait {
         self.common().is_local()
     }
 }
-

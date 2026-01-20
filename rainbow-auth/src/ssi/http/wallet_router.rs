@@ -29,11 +29,13 @@ use crate::ssi::errors::CustomToResponse;
 use crate::ssi::types::wallet::{DidsInfo, KeyDefinition, OidcUri};
 
 pub struct WalletRouter {
-    holder: Arc<dyn CoreWalletTrait>
+    holder: Arc<dyn CoreWalletTrait>,
 }
 
 impl WalletRouter {
-    pub fn new(holder: Arc<dyn CoreWalletTrait>) -> Self { Self { holder } }
+    pub fn new(holder: Arc<dyn CoreWalletTrait>) -> Self {
+        Self { holder }
+    }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -56,117 +58,117 @@ impl WalletRouter {
     async fn register(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.register().await {
             Ok(_) => StatusCode::CREATED.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn login(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.login().await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn logout(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.logout().await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn onboard(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.onboard().await {
             Ok(_) => StatusCode::CREATED.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn partial_onboard(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.partial_onboard().await {
             Ok(_) => StatusCode::CREATED.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn register_key(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.register_key().await {
             Ok(_) => StatusCode::CREATED.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn register_did(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.register_did().await {
             Ok(_) => StatusCode::CREATED.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn delete_key(
         State(holder): State<Arc<dyn CoreWalletTrait>>,
-        payload: Result<Json<KeyDefinition>, JsonRejection>
+        payload: Result<Json<KeyDefinition>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match holder.delete_key(payload).await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn delete_did(
         State(holder): State<Arc<dyn CoreWalletTrait>>,
-        payload: Result<Json<DidsInfo>, JsonRejection>
+        payload: Result<Json<DidsInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match holder.delete_did(payload).await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn did_json(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.get_did_doc().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn process_oidc4vci(
         State(holder): State<Arc<dyn CoreWalletTrait>>,
-        payload: Result<Json<OidcUri>, JsonRejection>
+        payload: Result<Json<OidcUri>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match holder.process_oidc4vci(payload).await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn process_oidc4vp(
         State(holder): State<Arc<dyn CoreWalletTrait>>,
-        payload: Result<Json<OidcUri>, JsonRejection>
+        payload: Result<Json<OidcUri>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match holder.process_oidc4vp(payload).await {
             Ok(Some(data)) => Redirect::to(&data).into_response(),
             Ok(None) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 }

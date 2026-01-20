@@ -20,7 +20,9 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_recv_verification" }
+    fn name(&self) -> &str {
+        "m20250403_094651_recv_verification"
+    }
 }
 
 #[async_trait::async_trait]
@@ -41,7 +43,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(RecvVerification::Status).string().not_null())
                     .col(ColumnDef::new(RecvVerification::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(RecvVerification::EndedAt).date_time())
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -64,5 +66,5 @@ pub enum RecvVerification {
     Success,
     Status,
     CreatedAt,
-    EndedAt
+    EndedAt,
 }

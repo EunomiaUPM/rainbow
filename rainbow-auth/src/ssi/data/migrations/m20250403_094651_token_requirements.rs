@@ -18,7 +18,9 @@ use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_token_requirements" }
+    fn name(&self) -> &str {
+        "m20250403_094651_token_requirements"
+    }
 }
 
 #[async_trait::async_trait]
@@ -37,7 +39,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TokenRequirements::Privileges).array(ColumnType::Text))
                     .col(ColumnDef::new(TokenRequirements::Label).string())
                     .col(ColumnDef::new(TokenRequirements::Flags).array(ColumnType::Text))
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -58,5 +60,5 @@ pub enum TokenRequirements {
     Identifier,
     Privileges,
     Label,
-    Flags
+    Flags,
 }

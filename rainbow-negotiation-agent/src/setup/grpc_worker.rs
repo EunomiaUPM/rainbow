@@ -34,6 +34,8 @@ use crate::grpc::negotiation_process::NegotiationAgentProcessesGrpc;
 use crate::grpc::offer::NegotiationAgentOfferGrpc;
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::vault::VaultTrait;
+use rainbow_common::vault::vault_rs::VaultService;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -45,8 +47,12 @@ use tonic::transport::Server;
 pub struct NegotiationGrpcWorker {}
 
 impl NegotiationGrpcWorker {
-    pub async fn spawn(config: &ContractsConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
-        let router = Self::create_root_grpc_router(&config).await?;
+    pub async fn spawn(
+        config: &ContractsConfig,
+        vault: Arc<VaultService>,
+        token: &CancellationToken,
+    ) -> anyhow::Result<JoinHandle<()>> {
+        let router = Self::create_root_grpc_router(&config, vault.clone()).await?;
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
         let grpc_port = format!("{}{}", port, "1");
@@ -70,8 +76,11 @@ impl NegotiationGrpcWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_grpc_router(config: &ContractsConfig) -> anyhow::Result<tonic::transport::server::Router> {
-        let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    pub async fn create_root_grpc_router(
+        config: &ContractsConfig,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<tonic::transport::server::Router> {
+        let db_connection = vault.get_db_connection(config.clone()).await;
         let config = Arc::new(config.clone());
         let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
             db_connection.clone(),

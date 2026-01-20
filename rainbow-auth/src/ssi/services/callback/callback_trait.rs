@@ -23,10 +23,6 @@ use crate::ssi::types::gnap::CallbackBody;
 
 #[async_trait]
 pub trait CallbackTrait: Send + Sync + 'static {
-    fn check_callback(
-        &self,
-        int_model: &mut req_interaction::Model,
-        payload: &CallbackBody
-    ) -> anyhow::Result<()>;
+    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()>;
     async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<Response>;
 }

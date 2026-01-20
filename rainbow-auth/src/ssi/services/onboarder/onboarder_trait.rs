@@ -26,24 +26,17 @@ use crate::ssi::types::entities::ReachProvider;
 pub trait OnboarderTrait: Send + Sync + 'static {
     fn start(
         &self,
-        payload: &ReachProvider
+        payload: &ReachProvider,
     ) -> (
         req_request::NewModel,
         req_interaction::NewModel,
-        token_requirements::Model
+        token_requirements::Model,
     );
     async fn send_req(
         &self,
         req_model: &mut req_request::Model,
-        int_model: &mut req_interaction::Model
+        int_model: &mut req_interaction::Model,
     ) -> anyhow::Result<()>;
-    fn save_verification(
-        &self,
-        int_model: &req_interaction::Model
-    ) -> anyhow::Result<req_verification::NewModel>;
-    async fn manage_res(
-        &self,
-        req_model: &mut req_request::Model,
-        res: Response
-    ) -> anyhow::Result<mates::NewModel>;
+    fn save_verification(&self, int_model: &req_interaction::Model) -> anyhow::Result<req_verification::NewModel>;
+    async fn manage_res(&self, req_model: &mut req_request::Model, res: Response) -> anyhow::Result<mates::NewModel>;
 }

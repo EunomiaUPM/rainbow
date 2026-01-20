@@ -23,20 +23,20 @@ use crate::ssi::types::vc_issuing::{
     AuthServerMetadata, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer, VCIssuer, VcType,
 };
 use anyhow::bail;
+use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use rainbow_common::config::traits::ExtraHostsTrait;
 use rainbow_common::config::types::HostType;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::vault::vault_rs::VaultService;
-use serde_json::{json, Value};
-use std::sync::Arc;
-use async_trait::async_trait;
-use tracing::{error, info};
 use rainbow_common::utils::expect_from_env;
 use rainbow_common::vault::secrets::PemHelper;
+use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::vault::VaultTrait;
+use serde_json::{json, Value};
+use std::sync::Arc;
+use tracing::{error, info};
 
 pub struct BasicGaiaSelfIssuer {
     vault: Arc<VaultService>,
@@ -204,7 +204,6 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
 
         let key = expect_from_env("VAULT_F_PRIV_KEY");
         let key: PemHelper = self.vault.read(None, &key).await?;
-
 
         let key = match EncodingKey::from_rsa_pem(key.data().as_bytes()) {
             Ok(data) => data,

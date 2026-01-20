@@ -21,5 +21,5 @@ use serde::{Deserialize, Serialize};
 pub struct VCIssuer {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>
+    pub name: Option<String>,
 }

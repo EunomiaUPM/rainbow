@@ -154,14 +154,14 @@ pub enum CommonErrors {
     EnvVarError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: String
+        cause: String,
     },
     #[error("Vault Error")]
     VaultError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: String
-    }
+        cause: String,
+    },
 }
 
 impl IntoResponse for &CommonErrors {
@@ -466,9 +466,9 @@ impl CommonErrors {
                 error_code: 800,
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
-                cause: e.clone()
+                cause: e.clone(),
             },
-            cause: e
+            cause: e,
         }
     }
     pub fn vault_new(e: String) -> Self {
@@ -478,9 +478,9 @@ impl CommonErrors {
                 error_code: 800,
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
-                cause: e.clone()
+                cause: e.clone(),
             },
-            cause: e
+            cause: e,
         }
     }
 }

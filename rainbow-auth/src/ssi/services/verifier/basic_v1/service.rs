@@ -47,7 +47,7 @@ use crate::ssi::utils::{get_claim, get_opt_claim, split_did};
 
 pub struct VerifierService {
     client: Arc<dyn ClientServiceTrait>,
-    config: VerifierConfig
+    config: VerifierConfig,
 }
 
 impl VerifierService {
@@ -68,12 +68,12 @@ impl VerifierTrait for VerifierService {
         );
         let host_url = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host
+            false => host,
         };
         recv_verification::NewModel {
             id: id.to_string(),
             audience: host_url,
-            vc_type: "DataspaceParticipant".to_string()
+            vc_type: "DataspaceParticipant".to_string(),
         }
     }
     fn generate_uri(&self, ver_model: &recv_verification::Model) -> String {
@@ -86,7 +86,7 @@ impl VerifierTrait for VerifierService {
         );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host
+            false => host,
         };
 
         let base_url = "openid4vp://authorize";
@@ -117,11 +117,7 @@ impl VerifierTrait for VerifierService {
         info!("Generating an vp definition");
         VPDef::new(model.id.clone(), model.vc_type.clone())
     }
-    fn verify_all(
-        &self,
-        ver_model: &mut recv_verification::Model,
-        payload: &VerifyPayload
-    ) -> anyhow::Result<()> {
+    fn verify_all(&self, ver_model: &mut recv_verification::Model, payload: &VerifyPayload) -> anyhow::Result<()> {
         info!("Verifying all");
 
         let (vcs, holder) = self.verify_vp(ver_model, &payload.vp_token)?;
@@ -133,11 +129,7 @@ impl VerifierTrait for VerifierService {
         Ok(())
     }
 
-    fn verify_vp(
-        &self,
-        model: &mut recv_verification::Model,
-        vp_token: &str
-    ) -> anyhow::Result<(Vec<String>, String)> {
+    fn verify_vp(&self, model: &mut recv_verification::Model, vp_token: &str) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying vp");
 
         model.vpt = Some(vp_token.to_string());
@@ -188,18 +180,13 @@ impl VerifierTrait for VerifierService {
         Ok(())
     }
 
-    fn validate_token(
-        &self,
-        vp_token: &str,
-        audience: Option<&str>
-    ) -> anyhow::Result<(TokenData<Value>, String)> {
+    fn validate_token(&self, vp_token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<Value>, String)> {
         info!("Validating token");
         let header = jsonwebtoken::decode_header(&vp_token)?;
         let kid_str = match header.kid.as_ref() {
             Some(data) => data,
             None => {
-                let error =
-                    CommonErrors::format_new(BadFormat::Received, "Jwt does not contain a token");
+                let error = CommonErrors::format_new(BadFormat::Received, "Jwt does not contain a token");
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -232,10 +219,7 @@ impl VerifierTrait for VerifierService {
         let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
-                let error = AuthErrors::security_new(&format!(
-                    "VPT signature is incorrect -> {}",
-                    e.to_string()
-                ));
+                let error = AuthErrors::security_new(&format!("VPT signature is incorrect -> {}", e.to_string()));
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -245,11 +229,7 @@ impl VerifierTrait for VerifierService {
         Ok((token, kid.to_string()))
     }
 
-    fn validate_nonce(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()> {
+    fn validate_nonce(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating nonce");
 
         let nonce = get_claim(&token.claims, vec!["nonce"])?;
@@ -267,7 +247,7 @@ impl VerifierTrait for VerifierService {
         &self,
         model: &mut recv_verification::Model,
         token: &TokenData<Value>,
-        kid: &str
+        kid: &str,
     ) -> anyhow::Result<()> {
         info!("Validating subject");
 
@@ -310,9 +290,7 @@ impl VerifierTrait for VerifierService {
         match sub {
             Some(sub) => {
                 if sub != holder {
-                    let error = AuthErrors::security_new(
-                        "VCT token sub, credential subject & VP Holder do not match"
-                    );
+                    let error = AuthErrors::security_new("VCT token sub, credential subject & VP Holder do not match");
                     error!("{}", error.log());
                     bail!(error);
                 }
@@ -322,9 +300,7 @@ impl VerifierTrait for VerifierService {
         }
 
         if holder != cred_sub_id {
-            let error = AuthErrors::security_new(
-                "VCT token sub, credential subject & VP Holder do not match"
-            );
+            let error = AuthErrors::security_new("VCT token sub, credential subject & VP Holder do not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -332,11 +308,7 @@ impl VerifierTrait for VerifierService {
         Ok(())
     }
 
-    fn validate_vp_id(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()> {
+    fn validate_vp_id(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating vp id");
 
         let vp_id = get_claim(&token.claims, vec!["vp", "id"])?;
@@ -351,11 +323,7 @@ impl VerifierTrait for VerifierService {
         Ok(())
     }
 
-    fn validate_holder(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()> {
+    fn validate_holder(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating holder");
 
         let vp_holder = get_claim(&token.claims, vec!["vp", "holder"])?;
@@ -437,10 +405,7 @@ impl VerifierTrait for VerifierService {
                         }
                     }
                     Err(e) => {
-                        let error = AuthErrors::security_new(&format!(
-                            "VC iat and issuanceDate do not match -> {}",
-                            e
-                        ));
+                        let error = AuthErrors::security_new(&format!("VC iat and issuanceDate do not match -> {}", e));
                         error!("{}", error.log());
                         bail!(error);
                     }
@@ -470,10 +435,7 @@ impl VerifierTrait for VerifierService {
                         }
                     }
                     Err(e) => {
-                        let error = AuthErrors::security_new(&format!(
-                            "VC validUntil has invalid format -> {}",
-                            e
-                        ));
+                        let error = AuthErrors::security_new(&format!("VC validUntil has invalid format -> {}", e));
                         error!("{}", error.log());
                         bail!(error);
                     }
@@ -487,27 +449,23 @@ impl VerifierTrait for VerifierService {
     }
     fn retrieve_vcs(&self, token: TokenData<Value>) -> anyhow::Result<Vec<String>> {
         info!("Retrieving VCs");
-        let vcs: Vec<String> =
-            match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
-                Ok(data) => data,
-                Err(e) => {
-                    let error = CommonErrors::format_new(
-                        BadFormat::Received,
-                        &format!(
-                            "VPT does not contain the 'verifiableCredential' field -> {}",
-                            e.to_string()
-                        )
-                    );
-                    error!("{}", error.log());
-                    bail!(error);
-                }
-            };
+        let vcs: Vec<String> = match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
+            Ok(data) => data,
+            Err(e) => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    &format!(
+                        "VPT does not contain the 'verifiableCredential' field -> {}",
+                        e.to_string()
+                    ),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
         Ok(vcs)
     }
-    async fn end_verification(
-        &self,
-        model: &recv_interaction::Model
-    ) -> anyhow::Result<Option<String>> {
+    async fn end_verification(&self, model: &recv_interaction::Model) -> anyhow::Result<Option<String>> {
         info!("Ending verification");
 
         if model.method == "redirect" {
@@ -523,8 +481,7 @@ impl VerifierTrait for VerifierService {
             headers.insert(CONTENT_TYPE, "application/json".parse()?);
             headers.insert(ACCEPT, "application/json".parse()?);
 
-            let body =
-                CallbackBody { interact_ref: model.interact_ref.clone(), hash: model.hash.clone() };
+            let body = CallbackBody { interact_ref: model.interact_ref.clone(), hash: model.hash.clone() };
             let body = serde_json::to_value(body)?;
             self.client.post(&url, Some(headers), Body::Json(body)).await?;
 
@@ -532,7 +489,7 @@ impl VerifierTrait for VerifierService {
         } else {
             let error = CommonErrors::not_impl_new(
                 "Interact method not supported",
-                &format!("Interact method {} not supported", model.method)
+                &format!("Interact method {} not supported", model.method),
             );
             error!("{}", error.log());
             bail!(error);

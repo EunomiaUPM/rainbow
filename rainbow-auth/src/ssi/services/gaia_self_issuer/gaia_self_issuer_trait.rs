@@ -17,9 +17,7 @@
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::ssi::types::vc_issuing::{
-    AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer
-};
+use crate::ssi::types::vc_issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
 
 #[async_trait]
 pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {

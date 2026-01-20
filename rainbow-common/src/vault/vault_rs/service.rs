@@ -29,15 +29,15 @@ use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
 use vaultrs::kv2;
 use vaultrs::sys::mount;
 
+use super::super::secrets::{DbSecrets, PemHelper};
+use super::super::VaultTrait;
 use crate::config::traits::DatabaseConfigTrait;
 use crate::errors::{CommonErrors, ErrorLog};
-use super::super::VaultTrait;
-use super::super::secrets::{DbSecrets, PemHelper};
 use crate::utils::{expect_from_env, read, read_json};
 
 #[derive(Clone)]
 pub struct VaultService {
-    client: Arc<VaultClient>
+    client: Arc<VaultClient>,
 }
 
 impl VaultService {
@@ -69,7 +69,7 @@ impl VaultService {}
 impl VaultTrait for VaultService {
     async fn read<T>(&self, mount: Option<&str>, path: &str) -> anyhow::Result<T>
     where
-        T: DeserializeOwned
+        T: DeserializeOwned,
     {
         let basic_mount = expect_from_env("VAULT_MOUNT");
         let mount = mount.unwrap_or(&basic_mount);
@@ -88,7 +88,7 @@ impl VaultTrait for VaultService {
     }
     async fn write<T>(&self, mount: Option<&str>, path: &str, secret: &T) -> anyhow::Result<()>
     where
-        T: Serialize + Send + Sync
+        T: Serialize + Send + Sync,
     {
         let basic_mount = expect_from_env("VAULT_MOUNT");
         let mount = mount.unwrap_or(&basic_mount);
@@ -165,14 +165,13 @@ impl VaultTrait for VaultService {
 
         Ok(map)
     }
-    async fn get_connection<T>(&self, config: T) -> DatabaseConnection
+    async fn get_db_connection<T>(&self, config: T) -> DatabaseConnection
     where
-        T: DatabaseConfigTrait + Send + Sync
+        T: DatabaseConfigTrait + Send + Sync,
     {
         let db_path = expect_from_env("VAULT_DB");
 
-        let db_secrets: DbSecrets =
-            self.read(None, &db_path).await.expect("Not able to retrieve env files");
+        let db_secrets: DbSecrets = self.read(None, &db_path).await.expect("Not able to retrieve env files");
         Database::connect(config.get_full_db_url(db_secrets)).await.expect("Database can't connect")
     }
 }

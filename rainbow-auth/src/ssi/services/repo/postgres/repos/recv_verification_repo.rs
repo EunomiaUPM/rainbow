@@ -27,15 +27,19 @@ use crate::ssi::services::repo::subtraits::recv_verification_trait::RecvVerifica
 
 #[derive(Clone)]
 pub struct RecvVerificationRepo {
-    db_connection: DatabaseConnection
+    db_connection: DatabaseConnection,
 }
 
 impl RecvVerificationRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for RecvVerificationRepo {
-    fn db(&self) -> &DatabaseConnection { &self.db_connection }
+    fn db(&self) -> &DatabaseConnection {
+        &self.db_connection
+    }
 }
 
 #[async_trait]
@@ -44,8 +48,7 @@ impl RecvVerificationTrait for RecvVerificationRepo {
         match Entity::find().filter(Column::State.eq(state)).one(self.db()).await {
             Ok(Some(data)) => Ok(data),
             Ok(None) => {
-                let error =
-                    CommonErrors::missing_resource_new(state, &format!("missing state: {}", state));
+                let error = CommonErrors::missing_resource_new(state, &format!("missing state: {}", state));
                 error!("{}", error.log());
                 bail!(error)
             }

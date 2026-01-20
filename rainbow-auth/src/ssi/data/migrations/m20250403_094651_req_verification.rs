@@ -20,7 +20,9 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_req_verification" }
+    fn name(&self) -> &str {
+        "m20250403_094651_req_verification"
+    }
 }
 
 #[async_trait::async_trait]
@@ -43,7 +45,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ReqVerification::Status).string().not_null())
                     .col(ColumnDef::new(ReqVerification::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(ReqVerification::EndedAt).date_time())
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -68,5 +70,5 @@ pub enum ReqVerification {
     Uri,
     Status,
     CreatedAt,
-    EndedAt
+    EndedAt,
 }

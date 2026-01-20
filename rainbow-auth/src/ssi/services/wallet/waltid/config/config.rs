@@ -29,22 +29,23 @@ pub struct WaltIdConfig {
 
 impl From<SsiAuthConfig> for WaltIdConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        WaltIdConfig {
-            hosts: value.common().hosts.clone(),
-            wallet: value.wallet(),
-        }
+        WaltIdConfig { hosts: value.common().hosts.clone(), wallet: value.wallet() }
     }
 }
 
 impl WaltIdConfigTrait for WaltIdConfig {
-    fn get_raw_wallet_config(&self) -> WalletConfig { self.wallet.clone() }
+    fn get_raw_wallet_config(&self) -> WalletConfig {
+        self.wallet.clone()
+    }
     fn get_wallet_api_url(&self) -> String {
         let data = self.get_raw_wallet_config().api;
         match data.port.as_ref() {
             Some(port) => format!("{}://{}:{}", data.protocol, data.url, port),
-            None => format!("{}://{}", data.protocol, data.url)
+            None => format!("{}://{}", data.protocol, data.url),
         }
     }
 
-    fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
+    }
 }

@@ -21,5 +21,5 @@ use serde::{Deserialize, Serialize};
 pub struct DbSecrets {
     pub user: String,
     pub password: String,
-    pub name: String
+    pub name: String,
 }

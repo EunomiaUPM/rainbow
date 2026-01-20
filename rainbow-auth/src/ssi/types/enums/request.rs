@@ -20,5 +20,5 @@ use serde_json::Value;
 pub enum Body {
     Json(Value),
     Raw(String),
-    None
+    None,
 }

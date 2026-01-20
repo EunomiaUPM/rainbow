@@ -40,7 +40,7 @@ pub struct AuthServerMetadata {
     pub id_token_signing_alg_values_supported: Vec<String>,
     pub code_challenge_methods_supported: Vec<String>,
     pub credential_configurations_supported: HashMap<String, CredentialConfiguration>,
-    pub authorization_servers: Vec<String>
+    pub authorization_servers: Vec<String>,
 }
 
 impl AuthServerMetadata {
@@ -58,11 +58,7 @@ impl AuthServerMetadata {
             batch_credential_endpoint: format!("{}/credential", host),
             deferred_credential_endpoint: format!("{}/credential_deferred", host),
             scopes_supported: vec!["openid".to_string()],
-            response_types_supported: vec![
-                "code".to_string(),
-                "vp_token".to_string(),
-                "id_token".to_string(),
-            ],
+            response_types_supported: vec!["code".to_string(), "vp_token".to_string(), "id_token".to_string()],
             response_modes_supported: vec!["query".to_string(), "fragment".to_string()],
             grant_types_supported: vec![
                 "authorization_code".to_string(),
@@ -72,7 +68,7 @@ impl AuthServerMetadata {
             id_token_signing_alg_values_supported: vec!["RSA".to_string()],
             code_challenge_methods_supported: vec!["S256".to_string()],
             credential_configurations_supported,
-            authorization_servers: vec![host.to_string()]
+            authorization_servers: vec![host.to_string()],
         }
     }
 }

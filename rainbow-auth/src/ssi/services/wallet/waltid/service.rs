@@ -39,16 +39,16 @@ use rainbow_common::config::traits::ExtraHostsTrait;
 use rainbow_common::config::types::{HostType, SemiWalletSecrets};
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::utils::expect_from_env;
+use rainbow_common::vault::secrets::PemHelper;
 use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use serde_json::Value;
 use tokio::sync::Mutex;
 use tracing::log::warn;
 use tracing::{debug, error, info};
 use url::Url;
 use urlencoding::decode;
-use rainbow_common::utils::expect_from_env;
-use rainbow_common::vault::secrets::PemHelper;
-use rainbow_common::vault::VaultTrait;
 
 pub struct WaltIdService {
     wallet_session: Arc<Mutex<WalletSession>>,

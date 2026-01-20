@@ -29,15 +29,19 @@ use crate::ssi::data::entities::mates::{Column, Entity, Model, NewModel};
 use crate::ssi::services::repo::subtraits::MatesTrait;
 
 pub struct MatesRepo {
-    db_connection: DatabaseConnection
+    db_connection: DatabaseConnection,
 }
 
 impl MatesRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for MatesRepo {
-    fn db(&self) -> &DatabaseConnection { &self.db_connection }
+    fn db(&self) -> &DatabaseConnection {
+        &self.db_connection
+    }
 }
 
 #[async_trait]
@@ -46,8 +50,7 @@ impl MatesTrait for MatesRepo {
         match Entity::find().filter(Column::IsMe.eq(true)).one(self.db()).await {
             Ok(Some(data)) => Ok(data),
             Ok(None) => {
-                let error =
-                    CommonErrors::missing_resource_new("me", "missing myself in the database");
+                let error = CommonErrors::missing_resource_new("me", "missing myself in the database");
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -63,8 +66,7 @@ impl MatesTrait for MatesRepo {
         match Entity::find().filter(Column::Token.eq(token)).one(self.db()).await {
             Ok(Some(data)) => Ok(data),
             Ok(None) => {
-                let error =
-                    CommonErrors::missing_resource_new(token, &format!("missing token: {}", token));
+                let error = CommonErrors::missing_resource_new(token, &format!("missing token: {}", token));
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -80,13 +82,8 @@ impl MatesTrait for MatesRepo {
         match Entity::insert(active_mate)
             .on_conflict(
                 OnConflict::column(Column::ParticipantId)
-                    .update_columns([
-                        Column::BaseUrl,
-                        Column::LastInteraction,
-                        Column::Token,
-                        Column::ParticipantSlug
-                    ])
-                    .to_owned()
+                    .update_columns([Column::BaseUrl, Column::LastInteraction, Column::Token, Column::ParticipantSlug])
+                    .to_owned(),
             )
             .exec_with_returning(self.db())
             .await

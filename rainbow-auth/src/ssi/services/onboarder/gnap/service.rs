@@ -33,13 +33,13 @@ use rainbow_common::config::traits::ExtraHostsTrait;
 use rainbow_common::config::types::HostType;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::{expect_from_env, get_from_opt};
+use rainbow_common::vault::secrets::PemHelper;
 use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
 use tracing::{error, info};
 use url::Url;
-use rainbow_common::vault::secrets::PemHelper;
-use rainbow_common::vault::VaultTrait;
 
 pub struct GnapOnboarderService {
     client: Arc<dyn ClientServiceTrait>,
@@ -119,7 +119,7 @@ impl OnboarderTrait for GnapOnboarderService {
         let cert = expect_from_env("VAULT_F_CERT");
         let cert: PemHelper = self.vault.read(None, &cert).await?;
         let client = self.config.get_pretty_client_config(&cert.data())?;
-        
+
         let grant_request = GrantRequest::prov_oidc(client, int_model);
 
         let mut headers = HeaderMap::new();

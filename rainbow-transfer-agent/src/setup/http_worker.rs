@@ -30,6 +30,8 @@ use axum::{serve, Router};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
 use std::sync::Arc;
@@ -41,11 +43,15 @@ use uuid::Uuid;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
-    pub async fn spawn(config: &TransferConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(
+        config: &TransferConfig,
+        vault: Arc<VaultService>,
+        token: &CancellationToken,
+    ) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         // module transfer router
-        let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
+        let router = Self::create_root_http_router(&config, vault.clone()).await?.merge(well_known_router);
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
         let addr = format!("{}{}", host, port);
@@ -67,8 +73,8 @@ impl TransferHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<Router> {
-        let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
+    pub async fn create_root_http_router(config: &TransferConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
+        let router = create_root_http_router(config, vault.clone()).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
                 .on_request(|request: &Request<_>, _span: &tracing::Span| {
@@ -85,10 +91,10 @@ impl TransferHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &TransferConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
+    let db_connection = vault.get_db_connection(config.clone()).await;
     let config = Arc::new(config.clone());
-    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
     // entities
@@ -102,6 +108,7 @@ pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<
         messages_controller_service.clone(),
         entities_controller_service.clone(),
         config.clone(),
+        vault.clone(),
     )
     .build_router()
     .await?;

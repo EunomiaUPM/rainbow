@@ -25,7 +25,7 @@ use crate::ssi::services::repo::postgres::repos::recv_request_repo::RecvRequestR
 use crate::ssi::services::repo::postgres::repos::recv_verification_repo::RecvVerificationRepo;
 use crate::ssi::services::repo::postgres::repos::req_request_repo::ReqRequestRepo;
 use crate::ssi::services::repo::postgres::repos::{
-    MatesRepo, ReqInteractionRepo, ReqVcRepo, ReqVerificationRepo, TokenRequirementsRepo
+    MatesRepo, ReqInteractionRepo, ReqVcRepo, ReqVerificationRepo, TokenRequirementsRepo,
 };
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use crate::ssi::services::repo::subtraits::business_mates_trait::BusinessMatesRepoTrait;
@@ -34,7 +34,7 @@ use crate::ssi::services::repo::subtraits::recv_request_trait::RecvRequestTrait;
 use crate::ssi::services::repo::subtraits::recv_verification_trait::RecvVerificationTrait;
 use crate::ssi::services::repo::subtraits::req_request_trait::ReqRequestTrait;
 use crate::ssi::services::repo::subtraits::{
-    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait,
 };
 
 pub struct AuthRepoForSql {
@@ -47,7 +47,7 @@ pub struct AuthRepoForSql {
     req_vc_repo: Arc<dyn ReqVcTrait>,
     token_repo: Arc<dyn TokenRequirementsTrait>,
     mates_repo: Arc<dyn MatesTrait>,
-    business_mates: Arc<dyn BusinessMatesRepoTrait>
+    business_mates: Arc<dyn BusinessMatesRepoTrait>,
 }
 
 impl AuthRepoForSql {
@@ -62,17 +62,23 @@ impl AuthRepoForSql {
             token_repo: Arc::new(TokenRequirementsRepo::new(db_connection.clone())),
             mates_repo: Arc::new(MatesRepo::new(db_connection.clone())),
             req_vc_repo: Arc::new(ReqVcRepo::new(db_connection.clone())),
-            business_mates: Arc::new(BusinessMatesRepo::new(db_connection.clone()))
+            business_mates: Arc::new(BusinessMatesRepo::new(db_connection.clone())),
         }
     }
 }
 
 impl AuthRepoTrait for AuthRepoForSql {
-    fn request_req(&self) -> Arc<dyn ReqRequestTrait> { self.req_request_repo.clone() }
+    fn request_req(&self) -> Arc<dyn ReqRequestTrait> {
+        self.req_request_repo.clone()
+    }
 
-    fn request_rcv(&self) -> Arc<dyn RecvRequestTrait> { self.recv_request_repo.clone() }
+    fn request_rcv(&self) -> Arc<dyn RecvRequestTrait> {
+        self.recv_request_repo.clone()
+    }
 
-    fn interaction_req(&self) -> Arc<dyn ReqInteractionTrait> { self.req_interaction_repo.clone() }
+    fn interaction_req(&self) -> Arc<dyn ReqInteractionTrait> {
+        self.req_interaction_repo.clone()
+    }
 
     fn interaction_rcv(&self) -> Arc<dyn RecvInteractionTrait> {
         self.recv_interaction_repo.clone()
@@ -86,11 +92,19 @@ impl AuthRepoTrait for AuthRepoForSql {
         self.recv_verification_repo.clone()
     }
 
-    fn token_requirements(&self) -> Arc<dyn TokenRequirementsTrait> { self.token_repo.clone() }
+    fn token_requirements(&self) -> Arc<dyn TokenRequirementsTrait> {
+        self.token_repo.clone()
+    }
 
-    fn mates(&self) -> Arc<dyn MatesTrait> { self.mates_repo.clone() }
+    fn mates(&self) -> Arc<dyn MatesTrait> {
+        self.mates_repo.clone()
+    }
 
-    fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> { self.business_mates.clone() }
+    fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> {
+        self.business_mates.clone()
+    }
 
-    fn vc_req(&self) -> Arc<dyn ReqVcTrait> { self.req_vc_repo.clone() }
+    fn vc_req(&self) -> Arc<dyn ReqVcTrait> {
+        self.req_vc_repo.clone()
+    }
 }

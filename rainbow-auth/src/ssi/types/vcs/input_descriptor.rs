@@ -21,34 +21,34 @@ use serde::{Deserialize, Serialize};
 pub struct InputDescriptor {
     pub id: String,
     pub format: InputDescriptorFormat,
-    pub constraints: InputDescriptorConstraints
+    pub constraints: InputDescriptorConstraints,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputDescriptorFormat {
-    jwt_vc_json: InputDescriptorFormatJWTJson
+    jwt_vc_json: InputDescriptorFormatJWTJson,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputDescriptorFormatJWTJson {
-    pub alg: Vec<String>
+    pub alg: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputDescriptorConstraints {
-    pub fields: Vec<InputDescriptorConstraintsFields>
+    pub fields: Vec<InputDescriptorConstraintsFields>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputDescriptorConstraintsFields {
     pub path: Vec<String>,
-    pub filter: InputDescriptorConstraintsFieldsFilter
+    pub filter: InputDescriptorConstraintsFieldsFilter,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputDescriptorConstraintsFieldsFilter {
     pub r#type: String,
-    pub pattern: String
+    pub pattern: String,
 }
 
 impl InputDescriptor {
@@ -56,17 +56,14 @@ impl InputDescriptor {
         InputDescriptor {
             id: vc_type.clone(),
             format: InputDescriptorFormat {
-                jwt_vc_json: InputDescriptorFormatJWTJson { alg: vec!["RSA".to_string()] }
+                jwt_vc_json: InputDescriptorFormatJWTJson { alg: vec!["RSA".to_string()] },
             },
             constraints: InputDescriptorConstraints {
                 fields: vec![InputDescriptorConstraintsFields {
                     path: vec!["$.vc.type".to_string()],
-                    filter: InputDescriptorConstraintsFieldsFilter {
-                        r#type: "string".to_string(),
-                        pattern: vc_type
-                    }
-                }]
-            }
+                    filter: InputDescriptorConstraintsFieldsFilter { r#type: "string".to_string(), pattern: vc_type },
+                }],
+            },
         }
     }
 }

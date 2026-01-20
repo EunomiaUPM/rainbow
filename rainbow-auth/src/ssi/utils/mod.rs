@@ -28,14 +28,15 @@ use tracing::error;
 use url::Url;
 
 pub fn get_query_param(parsed_uri: &Url, param_name: &str) -> anyhow::Result<String> {
-    if let Some(value) =
-        parsed_uri.query_pairs().find(|(k, _)| k == param_name).map(|(_, v)| v.into_owned())
-    {
+    if let Some(value) = parsed_uri.query_pairs().find(|(k, _)| k == param_name).map(|(_, v)| v.into_owned()) {
         Ok(value)
     } else {
         let error = CommonErrors::format_new(
             BadFormat::Received,
-            &format!("The expected '{}' field was missing in the oidc4vp uri", param_name)
+            &format!(
+                "The expected '{}' field was missing in the oidc4vp uri",
+                param_name
+            ),
         );
         error!("{}", error.log());
         bail!(error);
@@ -56,14 +57,11 @@ pub fn trim_4_base(input: &str) -> String {
 pub fn get_host_url(host_config: &HostConfig) -> String {
     match host_config.port.as_ref() {
         Some(port) => format!("{}://{}:{}", host_config.protocol, host_config.url, port),
-        None => format!("{}://{}", host_config.protocol, host_config.url)
+        None => format!("{}://{}", host_config.protocol, host_config.url),
     }
 }
 
-pub fn get_pretty_client_config_helper(
-    client_config: &ClientConfig,
-    cert: &str
-) -> anyhow::Result<Value> {
+pub fn get_pretty_client_config_helper(client_config: &ClientConfig, cert: &str) -> anyhow::Result<Value> {
     let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
 
     let key = json!({
@@ -94,7 +92,7 @@ pub fn extract_gnap_token(headers: HeaderMap) -> Option<String> {
 pub fn split_did(did: &str) -> (&str, Option<&str>) {
     match did.split_once('#') {
         Some((did_kid, id)) => (did_kid, Some(id)),
-        None => (did, None)
+        None => (did, None),
     }
 }
 
@@ -105,10 +103,7 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
         node = match node.get(key) {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Missing field '{}'", key)
-                );
+                let error = CommonErrors::format_new(BadFormat::Received, &format!("Missing field '{}'", key));
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -123,7 +118,7 @@ pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<S
     for key in path.iter() {
         node = match node.get(key) {
             Some(data) => data,
-            None => return Ok(None)
+            None => return Ok(None),
         };
     }
     let data = validate_data(node, field)?;
@@ -136,7 +131,7 @@ fn validate_data(node: &Value, field: &str) -> anyhow::Result<String> {
         None => {
             let error = CommonErrors::format_new(
                 BadFormat::Received,
-                &format!("Field '{}' not a string", field)
+                &format!("Field '{}' not a string", field),
             );
             error!("{}", error.log());
             bail!(error)

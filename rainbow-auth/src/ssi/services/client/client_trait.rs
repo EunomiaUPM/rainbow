@@ -24,22 +24,7 @@ use crate::ssi::types::enums::request::Body;
 #[async_trait]
 pub trait ClientServiceTrait: Send + Sync + 'static {
     async fn get(&self, url: &str, headers: Option<HeaderMap>) -> anyhow::Result<Response>;
-    async fn post(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response>;
-    async fn put(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response>;
-    async fn delete(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response>;
+    async fn post(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response>;
+    async fn put(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response>;
+    async fn delete(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response>;
 }

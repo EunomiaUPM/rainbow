@@ -37,10 +37,7 @@ pub trait CoreBusinessTrait: Send + Sync + 'static {
         let uri = self.verifier().generate_uri(&ver_model);
         Ok(uri)
     }
-    async fn token(
-        &self,
-        payload: RainbowBusinessLoginRequest
-    ) -> anyhow::Result<BusinessResponse> {
+    async fn token(&self, payload: RainbowBusinessLoginRequest) -> anyhow::Result<BusinessResponse> {
         let bus_model = self.repo().business_mates().get_by_id(&payload.auth_request_id).await?;
         let mate = self.repo().mates().get_by_id(&bus_model.participant_id).await?;
         self.business().get_token(&mate, &bus_model)

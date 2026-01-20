@@ -15,8 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod string_helper;
 mod db_secrets;
+mod string_helper;
 
 pub use db_secrets::*;
 pub use string_helper::*;

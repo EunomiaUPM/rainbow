@@ -27,51 +27,24 @@ pub trait VerifierTrait: Send + Sync + 'static {
     fn start(&self, id: &str) -> recv_verification::NewModel;
     fn generate_uri(&self, ver_model: &recv_verification::Model) -> String;
     fn get_vpd(&self, ver_model: &recv_verification::Model) -> VPDef;
-    fn verify_all(
-        &self,
-        ver_model: &mut recv_verification::Model,
-        payload: &VerifyPayload
-    ) -> anyhow::Result<()>;
-    fn verify_vp(
-        &self,
-        model: &mut recv_verification::Model,
-        vp_token: &str
-    ) -> anyhow::Result<(Vec<String>, String)>;
+    fn verify_all(&self, ver_model: &mut recv_verification::Model, payload: &VerifyPayload) -> anyhow::Result<()>;
+    fn verify_vp(&self, model: &mut recv_verification::Model, vp_token: &str) -> anyhow::Result<(Vec<String>, String)>;
     fn verify_vc(&self, vc_token: &str, holder: &str) -> anyhow::Result<()>;
-    fn validate_token(
-        &self,
-        vp_token: &str,
-        audience: Option<&str>
-    ) -> anyhow::Result<(TokenData<Value>, String)>;
-    fn validate_nonce(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()>;
+    fn validate_token(&self, vp_token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<Value>, String)>;
+    fn validate_nonce(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_vp_subject(
         &self,
         model: &mut recv_verification::Model,
         token: &TokenData<Value>,
-        kid: &str
+        kid: &str,
     ) -> anyhow::Result<()>;
     fn validate_vc_sub(&self, token: &TokenData<Value>, holder: &str) -> anyhow::Result<()>;
-    fn validate_vp_id(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()>;
-    fn validate_holder(
-        &self,
-        model: &recv_verification::Model,
-        token: &TokenData<Value>
-    ) -> anyhow::Result<()>;
+    fn validate_vp_id(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
+    fn validate_holder(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_issuer(&self, token: &TokenData<Value>, kid: &str) -> anyhow::Result<()>;
     fn validate_vc_id(&self, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_valid_from(&self, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_valid_until(&self, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn retrieve_vcs(&self, token: TokenData<Value>) -> anyhow::Result<Vec<String>>;
-    async fn end_verification(
-        &self,
-        model: &recv_interaction::Model
-    ) -> anyhow::Result<Option<String>>;
+    async fn end_verification(&self, model: &recv_interaction::Model) -> anyhow::Result<Option<String>>;
 }

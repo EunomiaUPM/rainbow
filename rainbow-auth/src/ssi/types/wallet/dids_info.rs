@@ -26,5 +26,5 @@ pub struct DidsInfo {
     pub key_id: String,
     pub default: bool,
     #[serde(rename = "createdOn")]
-    pub created_on: String
+    pub created_on: String,
 }

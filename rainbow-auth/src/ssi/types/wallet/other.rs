@@ -20,5 +20,5 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RedirectResponse {
     #[serde(rename = "redirectUri")]
-    pub redirect_uri: String
+    pub redirect_uri: String,
 }

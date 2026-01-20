@@ -17,17 +17,6 @@
 
 use std::sync::Arc;
 
-use axum::extract::Request;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use axum::routing::get;
-use axum::Router;
-use rainbow_common::config::traits::ApiConfigTrait;
-use rainbow_common::utils::server_status;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tracing::{error, info, Level};
-use uuid::Uuid;
-use rainbow_common::openapi_http::OpenapiRouter;
 use crate::ssi::core::traits::AuthCoreTrait;
 use crate::ssi::core::AuthCore;
 use crate::ssi::http::business_router::BusinessRouter;
@@ -35,10 +24,21 @@ use crate::ssi::http::gatekeeper_router::GateKeeperRouter;
 use crate::ssi::http::onboarder_router::OnboarderRouter;
 use crate::ssi::http::verifier_router::VerifierRouter;
 use crate::ssi::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
+use axum::extract::Request;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::Router;
+use rainbow_common::config::traits::ApiConfigTrait;
+use rainbow_common::openapi_http::OpenapiRouter;
+use rainbow_common::utils::server_status;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tracing::{error, info, Level};
+use uuid::Uuid;
 
 pub struct AuthRouter {
     core: Arc<AuthCore>,
-    openapi: String
+    openapi: String,
 }
 
 impl AuthRouter {
@@ -59,22 +59,22 @@ impl AuthRouter {
         let api_path = self.core.config().get_api_version();
 
         let router = Router::new()
-            .route(&format!("{}/health", api_path), get(server_status,),)
-            .nest(&format!("{}/mates", api_path), mate_router,)
-            .nest(&format!("{}/vc-request", api_path), vc_requester_router,)
-            .nest(&format!("{}/gate", api_path), gatekeeper_router,)
-            .nest(&format!("{}/verifier", api_path), verifier_router,)
-            .nest(&format!("{}/business", api_path), business_router,)
-            .nest(&format!("{}/onboard", api_path), onboarder_router,)
-            .nest(&format!("{}/docs", api_path), openapi_router,)
-            .fallback(Self::fallback,)
+            .route(&format!("{}/health", api_path), get(server_status))
+            .nest(&format!("{}/mates", api_path), mate_router)
+            .nest(&format!("{}/vc-request", api_path), vc_requester_router)
+            .nest(&format!("{}/gate", api_path), gatekeeper_router)
+            .nest(&format!("{}/verifier", api_path), verifier_router)
+            .nest(&format!("{}/business", api_path), business_router)
+            .nest(&format!("{}/onboard", api_path), onboarder_router)
+            .nest(&format!("{}/docs", api_path), openapi_router)
+            .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()
-                    .make_span_with(|_req: &Request<_,>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4()),)
-                    .on_request(|req: &Request<_,>, _span: &tracing::Span| {
+                    .make_span_with(|_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4()))
+                    .on_request(|req: &Request<_>, _span: &tracing::Span| {
                         info!("{} {}", req.method(), req.uri().path());
-                    },)
-                    .on_response(DefaultOnResponse::new().level(Level::TRACE,),),
+                    })
+                    .on_response(DefaultOnResponse::new().level(Level::TRACE)),
             );
 
         let router = match self.core.is_gaia_active() {
@@ -82,7 +82,7 @@ impl AuthRouter {
                 let gaia_router = GaiaSelfIssuerRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/gaia", api_path), gaia_router)
             }
-            false => router
+            false => router,
         };
 
         let router = match self.core.is_wallet_active() {
@@ -90,7 +90,7 @@ impl AuthRouter {
                 let wallet_router = WalletRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/wallet", api_path), wallet_router)
             }
-            false => router
+            false => router,
         };
         router
     }

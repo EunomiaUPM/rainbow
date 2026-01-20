@@ -1,7 +1,9 @@
 pub mod shutdown;
 
+use crate::vault::vault_rs::VaultService;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 
 #[async_trait::async_trait]
@@ -38,7 +40,10 @@ pub trait BootstrapServiceTrait: Send + Sync {
         anyhow::bail!("This service does not support creation of policy templates.");
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>>;
+    async fn start_services_background(
+        config: &Self::Config,
+        vault_service: Arc<VaultService>,
+    ) -> anyhow::Result<broadcast::Sender<()>>;
 }
 
 #[async_trait::async_trait]
@@ -123,9 +128,10 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [2/8]: Configuration loading");
         let config = S::load_config(self.env_file).await?;
+        let vault = Arc::new(VaultService::new());
 
         tracing::info!("Step [3/8]: Starting Services in Background");
-        let shutdown_tx = S::start_services_background(&config).await?;
+        let shutdown_tx = S::start_services_background(&config, vault.clone()).await?;
 
         // waiting for port setup
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;

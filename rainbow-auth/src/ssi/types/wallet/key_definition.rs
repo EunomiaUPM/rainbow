@@ -20,7 +20,7 @@ use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct KeyInfo {
-    pub id: String
+    pub id: String,
 }
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct KeyDefinition {
@@ -32,5 +32,5 @@ pub struct KeyDefinition {
     #[serde(rename = "keyPair")]
     pub key_pair: Value,
     #[serde(rename = "keyset_handle")]
-    pub keyset_handle: Option<Value>
+    pub keyset_handle: Option<Value>,
 }

@@ -22,15 +22,19 @@ use crate::ssi::data::entities::req_verification::{Entity, NewModel};
 use crate::ssi::services::repo::subtraits::ReqVerificationTrait;
 
 pub struct ReqVerificationRepo {
-    db_connection: DatabaseConnection
+    db_connection: DatabaseConnection,
 }
 
 impl ReqVerificationRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for ReqVerificationRepo {
-    fn db(&self) -> &DatabaseConnection { &self.db_connection }
+    fn db(&self) -> &DatabaseConnection {
+        &self.db_connection
+    }
 }
 
 impl ReqVerificationTrait for ReqVerificationRepo {}

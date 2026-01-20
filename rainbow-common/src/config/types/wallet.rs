@@ -30,5 +30,5 @@ pub struct WalletConfig {
 pub struct SemiWalletSecrets {
     r#type: String,
     email: String,
-    password: String
+    password: String,
 }

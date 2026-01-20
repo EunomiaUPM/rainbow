@@ -15,12 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::collections::HashMap;
 use async_trait::async_trait;
 use sea_orm::DatabaseConnection;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
+use std::collections::HashMap;
 
 use crate::config::traits::DatabaseConfigTrait;
 
@@ -35,7 +35,7 @@ pub trait VaultTrait: Send + Sync + 'static {
         T: Serialize + Send + Sync;
     async fn write_all_secrets(&self) -> anyhow::Result<()>;
     fn secrets(&self) -> anyhow::Result<HashMap<String, Value>>;
-    async fn get_connection<T>(&self, config: T) -> DatabaseConnection
-    where 
+    async fn get_db_connection<T>(&self, config: T) -> DatabaseConnection
+    where
         T: DatabaseConfigTrait + Send + Sync;
 }

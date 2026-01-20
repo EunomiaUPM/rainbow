@@ -28,24 +28,16 @@ use super::super::ClientServiceTrait;
 use crate::ssi::types::enums::request::Body;
 
 pub struct BasicClientService {
-    client: Client
+    client: Client,
 }
 
 impl BasicClientService {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(10))
-                .build()
-                .expect("Failed to build request client")
+            client: Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build request client"),
         }
     }
-    async fn send_request(
-        &self,
-        req: RequestBuilder,
-        method: &str,
-        url: &str
-    ) -> anyhow::Result<Response> {
+    async fn send_request(&self, req: RequestBuilder, method: &str, url: &str) -> anyhow::Result<Response> {
         match req.send().await {
             Ok(resp) => Ok(resp),
             Err(e) => {
@@ -60,7 +52,7 @@ impl BasicClientService {
         match body {
             Body::Json(value) => req.json(&value),
             Body::Raw(s) => req.body(s),
-            Body::None => req
+            Body::None => req,
         }
     }
 }
@@ -68,55 +60,24 @@ impl BasicClientService {
 #[async_trait]
 impl ClientServiceTrait for BasicClientService {
     async fn get(&self, url: &str, headers: Option<HeaderMap>) -> anyhow::Result<Response> {
-        let req = if let Some(h) = headers {
-            self.client.get(url).headers(h)
-        } else {
-            self.client.get(url)
-        };
+        let req = if let Some(h) = headers { self.client.get(url).headers(h) } else { self.client.get(url) };
         self.send_request(req, "GET", url).await
     }
 
-    async fn post(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response> {
-        let req = if let Some(h) = headers {
-            self.client.post(url).headers(h)
-        } else {
-            self.client.post(url)
-        };
+    async fn post(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response> {
+        let req = if let Some(h) = headers { self.client.post(url).headers(h) } else { self.client.post(url) };
         let req = self.apply_body(req, body);
         self.send_request(req, "POST", url).await
     }
 
-    async fn put(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response> {
-        let req = if let Some(h) = headers {
-            self.client.put(url).headers(h)
-        } else {
-            self.client.put(url)
-        };
+    async fn put(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response> {
+        let req = if let Some(h) = headers { self.client.put(url).headers(h) } else { self.client.put(url) };
         let req = self.apply_body(req, body);
         self.send_request(req, "PUT", url).await
     }
 
-    async fn delete(
-        &self,
-        url: &str,
-        headers: Option<HeaderMap>,
-        body: Body
-    ) -> anyhow::Result<Response> {
-        let req = if let Some(h) = headers {
-            self.client.delete(url).headers(h)
-        } else {
-            self.client.delete(url)
-        };
+    async fn delete(&self, url: &str, headers: Option<HeaderMap>, body: Body) -> anyhow::Result<Response> {
+        let req = if let Some(h) = headers { self.client.delete(url).headers(h) } else { self.client.delete(url) };
         let req = self.apply_body(req, body);
         self.send_request(req, "DELETE", url).await
     }

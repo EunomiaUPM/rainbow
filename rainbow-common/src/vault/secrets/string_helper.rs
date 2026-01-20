@@ -19,10 +19,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct PemHelper {
-    inner: String
+    inner: String,
 }
 
 impl PemHelper {
-    pub fn new(inner: String) -> PemHelper { PemHelper { inner } }
-    pub fn data(&self) -> String { self.inner.clone() }
+    pub fn new(inner: String) -> PemHelper {
+        PemHelper { inner }
+    }
+    pub fn data(&self) -> String {
+        self.inner.clone()
+    }
 }

@@ -15,16 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::cmp::PartialEq;
-
 use clap::{Parser, Subcommand};
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::vault::VaultTrait;
+use std::cmp::PartialEq;
+use std::sync::Arc;
 use tracing::{debug, info};
 
-use super::app::Application;
+use super::app::AuthApplication;
 use crate::ssi::setup::migrations::AuthMigrator;
 
 #[derive(Parser, Debug)]
@@ -55,20 +55,20 @@ impl AuthCommands {
         // parse command line
         debug!("Init the command line application");
         let cli = AuthCli::parse();
-        let vault = VaultService::new();
+        let vault = Arc::new(VaultService::new());
 
         match cli.command {
             AuthCliCommands::Start(args) => {
                 let config = SsiAuthConfig::load(args.env_file);
                 let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current Auth Config:\n{}", table);
-                Application::run(config, vault).await?;
+                AuthApplication::run(config, vault.clone()).await?;
             }
             AuthCliCommands::Setup(args) => {
                 let config = SsiAuthConfig::load(args.env_file);
                 let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current Auth Config:\n{}", table);
-                let connection = vault.get_connection(config).await;
+                let connection = vault.get_db_connection(config).await;
                 AuthMigrator::run(connection).await?;
             }
             AuthCliCommands::Vault => {

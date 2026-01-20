@@ -31,11 +31,7 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     fn vc_req(&self) -> Arc<dyn VcRequesterTrait>;
     fn repo(&self) -> Arc<dyn AuthRepoTrait>;
     fn callback(&self) -> Arc<dyn CallbackTrait>;
-    async fn beg_vc(
-        &self,
-        payload: ReachAuthority,
-        method: ReachMethod
-    ) -> anyhow::Result<Option<String>> {
+    async fn beg_vc(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
         let (vc_model, int_model) = self.vc_req().start(payload);
         let mut vc_model = self.repo().vc_req().create(vc_model).await?;
         let mut int_model = self.repo().interaction_req().create(int_model).await?;
@@ -48,7 +44,7 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
                 let _ver_model = self.repo().verification_req().create(ver_model).await?;
                 Ok(Some(uri))
             }
-            None => Ok(None)
+            None => Ok(None),
         }
     }
 
@@ -59,11 +55,7 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     async fn get_by_id(&self, id: String) -> anyhow::Result<req_vc::Model> {
         self.repo().vc_req().get_by_id(&id).await
     }
-    async fn continue_req(
-        &self,
-        id: String,
-        payload: CallbackBody
-    ) -> anyhow::Result<mates::Model> {
+    async fn continue_req(&self, id: String, payload: CallbackBody) -> anyhow::Result<mates::Model> {
         let mut int_model = self.repo().interaction_req().get_by_id(&id).await?;
         let result = self.callback().check_callback(&mut int_model, &payload);
         let int_model = self.repo().interaction_req().update(int_model).await?;

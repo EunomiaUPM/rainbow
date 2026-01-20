@@ -19,7 +19,9 @@ use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_mates" }
+    fn name(&self) -> &str {
+        "m20250403_094651_mates"
+    }
 }
 
 #[async_trait::async_trait]
@@ -37,7 +39,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Mates::SavedAt).date_time().not_null())
                     .col(ColumnDef::new(Mates::LastInteraction).date_time().not_null())
                     .col(ColumnDef::new(Mates::IsMe).boolean().not_null())
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -57,5 +59,5 @@ pub enum Mates {
     Token,
     SavedAt,
     LastInteraction,
-    IsMe
+    IsMe,
 }

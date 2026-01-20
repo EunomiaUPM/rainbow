@@ -21,15 +21,7 @@ use crate::ssi::data::entities::{business_mates, mates, recv_request, recv_verif
 use crate::ssi::types::business::BusinessResponse;
 
 pub trait BusinessTrait: Send + Sync + 'static {
-    fn start(
-        &self,
-        payload: &RainbowBusinessLoginRequest
-    ) -> (recv_request::NewModel, recv_verification::Model);
-    fn get_token(
-        &self,
-        mate: &mates::Model,
-        bus_model: &business_mates::Model
-    ) -> anyhow::Result<BusinessResponse>;
-    fn end(&self, ver_model: &recv_verification::Model)
-        -> anyhow::Result<business_mates::NewModel>;
+    fn start(&self, payload: &RainbowBusinessLoginRequest) -> (recv_request::NewModel, recv_verification::Model);
+    fn get_token(&self, mate: &mates::Model, bus_model: &business_mates::Model) -> anyhow::Result<BusinessResponse>;
+    fn end(&self, ver_model: &recv_verification::Model) -> anyhow::Result<business_mates::NewModel>;
 }

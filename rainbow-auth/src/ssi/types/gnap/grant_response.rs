@@ -35,7 +35,7 @@ pub struct GrantResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub instance_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String> // TODO
+    pub error: Option<String>, // TODO
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -43,7 +43,7 @@ pub struct Continue4GResponse {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wait: Option<i64>,
-    pub access_token: AccessToken
+    pub access_token: AccessToken,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -54,13 +54,13 @@ pub struct Interact4GResponse {
     pub user_code: Option<String>,
     pub user_code_uri: Option<UserCodeUri4Int>,
     pub finish: Option<String>,
-    pub expires_in: Option<u64>
+    pub expires_in: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserCodeUri4Int {
     pub code: String,
-    pub uri: String
+    pub uri: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -70,7 +70,7 @@ pub struct Subject4GResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assertion: Option<Vec<Value>>, // REQUIRED if returning assertions
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<String> // RECOMMENDED
+    pub updated_at: Option<String>, // RECOMMENDED
 }
 
 impl GrantResponse {
@@ -79,7 +79,7 @@ impl GrantResponse {
             r#continue: Some(Continue4GResponse {
                 uri: int_model.continue_endpoint.clone(),
                 wait: None, // TODO Manage wait time it should be at least 5 secs
-                access_token: AccessToken::default(int_model.continue_token.clone())
+                access_token: AccessToken::default(int_model.continue_token.clone()),
             }),
             access_token: None,
             interact: Some(Interact4GResponse {
@@ -89,11 +89,11 @@ impl GrantResponse {
                 user_code: None,
                 user_code_uri: None,
                 finish: Some(int_model.as_nonce.clone()),
-                expires_in: None
+                expires_in: None,
             }),
             subject: None,
             instance_id: Some(int_model.id.clone()),
-            error: None
+            error: None,
         }
     }
     pub fn default4oidc4vp(
@@ -101,19 +101,19 @@ impl GrantResponse {
         continue_uri: String,
         token: String,
         nonce: String,
-        oidc4vp_uri: String
+        oidc4vp_uri: String,
     ) -> Self {
         Self {
             r#continue: Some(Continue4GResponse {
                 uri: continue_uri,
                 wait: None, // TODO Manage wait time it should be at least 5 secs
-                access_token: AccessToken::default(token)
+                access_token: AccessToken::default(token),
             }),
             access_token: None,
             interact: Some(Interact4GResponse::default4oidc4vp(oidc4vp_uri, nonce)),
             subject: None,
             instance_id: Some(id),
-            error: None
+            error: None,
         }
     }
 
@@ -124,22 +124,18 @@ impl GrantResponse {
             interact: None,
             subject: None,
             instance_id: None,
-            error: Some(error)
+            error: Some(error),
         }
     }
 
     pub fn default4cross_user(id: String, uri: String, token: String, nonce: String) -> Self {
         Self {
-            r#continue: Some(Continue4GResponse {
-                uri,
-                wait: None,
-                access_token: AccessToken::default(token)
-            }),
+            r#continue: Some(Continue4GResponse { uri, wait: None, access_token: AccessToken::default(token) }),
             access_token: None,
             interact: Some(Interact4GResponse::default4cross_user(nonce)),
             subject: None,
             instance_id: Some(id),
-            error: None
+            error: None,
         }
     }
 }
@@ -153,7 +149,7 @@ impl Interact4GResponse {
             user_code: None,
             user_code_uri: None,
             finish: Some(nonce),
-            expires_in: None
+            expires_in: None,
         }
     }
     fn default4cross_user(nonce: String) -> Self {
@@ -164,7 +160,7 @@ impl Interact4GResponse {
             user_code: None,
             user_code_uri: None,
             finish: Some(nonce),
-            expires_in: None
+            expires_in: None,
         }
     }
 }

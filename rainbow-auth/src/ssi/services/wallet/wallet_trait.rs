@@ -20,8 +20,7 @@ use serde_json::Value;
 
 use crate::ssi::data::entities::mates;
 use crate::ssi::types::wallet::{
-    CredentialOfferResponse, DidsInfo, KeyDefinition, MatchingVCs, OidcUri, Vpd, WalletInfo,
-    WalletSession
+    CredentialOfferResponse, DidsInfo, KeyDefinition, MatchingVCs, OidcUri, Vpd, WalletInfo, WalletSession,
 };
 
 #[async_trait]
@@ -50,26 +49,12 @@ pub trait WalletServiceTrait: Send + Sync + 'static {
     // DELETE STUFF FROM WALLET
     async fn delete_key(&self, key: &KeyDefinition) -> anyhow::Result<()>;
     async fn delete_did(&self, did_info: &DidsInfo) -> anyhow::Result<()>;
-    async fn resolve_credential_offer(
-        &self,
-        payload: &OidcUri
-    ) -> anyhow::Result<CredentialOfferResponse>;
-    async fn resolve_credential_issuer(
-        &self,
-        cred_offer: &CredentialOfferResponse
-    ) -> anyhow::Result<Value>;
-    async fn use_offer_req(
-        &self,
-        payload: &OidcUri,
-        cred_offer: &CredentialOfferResponse
-    ) -> anyhow::Result<()>;
+    async fn resolve_credential_offer(&self, payload: &OidcUri) -> anyhow::Result<CredentialOfferResponse>;
+    async fn resolve_credential_issuer(&self, cred_offer: &CredentialOfferResponse) -> anyhow::Result<Value>;
+    async fn use_offer_req(&self, payload: &OidcUri, cred_offer: &CredentialOfferResponse) -> anyhow::Result<()>;
     async fn get_vpd(&self, payload: &OidcUri) -> anyhow::Result<Vpd>;
     fn parse_vpd(&self, vpd_as_string: &str) -> anyhow::Result<Vpd>;
     async fn get_matching_vcs(&self, vpd: &Vpd) -> anyhow::Result<Vec<String>>;
     async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
-    async fn present_vp(
-        &self,
-        payload: &OidcUri,
-        vcs_id: Vec<String>
-    ) -> anyhow::Result<Option<String>>;
+    async fn present_vp(&self, payload: &OidcUri, vcs_id: Vec<String>) -> anyhow::Result<Option<String>>;
 }

@@ -22,7 +22,7 @@ use super::{DidsInfo, WalletInfo};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletInfoResponse {
     pub account: String,
-    pub wallets: Vec<ModifiedWalletInfo>
+    pub wallets: Vec<ModifiedWalletInfo>,
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
@@ -34,7 +34,7 @@ pub struct ModifiedWalletInfo {
     #[serde(rename = "addedOn")]
     pub added_on: String,
     pub permission: String, // TODO
-    pub dids: Option<Vec<DidsInfo>>
+    pub dids: Option<Vec<DidsInfo>>,
 }
 
 impl ModifiedWalletInfo {
@@ -45,7 +45,7 @@ impl ModifiedWalletInfo {
             created_on: self.created_on,
             added_on: self.added_on,
             permission: self.permission,
-            dids: Vec::<DidsInfo>::new()
+            dids: Vec::<DidsInfo>::new(),
         }
     }
 }

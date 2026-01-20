@@ -19,7 +19,7 @@
 use crate::setup::grpc_worker::CatalogGrpcWorker;
 use crate::setup::http_worker::CatalogHttpWorker;
 use crate::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
-use rainbow_auth::mates;
+use rainbow_auth::ssi::data::entities::mates;
 use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::{CatalogConfig, ContractsConfig, TransferConfig};
@@ -27,7 +27,9 @@ use rainbow_common::config::traits::{ApiConfigTrait, ConfigLoader, HostConfigTra
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use rainbow_common::http_client::{HttpClient, HttpClientError};
+use rainbow_common::vault::vault_rs::VaultService;
 use std::str::FromStr;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
@@ -39,8 +41,8 @@ pub struct CatalogAgentBoot;
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for CatalogAgentBoot {
     type Config = CatalogConfig;
-    async fn load_config(role_config: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config> {
-        let config = Self::Config::load(role_config, env_file);
+    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config> {
+        let config = Self::Config::load(env_file);
         let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         tracing::info!("Current Catalog Agent Config:\n{}", table);
         Ok(config)
@@ -157,17 +159,20 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
         Ok(())
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>> {
+    async fn start_services_background(
+        config: &Self::Config,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<broadcast::Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();
 
         // workers
         tracing::info!("Spawning HTTP subsystem...");
-        let http_handle = CatalogHttpWorker::spawn(config, &cancel_token).await?;
+        let http_handle = CatalogHttpWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         tracing::info!("Spawning gRPC subsystem...");
-        let grpc_handle = CatalogGrpcWorker::spawn(config, &cancel_token).await?;
+        let grpc_handle = CatalogGrpcWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         // non-blocking thread
         let token_clone = cancel_token.clone();

@@ -18,22 +18,26 @@
  */
 use axum::extract::Request;
 use axum::Router;
-use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
+use rainbow_auth::ssi::setup::app::AuthApplication;
 use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::ApplicationConfig;
+use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
+use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
 
-pub async fn create_core_consumer_router(config: &ApplicationConfig) -> Router {
+pub async fn create_core_consumer_router(config: &ApplicationConfig, vault: Arc<VaultService>) -> Router {
     let well_known_root_dspace =
         WellKnownRoot::get_well_known_router(&config.into()).expect("Failed to well known router");
-    let auth_router = AuthConsumerApplication::create_router(&config.ssi_auth()).await;
+    let auth_router = AuthApplication::create_router(&config.ssi_auth(), vault.clone()).await;
     //let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
-    let transfer_agent_router =
-        create_root_http_router(&config.transfer()).await.expect("Failed to create transfer agent router");
-    let catalog_router = catalog_router(&config.catalog()).await.expect("Failed to create catalog router");
+    let transfer_agent_router = create_root_http_router(&config.transfer(), vault.clone())
+        .await
+        .expect("Failed to create transfer agent router");
+    let catalog_router =
+        catalog_router(&config.catalog(), vault.clone()).await.expect("Failed to create catalog router");
 
     Router::new()
         .merge(well_known_root_dspace)

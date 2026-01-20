@@ -23,5 +23,5 @@ pub struct WalletSession {
     pub account_id: Option<String>,
     pub token: Option<String>,
     pub token_exp: Option<u64>,
-    pub wallets: Vec<WalletInfo>
+    pub wallets: Vec<WalletInfo>,
 }

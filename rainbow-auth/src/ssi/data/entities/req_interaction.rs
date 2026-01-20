@@ -39,7 +39,7 @@ pub struct Model {
     pub as_nonce: Option<String>,          // RESPONSE
     pub oidc_vp_uri: Option<String>,       // RESPONSE
     pub interact_ref: Option<String>,      // POST-RESPONSE
-    pub hash: Option<String>               // POST-RESPONSE
+    pub hash: Option<String>,              // POST-RESPONSE
 }
 
 #[derive(Clone, Debug)]
@@ -50,13 +50,12 @@ pub struct NewModel {
     pub uri: String,                 // REQUEST
     pub hash_method: Option<String>, // REQUEST
     pub hints: Option<String>,       // REQUEST
-    pub grant_endpoint: String       // REQUEST
+    pub grant_endpoint: String,      // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
     fn to_active(self) -> ActiveModel {
-        let nonce: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
+        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let hash_method = self.hash_method.unwrap_or_else(|| "sha-256".to_string());
         ActiveModel {
             id: ActiveValue::Set(self.id),
@@ -73,7 +72,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             as_nonce: ActiveValue::Set(None),
             oidc_vp_uri: ActiveValue::Set(None),
             interact_ref: ActiveValue::Set(None),
-            hash: ActiveValue::Set(None)
+            hash: ActiveValue::Set(None),
         }
     }
 }
@@ -95,7 +94,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             as_nonce: ActiveValue::Set(self.as_nonce),
             oidc_vp_uri: ActiveValue::Set(self.oidc_vp_uri),
             interact_ref: ActiveValue::Set(self.interact_ref),
-            hash: ActiveValue::Set(self.hash)
+            hash: ActiveValue::Set(self.hash),
         }
     }
 }

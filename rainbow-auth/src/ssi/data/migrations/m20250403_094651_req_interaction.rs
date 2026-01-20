@@ -19,7 +19,9 @@ use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
-    fn name(&self) -> &str { "m20250403_094651_req_interaction" }
+    fn name(&self) -> &str {
+        "m20250403_094651_req_interaction"
+    }
 }
 
 #[async_trait::async_trait]
@@ -44,7 +46,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ReqInteraction::OidcVpUri).string())
                     .col(ColumnDef::new(ReqInteraction::InteractRef).string())
                     .col(ColumnDef::new(ReqInteraction::Hash).string())
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }
@@ -71,5 +73,5 @@ pub enum ReqInteraction {
     Hash,
     OidcVpUri,
     HashMethod,
-    Hints
+    Hints,
 }

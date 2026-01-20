@@ -20,8 +20,8 @@ use std::sync::Arc;
 use rainbow_common::config::services::SsiAuthConfig;
 
 use crate::ssi::core::traits::{
-    CoreBusinessTrait, CoreGaiaSelfIssuerTrait, CoreGateKeeperTrait, CoreMateTrait,
-    CoreOnboarderTrait, CoreVcRequesterTrait, CoreVerifierTrait, CoreWalletTrait
+    CoreBusinessTrait, CoreGaiaSelfIssuerTrait, CoreGateKeeperTrait, CoreMateTrait, CoreOnboarderTrait,
+    CoreVcRequesterTrait, CoreVerifierTrait, CoreWalletTrait,
 };
 
 pub trait AuthCoreTrait:

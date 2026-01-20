@@ -22,15 +22,19 @@ use crate::ssi::data::entities::req_vc::{Entity, NewModel};
 use crate::ssi::services::repo::subtraits::ReqVcTrait;
 
 pub struct ReqVcRepo {
-    db_connection: DatabaseConnection
+    db_connection: DatabaseConnection,
 }
 
 impl ReqVcRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for ReqVcRepo {
-    fn db(&self) -> &DatabaseConnection { &self.db_connection }
+    fn db(&self) -> &DatabaseConnection {
+        &self.db_connection
+    }
 }
 
 impl ReqVcTrait for ReqVcRepo {}
