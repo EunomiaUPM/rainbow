@@ -21,5 +21,5 @@ use serde::{Deserialize, Serialize};
 pub struct WalletLoginResponse {
     pub id: String,
     pub username: String,
-    pub token: String,
+    pub token: String
 }

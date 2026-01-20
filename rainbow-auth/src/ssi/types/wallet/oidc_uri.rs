@@ -19,5 +19,5 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OidcUri {
-    pub uri: String,
+    pub uri: String
 }

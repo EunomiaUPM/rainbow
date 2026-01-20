@@ -28,16 +28,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 pub struct CallbackResponse {
     pub hash: String,
-    pub interact_ref: String,
+    pub interact_ref: String
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RefBody {
-    pub interact_ref: String,
+    pub interact_ref: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CallbackBody {
     pub interact_ref: String,
-    pub hash: String,
+    pub hash: String
 }

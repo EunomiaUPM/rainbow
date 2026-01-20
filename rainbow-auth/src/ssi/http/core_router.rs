@@ -17,13 +17,6 @@
 
 use std::sync::Arc;
 
-use crate::ssi::core::traits::AuthCoreTrait;
-use crate::ssi::core::AuthCore;
-use crate::ssi::http::business_router::BusinessRouter;
-use crate::ssi::http::gatekeeper_router::GateKeeperRouter;
-use crate::ssi::http::onboarder_router::OnboarderRouter;
-use crate::ssi::http::verifier_router::VerifierRouter;
-use crate::ssi::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -36,9 +29,17 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{error, info, Level};
 use uuid::Uuid;
 
+use crate::ssi::core::traits::AuthCoreTrait;
+use crate::ssi::core::AuthCore;
+use crate::ssi::http::business_router::BusinessRouter;
+use crate::ssi::http::gatekeeper_router::GateKeeperRouter;
+use crate::ssi::http::onboarder_router::OnboarderRouter;
+use crate::ssi::http::verifier_router::VerifierRouter;
+use crate::ssi::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
+
 pub struct AuthRouter {
     core: Arc<AuthCore>,
-    openapi: String,
+    openapi: String
 }
 
 impl AuthRouter {
@@ -82,7 +83,7 @@ impl AuthRouter {
                 let gaia_router = GaiaSelfIssuerRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/gaia", api_path), gaia_router)
             }
-            false => router,
+            false => router
         };
 
         let router = match self.core.is_wallet_active() {
@@ -90,7 +91,7 @@ impl AuthRouter {
                 let wallet_router = WalletRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/wallet", api_path), wallet_router)
             }
-            false => router,
+            false => router
         };
         router
     }

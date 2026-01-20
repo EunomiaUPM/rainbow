@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 pub mod error_adapter;
 mod error_log_trait;
 pub mod helpers;
@@ -28,7 +29,6 @@ use axum::Json;
 use helpers::{BadFormat, MissingAction};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ErrorInfo {

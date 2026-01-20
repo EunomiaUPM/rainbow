@@ -23,19 +23,15 @@ use crate::ssi::data::entities::req_request::{Entity, NewModel};
 use crate::ssi::services::repo::subtraits::req_request_trait::ReqRequestTrait;
 
 pub struct ReqRequestRepo {
-    db_connection: DatabaseConnection,
+    db_connection: DatabaseConnection
 }
 
 impl ReqRequestRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self {
-        Self { db_connection }
-    }
+    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for ReqRequestRepo {
-    fn db(&self) -> &DatabaseConnection {
-        &self.db_connection
-    }
+    fn db(&self) -> &DatabaseConnection { &self.db_connection }
 }
 
 #[async_trait]

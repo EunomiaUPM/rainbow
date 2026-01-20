@@ -77,7 +77,7 @@ impl ConfigLoader for SsiAuthConfig {
     fn load(env_file: Option<String>) -> Self {
         match Self::global_load(env_file.clone()) {
             Ok(data) => data.ssi_auth(),
-            Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
+            Err(_) => Self::local_load(env_file).expect("Unable to load auth config"),
         }
     }
 }

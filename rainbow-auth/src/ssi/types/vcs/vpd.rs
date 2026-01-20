@@ -22,7 +22,7 @@ use super::InputDescriptor;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VPDef {
     pub id: String,
-    pub input_descriptors: Vec<InputDescriptor>,
+    pub input_descriptors: Vec<InputDescriptor>
 }
 
 impl VPDef {

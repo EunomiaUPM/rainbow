@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use super::super::CallbackTrait;
 use std::sync::Arc;
 
 use anyhow::bail;
@@ -29,6 +28,7 @@ use reqwest::Response;
 use sha2::{Digest, Sha256};
 use tracing::{error, info};
 
+use super::super::CallbackTrait;
 use crate::ssi::data::entities::req_interaction;
 use crate::ssi::errors::AuthErrors;
 use crate::ssi::services::client::ClientServiceTrait;
@@ -36,7 +36,7 @@ use crate::ssi::types::enums::request::Body;
 use crate::ssi::types::gnap::{CallbackBody, RefBody};
 
 pub struct BasicCallbackService {
-    client: Arc<dyn ClientServiceTrait>,
+    client: Arc<dyn ClientServiceTrait>
 }
 
 impl BasicCallbackService {
@@ -47,7 +47,11 @@ impl BasicCallbackService {
 
 #[async_trait]
 impl CallbackTrait for BasicCallbackService {
-    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()> {
+    fn check_callback(
+        &self,
+        int_model: &mut req_interaction::Model,
+        payload: &CallbackBody
+    ) -> anyhow::Result<()> {
         info!("Checking callback");
 
         int_model.interact_ref = Some(payload.interact_ref.clone());

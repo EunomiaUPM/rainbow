@@ -22,8 +22,8 @@ use rainbow_common::errors::{CommonErrors, ErrorLog};
 use tracing::error;
 
 use crate::ssi::core::traits::{
-    AuthCoreTrait, CoreBusinessTrait, CoreGaiaSelfIssuerTrait, CoreGateKeeperTrait, CoreMateTrait, CoreOnboarderTrait,
-    CoreVcRequesterTrait, CoreVerifierTrait, CoreWalletTrait,
+    AuthCoreTrait, CoreBusinessTrait, CoreGaiaSelfIssuerTrait, CoreGateKeeperTrait, CoreMateTrait,
+    CoreOnboarderTrait, CoreVcRequesterTrait, CoreVerifierTrait, CoreWalletTrait
 };
 use crate::ssi::services::business::BusinessTrait;
 use crate::ssi::services::callback::CallbackTrait;
@@ -46,7 +46,7 @@ pub struct AuthCore {
     config: Arc<SsiAuthConfig>,
     // EXTRA MODULES
     wallet: Option<Arc<dyn WalletServiceTrait>>,
-    self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
+    self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>
 }
 
 impl AuthCore {
@@ -61,7 +61,7 @@ impl AuthCore {
         config: Arc<SsiAuthConfig>,
         // EXTRA MODULES
         wallet: Option<Arc<dyn WalletServiceTrait>>,
-        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>
     ) -> AuthCore {
         AuthCore {
             vc_requester,
@@ -73,23 +73,17 @@ impl AuthCore {
             repo,
             config,
             wallet,
-            self_issuer,
+            self_issuer
         }
     }
 }
 
 impl CoreOnboarderTrait for AuthCore {
-    fn onboarder(&self) -> Arc<dyn OnboarderTrait> {
-        self.onboarder.clone()
-    }
+    fn onboarder(&self) -> Arc<dyn OnboarderTrait> { self.onboarder.clone() }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 
-    fn callback(&self) -> Arc<dyn CallbackTrait> {
-        self.callback.clone()
-    }
+    fn callback(&self) -> Arc<dyn CallbackTrait> { self.callback.clone() }
 }
 
 impl CoreWalletTrait for AuthCore {
@@ -102,29 +96,19 @@ impl CoreWalletTrait for AuthCore {
         wallet.expect("Wallet module activated")
     }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 }
 
 impl CoreVcRequesterTrait for AuthCore {
-    fn vc_req(&self) -> Arc<dyn VcRequesterTrait> {
-        self.vc_requester.clone()
-    }
+    fn vc_req(&self) -> Arc<dyn VcRequesterTrait> { self.vc_requester.clone() }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 
-    fn callback(&self) -> Arc<dyn CallbackTrait> {
-        self.callback.clone()
-    }
+    fn callback(&self) -> Arc<dyn CallbackTrait> { self.callback.clone() }
 }
 
 impl CoreMateTrait for AuthCore {
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 }
 
 impl CoreGaiaSelfIssuerTrait for AuthCore {
@@ -148,62 +132,42 @@ impl CoreGaiaSelfIssuerTrait for AuthCore {
 }
 
 impl CoreVerifierTrait for AuthCore {
-    fn verifier(&self) -> Arc<dyn VerifierTrait> {
-        self.verifier.clone()
-    }
+    fn verifier(&self) -> Arc<dyn VerifierTrait> { self.verifier.clone() }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 
-    fn business(&self) -> Arc<dyn BusinessTrait> {
-        self.business.clone()
-    }
+    fn business(&self) -> Arc<dyn BusinessTrait> { self.business.clone() }
 }
 
 impl CoreBusinessTrait for AuthCore {
-    fn business(&self) -> Arc<dyn BusinessTrait> {
-        self.business.clone()
-    }
+    fn business(&self) -> Arc<dyn BusinessTrait> { self.business.clone() }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 
-    fn verifier(&self) -> Arc<dyn VerifierTrait> {
-        self.verifier.clone()
-    }
+    fn verifier(&self) -> Arc<dyn VerifierTrait> { self.verifier.clone() }
 }
 
 impl CoreGateKeeperTrait for AuthCore {
-    fn gatekeeper(&self) -> Arc<dyn GateKeeperTrait> {
-        self.gatekeeper.clone()
-    }
+    fn gatekeeper(&self) -> Arc<dyn GateKeeperTrait> { self.gatekeeper.clone() }
 
-    fn verifier(&self) -> Arc<dyn VerifierTrait> {
-        self.verifier.clone()
-    }
+    fn verifier(&self) -> Arc<dyn VerifierTrait> { self.verifier.clone() }
 
-    fn repo(&self) -> Arc<dyn AuthRepoTrait> {
-        self.repo.clone()
-    }
+    fn repo(&self) -> Arc<dyn AuthRepoTrait> { self.repo.clone() }
 }
 
 impl AuthCoreTrait for AuthCore {
     fn is_gaia_active(&self) -> bool {
         match self.self_issuer {
             Some(_) => true,
-            None => false,
+            None => false
         }
     }
 
     fn is_wallet_active(&self) -> bool {
         match self.wallet {
             Some(_) => true,
-            None => false,
+            None => false
         }
     }
-    fn config(&self) -> Arc<SsiAuthConfig> {
-        self.config.clone()
-    }
+    fn config(&self) -> Arc<SsiAuthConfig> { self.config.clone() }
 }

@@ -28,7 +28,7 @@ use tracing::error;
 pub enum VcType {
     LegalPerson,
     TermsAndConditions,
-    Unknown,
+    Unknown
 }
 
 impl FromStr for VcType {
@@ -52,7 +52,7 @@ impl fmt::Display for VcType {
         let s = match self {
             VcType::LegalPerson => "LegalPerson".to_string(),
             VcType::TermsAndConditions => "TermsAndConditions".to_string(),
-            _ => "Unknown".to_string(),
+            _ => "Unknown".to_string()
         };
 
         write!(f, "{s}")
@@ -64,7 +64,7 @@ impl VcType {
         match self {
             VcType::LegalPerson => "LegalPerson_jwt_vc_json".to_string(),
             VcType::TermsAndConditions => "TermsAndConditions_jwt_vc_json".to_string(),
-            _ => "Unknown".to_string(),
+            _ => "Unknown".to_string()
         }
     }
 

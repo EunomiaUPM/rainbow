@@ -25,7 +25,7 @@ pub struct TermsAndConditionsCredSub {
     #[serde(rename = "gx:url")]
     pub url: String,
     #[serde(rename = "gx:hash")]
-    pub hash: String,
+    pub hash: String
 }
 
 impl TermsAndConditionsCredSub {
@@ -34,7 +34,7 @@ impl TermsAndConditionsCredSub {
             id: Some(kid.to_string()),
             r#type: "gx:TermsAndConditions".to_string(),
             url: "test_url".to_string(),
-            hash: "test_hash".to_string(),
+            hash: "test_hash".to_string()
         }
     }
 }

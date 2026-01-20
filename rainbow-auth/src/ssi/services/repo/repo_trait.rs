@@ -23,7 +23,7 @@ use crate::ssi::services::repo::subtraits::recv_request_trait::RecvRequestTrait;
 use crate::ssi::services::repo::subtraits::recv_verification_trait::RecvVerificationTrait;
 use crate::ssi::services::repo::subtraits::req_request_trait::ReqRequestTrait;
 use crate::ssi::services::repo::subtraits::{
-    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait,
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait
 };
 
 pub trait AuthRepoTrait: Send + Sync + 'static {

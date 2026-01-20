@@ -20,40 +20,40 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Vpd {
     pub id: String,
-    pub input_descriptors: Vec<InputDescriptor>,
+    pub input_descriptors: Vec<InputDescriptor>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct InputDescriptor {
     pub id: String,
     pub constraints: Option<Constraints>,
-    pub format: Option<Format>,
+    pub format: Option<Format>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Constraints {
-    pub fields: Vec<Field>,
+    pub fields: Vec<Field>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Field {
     pub path: Vec<String>,
-    pub filter: Option<Filter>,
+    pub filter: Option<Filter>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Filter {
     pub pattern: String,
     #[serde(rename = "type")]
-    pub ty: String,
+    pub ty: String
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Format {
-    pub jwt_vc_json: Option<JwtVcJson>,
+    pub jwt_vc_json: Option<JwtVcJson>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct JwtVcJson {
-    alg: Vec<String>,
+    alg: Vec<String>
 }

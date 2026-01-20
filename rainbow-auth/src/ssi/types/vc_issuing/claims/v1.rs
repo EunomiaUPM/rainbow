@@ -31,7 +31,7 @@ pub struct VCClaimsV1 {
     pub iss: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub: Option<String>,
-    pub vc: VCFromClaimsV1,
+    pub vc: VCFromClaimsV1
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -47,5 +47,5 @@ pub struct VCFromClaimsV1 {
     pub valid_from: Option<DateTime<Utc>>,
     #[serde()]
     #[serde(rename = "validUntil", skip_serializing_if = "Option::is_none")]
-    pub valid_until: Option<DateTime<Utc>>,
+    pub valid_until: Option<DateTime<Utc>>
 }

@@ -30,7 +30,7 @@ pub struct AccessToken {
     pub expires_in: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<Value>, // TODO DecodingKey
-    pub flags: Option<Vec<String>>,
+    pub flags: Option<Vec<String>>
 }
 
 impl AccessToken {
@@ -42,7 +42,7 @@ impl AccessToken {
             access: vec!["talk".to_string()],
             expires_in: None,
             key: None,
-            flags: None,
+            flags: None
         }
     }
 }

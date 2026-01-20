@@ -27,7 +27,7 @@ use crate::ssi::core::traits::CoreGaiaSelfIssuerTrait;
 use crate::ssi::errors::CustomToResponse;
 
 pub struct GaiaSelfIssuerRouter {
-    self_issuer: Arc<dyn CoreGaiaSelfIssuerTrait>,
+    self_issuer: Arc<dyn CoreGaiaSelfIssuerTrait>
 }
 
 impl GaiaSelfIssuerRouter {
@@ -39,51 +39,57 @@ impl GaiaSelfIssuerRouter {
         Router::new()
             .route("/issue", post(Self::credential))
             .route("/credentialOffer", get(Self::cred_offer))
-            .route(
-                "/.well-known/openid-credential-issuer",
-                get(Self::get_issuer),
-            )
-            .route(
-                "/.well-known/oauth-authorization-server",
-                get(Self::get_oauth_server),
-            )
+            .route("/.well-known/openid-credential-issuer", get(Self::get_issuer))
+            .route("/.well-known/oauth-authorization-server", get(Self::get_oauth_server))
             .route("/token", post(Self::get_token))
             .route("/credential", post(Self::post_credential))
             .with_state(self.self_issuer)
     }
 
-    async fn credential(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn credential(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         match self_issuer.generate_gaia_vcs().await {
             Ok(_) => StatusCode::OK.into_response(),
-            Err(e) => e.to_response(),
+            Err(e) => e.to_response()
         }
     }
 
-    async fn cred_offer(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn cred_offer(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         let data = self_issuer.get_cred_offer_data();
 
         (StatusCode::OK, Json(data)).into_response()
     }
 
-    async fn get_issuer(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn get_issuer(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         let data = self_issuer.get_issuer_data();
         (StatusCode::OK, Json(data)).into_response()
     }
 
-    async fn get_oauth_server(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn get_oauth_server(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         let data = self_issuer.get_oauth_server_data();
         (StatusCode::OK, Json(data)).into_response()
     }
 
-    async fn get_token(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn get_token(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         let data = self_issuer.get_token();
         (StatusCode::OK, Json(data)).into_response()
     }
 
-    async fn post_credential(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
+    async fn post_credential(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>
+    ) -> impl IntoResponse {
         match self_issuer.issue_cred().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response(),
+            Err(e) => e.to_response()
         }
     }
 }

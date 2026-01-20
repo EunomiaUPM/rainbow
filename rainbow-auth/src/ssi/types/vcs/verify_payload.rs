@@ -20,5 +20,5 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct VerifyPayload {
     pub vp_token: String,
-    pub presentation_submission: String,
+    pub presentation_submission: String
 }

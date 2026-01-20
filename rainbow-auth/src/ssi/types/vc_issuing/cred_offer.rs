@@ -24,35 +24,42 @@ use crate::ssi::utils::create_opaque_token;
 pub struct VCCredOffer {
     pub credential_issuer: String,
     pub grants: CredOfferGrants,
-    pub credential_configuration_ids: Vec<String>,
+    pub credential_configuration_ids: Vec<String>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CredOfferGrants {
     #[serde(rename = "urn:ietf:params:oauth:grant-type:pre-authorized_code")]
-    pub urn_pre_authorized_code: UrnPreAuthorizedCode,
+    pub urn_pre_authorized_code: UrnPreAuthorizedCode
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UrnPreAuthorizedCode {
     #[serde(rename = "pre-authorized_code")]
-    pub pre_authorized_code: String,
+    pub pre_authorized_code: String
 }
 
 impl VCCredOffer {
     pub fn new(issuer: String, token: String, vc_type: VcType) -> Self {
         VCCredOffer {
             credential_issuer: issuer,
-            grants: CredOfferGrants { urn_pre_authorized_code: UrnPreAuthorizedCode { pre_authorized_code: token } },
-            credential_configuration_ids: vec![vc_type.to_conf()],
+            grants: CredOfferGrants {
+                urn_pre_authorized_code: UrnPreAuthorizedCode { pre_authorized_code: token }
+            },
+            credential_configuration_ids: vec![vc_type.to_conf()]
         }
     }
     pub fn new4gaia(issuer: &str) -> VCCredOffer {
         let token = create_opaque_token();
         VCCredOffer {
             credential_issuer: issuer.to_string(),
-            grants: CredOfferGrants { urn_pre_authorized_code: UrnPreAuthorizedCode { pre_authorized_code: token } },
-            credential_configuration_ids: vec![VcType::LegalPerson.to_conf(), VcType::TermsAndConditions.to_conf()],
+            grants: CredOfferGrants {
+                urn_pre_authorized_code: UrnPreAuthorizedCode { pre_authorized_code: token }
+            },
+            credential_configuration_ids: vec![
+                VcType::LegalPerson.to_conf(),
+                VcType::TermsAndConditions.to_conf(),
+            ]
         }
     }
 }

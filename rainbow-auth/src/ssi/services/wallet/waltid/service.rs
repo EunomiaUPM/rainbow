@@ -17,18 +17,6 @@
 
 use std::sync::Arc;
 
-use super::super::WalletServiceTrait;
-use super::config::{WaltIdConfig, WaltIdConfigTrait};
-use crate::ssi::data::entities::mates;
-use crate::ssi::errors::AuthErrors;
-use crate::ssi::services::client::ClientServiceTrait;
-use crate::ssi::types::enums::request::Body;
-use crate::ssi::types::jwt::AuthJwtClaims;
-use crate::ssi::types::wallet::{
-    CredentialOfferResponse, DidsInfo, KeyDefinition, MatchVCsRequest, MatchingVCs, OidcUri, RedirectResponse, Vpd,
-    WalletInfo, WalletInfoResponse, WalletLoginResponse, WalletSession,
-};
-use crate::ssi::utils::get_query_param;
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -50,27 +38,44 @@ use tracing::{debug, error, info};
 use url::Url;
 use urlencoding::decode;
 
+use super::super::WalletServiceTrait;
+use super::config::{WaltIdConfig, WaltIdConfigTrait};
+use crate::ssi::data::entities::mates;
+use crate::ssi::errors::AuthErrors;
+use crate::ssi::services::client::ClientServiceTrait;
+use crate::ssi::types::enums::request::Body;
+use crate::ssi::types::jwt::AuthJwtClaims;
+use crate::ssi::types::wallet::{
+    CredentialOfferResponse, DidsInfo, KeyDefinition, MatchVCsRequest, MatchingVCs, OidcUri,
+    RedirectResponse, Vpd, WalletInfo, WalletInfoResponse, WalletLoginResponse, WalletSession
+};
+use crate::ssi::utils::get_query_param;
+
 pub struct WaltIdService {
     wallet_session: Arc<Mutex<WalletSession>>,
     key_data: Arc<Mutex<Vec<KeyDefinition>>>,
     client: Arc<dyn ClientServiceTrait>,
     vault: Arc<VaultService>,
-    config: WaltIdConfig,
+    config: WaltIdConfig
 }
 
 impl WaltIdService {
-    pub fn new(client: Arc<dyn ClientServiceTrait>, vault: Arc<VaultService>, config: WaltIdConfig) -> WaltIdService {
+    pub fn new(
+        client: Arc<dyn ClientServiceTrait>,
+        vault: Arc<VaultService>,
+        config: WaltIdConfig
+    ) -> WaltIdService {
         WaltIdService {
             wallet_session: Arc::new(Mutex::new(WalletSession {
                 account_id: None,
                 token: None,
                 token_exp: None,
-                wallets: vec![],
+                wallets: vec![]
             })),
             key_data: Arc::new(Mutex::new(Vec::new())),
             config,
             client,
-            vault,
+            vault
         }
     }
 }
@@ -80,10 +85,7 @@ impl WalletServiceTrait for WaltIdService {
     // BASIC ----------------------------------------------------------------------------------------------->
     async fn register(&self) -> anyhow::Result<()> {
         info!("Registering in web wallet");
-        let url = format!(
-            "{}/wallet-api/auth/register",
-            self.config.get_wallet_api_url()
-        );
+        let url = format!("{}/wallet-api/auth/register", self.config.get_wallet_api_url());
         let db_path = expect_from_env("VAULT_WALLET");
         let body = self.vault.read(None, &db_path).await?;
 
@@ -105,7 +107,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to register Wallet failed",
+                    "Petition to register Wallet failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -140,7 +142,10 @@ impl WalletServiceTrait for WaltIdService {
 
                 let jwt_parts: Vec<&str> = json_res.token.split('.').collect();
                 if jwt_parts.len() != 3 {
-                    let error = CommonErrors::format_new(BadFormat::Sent, "The jwt does not have the correct format");
+                    let error = CommonErrors::format_new(
+                        BadFormat::Sent,
+                        "The jwt does not have the correct format"
+                    );
                     error!("{}", error.log());
                     bail!(error);
                 }
@@ -157,7 +162,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to login into Wallet failed",
+                    "Petition to login into Wallet failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -167,10 +172,7 @@ impl WalletServiceTrait for WaltIdService {
 
     async fn logout(&self) -> anyhow::Result<()> {
         info!("Login out of web wallet");
-        let url = format!(
-            "{}/wallet-api/auth/logout",
-            self.config.get_wallet_api_url()
-        );
+        let url = format!("{}/wallet-api/auth/logout", self.config.get_wallet_api_url());
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -189,7 +191,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to logout from Wallet failed",
+                    "Petition to logout from Wallet failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -249,7 +251,7 @@ impl WalletServiceTrait for WaltIdService {
             participant_type: "Both".to_string(),
             base_url,
             is_me: true,
-            token: None,
+            token: None
         };
 
         info!("Onboarding completed successfully");
@@ -278,7 +280,7 @@ impl WalletServiceTrait for WaltIdService {
             None => {
                 let error = CommonErrors::missing_action_new(
                     MissingAction::Wallet,
-                    "There is no wallet to retrieve dids from",
+                    "There is no wallet to retrieve dids from"
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -290,7 +292,8 @@ impl WalletServiceTrait for WaltIdService {
         let wallet_session = self.wallet_session.lock().await;
 
         if wallet_session.wallets.is_empty() {
-            let error = CommonErrors::missing_action_new(MissingAction::Wallet, "No wallet available");
+            let error =
+                CommonErrors::missing_action_new(MissingAction::Wallet, "No wallet available");
             error!("{}", error.log());
             bail!(error);
         }
@@ -305,7 +308,8 @@ impl WalletServiceTrait for WaltIdService {
         match wallet.dids.first() {
             Some(did_entry) => Ok(did_entry.did.clone()),
             None => {
-                let error = CommonErrors::missing_action_new(MissingAction::Did, "No DIDs found in wallet");
+                let error =
+                    CommonErrors::missing_action_new(MissingAction::Did, "No DIDs found in wallet");
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -319,8 +323,10 @@ impl WalletServiceTrait for WaltIdService {
         match &wallet_session.token {
             Some(token) => Ok(token.clone()),
             None => {
-                let error =
-                    CommonErrors::missing_action_new(MissingAction::Token, "There is no token available for use");
+                let error = CommonErrors::missing_action_new(
+                    MissingAction::Token,
+                    "There is no token available for use"
+                );
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -334,7 +340,8 @@ impl WalletServiceTrait for WaltIdService {
         let did = match wallet.dids.first() {
             Some(did_entry) => did_entry.document.clone(),
             None => {
-                let error = CommonErrors::missing_action_new(MissingAction::Did, "No DIDs found in wallet");
+                let error =
+                    CommonErrors::missing_action_new(MissingAction::Did, "No DIDs found in wallet");
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -351,7 +358,10 @@ impl WalletServiceTrait for WaltIdService {
         match key_data.first() {
             Some(data) => Ok(data.clone()),
             None => {
-                let error = CommonErrors::missing_action_new(MissingAction::Key, "Retrieve keys from wallet first");
+                let error = CommonErrors::missing_action_new(
+                    MissingAction::Key,
+                    "Retrieve keys from wallet first"
+                );
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -399,7 +409,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "GET",
                     res.status().as_u16(),
-                    "Petition to retrieve Wallet information failed",
+                    "Petition to retrieve Wallet information failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -444,7 +454,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to retrieve keys failed",
+                    "Petition to retrieve keys failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -492,7 +502,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "GET",
                     res.status().as_u16(),
-                    "Petition to retrieve Wallet DIDs failed",
+                    "Petition to retrieve Wallet DIDs failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -536,7 +546,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to register key failed",
+                    "Petition to register key failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -580,7 +590,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to register key failed",
+                    "Petition to register key failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -620,7 +630,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to set did as default failed",
+                    "Petition to set did as default failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -665,7 +675,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "DELETE",
                     res.status().as_u16(),
-                    "Petition to delete key failed",
+                    "Petition to delete key failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -708,7 +718,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "DELETE",
                     res.status().as_u16(),
-                    "Petition to delete key failed",
+                    "Petition to delete key failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -716,7 +726,10 @@ impl WalletServiceTrait for WaltIdService {
         }
     }
 
-    async fn resolve_credential_offer(&self, payload: &OidcUri) -> anyhow::Result<CredentialOfferResponse> {
+    async fn resolve_credential_offer(
+        &self,
+        payload: &OidcUri
+    ) -> anyhow::Result<CredentialOfferResponse> {
         info!("Resolving credential offer");
 
         let wallet = self.get_wallet().await?;
@@ -746,7 +759,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to resolve credential offer failed",
+                    "Petition to resolve credential offer failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -754,7 +767,10 @@ impl WalletServiceTrait for WaltIdService {
         }
     }
 
-    async fn resolve_credential_issuer(&self, cred_offer: &CredentialOfferResponse) -> anyhow::Result<Value> {
+    async fn resolve_credential_issuer(
+        &self,
+        cred_offer: &CredentialOfferResponse
+    ) -> anyhow::Result<Value> {
         info!("Resolving credential issuer metadata");
 
         let wallet = self.get_wallet().await?;
@@ -786,7 +802,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "GET",
                     res.status().as_u16(),
-                    "Petition resolve credential issuer failed",
+                    "Petition resolve credential issuer failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -794,7 +810,11 @@ impl WalletServiceTrait for WaltIdService {
         }
     }
 
-    async fn use_offer_req(&self, payload: &OidcUri, cred_offer: &CredentialOfferResponse) -> anyhow::Result<()> {
+    async fn use_offer_req(
+        &self,
+        payload: &OidcUri,
+        cred_offer: &CredentialOfferResponse
+    ) -> anyhow::Result<()> {
         info!("Accepting credential");
 
         let wallet = self.get_wallet().await?;
@@ -828,7 +848,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition accept credential issuer failed",
+                    "Petition accept credential issuer failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -867,7 +887,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Error joining the exchange",
+                    "Error joining the exchange"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -887,7 +907,7 @@ impl WalletServiceTrait for WaltIdService {
             Err(err) => {
                 let error = CommonErrors::format_new(
                     BadFormat::Received,
-                    &format!("Error parsing the credential -> {}", err),
+                    &format!("Error parsing the credential -> {}", err)
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -907,8 +927,9 @@ impl WalletServiceTrait for WaltIdService {
             let vc_id = match vcs.first() {
                 Some(vc) => vc.id.clone(),
                 None => {
-                    let error =
-                        CommonErrors::forbidden_new("There are no VCs that match the specified input descriptor");
+                    let error = CommonErrors::forbidden_new(
+                        "There are no VCs that match the specified input descriptor"
+                    );
                     error!("{}", error.log());
                     bail!(error)
                 }
@@ -946,7 +967,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to match credentials failed",
+                    "Petition to match credentials failed"
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -954,7 +975,11 @@ impl WalletServiceTrait for WaltIdService {
         }
     }
 
-    async fn present_vp(&self, payload: &OidcUri, vcs_id: Vec<String>) -> anyhow::Result<Option<String>> {
+    async fn present_vp(
+        &self,
+        payload: &OidcUri,
+        vcs_id: Vec<String>
+    ) -> anyhow::Result<Option<String>> {
         info!("Presenting Verifiable Presentation");
         let wallet = self.get_wallet().await?;
         let token = self.get_token().await?;
@@ -971,16 +996,21 @@ impl WalletServiceTrait for WaltIdService {
         headers.insert(ACCEPT, "application/json".parse()?);
         headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        let body = MatchVCsRequest { did, presentation_request: payload.uri.clone(), selected_credentials: vcs_id };
+        let body = MatchVCsRequest {
+            did,
+            presentation_request: payload.uri.clone(),
+            selected_credentials: vcs_id
+        };
 
-        let res = self.client.post(&url, Some(headers), Body::Json(serde_json::to_value(body)?)).await?;
+        let res =
+            self.client.post(&url, Some(headers), Body::Json(serde_json::to_value(body)?)).await?;
         match res.status().as_u16() {
             200 => {
                 info!("Credentials presented successfully");
                 // let data: RedirectResponse = res.json().await?;
                 match res.json::<Option<RedirectResponse>>().await {
                     Ok(Some(data)) => Ok(Some(data.redirect_uri)),
-                    _ => Ok(None),
+                    _ => Ok(None)
                 }
             }
             _ => {
@@ -988,7 +1018,7 @@ impl WalletServiceTrait for WaltIdService {
                     &url,
                     "POST",
                     res.status().as_u16(),
-                    "Petition to present credentials failed",
+                    "Petition to present credentials failed"
                 );
                 error!("{}", error.log());
                 bail!(error);

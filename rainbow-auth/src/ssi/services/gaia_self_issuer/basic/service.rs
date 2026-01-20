@@ -14,14 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use super::super::GaiaSelfIssuerTrait;
-use super::config::{GaiaGaiaSelfIssuerConfigTrait, GaiaSelfIssuerConfig};
-use crate::ssi::types::enums::VcDataModelVersion;
-use crate::ssi::types::vc_issuing::claims::{VCClaimsV1, VCClaimsV2, VCFromClaimsV1};
-use crate::ssi::types::vc_issuing::cred_subject::{LegalPersonCredentialSubject, TermsAndConditionsCredSub};
-use crate::ssi::types::vc_issuing::{
-    AuthServerMetadata, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer, VCIssuer, VcType,
-};
+use std::sync::Arc;
+
 use anyhow::bail;
 use async_trait::async_trait;
 use chrono::{Duration, Utc};
@@ -35,12 +29,22 @@ use rainbow_common::vault::secrets::PemHelper;
 use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::vault::VaultTrait;
 use serde_json::{json, Value};
-use std::sync::Arc;
 use tracing::{error, info};
+
+use super::super::GaiaSelfIssuerTrait;
+use super::config::{GaiaGaiaSelfIssuerConfigTrait, GaiaSelfIssuerConfig};
+use crate::ssi::types::enums::VcDataModelVersion;
+use crate::ssi::types::vc_issuing::claims::{VCClaimsV1, VCClaimsV2, VCFromClaimsV1};
+use crate::ssi::types::vc_issuing::cred_subject::{
+    LegalPersonCredentialSubject, TermsAndConditionsCredSub
+};
+use crate::ssi::types::vc_issuing::{
+    AuthServerMetadata, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer, VCIssuer, VcType
+};
 
 pub struct BasicGaiaSelfIssuer {
     vault: Arc<VaultService>,
-    config: GaiaSelfIssuerConfig,
+    config: GaiaSelfIssuerConfig
 }
 
 impl BasicGaiaSelfIssuer {
@@ -61,7 +65,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         );
         let issuer = match self.config.is_local() {
             true => issuer.replace("127.0.0.1", "host.docker.internal"),
-            false => issuer,
+            false => issuer
         };
 
         VCCredOffer::new4gaia(&issuer)
@@ -75,7 +79,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host,
+            false => host
         };
         IssuerMetadata::new(&host)
     }
@@ -89,7 +93,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host,
+            false => host
         };
 
         AuthServerMetadata::new(&host)
@@ -116,7 +120,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 let b = host.replace("127.0.0.1", "host.docker.internal");
                 (a, b)
             }
-            false => (semi_host, host),
+            false => (semi_host, host)
         };
         let h_host = format!("{}/credentialOffer?id={}", host, &id);
         let encoded_host = urlencoding::encode(h_host.as_str());
@@ -134,7 +138,8 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         let legal_id = uuid::Uuid::new_v4().to_string();
         let terms_id = uuid::Uuid::new_v4().to_string();
 
-        let legal_person_subj = serde_json::to_value(LegalPersonCredentialSubject::default4gaia(did))?;
+        let legal_person_subj =
+            serde_json::to_value(LegalPersonCredentialSubject::default4gaia(did))?;
         let terms_subj = serde_json::to_value(TermsAndConditionsCredSub::new4gaia(did))?;
         let now = Utc::now();
         let person_vc = match self.config.get_data_model_version() {
@@ -145,13 +150,16 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 sub: None,
                 vc: VCFromClaimsV1 {
                     context: vec!["https://www.w3.org/ns/credentials/v1".to_string()],
-                    r#type: vec!["VerifiableCredential".to_string(), VcType::LegalPerson.to_string()],
+                    r#type: vec![
+                        "VerifiableCredential".to_string(),
+                        VcType::LegalPerson.to_string(),
+                    ],
                     id: legal_id,
                     credential_subject: legal_person_subj,
                     issuer: VCIssuer { id: did.to_string(), name: None },
                     valid_from: Some(now),
-                    valid_until: Some(now + Duration::days(365)),
-                },
+                    valid_until: Some(now + Duration::days(365))
+                }
             })?,
             VcDataModelVersion::V2 => serde_json::to_value(VCClaimsV2 {
                 exp: None,
@@ -164,8 +172,8 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 credential_subject: legal_person_subj,
                 issuer: VCIssuer { id: did.to_string(), name: None },
                 valid_from: Some(now),
-                valid_until: Some(now + Duration::days(365)),
-            })?,
+                valid_until: Some(now + Duration::days(365))
+            })?
         };
 
         let terms_vc = match self.config.get_data_model_version() {
@@ -176,13 +184,16 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 sub: None,
                 vc: VCFromClaimsV1 {
                     context: vec!["https://www.w3.org/ns/credentials/v1".to_string()],
-                    r#type: vec!["VerifiableCredential".to_string(), VcType::TermsAndConditions.to_string()],
+                    r#type: vec![
+                        "VerifiableCredential".to_string(),
+                        VcType::TermsAndConditions.to_string(),
+                    ],
                     id: terms_id,
                     credential_subject: terms_subj,
                     issuer: VCIssuer { id: did.to_string(), name: None },
                     valid_from: Some(now),
-                    valid_until: Some(now + Duration::days(365)),
-                },
+                    valid_until: Some(now + Duration::days(365))
+                }
             })?,
             VcDataModelVersion::V2 => serde_json::to_value(VCClaimsV2 {
                 exp: None,
@@ -190,13 +201,16 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 iss: None,
                 sub: None,
                 context: vec!["https://www.w3.org/ns/credentials/v2".to_string()],
-                r#type: vec!["VerifiableCredential".to_string(), VcType::TermsAndConditions.to_string()],
+                r#type: vec![
+                    "VerifiableCredential".to_string(),
+                    VcType::TermsAndConditions.to_string(),
+                ],
                 id: terms_id,
                 credential_subject: terms_subj,
                 issuer: VCIssuer { id: did.to_string(), name: None },
                 valid_from: Some(now),
-                valid_until: Some(now + Duration::days(365)),
-            })?,
+                valid_until: Some(now + Duration::days(365))
+            })?
         };
 
         let mut header = Header::new(Algorithm::RS256);
@@ -210,7 +224,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
             Err(e) => {
                 let error = CommonErrors::format_new(
                     BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
+                    &format!("Error parsing private key: {}", e.to_string())
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -222,7 +236,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
             Err(e) => {
                 let error = CommonErrors::format_new(
                     BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
+                    &format!("Error parsing private key: {}", e.to_string())
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -233,7 +247,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
             Err(e) => {
                 let error = CommonErrors::format_new(
                     BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
+                    &format!("Error parsing private key: {}", e.to_string())
                 );
                 error!("{}", error.log());
                 bail!(error)

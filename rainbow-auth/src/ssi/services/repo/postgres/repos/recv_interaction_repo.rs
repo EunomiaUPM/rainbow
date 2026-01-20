@@ -26,19 +26,15 @@ use crate::ssi::data::entities::recv_interaction::{Column, Entity, Model, NewMod
 use crate::ssi::services::repo::subtraits::recv_interaction_trait::RecvInteractionTrait;
 
 pub struct RecvInteractionRepo {
-    db_connection: DatabaseConnection,
+    db_connection: DatabaseConnection
 }
 
 impl RecvInteractionRepo {
-    pub fn new(db_connection: DatabaseConnection) -> Self {
-        Self { db_connection }
-    }
+    pub fn new(db_connection: DatabaseConnection) -> Self { Self { db_connection } }
 }
 
 impl BasicRepoTrait<Entity, NewModel> for RecvInteractionRepo {
-    fn db(&self) -> &DatabaseConnection {
-        &self.db_connection
-    }
+    fn db(&self) -> &DatabaseConnection { &self.db_connection }
 }
 
 #[async_trait]
@@ -47,7 +43,10 @@ impl RecvInteractionTrait for RecvInteractionRepo {
         match Entity::find().filter(Column::InteractRef.eq(reference)).one(self.db()).await {
             Ok(Some(data)) => Ok(data),
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(reference, &format!("missing reference: {}", reference));
+                let error = CommonErrors::missing_resource_new(
+                    reference,
+                    &format!("missing reference: {}", reference)
+                );
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -63,7 +62,10 @@ impl RecvInteractionTrait for RecvInteractionRepo {
         match Entity::find().filter(Column::ContinueId.eq(cont_id)).one(self.db()).await {
             Ok(Some(data)) => Ok(data),
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(cont_id, &format!("missing cont_id: {}", cont_id));
+                let error = CommonErrors::missing_resource_new(
+                    cont_id,
+                    &format!("missing cont_id: {}", cont_id)
+                );
                 error!("{}", error.log());
                 bail!(error)
             }

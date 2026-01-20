@@ -38,7 +38,7 @@ impl CustomToResponse for anyhow::Error {
             Json(json!({
                 "message": "Internal Server Error",
                 "error_code": 5000
-            })),
+            }))
         )
             .into_response()
     }

@@ -23,12 +23,16 @@ use crate::ssi::utils::create_opaque_token;
 pub struct IssuingToken {
     pub access_token: String,
     pub token_type: String,
-    pub expires_in: u16,
+    pub expires_in: u16
 }
 
 impl IssuingToken {
     pub fn new(token: &str) -> IssuingToken {
-        IssuingToken { access_token: token.to_string(), token_type: "Bearer".to_string(), expires_in: 600 }
+        IssuingToken {
+            access_token: token.to_string(),
+            token_type: "Bearer".to_string(),
+            expires_in: 600
+        }
     }
     pub fn new4gai() -> IssuingToken {
         let token = create_opaque_token();

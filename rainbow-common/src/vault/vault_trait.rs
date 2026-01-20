@@ -21,7 +21,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
-
+use std::path::Path;
 use crate::config::traits::DatabaseConfigTrait;
 
 #[async_trait]
@@ -34,7 +34,13 @@ pub trait VaultTrait: Send + Sync + 'static {
     where
         T: Serialize + Send + Sync;
     async fn write_all_secrets(&self) -> anyhow::Result<()>;
-    fn secrets(&self) -> anyhow::Result<HashMap<String, Value>>;
+    fn secrets() -> anyhow::Result<HashMap<String, Value>>;
+    fn insert_json<T>(mapa: &mut HashMap<String, Value>, to_read: T, env: &str, required: bool) -> anyhow::Result<()>
+    where
+        T: AsRef<Path>;
+    fn insert_pem<T>(mapa: &mut HashMap<String, Value>, to_read: T, env: &str) -> anyhow::Result<()>
+    where
+        T: AsRef<Path>;
     async fn get_db_connection<T>(&self, config: T) -> DatabaseConnection
     where
         T: DatabaseConfigTrait + Send + Sync;

@@ -35,7 +35,7 @@ pub struct Model {
     pub response_uri: String,                    // REQUEST
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
-    pub ended_at: Option<chrono::NaiveDateTime>, // RESPONSE
+    pub ended_at: Option<chrono::NaiveDateTime>  // RESPONSE
 }
 
 #[derive(Clone, Debug)]
@@ -49,7 +49,7 @@ pub struct NewModel {
     pub pd_uri: String,           // REQUEST
     pub client_id_scheme: String, // REQUEST
     pub nonce: String,            // REQUEST
-    pub response_uri: String,     // REQUEST
+    pub response_uri: String      // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
@@ -67,7 +67,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             response_uri: ActiveValue::Set(self.response_uri),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            ended_at: ActiveValue::Set(None),
+            ended_at: ActiveValue::Set(None)
         }
     }
 }
@@ -87,7 +87,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             response_uri: ActiveValue::Set(self.response_uri),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),
-            ended_at: ActiveValue::Set(self.ended_at),
+            ended_at: ActiveValue::Set(self.ended_at)
         }
     }
 }
