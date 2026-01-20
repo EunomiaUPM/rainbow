@@ -20,7 +20,7 @@
 use crate::config::services::{
     CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
 };
-use crate::config::traits::{CommonConfigTrait, DatabaseConfigTrait, MonoConfigTrait};
+use crate::config::traits::MonoConfigTrait;
 use crate::config::types::database::{DatabaseConfig, DbType};
 use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
 use crate::errors::{CommonErrors, ErrorLog};

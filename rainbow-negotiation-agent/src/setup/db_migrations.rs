@@ -18,10 +18,8 @@
  */
 use crate::data::migrations::get_negotiation_agent_migrations;
 use rainbow_common::config::services::ContractsConfig;
-use rainbow_common::config::traits::DatabaseConfigTrait;
 use rainbow_common::vault::VaultTrait;
 use rainbow_common::vault::vault_rs::VaultService;
-use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use std::sync::Arc;
 

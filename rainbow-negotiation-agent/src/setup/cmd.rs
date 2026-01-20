@@ -22,7 +22,6 @@ use clap::{Parser, Subcommand};
 use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::vault::vault_rs::VaultService;
 use std::sync::Arc;
 use tracing::{debug, info};

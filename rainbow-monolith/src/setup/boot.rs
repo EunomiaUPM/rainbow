@@ -21,7 +21,6 @@ use rainbow_auth::ssi::data::entities::mates;
 use rainbow_catalog_agent::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::traits::{ApiConfigTrait, HostConfigTrait};
-use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_common::http_client::{HttpClient, HttpClientError};

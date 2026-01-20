@@ -21,7 +21,6 @@ use crate::setup::http_worker::NegotiationHttpWorker;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::vault::vault_rs::VaultService;
 use std::sync::Arc;
 use tokio::sync::broadcast;

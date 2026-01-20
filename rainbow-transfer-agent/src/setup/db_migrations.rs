@@ -18,11 +18,9 @@
  */
 use crate::data::migrations::get_transfer_agent_migrations;
 use rainbow_common::config::services::TransferConfig;
-use rainbow_common::config::traits::DatabaseConfigTrait;
 use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::vault::VaultTrait;
 use rainbow_dataplane::get_dataplane_migrations;
-use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use std::sync::Arc;
 

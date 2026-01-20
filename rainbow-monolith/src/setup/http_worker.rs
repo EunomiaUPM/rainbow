@@ -16,11 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::consumer::router::create_core_consumer_router;
-use crate::provider::router::create_core_provider_router;
+
+use crate::http::router::create_core_provider_router;
 use axum::serve;
-use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait, MonoConfigTrait};
-use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::HostType;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_common::vault::vault_rs::VaultService;

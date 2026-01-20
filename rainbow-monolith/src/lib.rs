@@ -17,6 +17,5 @@
  *
  */
 
-pub mod consumer;
-pub mod provider;
+mod http;
 pub mod setup;
