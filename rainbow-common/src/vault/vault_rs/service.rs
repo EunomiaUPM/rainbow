@@ -140,73 +140,15 @@ impl VaultTrait for VaultService {
         let secret_path = PathBuf::from(expect_from_env("VAULT_PATH")).join("secrets");
         let config_path = PathBuf::from(expect_from_env("VAULT_PATH")).join("config");
 
-        Self::insert_json(&mut map, secret_path.join("db.json"), "VAULT_DB", true)?;
-        Self::insert_json(&mut map, secret_path.join("wallet.json"), "VAULT_WALLET", false)?;
+        Self::insert_json(&mut map, secret_path.join("db.json"), "VAULT_APP_DB", true)?;
+        Self::insert_json(&mut map, secret_path.join("wallet.json"), "VAULT_APP_WALLET", false)?;
 
-        Self::insert_pem(&mut map, secret_path.join("private_key.pem"), "VAULT_F_PRIV_KEY")?;
-        Self::insert_pem(&mut map, secret_path.join("public_key.pem"), "VAULT_F_PUB_PKEY")?;
-        Self::insert_pem(&mut map, secret_path.join("cert.pem"), "VAULT_F_CERT")?;
+        Self::insert_pem(&mut map, secret_path.join("private_key.pem"), "VAULT_APP_PRIV_KEY")?;
+        Self::insert_pem(&mut map, secret_path.join("public_key.pem"), "VAULT_APP_PUB_PKEY")?;
+        Self::insert_pem(&mut map, secret_path.join("cert.pem"), "VAULT_APP_CERT")?;
 
-        Self::insert_pem(&mut map, config_path.join("vault-cert.pem"), "VAULT_CLIENT_CERT")?;
-        Self::insert_pem(&mut map, config_path.join("vault-key.pem"), "VAULT_CLIENT_KEY")?;
-
-        let secret_path = expect_from_env("SECRET_PATH");
-        let config_path = expect_from_env("CONFIG_PATH");
-
-        // DB -----------------------------------------------
-        let binding = PathBuf::from(&secret_path).join("db.json");
-        let to_read_db = binding.to_str().expect("Error parsing db path");
-        let db_path = expect_from_env("VAULT_DB");
-        let db_json = read_json(to_read_db)?;
-        map.insert(db_path, db_json);
-
-        // WALLET  -----------------------------------------------
-        let binding = PathBuf::from(&secret_path).join("wallet.json");
-        let to_read_wallet = binding.to_str().expect("Error parsing wallet path");
-        if let Ok(data) = read_json(to_read_wallet) {
-            let db_path = expect_from_env("VAULT_WALLET");
-            map.insert(db_path, data);
-        }
-
-        // PRIV_KEY
-        let binding = PathBuf::from(&secret_path).join("private_key.pem");
-        let to_read_f_pkey = binding.to_str().expect("Error parsing priv key path");
-        let priv_key_path = expect_from_env("VAULT_F_PRIV_KEY");
-        let data = read(to_read_f_pkey)?;
-        let data = serde_json::to_value(PemHelper::new(data))?;
-        map.insert(priv_key_path, data);
-
-        // PUB_KEY
-        let binding = PathBuf::from(&secret_path).join("public_key.pem");
-        let to_read_f_pkey = binding.to_str().expect("Error parsing f pub key path");
-        let pub_key_path = expect_from_env("VAULT_F_PUB_PKEY");
-        let data = read(to_read_f_pkey)?;
-        let data = serde_json::to_value(PemHelper::new(data))?;
-        map.insert(pub_key_path, data);
-
-        // CERT
-        let binding = PathBuf::from(&secret_path).join("cert.pem");
-        let to_read_f_pkey = binding.to_str().expect("Error parsing f cert path");
-        let cert_path = expect_from_env("VAULT_F_CERT");
-        let data = read(to_read_f_pkey)?;
-        let data = serde_json::to_value(PemHelper::new(data))?;
-        map.insert(cert_path, data);
-
-        // REAL CERT
-        let binding = PathBuf::from(&config_path).join("vault-cert.pem");
-        let to_read_cert = binding.to_str().expect("Error parsing cert path");
-        let cert_path = expect_from_env("VAULT_CLIENT_CERT");
-        let data = read(to_read_cert)?;
-        let data = serde_json::to_value(PemHelper::new(data))?;
-        map.insert(cert_path, data);
-
-        // REAL KEY
-        let binding = PathBuf::from(&config_path).join("vault-key.pem");
-        let to_read_pkey = binding.to_str().expect("Error parsing f cert path");
-        let key_path = expect_from_env("VAULT_CLIENT_KEY");
-        let data = read(to_read_pkey)?;
-        let data = serde_json::to_value(PemHelper::new(data))?;
-        map.insert(key_path, data);
+        Self::insert_pem(&mut map, config_path.join("vault-cert.pem"), "VAULT_APP_CLIENT_CERT")?;
+        Self::insert_pem(&mut map, config_path.join("vault-key.pem"), "VAULT_APP_CLIENT_KEY")?;
 
         Ok(map)
     }
@@ -245,7 +187,7 @@ impl VaultTrait for VaultService {
     where
         T: DatabaseConfigTrait + Send + Sync,
     {
-        let db_path = expect_from_env("VAULT_DB");
+        let db_path = expect_from_env("VAULT_APP_DB");
 
         let db_secrets: DbSecrets = self.read(None, &db_path).await.expect("Not able to retrieve env files");
         Database::connect(config.get_full_db_url(db_secrets)).await.expect("Database can't connect")

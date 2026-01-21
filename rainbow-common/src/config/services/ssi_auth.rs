@@ -53,7 +53,7 @@ impl SsiAuthConfig {
         self.gaia_active
     }
     pub fn is_wallet_active(&self) -> bool {
-        self.wallet.is_none()
+        self.wallet.is_some()
     }
 }
 

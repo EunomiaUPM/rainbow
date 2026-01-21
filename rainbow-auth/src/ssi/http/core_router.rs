@@ -25,6 +25,7 @@ use axum::Router;
 use rainbow_common::config::traits::ApiConfigTrait;
 use rainbow_common::openapi_http::OpenapiRouter;
 use rainbow_common::utils::server_status;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{error, info, Level};
 use uuid::Uuid;
@@ -59,6 +60,16 @@ impl AuthRouter {
 
         let api_path = self.core.config().get_api_version();
 
+        let cors = CorsLayer::new()
+            .allow_origin(Any) // Temporal: permite cualquier origen
+            .allow_methods([
+                axum::http::Method::GET,
+                axum::http::Method::POST,
+                axum::http::Method::DELETE
+            ])
+            .allow_headers(Any)
+            .allow_credentials(false);
+
         let router = Router::new()
             .route(&format!("{}/health", api_path), get(server_status))
             .nest(&format!("{}/mates", api_path), mate_router)
@@ -67,16 +78,7 @@ impl AuthRouter {
             .nest(&format!("{}/verifier", api_path), verifier_router)
             .nest(&format!("{}/business", api_path), business_router)
             .nest(&format!("{}/onboard", api_path), onboarder_router)
-            .nest(&format!("{}/docs", api_path), openapi_router)
-            .fallback(Self::fallback)
-            .layer(
-                TraceLayer::new_for_http()
-                    .make_span_with(|_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4()))
-                    .on_request(|req: &Request<_>, _span: &tracing::Span| {
-                        info!("{} {}", req.method(), req.uri().path());
-                    })
-                    .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-            );
+            .nest(&format!("{}/docs", api_path), openapi_router);
 
         let router = match self.core.is_gaia_active() {
             true => {
@@ -93,7 +95,17 @@ impl AuthRouter {
             }
             false => router
         };
-        router
+
+        router.fallback(Self::fallback).layer(cors).layer(
+            TraceLayer::new_for_http()
+                .make_span_with(
+                    |_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4())
+                )
+                .on_request(|req: &Request<_>, _span: &tracing::Span| {
+                    info!("{} {}", req.method(), req.uri().path());
+                })
+                .on_response(DefaultOnResponse::new().level(Level::TRACE))
+        )
     }
 
     async fn fallback() -> impl IntoResponse {
