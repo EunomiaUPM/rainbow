@@ -32,4 +32,5 @@ pub mod http_client;
 pub mod mates;
 pub mod openapi_http;
 pub mod utils;
+pub mod vault;
 pub mod well_known;

@@ -26,7 +26,8 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::fs;
+use std::{env, fs};
+use std::path::Path;
 use tracing::{error, info};
 use urn::Urn;
 use uuid::Uuid;
@@ -76,15 +77,32 @@ where
     }
 }
 
-pub fn read(path: &str) -> anyhow::Result<String> {
-    match fs::read_to_string(&path) {
+pub fn read<P>(path: P) -> anyhow::Result<String>
+where
+    P: AsRef<Path>,
+{
+    let path_ref = path.as_ref();
+    match fs::read_to_string(path_ref) {
         Ok(data) => Ok(data),
         Err(e) => {
-            let error = CommonErrors::read_new(path, &e.to_string());
+            let error = CommonErrors::read_new(
+                &path_ref.display().to_string(),
+                &e.to_string()
+            );
             error!("{}", error.log());
             bail!(error)
         }
     }
+}
+
+pub fn read_json<T, P>(path: P) -> anyhow::Result<T>
+where
+    T: DeserializeOwned,
+    P: AsRef<Path>,
+{
+    let data = read(path)?;
+    let json = serde_json::from_str(&data)?;
+    Ok(json)
 }
 
 pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
@@ -99,6 +117,20 @@ pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Resul
             bail!(error)
         }
     }
+}
+
+
+pub fn expect_from_env(env: &str) -> String {
+    let result = env::var(env);
+    let data = match result {
+        Ok(data) => Some(data),
+        Err(e) => {
+            let error = CommonErrors::env_new(format!("{} not found -> {}", &env, e.to_string()));
+            error!("{}", error.log());
+            None
+        }
+    };
+    data.expect("Error with env variable")
 }
 
 pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Response> {

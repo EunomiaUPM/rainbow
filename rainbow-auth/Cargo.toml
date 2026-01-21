@@ -52,6 +52,9 @@ tower = { version = "0.5.2", features = ["full"] }
 urn = { workspace = true }
 futures = "0.3"
 assert_cmd = "2.0"
+derive_builder = { workspace = true }
 cargo-binutils = "0.3"
 tokio-util = "0.7.17"
 async-trait = "0.1.89"
+rustls = {workspace = true}
+axum-server = {workspace = true}

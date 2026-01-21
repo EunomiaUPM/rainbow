@@ -48,6 +48,8 @@ use crate::http::odrl_policies::OdrlOfferEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::{CacheConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -59,8 +61,12 @@ use tonic::transport::Server;
 pub struct CatalogGrpcWorker {}
 
 impl CatalogGrpcWorker {
-    pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
-        let router = Self::create_root_grpc_router(&config).await?;
+    pub async fn spawn(
+        config: &CatalogConfig,
+        vault: Arc<VaultService>,
+        token: &CancellationToken,
+    ) -> anyhow::Result<JoinHandle<()>> {
+        let router = Self::create_root_grpc_router(&config, vault.clone()).await?;
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
         let addr = format!("{}:{}", host, port);
@@ -83,9 +89,12 @@ impl CatalogGrpcWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_grpc_router(config: &CatalogConfig) -> anyhow::Result<tonic::transport::server::Router> {
+    pub async fn create_root_grpc_router(
+        config: &CatalogConfig,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<tonic::transport::server::Router> {
         // conn
-        let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+        let db_connection = vault.get_db_connection(config.clone()).await;
         let cache_connection_url = config.get_full_cache_url();
         let redis_client = redis::Client::open(cache_connection_url)?;
         let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");

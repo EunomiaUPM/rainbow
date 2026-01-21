@@ -1,10 +1,15 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_request.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_request.rs'
 
 #[cfg(test)]
 mod tests {
     use rainbow_auth::ssi_auth::common::types::gnap::{
         grant_request::{AccessTokenRequirements4GR, Finish4Interact, Interact4GR},
+<<<<<<< HEAD
+        GrantRequest
+=======
         GrantRequest,
+>>>>>>> origin/main
     };
     use serde_json::json;
 
@@ -14,7 +19,11 @@ mod tests {
         let gr = GrantRequest::pr_oidc(
             client.clone(),
             "redirect".to_string(),
+<<<<<<< HEAD
+            Some("https://callback".to_string())
+=======
             Some("https://callback".to_string()),
+>>>>>>> origin/main
         );
         assert_eq!(gr.client, client);
         assert!(gr.interact.is_some());
@@ -27,7 +36,11 @@ mod tests {
             client.clone(),
             "redirect".to_string(),
             None,
+<<<<<<< HEAD
+            "vc-type".to_string()
+=======
             "vc-type".to_string(),
+>>>>>>> origin/main
         );
         assert_eq!(gr.access_token.access.r#type, "vc-type");
     }
@@ -88,7 +101,7 @@ mod tests {
             subject: None,
             client,
             user: None,
-            interact: None,
+            interact: None
         };
         gr.update_callback("https://new-callback".to_string());
         // interact sigue siendo None
@@ -118,7 +131,7 @@ mod tests {
             method: "redirect".to_string(),
             uri: Some("uri".to_string()),
             nonce: "nonce".to_string(),
-            hash_method: None,
+            hash_method: None
         };
         assert!(finish.hash_method.is_none());
     }

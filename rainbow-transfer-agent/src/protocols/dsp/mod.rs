@@ -47,6 +47,7 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::http_client::HttpClient;
+use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
@@ -56,6 +57,7 @@ pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
     transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
     config: Arc<TransferConfig>,
+    vault: Arc<VaultService>,
 }
 
 impl TransferDSP {
@@ -63,8 +65,9 @@ impl TransferDSP {
         transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
         config: Arc<TransferConfig>,
+        vault: Arc<VaultService>,
     ) -> Self {
-        Self { transfer_agent_message_service, transfer_agent_process_entities, config }
+        Self { transfer_agent_message_service, transfer_agent_process_entities, config, vault }
     }
 }
 
@@ -119,7 +122,7 @@ impl ProtocolPluginTrait for TransferDSP {
 
         // dataplane
         let dataplane = DataplaneSetup::new();
-        let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone()).await;
+        let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone(), self.vault.clone()).await;
         let dataplane_strategy_factory = Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
         let dataplane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
             dataplane_strategy_factory.clone(),

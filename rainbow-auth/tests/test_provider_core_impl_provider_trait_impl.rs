@@ -1,7 +1,13 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\provider\core\impls\provider_trait_impl.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\provider\core\impls\provider_trait_impl.rs'
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
+    use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
     use anyhow::Result;
     use axum::async_trait;
     use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
@@ -12,17 +18,36 @@ mod tests {
         common::{
             errors::AuthErrors,
             types::gnap::{
+<<<<<<< HEAD
+                grant_request::{
+                    Access4AT, AccessTokenRequirements4GR, Finish4Interact, Interact4GR
+                },
+                GrantRequest, GrantResponse
+            }
+        },
+        provider::core::Manager
+=======
                 grant_request::{Access4AT, AccessTokenRequirements4GR, Finish4Interact, Interact4GR},
                 GrantRequest, GrantResponse,
             },
         },
         provider::core::Manager,
+>>>>>>> origin/main
     };
     use rainbow_common::{
         config::{
             database::DbType,
             global_config::{DatabaseConfig, HostConfig},
             provider_config::ApplicationProviderConfig,
+<<<<<<< HEAD
+            ConfigRoles
+        },
+        errors::CommonErrors,
+        ssi::{ClientConfig, DisplayInfo, SSIWalletConfig}
+    };
+    use rainbow_db::auth_provider::entities::auth_interaction::{
+        Model as InteractionModel, NewModel as NewInteractionModel
+=======
             ConfigRoles,
         },
         errors::CommonErrors,
@@ -30,18 +55,34 @@ mod tests {
     };
     use rainbow_db::auth_provider::entities::auth_interaction::{
         Model as InteractionModel, NewModel as NewInteractionModel,
+>>>>>>> origin/main
     };
     use rainbow_db::auth_provider::entities::auth_request::Model as RequestModel;
     use rainbow_db::auth_provider::entities::auth_request::{Model, NewModel};
     use rainbow_db::auth_provider::entities::auth_token_requirements::Model as TokenRequirementsModel;
     use rainbow_db::auth_provider::entities::auth_verification::NewModel as NewVerificationModel;
+<<<<<<< HEAD
+    use rainbow_db::auth_provider::entities::mates::{
+        Model as MateModel, NewModel as NewMateModel
+    };
+=======
     use rainbow_db::auth_provider::entities::mates::{Model as MateModel, NewModel as NewMateModel};
+>>>>>>> origin/main
     use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
     use rainbow_db::{
         auth_provider::{
             entities::auth_verification::Model as VerificationModel,
             repo_factory::traits::{
                 AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+<<<<<<< HEAD
+                AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait
+            }
+        },
+        common::BasicRepoTrait
+    };
+    use serde_json::json;
+    use serde_json::Value;
+=======
                 AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait,
             },
         },
@@ -50,6 +91,7 @@ mod tests {
     use serde_json::json;
     use serde_json::Value;
     use std::sync::Arc;
+>>>>>>> origin/main
     use uuid::Uuid;
 
     // Mocks
@@ -91,19 +133,50 @@ mod tests {
     impl
         BasicRepoTrait<
             rainbow_db::auth_provider::entities::business_mates::Model,
+<<<<<<< HEAD
+            rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
             rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         > for MockBusinessMatesRepo
     {
         async fn get_all(
             &self,
             _limit: Option<u64>,
+<<<<<<< HEAD
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<rainbow_db::auth_provider::entities::business_mates::Model>>
+        {
+=======
             _offset: Option<u64>,
         ) -> anyhow::Result<Vec<rainbow_db::auth_provider::entities::business_mates::Model>> {
+>>>>>>> origin/main
             Ok(vec![])
         }
 
         async fn get_by_id(
             &self,
+<<<<<<< HEAD
+            id: &str
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>>
+        {
+            if id == "test-state" {
+                Ok(Some(rainbow_db::auth_provider::entities::business_mates::Model {
+                    id: id.to_string(),
+                    participant_id: "test-holder".to_string(),
+                    token: Some("token-abc".to_string()),
+                    saved_at: Utc::now().naive_utc(),
+                    last_interaction: Utc::now().naive_utc()
+                }))
+            } else if id == "test-state-fail" {
+                Ok(Some(rainbow_db::auth_provider::entities::business_mates::Model {
+                    id: id.to_string(),
+                    participant_id: "unknown-holder".to_string(),
+                    token: Some("token-abc".to_string()),
+                    saved_at: Utc::now().naive_utc(),
+                    last_interaction: Utc::now().naive_utc()
+                }))
+=======
             id: &str,
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>> {
             if id == "test-state" {
@@ -126,6 +199,7 @@ mod tests {
                         last_interaction: Utc::now().naive_utc(),
                     },
                 ))
+>>>>>>> origin/main
             } else {
                 Ok(None)
             }
@@ -133,42 +207,58 @@ mod tests {
 
         async fn create(
             &self,
+<<<<<<< HEAD
+            _model: rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
             _model: rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
 
         async fn update(
             &self,
+<<<<<<< HEAD
+            _model: rainbow_db::auth_provider::entities::business_mates::Model
+=======
             _model: rainbow_db::auth_provider::entities::business_mates::Model,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
     #[async_trait]
     impl BusinessMatesRepoTrait for MockBusinessMatesRepo {
         async fn get_by_token(
             &self,
+<<<<<<< HEAD
+            _token: &str
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>>
+        {
+=======
             _token: &str,
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::business_mates::Model>> {
+>>>>>>> origin/main
             unimplemented!()
         }
 
         async fn force_create(
             &self,
+<<<<<<< HEAD
+            _mate: rainbow_db::auth_provider::entities::business_mates::NewModel
+=======
             _mate: rainbow_db::auth_provider::entities::business_mates::NewModel,
+>>>>>>> origin/main
         ) -> anyhow::Result<rainbow_db::auth_provider::entities::business_mates::Model> {
             unimplemented!()
         }
     }
 
     struct TestManager {
-        inner: Manager<MockAuthRepoFactory>,
+        inner: Manager<MockAuthRepoFactory>
     }
 
     impl TestManager {
@@ -179,7 +269,15 @@ mod tests {
 
     #[async_trait]
     impl RainbowSSIAuthProviderManagerTrait for TestManager {
+<<<<<<< HEAD
+        async fn verify_vp(
+            &self,
+            _model: VerificationModel,
+            vp_token: String
+        ) -> Result<(Vec<String>, String)> {
+=======
         async fn verify_vp(&self, _model: VerificationModel, vp_token: String) -> Result<(Vec<String>, String)> {
+>>>>>>> origin/main
             if vp_token == "valid-vp-token" {
                 Ok((
                     vec!["valid-vc-token".to_string()],
@@ -210,7 +308,7 @@ mod tests {
                 success: None,
                 status: "Pending".to_string(),
                 created_at: Utc::now().naive_utc(),
-                ended_at: None,
+                ended_at: None
             };
 
             // Use mock of verify_vp
@@ -232,7 +330,7 @@ mod tests {
                 token: Some("token-abc".to_string()),
                 status: "Processing".to_string(),
                 created_at: Utc::now().naive_utc(),
-                ended_at: None,
+                ended_at: None
             };
 
             // Simulate success
@@ -240,54 +338,53 @@ mod tests {
         }
 
         // Delegated or unused methods in the current test
-        async fn generate_uri(&self, _: VerificationModel) -> Result<String> {
-            todo!()
-        }
+        async fn generate_uri(&self, _: VerificationModel) -> Result<String> { todo!() }
 
-        async fn manage_access(&self, _: GrantRequest) -> Result<GrantResponse> {
-            todo!()
-        }
+        async fn manage_access(&self, _: GrantRequest) -> Result<GrantResponse> { todo!() }
 
+<<<<<<< HEAD
+        async fn validate_continue_request(
+            &self,
+            _: String,
+            _: String,
+            _: String
+        ) -> Result<InteractionModel> {
+=======
         async fn validate_continue_request(&self, _: String, _: String, _: String) -> Result<InteractionModel> {
+>>>>>>> origin/main
             todo!()
         }
 
-        async fn continue_req(&self, _: InteractionModel) -> Result<RequestModel> {
+        async fn continue_req(&self, _: InteractionModel) -> Result<RequestModel> { todo!() }
+
+        async fn retrieve_data(
+            &self,
+            _: RequestModel,
+            _: InteractionModel
+        ) -> Result<NewMateModel> {
             todo!()
         }
 
-        async fn retrieve_data(&self, _: RequestModel, _: InteractionModel) -> Result<NewMateModel> {
-            todo!()
-        }
+        async fn save_mate(&self, _: NewMateModel) -> Result<MateModel> { todo!() }
 
-        async fn save_mate(&self, _: NewMateModel) -> Result<MateModel> {
-            todo!()
-        }
+        async fn generate_vp_def(&self, _: String) -> Result<Value> { todo!() }
 
-        async fn generate_vp_def(&self, _: String) -> Result<Value> {
-            todo!()
-        }
+        async fn end_verification(&self, _: String) -> Result<Option<String>> { todo!() }
 
-        async fn end_verification(&self, _: String) -> Result<Option<String>> {
-            todo!()
-        }
+        async fn fast_login(&self, _: String) -> Result<String> { todo!() }
 
-        async fn fast_login(&self, _: String) -> Result<String> {
-            todo!()
-        }
+        async fn verify_token(&self, _: String) -> Result<MateModel> { todo!() }
 
-        async fn verify_token(&self, _: String) -> Result<MateModel> {
-            todo!()
-        }
-
-        async fn retrieve_business_token(&self, _: String) -> Result<Value> {
-            todo!()
-        }
+        async fn retrieve_business_token(&self, _: String) -> Result<Value> { todo!() }
     }
 
     #[async_trait]
     impl BasicRepoTrait<MateModel, NewMateModel> for MockMatesRepo {
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<MateModel>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<MateModel>> {
             Ok(vec![])
         }
 
@@ -301,7 +398,7 @@ mod tests {
                     token: Some("token-abc".to_string()),
                     saved_at: Utc::now().naive_utc(),
                     last_interaction: Utc::now().naive_utc(),
-                    is_me: false,
+                    is_me: false
                 }))
             } else {
                 Ok(None)
@@ -312,20 +409,22 @@ mod tests {
             unimplemented!()
         }
 
-        async fn update(&self, _model: MateModel) -> anyhow::Result<MateModel> {
-            unimplemented!()
-        }
+        async fn update(&self, _model: MateModel) -> anyhow::Result<MateModel> { unimplemented!() }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
     #[derive(Clone)]
     pub struct MockMatesRepo;
 
     #[async_trait]
+<<<<<<< HEAD
+    impl rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait
+        for MockMatesRepo
+    {
+=======
     impl rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait for MockMatesRepo {
+>>>>>>> origin/main
         async fn force_create(&self, mate: NewMateModel) -> anyhow::Result<MateModel> {
             Ok(MateModel {
                 participant_id: mate.participant_id,
@@ -335,13 +434,17 @@ mod tests {
                 token: mate.token,
                 saved_at: chrono::Utc::now().naive_utc(),
                 last_interaction: chrono::Utc::now().naive_utc(),
-                is_me: mate.is_me,
+                is_me: mate.is_me
             })
         }
 
+<<<<<<< HEAD
+        async fn get_me(&self) -> anyhow::Result<Option<MateModel>> { unimplemented!() }
+=======
         async fn get_me(&self) -> anyhow::Result<Option<MateModel>> {
             unimplemented!()
         }
+>>>>>>> origin/main
 
         async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<MateModel>> {
             if token == "valid-token" {
@@ -353,7 +456,7 @@ mod tests {
                     token: Some(token.to_string()),
                     saved_at: Utc::now().naive_utc(),
                     last_interaction: Utc::now().naive_utc(),
-                    is_me: false,
+                    is_me: false
                 }))
             } else {
                 Ok(None)
@@ -367,7 +470,11 @@ mod tests {
 
     #[async_trait]
     impl BasicRepoTrait<VerificationModel, NewVerificationModel> for MockVerificationRepo {
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<VerificationModel>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<VerificationModel>> {
             Ok(vec![])
         }
 
@@ -383,7 +490,7 @@ mod tests {
                     success: None,
                     status: "Pending".to_string(),
                     created_at: Utc::now().naive_utc(),
-                    ended_at: None,
+                    ended_at: None
                 }))
             } else {
                 Ok(None)
@@ -401,7 +508,7 @@ mod tests {
                 success: None,
                 status: "Pending".to_string(),
                 created_at: Utc::now().naive_utc(),
-                ended_at: None,
+                ended_at: None
             })
         }
 
@@ -409,9 +516,7 @@ mod tests {
             Ok(model)
         }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
     #[derive(Clone)]
@@ -424,25 +529,47 @@ mod tests {
         async fn get_by_state(
             &self,
             _state: &str,
+<<<<<<< HEAD
+        ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::auth_verification::Model,>,> {
+            if _state == "test-state"
+            {
+=======
         ) -> anyhow::Result<Option<rainbow_db::auth_provider::entities::auth_verification::Model>> {
             if _state == "test-state" {
+>>>>>>> origin/main
                 Ok(Some(VerificationModel {
                     id: "mock-id".to_string(),
                     state: _state.to_string(),
                     nonce: "test-nonce".to_string(),
                     audience: "test-client-id".to_string(),
-                    holder: Some("test-holder".to_string()),
+                    holder: Some("test-holder".to_string(),),
                     vpt: None,
                     success: None,
                     status: "Pending".to_string(),
                     created_at: Utc::now().naive_utc(),
                     ended_at: None,
-                }))
-            } else {
-                Ok(None)
+                },),)
+            }
+            else
+            {
+                Ok(None,)
             }
         }
 
+<<<<<<< HEAD
+
+        async fn create_extra(
+            &self,
+            model: rainbow_db::auth_provider::entities::auth_verification::Model,
+        ) -> anyhow::Result<rainbow_db::auth_provider::entities::auth_verification::Model,> {
+            if model.state == "fail-verification"
+            {
+                Err(anyhow::anyhow!("Simulated DB failure in verification"),)
+            }
+            else
+            {
+                Ok(model,)
+=======
         async fn create_extra(
             &self,
             model: rainbow_db::auth_provider::entities::auth_verification::Model,
@@ -451,6 +578,7 @@ mod tests {
                 Err(anyhow::anyhow!("Simulated DB failure in verification"))
             } else {
                 Ok(model)
+>>>>>>> origin/main
             }
         }
     }
@@ -459,34 +587,47 @@ mod tests {
     struct MockAuthRepoFactory;
 
     impl Default for MockAuthRepoFactory {
-        fn default() -> Self {
-            MockAuthRepoFactory
-        }
+        fn default() -> Self { MockAuthRepoFactory }
     }
 
     impl AuthRepoFactoryTrait for MockAuthRepoFactory {
         fn request(
             &self,
+<<<<<<< HEAD
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_request_trait::AuthRequestRepoTrait,>
+=======
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_request_trait::AuthRequestRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockRequestRepo)
         }
 
         fn interaction(
             &self,
+<<<<<<< HEAD
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_interaction_trait::AuthInteractionRepoTrait,>
+=======
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_interaction_trait::AuthInteractionRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockInteractionRepo)
         }
 
         fn verification(
             &self,
+<<<<<<< HEAD
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_verification_trait::AuthVerificationRepoTrait,>
+=======
         ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::auth_verification_trait::AuthVerificationRepoTrait>
+>>>>>>> origin/main
         {
             Arc::new(MockVerificationRepo)
         }
 
-        fn mates(&self) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait> {
+        fn mates(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_provider::repo_factory::traits::mates_trait::MatesRepoTrait>
+        {
             Arc::new(MockMatesRepo)
         }
 
@@ -504,13 +645,15 @@ mod tests {
 
     #[async_trait]
     impl BasicRepoTrait<TokenRequirementsModel, TokenRequirementsModel> for MockTokenRequirementsRepo {
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> Result<Vec<TokenRequirementsModel>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> Result<Vec<TokenRequirementsModel>> {
             Ok(vec![])
         }
 
-        async fn get_by_id(&self, _id: &str) -> Result<Option<TokenRequirementsModel>> {
-            Ok(None)
-        }
+        async fn get_by_id(&self, _id: &str) -> Result<Option<TokenRequirementsModel>> { Ok(None) }
 
         async fn create(&self, model: TokenRequirementsModel) -> Result<TokenRequirementsModel> {
             Ok(model)
@@ -520,9 +663,7 @@ mod tests {
             Ok(model)
         }
 
-        async fn delete(&self, _id: &str) -> Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> Result<()> { Ok(()) }
     }
 
     #[async_trait]
@@ -536,7 +677,11 @@ mod tests {
 
     #[async_trait]
     impl BasicRepoTrait<Model, NewModel> for MockRequestRepo {
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<Model>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<Model>> {
             unimplemented!()
         }
 
@@ -548,7 +693,7 @@ mod tests {
                     token: None,
                     status: "Pending".to_string(),
                     created_at: Utc::now().naive_utc(),
-                    ended_at: None,
+                    ended_at: None
                 }))
             } else {
                 Ok(None)
@@ -562,17 +707,13 @@ mod tests {
                 token: None,
                 status: "Pending".to_string(),
                 created_at: chrono::Utc::now().naive_utc(),
-                ended_at: None,
+                ended_at: None
             })
         }
 
-        async fn update(&self, _model: Model) -> anyhow::Result<Model> {
-            Ok(_model)
-        }
+        async fn update(&self, _model: Model) -> anyhow::Result<Model> { Ok(_model) }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            unimplemented!()
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { unimplemented!() }
     }
 
     impl AuthRequestRepoTrait for MockRequestRepo {}
@@ -582,7 +723,11 @@ mod tests {
 
     #[async_trait]
     impl BasicRepoTrait<InteractionModel, NewInteractionModel> for MockInteractionRepo {
-        async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<InteractionModel>> {
+        async fn get_all(
+            &self,
+            _limit: Option<u64>,
+            _offset: Option<u64>
+        ) -> anyhow::Result<Vec<InteractionModel>> {
             unimplemented!()
         }
 
@@ -603,7 +748,7 @@ mod tests {
                     continue_endpoint: "https://example.com/continue".to_string(),
                     continue_id: id.to_string(),
                     continue_token: "token-abc".to_string(),
-                    as_nonce: "as-nonce-xyz".to_string(),
+                    as_nonce: "as-nonce-xyz".to_string()
                 }))
             } else if id == "invalid-method-id" {
                 Ok(Some(InteractionModel {
@@ -620,7 +765,7 @@ mod tests {
                     continue_token: "token-abc".to_string(),
                     as_nonce: "as-nonce-xyz".to_string(),
                     interact_ref: "ref-456".to_string(),
-                    hash: "hash789".to_string(),
+                    hash: "hash789".to_string()
                 }))
             } else {
                 Ok(None)
@@ -642,7 +787,7 @@ mod tests {
                 continue_token: model.continue_token,
                 as_nonce: Uuid::new_v4().to_string(),
                 interact_ref: Uuid::new_v4().to_string(),
-                hash: "mocked-hash".to_string(),
+                hash: "mocked-hash".to_string()
             })
         }
 
@@ -650,14 +795,15 @@ mod tests {
             Ok(_model)
         }
 
-        async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-            Ok(())
-        }
+        async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
     }
 
     #[async_trait]
     impl AuthInteractionRepoTrait for MockInteractionRepo {
-        async fn get_by_reference(&self, _reference: &str) -> anyhow::Result<Option<InteractionModel>> {
+        async fn get_by_reference(
+            &self,
+            _reference: &str
+        ) -> anyhow::Result<Option<InteractionModel>> {
             unimplemented!()
         }
 
@@ -677,7 +823,7 @@ mod tests {
                     continue_token: "token-abc".to_string(),
                     as_nonce: "as-nonce-xyz".to_string(),
                     interact_ref: "ref-456".to_string(),
-                    hash: "hash789".to_string(),
+                    hash: "hash789".to_string()
                 }))
             } else {
                 Ok(None)
@@ -698,7 +844,7 @@ mod tests {
             ssi_auth_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "localhost".to_string(),
-                port: "8080".to_string(),
+                port: "8080".to_string()
             }),
             gateway_host: None,
             is_gateway_in_production: false,
@@ -708,7 +854,7 @@ mod tests {
                 password: "pass".to_string(),
                 url: "localhost".to_string(),
                 port: 5432.to_string(),
-                name: "test_db".to_string(),
+                name: "test_db".to_string()
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -720,7 +866,7 @@ mod tests {
                 wallet_password: "password".to_string(),
                 wallet_api_protocol: "http".to_string(),
                 wallet_api_url: "localhost".to_string(),
-                wallet_api_port: Some("3000".to_string()),
+                wallet_api_port: Some("3000".to_string())
             },
             client_config: ClientConfig {
                 class_id: "test-class-id".to_string(),
@@ -728,11 +874,16 @@ mod tests {
                 display: Some(DisplayInfo {
                     name: "test-display".to_string(),
                     uri: Some("localhost".to_string()),
+<<<<<<< HEAD
+                    logo_uri: Some("localhost".to_string())
+                })
+=======
                     logo_uri: Some("localhost".to_string()),
                 }),
+>>>>>>> origin/main
             },
             role: ConfigRoles::Provider,
-            is_local: true,
+            is_local: true
         }
     }
 
@@ -770,7 +921,11 @@ mod tests {
         encode(
             &header,
             &claims,
+<<<<<<< HEAD
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap()
+=======
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap(),
+>>>>>>> origin/main
         )
         .unwrap()
     }
@@ -799,7 +954,7 @@ mod tests {
             success: None,
             status: "Pending".to_string(),
             created_at: Utc::now().naive_utc(),
-            ended_at: None,
+            ended_at: None
         };
 
         // Execute function
@@ -837,7 +992,7 @@ mod tests {
                     success: None,
                     status: "Pending".to_string(),
                     created_at: Utc::now().naive_utc(),
-                    ended_at: None,
+                    ended_at: None
                 };
 
                 let _ = manager.generate_uri(ver_model).await;
@@ -861,10 +1016,10 @@ mod tests {
                     locations: None,
                     datatypes: None,
                     identifier: None,
-                    privileges: None,
+                    privileges: None
                 },
                 label: None,
-                flags: None,
+                flags: None
             },
             subject: None,
             client: json!({ "class_id": "test-class" }),
@@ -875,10 +1030,10 @@ mod tests {
                     method: "redirect".to_string(),
                     uri: Some("http://localhost/redirect".to_string()),
                     nonce: "nonce123".to_string(),
-                    hash_method: None,
+                    hash_method: None
                 },
-                hints: None,
-            }),
+                hints: None
+            })
         };
 
         let result = manager.manage_access(payload).await;
@@ -886,7 +1041,15 @@ mod tests {
         assert!(result.is_ok(), "Expected success, got error: {:?}", result);
         let response = result.unwrap();
 
+<<<<<<< HEAD
+        let uri = response
+            .interact
+            .as_ref()
+            .and_then(|i| i.oidc4vp.clone())
+            .expect("Expected oidc4vp URI in response");
+=======
         let uri = response.interact.as_ref().and_then(|i| i.oidc4vp.clone()).expect("Expected oidc4vp URI in response");
+>>>>>>> origin/main
 
         assert!(uri.starts_with("openid4vp://authorize"));
 
@@ -907,15 +1070,15 @@ mod tests {
                     locations: None,
                     datatypes: None,
                     identifier: None,
-                    privileges: None,
+                    privileges: None
                 },
                 label: None,
-                flags: None,
+                flags: None
             },
             subject: None,
             client: json!({ "class_id": "test-class" }),
             user: None,
-            interact: None, // ← ERROR
+            interact: None // ← ERROR
         };
 
         let result = manager.manage_access(payload).await;
@@ -929,7 +1092,7 @@ mod tests {
             CommonErrors::FeatureNotImplError { feature, .. } => {
                 assert!(feature.contains("Only petitions with an 'interact field'"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -945,7 +1108,9 @@ mod tests {
         let token = "token-abc".to_string();
 
         // Execute
-        let result = manager.validate_continue_request(cont_id.clone(), interact_ref.clone(), token.clone()).await;
+        let result = manager
+            .validate_continue_request(cont_id.clone(), interact_ref.clone(), token.clone())
+            .await;
 
         // Validate
         assert!(result.is_ok());
@@ -978,7 +1143,7 @@ mod tests {
                 let cause_text = cause.as_ref().expect("Expected cause");
                 assert!(cause_text.contains("Interact reference"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1002,7 +1167,7 @@ mod tests {
             continue_token: "token-abc".to_string(),
             as_nonce: "as-nonce-xyz".to_string(),
             interact_ref: "ref-456".to_string(),
-            hash: "hash789".to_string(),
+            hash: "hash789".to_string()
         };
 
         let result = manager.continue_req(interaction_model.clone()).await;
@@ -1036,7 +1201,7 @@ mod tests {
             continue_token: "token-abc".to_string(),
             as_nonce: "as-nonce-xyz".to_string(),
             interact_ref: "ref-456".to_string(),
-            hash: "hash789".to_string(),
+            hash: "hash789".to_string()
         };
 
         let result = manager.continue_req(interaction_model).await;
@@ -1049,7 +1214,7 @@ mod tests {
             CommonErrors::MissingResourceError { resource_id, .. } => {
                 assert_eq!(resource_id, "non-existent-id");
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1065,7 +1230,7 @@ mod tests {
             token: Some("token-abc".to_string()),
             status: "Pending".to_string(),
             created_at: Utc::now().naive_utc(),
-            ended_at: None,
+            ended_at: None
         };
 
         let int_model = InteractionModel {
@@ -1082,7 +1247,7 @@ mod tests {
             continue_token: "token-abc".to_string(),
             as_nonce: "as-nonce-xyz".to_string(),
             interact_ref: "ref-456".to_string(),
-            hash: "hash789".to_string(),
+            hash: "hash789".to_string()
         };
 
         let result = manager.retrieve_data(req_model.clone(), int_model.clone()).await;
@@ -1112,7 +1277,7 @@ mod tests {
             token: Some("token-abc".to_string()),
             status: "Pending".to_string(),
             created_at: Utc::now().naive_utc(),
-            ended_at: None,
+            ended_at: None
         };
 
         let int_model = InteractionModel {
@@ -1129,7 +1294,7 @@ mod tests {
             continue_token: "token-abc".to_string(),
             as_nonce: "as-nonce-xyz".to_string(),
             interact_ref: "ref-456".to_string(),
-            hash: "hash789".to_string(),
+            hash: "hash789".to_string()
         };
 
         let result = manager.retrieve_data(req_model, int_model).await;
@@ -1142,7 +1307,7 @@ mod tests {
             CommonErrors::MissingResourceError { resource_id, .. } => {
                 assert_eq!(resource_id, "non-existent-id");
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1158,7 +1323,7 @@ mod tests {
             participant_type: "Consumer".to_string(),
             base_url: Some("https://example.com".to_string()),
             token: Some("token-abc".to_string()),
-            is_me: false,
+            is_me: false
         };
 
         let result = manager.save_mate(new_mate.clone()).await;
@@ -1180,13 +1345,15 @@ mod tests {
 
         #[async_trait]
         impl BasicRepoTrait<MateModel, NewMateModel> for FailingMatesRepo {
-            async fn get_all(&self, _limit: Option<u64>, _offset: Option<u64>) -> anyhow::Result<Vec<MateModel>> {
+            async fn get_all(
+                &self,
+                _limit: Option<u64>,
+                _offset: Option<u64>
+            ) -> anyhow::Result<Vec<MateModel>> {
                 Ok(vec![])
             }
 
-            async fn get_by_id(&self, _id: &str) -> anyhow::Result<Option<MateModel>> {
-                Ok(None)
-            }
+            async fn get_by_id(&self, _id: &str) -> anyhow::Result<Option<MateModel>> { Ok(None) }
 
             async fn create(&self, _model: NewMateModel) -> anyhow::Result<MateModel> {
                 unimplemented!()
@@ -1196,9 +1363,7 @@ mod tests {
                 unimplemented!()
             }
 
-            async fn delete(&self, _id: &str) -> anyhow::Result<()> {
-                Ok(())
-            }
+            async fn delete(&self, _id: &str) -> anyhow::Result<()> { Ok(()) }
         }
 
         #[async_trait]
@@ -1207,9 +1372,7 @@ mod tests {
                 Err(anyhow::anyhow!("DB failure"))
             }
 
-            async fn get_me(&self) -> anyhow::Result<Option<MateModel>> {
-                unimplemented!()
-            }
+            async fn get_me(&self) -> anyhow::Result<Option<MateModel>> { unimplemented!() }
 
             async fn get_by_token(&self, _token: &str) -> anyhow::Result<Option<MateModel>> {
                 unimplemented!()
@@ -1224,9 +1387,7 @@ mod tests {
         struct FailingRepoFactory;
 
         impl AuthRepoFactoryTrait for FailingRepoFactory {
-            fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
-                Arc::new(MockRequestRepo)
-            }
+            fn request(&self) -> Arc<dyn AuthRequestRepoTrait> { Arc::new(MockRequestRepo) }
             fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
                 Arc::new(MockInteractionRepo)
             }
@@ -1236,12 +1397,8 @@ mod tests {
             fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
                 Arc::new(MockTokenRequirementsRepo)
             }
-            fn mates(&self) -> Arc<dyn MatesRepoTrait> {
-                Arc::new(FailingMatesRepo)
-            }
-            fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> {
-                todo!()
-            }
+            fn mates(&self) -> Arc<dyn MatesRepoTrait> { Arc::new(FailingMatesRepo) }
+            fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> { todo!() }
         }
 
         let config = build_test_config();
@@ -1253,7 +1410,7 @@ mod tests {
             participant_type: "Consumer".to_string(),
             base_url: Some("https://example.com".to_string()),
             token: Some("token-abc".to_string()),
-            is_me: false,
+            is_me: false
         };
 
         let result = manager.save_mate(new_mate).await;
@@ -1266,7 +1423,7 @@ mod tests {
             CommonErrors::DatabaseError { cause, .. } => {
                 assert!(cause.as_ref().unwrap().contains("DB failure"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1311,7 +1468,7 @@ mod tests {
             CommonErrors::MissingResourceError { resource_id, .. } => {
                 assert_eq!(resource_id, &invalid_state);
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1321,7 +1478,8 @@ mod tests {
         let repo = Arc::new(MockAuthRepoFactory::default());
         let manager = TestManager::new(repo, config);
 
-        let result = manager.verify_all("test-state".to_string(), "valid-vp-token".to_string()).await;
+        let result =
+            manager.verify_all("test-state".to_string(), "valid-vp-token".to_string()).await;
 
         assert!(result.is_ok());
         let id = result.unwrap();
@@ -1336,7 +1494,8 @@ mod tests {
         let repo = Arc::new(MockAuthRepoFactory::default());
         let manager = TestManager::new(repo, config);
 
-        let result = manager.verify_all("test-state".to_string(), "invalid-vp-token".to_string()).await;
+        let result =
+            manager.verify_all("test-state".to_string(), "invalid-vp-token".to_string()).await;
 
         assert!(result.is_err());
 
@@ -1347,7 +1506,7 @@ mod tests {
             AuthErrors::SecurityError { cause, .. } => {
                 assert!(cause.as_ref().unwrap().contains("VPT signature is incorrect"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1368,7 +1527,7 @@ mod tests {
             success: None,
             status: "Pending".to_string(),
             created_at: Utc::now().naive_utc(),
-            ended_at: None,
+            ended_at: None
         };
 
         // Valid VP token JWT (you must generate one that meets the expected claims)
@@ -1402,7 +1561,7 @@ mod tests {
             success: None,
             status: "Pending".to_string(),
             created_at: Utc::now().naive_utc(),
-            ended_at: None,
+            ended_at: None
         };
 
         let vp_token = "invalid.jwt.token".to_string(); //<-- ERROR
@@ -1460,7 +1619,11 @@ mod tests {
         let token = encode(
             &header,
             &claims,
+<<<<<<< HEAD
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes())?
+=======
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes())?,
+>>>>>>> origin/main
         )?;
 
         let config = build_test_config();
@@ -1512,7 +1675,11 @@ mod tests {
         let token = encode(
             &header,
             &claims,
+<<<<<<< HEAD
+            &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap()
+=======
             &EncodingKey::from_rsa_pem(private_key_pem.as_bytes()).unwrap(),
+>>>>>>> origin/main
         )
         .unwrap();
 
@@ -1530,12 +1697,13 @@ mod tests {
             AuthErrors::SecurityError { cause, .. } => {
                 let cause_text = cause.as_ref().expect("Expected cause");
                 assert!(
-                    cause_text.contains("VCT token sub, credential subject & VP Holder do not match"),
+                    cause_text
+                        .contains("VCT token sub, credential subject & VP Holder do not match"),
                     "Expected holder mismatch error, got: {}",
                     cause_text
                 );
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1585,7 +1753,7 @@ mod tests {
                     cause_text
                 );
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1625,7 +1793,7 @@ mod tests {
             CommonErrors::DatabaseError { cause, .. } => {
                 assert!(cause.as_ref().unwrap().contains("Simulated DB failure in verification"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1660,7 +1828,7 @@ mod tests {
             CommonErrors::UnauthorizedError { cause, .. } => {
                 assert!(cause.as_ref().unwrap().contains("Invalid token"));
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 
@@ -1701,7 +1869,7 @@ mod tests {
             CommonErrors::MissingActionError { action, .. } => {
                 assert_eq!(action, "Onboarding");
             }
-            _ => panic!("Unexpected error type"),
+            _ => panic!("Unexpected error type")
         }
     }
 }

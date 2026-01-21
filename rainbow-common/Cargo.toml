@@ -30,3 +30,4 @@ tokio = { workspace = true }
 bytes = "1.10.1"
 serde_urlencoded = "0.7.1"
 serde_norway = { workspace = true }
+vaultrs = {workspace = true}

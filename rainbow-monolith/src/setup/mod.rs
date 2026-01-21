@@ -19,6 +19,7 @@
 
 pub mod boot;
 pub mod cmd;
+pub mod db_migrations;
 mod http_worker;
 
 pub use http_worker::CoreHttpWorker;

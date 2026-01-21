@@ -16,12 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::data::migrations::get_negotiation_agent_migrations;
 use rainbow_common::config::services::ContractsConfig;
-use rainbow_common::config::traits::DatabaseConfigTrait;
-use sea_orm::Database;
+use rainbow_common::vault::VaultTrait;
+use rainbow_common::vault::vault_rs::VaultService;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use std::sync::Arc;
 
 pub struct NegotiationAgentMigration;
 
@@ -36,10 +36,9 @@ impl MigratorTrait for NegotiationAgentMigration {
 }
 
 impl NegotiationAgentMigration {
-    pub async fn run(config: &ContractsConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ContractsConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+        let db_connection = vault.get_db_connection(config.clone()).await;
         // run migration
         Self::refresh(&db_connection).await?;
         Ok(())

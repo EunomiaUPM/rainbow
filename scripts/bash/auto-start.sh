@@ -92,7 +92,6 @@ spawn_terminal() {
 # ----------------------------
 # 5. Paths and Commands Definition
 # ----------------------------
-AUTHORITY_DIR="$BASE_DIR/rainbow-authority"
 CONSUMER_DIR="$BASE_DIR/rainbow-$MODULE"
 PROVIDER_DIR="$BASE_DIR/rainbow-$MODULE"
 
@@ -103,17 +102,13 @@ if [[ "$MODULE" == "core" ]]; then
 fi
 
 # Service commands to run inside the new terminals
-AUTHORITY_CMD="cargo run --manifest-path Cargo.toml start --env-file ../static/envs/.env.authority"
-CONSUMER_CMD="cargo run --manifest-path Cargo.toml consumer start --env-file ../static/envs/.env.consumer.core"
-PROVIDER_CMD="cargo run --manifest-path Cargo.toml provider start --env-file ../static/envs/.env.provider.core"
+CONSUMER_CMD="cargo run --manifest-path Cargo.toml consumer start --env-file static/envs/core.consumer.yaml"
+PROVIDER_CMD="cargo run --manifest-path Cargo.toml provider start --env-file static/envs/core.provider.yaml"
 
 
 # ----------------------------
 # 6. Start Services
 # ----------------------------
-
-# Start Authority service
-spawn_terminal "Rainbow Authority" "$AUTHORITY_CMD" "$AUTHORITY_DIR"
 
 # Start Consumer service
 spawn_terminal "Rainbow Consumer" "$CONSUMER_CMD" "$CONSUMER_DIR"

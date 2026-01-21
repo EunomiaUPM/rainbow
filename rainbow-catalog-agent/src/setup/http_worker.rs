@@ -47,6 +47,8 @@ use rainbow_common::errors::CommonErrors;
 use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::health::HealthRouter;
 use rainbow_common::http_client::HttpClient;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
 use std::sync::Arc;
@@ -58,12 +60,17 @@ use uuid::Uuid;
 
 pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
-    pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(
+        config: &CatalogConfig,
+        vault: Arc<VaultService>,
+        token: &CancellationToken,
+    ) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module catalog router
-        let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
+        let router =
+            Self::create_root_http_router(&config, vault.clone()).await?.merge(well_known_router).merge(health_router);
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
         let addr = format!("{}:{}", host, port);
@@ -85,8 +92,8 @@ impl CatalogHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<Router> {
-        let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
+    pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
+        let router = create_root_http_router(config, vault.clone()).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
                 .on_request(|request: &Request<_>, _span: &tracing::Span| {
@@ -103,12 +110,11 @@ impl CatalogHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
+    let db_connection = vault.get_db_connection(config.clone()).await;
     let config = Arc::new(config.clone());
-    let db_connection_url = config.get_full_db_url();
     let cache_connection_url = config.get_full_cache_url();
-    let db_connection = Database::connect(db_connection_url).await.expect("Database can't connect");
     let redis_client = redis::Client::open(cache_connection_url)?;
     let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
     let http_client = Arc::new(HttpClient::new(20, 3));

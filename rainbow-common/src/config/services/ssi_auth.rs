@@ -16,12 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
-    RoleTrait,
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
 };
-use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
 use crate::errors::{CommonErrors, ErrorLog};
 use serde::{Deserialize, Serialize};
@@ -53,57 +52,32 @@ impl SsiAuthConfig {
     pub fn is_gaia_active(&self) -> bool {
         self.gaia_active
     }
+    pub fn is_wallet_active(&self) -> bool {
+        self.wallet.is_some()
+    }
 }
 
 impl ConfigLoader for SsiAuthConfig {
     fn default(common_config: CommonConfig) -> Self {
-        match common_config.role {
-            RoleConfig::Consumer => Self {
-                common: common_config,
-                wallet: Some(WalletConfig {
-                    api: HostConfig {
-                        protocol: "http".to_string(),
-                        url: "127.0.0.1".to_string(),
-                        port: Some("7001".to_string()),
-                    },
-                    r#type: "email".to_string(),
-                    name: "RainbowConsumer".to_string(),
-                    email: "RainbowConsumer@rainbow.com".to_string(),
-                    password: "rainbow".to_string(),
-                    id: None,
-                }),
-                client: ClientConfig { class_id: "rainbow_consumer".to_string(), display: None },
-                gaia_active: false,
-            },
-            RoleConfig::Provider => Self {
-                common: common_config,
-                wallet: Some(WalletConfig {
-                    api: HostConfig {
-                        protocol: "http".to_string(),
-                        url: "127.0.0.1".to_string(),
-                        port: Some("7001".to_string()),
-                    },
-                    r#type: "email".to_string(),
-                    name: "RainbowProvider".to_string(),
-                    email: "RainbowProvider@rainbow.com".to_string(),
-                    password: "rainbow".to_string(),
-                    id: None,
-                }),
-                client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
-                gaia_active: false,
-            },
-            _ => {
-                let err = CommonErrors::missing_resource_new("", "For SsiAuthConfig RoleConfig must be provided");
-                error!("{}", err.log());
-                panic!("{}", err)
-            }
+        Self {
+            common: common_config,
+            wallet: Some(WalletConfig {
+                api: HostConfig {
+                    protocol: "http".to_string(),
+                    url: "127.0.0.1".to_string(),
+                    port: Some("7001".to_string()),
+                },
+                id: None,
+            }),
+            client: ClientConfig { class_id: "rainbow".to_string(), display: None },
+            gaia_active: false,
         }
     }
 
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        match Self::global_load(role, env_file.clone()) {
+    fn load(env_file: Option<String>) -> Self {
+        match Self::global_load(env_file.clone()) {
             Ok(data) => data.ssi_auth(),
-            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
+            Err(_) => Self::local_load(env_file).expect("Unable to load auth config"),
         }
     }
 }
@@ -119,9 +93,5 @@ impl HostConfigTrait for SsiAuthConfig {}
 impl DatabaseConfigTrait for SsiAuthConfig {}
 
 impl IsLocalTrait for SsiAuthConfig {}
-
-impl KeysPathTrait for SsiAuthConfig {}
-
-impl RoleTrait for SsiAuthConfig {}
 
 impl ApiConfigTrait for SsiAuthConfig {}

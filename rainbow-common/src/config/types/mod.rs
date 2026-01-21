@@ -28,4 +28,4 @@ mod wallet;
 pub use api::ApiConfig;
 pub use client::*;
 pub use host::*;
-pub use wallet::WalletConfig;
+pub use wallet::*;

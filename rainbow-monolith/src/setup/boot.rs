@@ -17,15 +17,16 @@
  *
  */
 use crate::setup::CoreHttpWorker;
-use rainbow_auth::mates;
+use rainbow_auth::ssi::data::entities::mates;
 use rainbow_catalog_agent::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::traits::{ApiConfigTrait, HostConfigTrait};
-use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_common::http_client::{HttpClient, HttpClientError};
+use rainbow_common::vault::vault_rs::VaultService;
 use std::str::FromStr;
+use std::sync::Arc;
 use tokio::fs;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::Sender;
@@ -38,8 +39,8 @@ pub struct CoreBoot;
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for CoreBoot {
     type Config = ApplicationConfig;
-    async fn load_config(role_config: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config> {
-        let config = Self::Config::load(role_config, env_file)?;
+    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config> {
+        let config = Self::Config::load(env_file)?;
         let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
         tracing::info!("Current Monolith Dataspace Agent Config:\n{}", table);
         Ok(config)
@@ -160,14 +161,14 @@ impl BootstrapServiceTrait for CoreBoot {
         Ok(())
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<Sender<()>> {
+    async fn start_services_background(config: &Self::Config, vault: Arc<VaultService>) -> anyhow::Result<Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();
 
         // workers
         tracing::info!("Spawning HTTP subsystem...");
-        let http_handle = CoreHttpWorker::spawn(config, &cancel_token).await?;
+        let http_handle = CoreHttpWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         // todo set grpc
 

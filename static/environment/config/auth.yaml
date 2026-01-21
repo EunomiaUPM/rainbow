@@ -1,0 +1,50 @@
+# ==========================
+# COMMON ANCHORS
+# ==========================
+http_host: &http_host
+  protocol: "https"
+  url: "dev-dataspaces.dit.upm.es"
+  port: null
+
+hosts_default: &hosts_default
+  http: *http_host
+  grpc: null
+  graphql: null
+
+api_version: &api_version "v1"
+
+min_known_config: &min_known_config
+  hosts: *hosts_default
+  api_version: *api_version
+
+is_catalog_datahub: &is_catalog_datahub false
+
+common_config: &common_config
+  hosts: *hosts_default
+  db:
+    db_type: Postgres
+    url: "127.0.0.1"
+    port: "1300"
+  api:
+    version: *api_version
+    openapi_path: "/home/ging/rainbow/static/specs/openapi/auth/auth_consumer.json"
+  is_local: false
+
+
+
+# ==========================
+# SSI AUTH
+# ==========================
+ssi_auth:
+  common: *common_config
+  wallet:
+    api:
+      protocol: "https"
+      url: "wallet.demo.walt.id"
+      port: null
+    id: null
+  client:
+    class_id: "rainbow_consumer"
+    display: null
+  gaia_active: false
+

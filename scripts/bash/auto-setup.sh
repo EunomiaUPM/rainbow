@@ -53,15 +53,6 @@ sleep 5
 
 
 # ----------------------------
-# 4. Authority Setup (Always runs setup for Authority)
-# ----------------------------
-echo ""
-echo "--- Running setup for Authority component ---"
-cargo run --manifest-path "$BASE_DIR/rainbow-authority/Cargo.toml" setup \
-  --env-file "$BASE_DIR/static/envs/.env.authority"
-
-
-# ----------------------------
 # 5. Consumer Setup
 # The setup command structure depends on whether 'core' or a specific module is targeted.
 # ----------------------------
@@ -86,12 +77,12 @@ echo ""
 if [[ "$MODULE" == "core" ]]; then
   echo "--- Running setup for Provider (all core modules) ---"
   cargo run --manifest-path "$BASE_DIR/rainbow-core/Cargo.toml" provider setup \
-    --env-file "$BASE_DIR/static/envs/.env.provider.core"
+    --env-file "$BASE_DIR/static/envs/core.consumer.yaml"
 else
   echo "--- Running setup for Provider module: $MODULE ---"
   # Targets the specific module's manifest file (e.g., rainbow-catalog/Cargo.toml)
   cargo run --manifest-path "$BASE_DIR/rainbow-$MODULE/Cargo.toml" provider setup \
-    --env-file "$BASE_DIR/static/envs/.env.provider.core"
+    --env-file "$BASE_DIR/static/envs/core.consumer.yaml"
 fi
 
 echo ""

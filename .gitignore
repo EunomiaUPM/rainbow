@@ -25,3 +25,13 @@ rainbow-pslm
 .run
 test_command_stub.sh
 venv
+
+# VAULT
+vault/**
+!vault/**/
+!vault/**/*.example
+!vault/**/*.gitkeep
+
+# ENVIRONMENT
+static/environment/envs/**
+!static/environment/envs/**/*.example

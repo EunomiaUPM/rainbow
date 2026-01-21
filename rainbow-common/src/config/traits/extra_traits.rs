@@ -16,23 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::traits::CommonConfigTrait;
-use crate::config::types::roles::RoleConfig;
 
 pub trait IsLocalTrait: CommonConfigTrait {
     fn is_local(&self) -> bool {
         self.common().is_local()
-    }
-}
-
-pub trait KeysPathTrait: CommonConfigTrait {
-    fn get_keys_path(&self) -> &str {
-        self.common().keys_path()
-    }
-}
-
-pub trait RoleTrait: CommonConfigTrait {
-    fn get_role(&self) -> &RoleConfig {
-        self.common().role()
     }
 }

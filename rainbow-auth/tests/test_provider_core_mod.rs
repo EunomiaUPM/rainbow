@@ -2,15 +2,27 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
+    use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
     use rainbow_common::config::provider_config::ApplicationProviderConfig;
     use rainbow_db::auth_provider::repo_factory::{
         factory_trait::AuthRepoFactoryTrait,
         traits::{
+<<<<<<< HEAD
+            AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+            AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait
+        }
+    };
+=======
             AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
             BusinessMatesRepoTrait, MatesRepoTrait,
         },
     };
     use std::sync::Arc;
+>>>>>>> origin/main
 
     // Mock
 
@@ -18,31 +30,20 @@ mod tests {
     pub struct MockRepoFactory;
 
     impl AuthRepoFactoryTrait for MockRepoFactory {
-        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
-            unimplemented!()
-        }
-        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
-            unimplemented!()
-        }
-        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> {
-            unimplemented!()
-        }
-        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
-            unimplemented!()
-        }
-        fn mates(&self) -> Arc<dyn MatesRepoTrait> {
-            unimplemented!()
-        }
-        fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> {
-            unimplemented!()
-        }
+        fn request(&self) -> Arc<dyn AuthRequestRepoTrait> { unimplemented!() }
+        fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> { unimplemented!() }
+        fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> { unimplemented!() }
+        fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> { unimplemented!() }
+        fn mates(&self) -> Arc<dyn MatesRepoTrait> { unimplemented!() }
+        fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait> { unimplemented!() }
     }
 
     pub fn mock_config(base_url: &str) -> ApplicationProviderConfig {
         let mut config = ApplicationProviderConfig::default();
 
         config.ssi_wallet_config.wallet_api_protocol = "http".to_string();
-        config.ssi_wallet_config.wallet_api_url = base_url.replace("http://", "").replace("https://", "");
+        config.ssi_wallet_config.wallet_api_url =
+            base_url.replace("http://", "").replace("https://", "");
         config.ssi_wallet_config.wallet_api_port = None; // O Some("7001".to_string()) si quieres incluir puerto
         config.ssi_wallet_config.wallet_type = "email".to_string();
         config.ssi_wallet_config.wallet_name = "TestWallet".to_string();
@@ -52,12 +53,17 @@ mod tests {
         config
     }
 
+<<<<<<< HEAD
+    // Tests
+=======
     //Tests
+>>>>>>> origin/main
 
     #[tokio::test]
     async fn test_manager_new_initializes_correctly() {
-        use rainbow_auth::ssi_auth::provider::core::Manager;
         use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::provider::core::Manager;
 
         let config = mock_config("http://localhost");
         let repo = Arc::new(MockRepoFactory);

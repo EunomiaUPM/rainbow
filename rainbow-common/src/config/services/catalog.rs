@@ -16,14 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CacheConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait,
-    IsLocalTrait, KeysPathTrait, RoleTrait,
+    IsLocalTrait,
 };
 use crate::config::types::cache::{CacheConfig, CacheType};
-use crate::config::types::roles::RoleConfig;
 use crate::config::types::HostConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::utils::get_host_helper;
@@ -100,10 +100,10 @@ impl ConfigLoader for CatalogConfig {
         }
     }
 
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        match Self::global_load(role, env_file.clone()) {
+    fn load(env_file: Option<String>) -> Self {
+        match Self::global_load(env_file.clone()) {
             Ok(data) => data.catalog(),
-            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
+            Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
         }
     }
 }
@@ -126,9 +126,6 @@ impl DatabaseConfigTrait for CatalogConfig {}
 
 impl IsLocalTrait for CatalogConfig {}
 
-impl KeysPathTrait for CatalogConfig {}
-
-impl RoleTrait for CatalogConfig {}
 impl ApiConfigTrait for CatalogConfig {}
 
 impl CatalogConfig {
