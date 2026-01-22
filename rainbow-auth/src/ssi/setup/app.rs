@@ -136,7 +136,7 @@ impl AuthApplication {
     }
 
     pub async fn run_tls(config: &SsiAuthConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
-        let cert = expect_from_env("VAULT_APP_CLIENT_CERT");
+        let cert = expect_from_env("VAULT_APP_ROOT_CLIENT_KEY");
         let pkey = expect_from_env("VAULT_APP_CLIENT_KEY");
         let cert: PemHelper = vault.read(None, &cert).await?;
         let pkey: PemHelper = vault.read(None, &pkey).await?;

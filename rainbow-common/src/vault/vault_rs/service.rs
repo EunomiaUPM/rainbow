@@ -149,6 +149,7 @@ impl VaultTrait for VaultService {
 
         Self::insert_pem(&mut map, config_path.join("vault-cert.pem"), "VAULT_APP_CLIENT_CERT")?;
         Self::insert_pem(&mut map, config_path.join("vault-key.pem"), "VAULT_APP_CLIENT_KEY")?;
+        Self::insert_pem(&mut map, config_path.join("vault-ca.pem"), "VAULT_APP_ROOT_CLIENT_KEY")?;
 
         Ok(map)
     }
