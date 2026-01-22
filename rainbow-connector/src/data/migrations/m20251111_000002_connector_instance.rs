@@ -54,10 +54,7 @@ pub enum ConnectorInstances {
     TemplateName,
     TemplateVersion,
     DistributionId,
-    CurrentState,
     CreatedAt,
-    UpdatedAt,
-    LockVersion,
     ConfigurationValues,
     RuntimeContext,
 }
@@ -67,7 +64,4 @@ pub enum ConnectorTemplates {
     Table,
     Name,
     Version,
-    Author,
-    CreatedAt,
-    Spec,
 }

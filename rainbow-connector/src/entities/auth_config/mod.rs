@@ -1,3 +1,6 @@
+pub(crate) mod validation;
+
+use crate::entities::common::parameters::{TemplateString, TemplateVecString};
 use crate::entities::common::secret_management::SecretString;
 use serde::{Deserialize, Serialize};
 
@@ -11,23 +14,22 @@ pub enum AuthenticationConfig {
         token: SecretString,
     },
     ApiKey {
-        key: String,
+        key: TemplateString,
         value: SecretString,
         location: ApiKeyLocation, // Enum: Header, Query
     },
     OAuth2 {
         grant_type: OAuthGrantType, // Enum: ClientCredentials, AuthorizationCode...
-        token_url: String,
-        client_id: String,
+        token_url: TemplateString,
+        client_id: TemplateString,
         client_secret: SecretString,
-        scopes: Vec<String>,
-        // ... otros campos OAuth
+        scopes: TemplateVecString,
     },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BasicAuthConfig {
-    username: String,
+    username: TemplateString,
     password: SecretString,
 }
 

@@ -3,7 +3,8 @@ pub(crate) mod validator;
 
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
 use crate::entities::auth_config::AuthenticationConfig;
-use crate::entities::common::parameters::ParameterDefinition;
+use crate::entities::common::parameters::{ParameterDefinition, TemplateVisitable};
+use crate::entities::connector_template::validator::Visitor;
 use crate::entities::interaction::InteractionConfig;
 use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};
@@ -24,6 +25,24 @@ pub struct ConnectorTemplateDto {
     pub authentication: AuthenticationConfig,
     pub interaction: InteractionConfig,
     pub parameters: Vec<ParameterDefinition>,
+}
+
+impl TemplateVisitable for ConnectorTemplateDto {
+    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+        visitor.visit_connector_template(self)?;
+
+        // 1. Authentication parameter delegation
+        visitor.enter_scope("authentication");
+        self.authentication.accept(visitor)?;
+        visitor.exit_scope();
+
+        // 2. Interaction parameter delegation
+        visitor.enter_scope("interaction");
+        self.interaction.accept(visitor)?;
+        visitor.exit_scope();
+
+        Ok(())
+    }
 }
 
 impl TryFrom<ConnectorTemplateDto> for NewConnectorTemplateModel {
@@ -59,6 +78,6 @@ pub trait ConnectorTemplateEntitiesTrait: Send + Sync {
         name: &String,
         version: &String,
     ) -> anyhow::Result<Option<ConnectorTemplateDto>>;
-    async fn create_template(&self, new_template: &ConnectorTemplateDto) -> anyhow::Result<ConnectorTemplateDto>;
+    async fn create_template(&self, new_template: &mut ConnectorTemplateDto) -> anyhow::Result<ConnectorTemplateDto>;
     async fn delete_template_by_name_and_version(&self, name: &String, version: &String) -> anyhow::Result<()>;
 }

@@ -27,10 +27,3 @@ pub fn get_connector_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20251111_000002_connector_instance::Migration),
     ]
 }
-pub struct Migrator;
-#[async_trait::async_trait]
-impl MigratorTrait for Migrator {
-    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        get_connector_migrations()
-    }
-}

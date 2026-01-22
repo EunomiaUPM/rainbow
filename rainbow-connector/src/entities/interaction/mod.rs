@@ -1,3 +1,5 @@
+pub(crate) mod validation;
+
 use crate::entities::resource::ProtocolSpec;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +17,6 @@ pub enum InteractionConfig {
 #[serde(rename_all = "camelCase")]
 pub struct PullLifecycle {
     pub data_access: ProtocolSpec,
-    pub scheduler: SchedulerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,12 +24,4 @@ pub struct PullLifecycle {
 pub struct PushLifecycle {
     pub subscribe: ProtocolSpec,
     pub unsubscribe: Option<ProtocolSpec>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum SchedulerConfig {
-    Interval { seconds: u64 },
-    Cron { expression: String },
 }

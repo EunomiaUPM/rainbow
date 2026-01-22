@@ -20,7 +20,6 @@
 use crate::data::entities::connector_templates;
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
 use crate::data::repo_traits::connector_repo_errors::ConnectorAgentRepoErrors;
-use sea_orm::EntityTrait;
 
 #[async_trait::async_trait]
 pub trait ConnectorTemplateRepoTrait: Send + Sync {

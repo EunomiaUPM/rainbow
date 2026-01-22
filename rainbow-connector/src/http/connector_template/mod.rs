@@ -64,11 +64,11 @@ impl ConnectorTemplateRouter {
         State(state): State<ConnectorTemplateRouter>,
         input: Result<Json<ConnectorTemplateDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
+        let mut input = match extract_payload(input) {
             Ok(v) => v,
             Err(e) => return e,
         };
-        match state.service.create_template(&input).await {
+        match state.service.create_template(&mut input).await {
             Ok(template) => (StatusCode::OK, Json(template)).into_response(),
             Err(err) => err.to_response(),
         }
