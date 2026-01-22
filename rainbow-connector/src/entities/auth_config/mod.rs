@@ -1,4 +1,4 @@
-pub(crate) mod validation;
+pub(crate) mod parameter_validation;
 
 use crate::entities::common::parameters::{TemplateString, TemplateVecString};
 use crate::entities::common::secret_management::SecretString;

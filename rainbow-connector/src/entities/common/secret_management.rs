@@ -1,5 +1,5 @@
 use crate::entities::common::parameters::{TemplateString, TemplateVisitable};
-use crate::entities::connector_template::validator::Visitor;
+use crate::entities::common::parameter_visitor::ParameterVisitor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,7 +26,7 @@ impl SecretString {
 }
 
 impl TemplateVisitable for SecretString {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("source");
         match &mut self.source {
             SecretSource::Plain(secret) => {

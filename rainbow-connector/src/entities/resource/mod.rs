@@ -1,5 +1,5 @@
 use crate::entities::common::parameters::{TemplateMapString, TemplateString, TemplateVecString, TemplateVisitable};
-use crate::entities::connector_template::validator::Visitor;
+use crate::entities::common::parameter_visitor::ParameterVisitor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub enum ProtocolSpec {
 }
 
 impl TemplateVisitable for ProtocolSpec {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             ProtocolSpec::Http(spec) => {
                 visitor.enter_scope("http");
@@ -38,7 +38,7 @@ pub struct HttpSpec {
 }
 
 impl TemplateVisitable for HttpSpec {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("urlTemplate");
         self.url_template.accept(visitor)?;
         visitor.exit_scope();
@@ -71,7 +71,7 @@ pub struct KafkaSpec {
 }
 
 impl TemplateVisitable for KafkaSpec {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("brokers");
         self.brokers.accept(visitor)?;
         visitor.exit_scope();

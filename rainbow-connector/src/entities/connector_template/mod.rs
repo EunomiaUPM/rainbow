@@ -4,7 +4,7 @@ pub(crate) mod validator;
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
 use crate::entities::auth_config::AuthenticationConfig;
 use crate::entities::common::parameters::{ParameterDefinition, TemplateVisitable};
-use crate::entities::connector_template::validator::Visitor;
+use crate::entities::common::parameter_visitor::ParameterVisitor;
 use crate::entities::interaction::InteractionConfig;
 use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};
@@ -28,15 +28,11 @@ pub struct ConnectorTemplateDto {
 }
 
 impl TemplateVisitable for ConnectorTemplateDto {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
-        visitor.visit_connector_template(self)?;
-
-        // 1. Authentication parameter delegation
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("authentication");
         self.authentication.accept(visitor)?;
         visitor.exit_scope();
 
-        // 2. Interaction parameter delegation
         visitor.enter_scope("interaction");
         self.interaction.accept(visitor)?;
         visitor.exit_scope();

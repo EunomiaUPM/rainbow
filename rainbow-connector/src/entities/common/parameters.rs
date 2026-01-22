@@ -1,4 +1,4 @@
-use crate::entities::connector_template::validator::{ExpectedType, Visitor};
+use crate::entities::common::parameter_visitor::{ExpectedType, ParameterVisitor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -58,18 +58,18 @@ pub enum TemplateMapString {
 }
 
 pub trait TemplateVisitable {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error>;
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error>;
 }
 
 impl TemplateVisitable for TemplateString {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         let _ = visitor.scan_template_candidate(self.as_str(), ExpectedType::AnyString);
         Ok(())
     }
 }
 
 impl TemplateVisitable for TemplateInt {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             TemplateInt::Value(_) => Ok(()),
             TemplateInt::Template(str) => {
@@ -81,7 +81,7 @@ impl TemplateVisitable for TemplateInt {
 }
 
 impl TemplateVisitable for TemplateBoolean {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             TemplateBoolean::Value(_) => Ok(()),
             TemplateBoolean::Template(s) => {
@@ -93,7 +93,7 @@ impl TemplateVisitable for TemplateBoolean {
 }
 
 impl TemplateVisitable for TemplateVecString {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             TemplateVecString::Value(list) => {
                 for (index, item) in list.iter_mut().enumerate() {
@@ -111,7 +111,7 @@ impl TemplateVisitable for TemplateVecString {
 }
 
 impl TemplateVisitable for TemplateMapString {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             TemplateMapString::Value(map) => {
                 for (key, value) in map.iter_mut() {

@@ -1,25 +1,8 @@
 use crate::entities::common::parameters::{ParameterDefinition, ParameterType};
-use crate::entities::connector_template::ConnectorTemplateDto;
+use crate::entities::common::parameter_visitor::{ExpectedType, ParameterVisitor};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::OnceLock;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ExpectedType {
-    AnyString,
-    StrictInt,
-    StrictBool,
-    StrictVec,
-    StrictMap,
-}
-
-pub trait Visitor {
-    type Error;
-    fn enter_scope(&mut self, name: &str);
-    fn exit_scope(&mut self);
-    fn scan_template_candidate(&mut self, value: &str, expected: ExpectedType);
-    fn visit_connector_template(&mut self, node: &mut ConnectorTemplateDto) -> Result<(), Self::Error>;
-}
 
 fn template_regex() -> &'static Regex {
     static REGEX: OnceLock<Regex> = OnceLock::new();
@@ -67,7 +50,7 @@ impl<'a> TemplateValidator<'a> {
     }
 }
 
-impl<'a> Visitor for TemplateValidator<'a> {
+impl<'a> ParameterVisitor for TemplateValidator<'a> {
     type Error = anyhow::Error;
     fn enter_scope(&mut self, name: &str) {
         self.context_stack.push(name.to_string());
@@ -97,9 +80,5 @@ impl<'a> Visitor for TemplateValidator<'a> {
                 }
             }
         }
-    }
-
-    fn visit_connector_template(&mut self, _node: &mut ConnectorTemplateDto) -> Result<(), Self::Error> {
-        Ok(())
     }
 }

@@ -1,4 +1,4 @@
-pub(crate) mod validation;
+pub(crate) mod parameter_validation;
 
 use crate::entities::resource::ProtocolSpec;
 use serde::{Deserialize, Serialize};

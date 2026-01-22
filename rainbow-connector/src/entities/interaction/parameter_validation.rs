@@ -1,9 +1,9 @@
 use crate::entities::common::parameters::TemplateVisitable;
-use crate::entities::connector_template::validator::Visitor;
+use crate::entities::common::parameter_visitor::ParameterVisitor;
 use crate::entities::interaction::{InteractionConfig, PullLifecycle, PushLifecycle};
 
 impl TemplateVisitable for InteractionConfig {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
             InteractionConfig::Pull(lifecycle) => {
                 visitor.enter_scope("pull");
@@ -21,7 +21,7 @@ impl TemplateVisitable for InteractionConfig {
 }
 
 impl TemplateVisitable for PullLifecycle {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("dataAccess");
         self.data_access.accept(visitor)?;
         visitor.exit_scope();
@@ -30,7 +30,7 @@ impl TemplateVisitable for PullLifecycle {
 }
 
 impl TemplateVisitable for PushLifecycle {
-    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+    fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         visitor.enter_scope("subscribe");
         self.subscribe.accept(visitor)?;
         visitor.exit_scope();
