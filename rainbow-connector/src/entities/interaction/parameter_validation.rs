@@ -1,5 +1,5 @@
-use crate::entities::common::parameters::TemplateVisitable;
 use crate::entities::common::parameter_visitor::ParameterVisitor;
+use crate::entities::common::parameters::TemplateVisitable;
 use crate::entities::interaction::{InteractionConfig, PullLifecycle, PushLifecycle};
 
 impl TemplateVisitable for InteractionConfig {

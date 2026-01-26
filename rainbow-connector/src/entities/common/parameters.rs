@@ -2,8 +2,6 @@ use crate::entities::common::parameter_visitor::{ExpectedType, ParameterVisitor}
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub type ParameterName = String;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum ParameterType {
@@ -17,14 +15,39 @@ pub enum ParameterType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ParameterAutoFilledType {
+    SysUrn,
+    SysToken,
+    SysTimestamp,
+    SysIso8601,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoFillable {
+    #[serde(default)]
+    pub auto_filled: bool,
+    pub auto_filled_type: Option<ParameterAutoFilledType>,
+}
+
+impl Default for AutoFillable {
+    fn default() -> Self {
+        Self { auto_filled: false, auto_filled_type: None }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ParameterDefinition {
-    pub name: ParameterName,
+    pub name: String,
     pub title: String,
     pub description: Option<String>,
     pub param_type: ParameterType,
     pub required: bool,
     pub default_value: Option<String>,
+    #[serde(flatten)]
+    pub auto_fillable: AutoFillable,
 }
 
 pub type TemplateString = String;

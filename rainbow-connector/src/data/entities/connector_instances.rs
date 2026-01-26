@@ -14,8 +14,10 @@ pub struct Model {
     pub template_version: String,
     pub distribution_id: String,
     pub created_at: DateTimeWithTimeZone,
-    pub configuration_values: Json,
-    pub runtime_context: Json,
+    pub metadata: Json,
+    pub configuration_parameters: Json,
+    pub authentication: Json,
+    pub interaction: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -42,8 +44,10 @@ pub struct NewConnectorInstanceModel {
     pub template_name: String,
     pub template_version: String,
     pub distribution_id: String,
-    pub configuration_values: Json,
-    pub runtime_context: Json,
+    pub metadata: Json,
+    pub configuration_parameters: Json,
+    pub authentication: Json,
+    pub interaction: Json,
 }
 
 impl From<NewConnectorInstanceModel> for ActiveModel {
@@ -62,8 +66,10 @@ impl From<NewConnectorInstanceModel> for ActiveModel {
             template_version: ActiveValue::Set(dto.template_version),
             distribution_id: ActiveValue::Set(dto.distribution_id),
             created_at: ActiveValue::Set(now),
-            configuration_values: ActiveValue::Set(dto.configuration_values),
-            runtime_context: ActiveValue::Set(dto.runtime_context),
+            metadata: ActiveValue::Set(dto.metadata),
+            configuration_parameters: ActiveValue::Set(dto.configuration_parameters),
+            authentication: ActiveValue::Set(dto.authentication),
+            interaction: ActiveValue::Set(dto.interaction),
         }
     }
 }

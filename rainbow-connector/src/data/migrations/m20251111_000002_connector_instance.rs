@@ -19,8 +19,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ConnectorInstances::TemplateVersion).string().not_null())
                     .col(ColumnDef::new(ConnectorInstances::DistributionId).string().not_null())
                     .col(ColumnDef::new(ConnectorInstances::CreatedAt).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(ConnectorInstances::ConfigurationValues).json_binary().not_null())
-                    .col(ColumnDef::new(ConnectorInstances::RuntimeContext).json_binary().not_null())
+                    .col(ColumnDef::new(ConnectorInstances::Metadata).json_binary().not_null())
+                    .col(ColumnDef::new(ConnectorInstances::ConfigurationParameters).json_binary().not_null())
+                    .col(ColumnDef::new(ConnectorInstances::Authentication).json_binary().not_null())
+                    .col(ColumnDef::new(ConnectorInstances::Interaction).json_binary().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_instance_template")
@@ -55,8 +57,10 @@ pub enum ConnectorInstances {
     TemplateVersion,
     DistributionId,
     CreatedAt,
-    ConfigurationValues,
-    RuntimeContext,
+    Metadata,
+    ConfigurationParameters,
+    Authentication,
+    Interaction,
 }
 
 #[derive(Iden)]

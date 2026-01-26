@@ -3,8 +3,8 @@ pub(crate) mod validator;
 
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
 use crate::entities::auth_config::AuthenticationConfig;
-use crate::entities::common::parameters::{ParameterDefinition, TemplateVisitable};
 use crate::entities::common::parameter_visitor::ParameterVisitor;
+use crate::entities::common::parameters::{ParameterDefinition, TemplateVisitable};
 use crate::entities::interaction::InteractionConfig;
 use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};

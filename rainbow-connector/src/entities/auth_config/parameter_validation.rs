@@ -1,6 +1,6 @@
 use crate::entities::auth_config::AuthenticationConfig;
-use crate::entities::common::parameters::TemplateVisitable;
 use crate::entities::common::parameter_visitor::ParameterVisitor;
+use crate::entities::common::parameters::TemplateVisitable;
 
 impl TemplateVisitable for AuthenticationConfig {
     fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {

@@ -1,5 +1,5 @@
-use crate::entities::common::parameters::{TemplateString, TemplateVisitable};
 use crate::entities::common::parameter_visitor::ParameterVisitor;
+use crate::entities::common::parameters::{TemplateString, TemplateVisitable};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
