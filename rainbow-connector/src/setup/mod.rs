@@ -2,11 +2,13 @@ use crate::data::factory_sql::ConnectorRepoForSql;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::connector_instance::connector_instance::ConnectorInstanceEntitiesService;
 use crate::entities::connector_template::connector_template::ConnectorTemplateEntitiesService;
+use crate::facades::distribution_resolver_facade::data_service_resolver_facade::DistributionFacadeServiceForConnector;
 use crate::http::connector_instance::ConnectorInstanceRouter;
 use crate::http::connector_template::ConnectorTemplateRouter;
 use axum::Router;
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::DatabaseConfigTrait;
+use rainbow_common::http_client::HttpClient;
 use sea_orm::Database;
 use std::sync::Arc;
 
@@ -24,6 +26,13 @@ impl ConnectorSetup {
     pub async fn build_control_router(&self, config: &CatalogConfig) -> Router {
         let connector_repo = self.get_connector_repo(config).await;
         let config = Arc::new(config.clone());
+        let http_client = Arc::new(HttpClient::new(3, 1));
+
+        let distribution_facade = Arc::new(DistributionFacadeServiceForConnector::new(
+            config.clone(),
+            http_client.clone(),
+        ));
+
         let connector_template_service = Arc::new(ConnectorTemplateEntitiesService::new(
             connector_repo.clone(),
         ));
@@ -31,6 +40,7 @@ impl ConnectorSetup {
             ConnectorTemplateRouter::new(connector_template_service.clone(), config.clone()).router();
         let connector_instance_service = Arc::new(ConnectorInstanceEntitiesService::new(
             connector_repo.clone(),
+            distribution_facade.clone(),
         ));
         let connector_instance_router = ConnectorInstanceRouter::new(connector_instance_service.clone()).router();
         Router::new().nest("/templates", connector_template_router).nest("/instances", connector_instance_router)

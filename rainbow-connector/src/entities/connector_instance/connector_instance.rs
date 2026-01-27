@@ -4,6 +4,7 @@ use crate::entities::auth_config::AuthenticationConfig;
 use crate::entities::connector_instance::{ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto};
 use crate::entities::connector_template::ConnectorMetadata;
 use crate::entities::interaction::InteractionConfig;
+use crate::facades::distribution_resolver_facade::DistributionFacadeTrait;
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
@@ -12,11 +13,12 @@ use urn::Urn;
 
 pub struct ConnectorInstanceEntitiesService {
     repo: Arc<dyn ConnectorRepoTrait>,
+    distribution_facade: Arc<dyn DistributionFacadeTrait>,
 }
 
 impl ConnectorInstanceEntitiesService {
-    pub fn new(repo: Arc<dyn ConnectorRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn ConnectorRepoTrait>, distribution_facade: Arc<dyn DistributionFacadeTrait>) -> Self {
+        Self { repo, distribution_facade }
     }
 
     fn map_model_to_dto(model: connector_instances::Model) -> anyhow::Result<ConnectorInstanceDto> {
@@ -97,7 +99,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
         &self,
         instance_dto: &mut ConnectorInstantiationDto,
     ) -> anyhow::Result<ConnectorInstanceDto> {
-        // 1. Fetch Template
+        // fetch template
         let template = self
             .repo
             .get_templates_repo()
@@ -124,7 +126,25 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             }
         };
 
-        // 2. Prepare Data
+        // fetch distribution
+        let distribution_id = instance_dto.distribution_id.to_string();
+        let _ = self.distribution_facade.resolve_distribution_by_id(&distribution_id).await.map_err(|e| {
+            let err = CommonErrors::parse_new(&format!("Error resolving associated distribution: {}", e));
+            error!("{}", err.log());
+            err
+        })?;
+
+        // edit or create
+        let current_instance =
+            self.repo.get_instances_repo().get_instances_by_distribution(&distribution_id).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
+
+        // meter relation
+
+        // prepare data
         let metadata_json = serde_json::to_value(&instance_dto.metadata).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Error serializing metadata: {}", e));
             error!("{}", err.log());
@@ -137,30 +157,27 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             err
         })?;
 
-        // Extract authentication and interaction directly from template spec
         let auth_json = template_model.spec["authentication"].clone();
         let inter_json = template_model.spec["interaction"].clone();
 
-        // 3. Create Model
-        let distribution_urn = instance_dto.distribution_id.to_string();
-
+        // persist instance
         let new_instance = connector_instances::NewConnectorInstanceModel {
-            id: None, // Will be generated
+            id: None,
             template_name: instance_dto.template_name.clone(),
             template_version: instance_dto.template_version.clone(),
-            distribution_id: distribution_urn,
+            distribution_id: distribution_id,
             metadata: metadata_json,
             configuration_parameters: params_json,
             authentication: auth_json,
             interaction: inter_json,
         };
-
-        // 4. Save
         let saved_model = self.repo.get_instances_repo().create_instance(&new_instance).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());
             err
         })?;
+
+        // persist relation
 
         // 5. Return DTO
         Self::map_model_to_dto(saved_model)

@@ -23,6 +23,7 @@ use serde::Deserialize;
 pub mod data_service_resolver_facade;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Distribution {
     pub id: String,
     pub dct_issued: DateTimeWithTimeZone,

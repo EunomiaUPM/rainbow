@@ -67,7 +67,7 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("idx-transfer_agent_process-properties-gin") // Sin '?' aquí
+                    .name("idx-transfer_agent_process-properties_gin") // Sin '?' aquí
                     .table(TransferAgentProcess::Table) // Es buena práctica especificar la tabla también
                     .to_owned(),
             )

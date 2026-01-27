@@ -26,6 +26,8 @@ pub enum ConnectorAgentRepoErrors {
     ConnectorTemplateRepoErrors(ConnectorTemplateRepoErrors),
     #[error("Connector Instance Repo error: {0}")]
     ConnectorInstanceRepoErrors(ConnectorInstanceRepoErrors),
+    #[error("Connector Relation Repo error: {0}")]
+    ConnectorDistroRelationRepoErrors(ConnectorDistroRelationRepoErrors),
 }
 
 #[derive(Error, Debug)]
@@ -48,8 +50,24 @@ pub enum ConnectorInstanceRepoErrors {
     ErrorFetchingInstance(Error),
     #[error("Error creating connector instance. {0}")]
     ErrorCreatingInstance(Error),
+    #[error("Error creating connector instance by duplication. {0}")]
+    ErrorCreatingTemplateByDuplication(Error),
     #[error("Error deleting connector instance. {0}")]
     ErrorDeletingInstance(Error),
     #[error("Error updating connector instance. {0}")]
     ErrorUpdatingInstance(Error),
+}
+
+#[derive(Error, Debug)]
+pub enum ConnectorDistroRelationRepoErrors {
+    #[error("Relation not found")]
+    RelationNotFound,
+    #[error("Error fetching relation. {0}")]
+    ErrorFetchingRelation(Error),
+    #[error("Error creating relation. {0}")]
+    ErrorCreatingRelation(Error),
+    #[error("Error deleting relation. {0}")]
+    ErrorDeletingRelation(Error),
+    #[error("Error updating relation. {0}")]
+    ErrorUpdatingRelation(Error),
 }

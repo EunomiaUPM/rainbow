@@ -21,9 +21,12 @@ use sea_orm_migration::prelude::*;
 
 mod m20251111_000001_connector_template;
 mod m20251111_000002_connector_instance;
+mod m20251111_000003_connector_distribution_relation;
+
 pub fn get_connector_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20251111_000001_connector_template::Migration),
         Box::new(m20251111_000002_connector_instance::Migration),
+        Box::new(m20251111_000003_connector_distribution_relation::Migration),
     ]
 }

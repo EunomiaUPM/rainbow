@@ -2,7 +2,7 @@ use crate::data::entities::connector_instances;
 use crate::data::entities::connector_instances::NewConnectorInstanceModel;
 use crate::data::repo_traits::connector_instance_repo::ConnectorInstanceRepoTrait;
 use crate::data::repo_traits::connector_repo_errors::{ConnectorAgentRepoErrors, ConnectorInstanceRepoErrors};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, RuntimeErr, SqlxError};
 
 pub struct ConnectorInstanceRepoForSql {
     db_connection: DatabaseConnection,
@@ -25,9 +25,29 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
 
         match instance {
             Ok(instance) => Ok(instance),
-            Err(err) => Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
-                ConnectorInstanceRepoErrors::ErrorCreatingInstance(err.into()),
-            )),
+            Err(err) => match err {
+                DbErr::Query(RuntimeErr::SqlxError(SqlxError::Database(ref db_err)))
+                | DbErr::Exec(RuntimeErr::SqlxError(SqlxError::Database(ref db_err))) => {
+                    if let Some(code) = db_err.code() {
+                        if code == "23505" && db_err.message().contains("idx_unique_distribution_connector") {
+                            Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
+                                ConnectorInstanceRepoErrors::ErrorCreatingTemplateByDuplication(err.into()),
+                            ))
+                        } else {
+                            Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
+                                ConnectorInstanceRepoErrors::ErrorCreatingInstance(err.into()),
+                            ))
+                        }
+                    } else {
+                        Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
+                            ConnectorInstanceRepoErrors::ErrorCreatingInstance(err.into()),
+                        ))
+                    }
+                }
+                _ => Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
+                    ConnectorInstanceRepoErrors::ErrorCreatingInstance(err.into()),
+                )),
+            },
         }
     }
 
