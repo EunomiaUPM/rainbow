@@ -19,6 +19,15 @@ min_known_config: &min_known_config
 
 is_catalog_datahub: &is_catalog_datahub false
 
+policy_templates_folder: &policy_templates_folder "../static/policy_templates/"
+
+cache_config: &cache_config
+  cache_type: Redis
+  url: "127.0.0.1"
+  port: "6379"
+  user: "default"
+  password: "ds_core_provider_redis"
+
 common_config: &common_config
   hosts: *hosts_default
   db:
@@ -36,16 +45,20 @@ common_config: &common_config
 # ==========================
 monolith:
   common: *common_config
+  cache: *cache_config
 
 # ==========================
 # CATALOG
 # ==========================
 catalog:
   common: *common_config
+  cache: *cache_config
   is_datahub: *is_catalog_datahub
+  policy_templates_folder: *policy_templates_folder
   datahub_host: null
   datahub_token: null
   ssi_auth: *min_known_config
+  contracts: *min_known_config
 
 # ==========================
 # SSI AUTH
@@ -62,6 +75,21 @@ ssi_auth:
     class_id: "rainbow_provider"
     display: null
   gaia_active: false
+  stuff_to_issue:
+    vc_model: JwtVc
+    w3c_data_model: V1
+    dataspace_id: null
+    federated_catalog_uri: null
+  requirements_to_verify:
+    is_cert_allowed: false
+    vcs_requested: [ ]
+  did_config:
+    did: "did:jwk:eyJrdHkiOiJSU0EiLAJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ"
+    type: Jwk
+    did_web_options: null
+    #    domain: "CHANGE_ME"
+    #    path: null
+
 
 # ==========================
 # CONTRACTS

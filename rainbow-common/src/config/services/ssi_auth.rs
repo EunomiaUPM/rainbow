@@ -33,7 +33,7 @@ pub struct SsiAuthConfig {
     common: CommonConfig,
     wallet: Option<WalletConfig>,
     client: ClientConfig,
-    did: DidConfig,
+    did_config: DidConfig,
     stuff_to_issue: StuffToIssue,
     requirements_to_verify: RequirementsToVerify,
     gaia_active: bool,
@@ -61,7 +61,7 @@ impl SsiAuthConfig {
         self.wallet.is_some()
     }
     pub fn did(&self) -> DidConfig {
-        self.did.clone()
+        self.did_config.clone()
     }
     pub fn stuff_to_issue(&self) -> StuffToIssue {
         self.stuff_to_issue.clone()

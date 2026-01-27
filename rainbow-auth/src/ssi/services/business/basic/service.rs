@@ -20,7 +20,7 @@ use super::config::{BusinessConfig, BusinessConfigTrait};
 use crate::ssi::types::business::BusinessResponse;
 use chrono::Utc;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rand::distributions::Alphanumeric;
+use rand::distr::Alphanumeric;
 use rand::Rng;
 use uuid::Uuid;
 use ymir::config::traits::HostsConfigTrait;
@@ -45,7 +45,7 @@ impl BusinessTrait for BasicBusinessService {
     ) -> (recv_request::NewModel, recv_verification::Model) {
         let id = Uuid::new_v4().to_string();
         let nonce: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+            rand::rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let provider_url = format!(
             "{}{}",
             self.config.hosts().get_host(HostType::Http),
