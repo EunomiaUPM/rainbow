@@ -38,20 +38,34 @@ services:
       - ../vault/provider/config:/vault/config
       - ../vault/provider/data:/vault/file
     environment:
-      VAULT_CACERT: /vault/config/root-ca.pem
+#      VAULT_CACERT: /vault/config/root-ca.pem
+#      VAULT_LOCAL_CONFIG: >
+#        {
+#          "storage": { "file": { "path": "/vault/file" } },
+#          "listener": [{
+#            "tcp": {
+#              "address": "0.0.0.0:8200",
+#              "tls_cert_file": "/vault/config/vault-cert.pem",
+#              "tls_key_file": "/vault/config/vault-key.pem",
+#              "tls_client_ca_file": "/vault/config/vault-ca.pem"
+#            }
+#          }],
+#          "ui": true,
+#          "api_addr": "https://127.0.0.1:8200",
+#          "default_lease_ttl": "168h",
+#          "max_lease_ttl": "720h"
+#        }
       VAULT_LOCAL_CONFIG: >
         {
           "storage": { "file": { "path": "/vault/file" } },
           "listener": [{
             "tcp": {
               "address": "0.0.0.0:8200",
-              "tls_cert_file": "/vault/config/vault-cert.pem",
-              "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_client_ca_file": "/vault/config/vault-ca.pem"
+              "tls_disable": 1
             }
           }],
           "ui": true,
-          "api_addr": "https://127.0.0.1:8200",
+          "api_addr": "http://127.0.0.1:8200",
           "default_lease_ttl": "168h",
           "max_lease_ttl": "720h"
         }
@@ -82,39 +96,37 @@ services:
       - ../vault/consumer/config:/vault/config
       - ../vault/consumer/data:/vault/file
     environment:
-      VAULT_CACERT: /vault/config/root-ca.pem
-      VAULT_LOCAL_CONFIG: >
-        {
-          "storage": { "file": { "path": "/vault/file" } },
-          "listener": [{
-            "tcp": {
-              "address": "0.0.0.0:8200",
-              "tls_cert_file": "/vault/config/vault-cert.pem",
-              "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_client_ca_file": "/vault/config/vault-ca.pem"
-            }
-          }],
-          "ui": true,
-          "api_addr": "https://127.0.0.1:8200",
-          "default_lease_ttl": "168h",
-          "max_lease_ttl": "720h"
-        }
+#      VAULT_CACERT: /vault/config/root-ca.pem
 #      VAULT_LOCAL_CONFIG: >
 #        {
 #          "storage": { "file": { "path": "/vault/file" } },
 #          "listener": [{
 #            "tcp": {
 #              "address": "0.0.0.0:8200",
-#              "tls_disable": 1
-#
-#
+#              "tls_cert_file": "/vault/config/vault-cert.pem",
+#              "tls_key_file": "/vault/config/vault-key.pem",
+#              "tls_client_ca_file": "/vault/config/vault-ca.pem"
 #            }
 #          }],
 #          "ui": true,
-#          "api_addr": "http://127.0.0.1:8200",
+#          "api_addr": "https://127.0.0.1:8200",
 #          "default_lease_ttl": "168h",
 #          "max_lease_ttl": "720h"
 #        }
+      VAULT_LOCAL_CONFIG: >
+        {
+          "storage": { "file": { "path": "/vault/file" } },
+          "listener": [{
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_disable": 1
+            }
+          }],
+          "ui": true,
+          "api_addr": "http://127.0.0.1:8200",
+          "default_lease_ttl": "168h",
+          "max_lease_ttl": "720h"
+        }
     command: server
   ds_core_consumer_redis:
     image: redis:alpine
