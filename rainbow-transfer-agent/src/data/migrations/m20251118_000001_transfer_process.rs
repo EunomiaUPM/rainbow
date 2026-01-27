@@ -36,15 +36,25 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferAgentProcess::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(TransferAgentProcess::State).string().not_null())
                     .col(ColumnDef::new(TransferAgentProcess::StateAttribute).string())
-                    .col(ColumnDef::new(TransferAgentProcess::AssociatedAgentPeer).string().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentProcess::AssociatedAgentPeer)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentProcess::Protocol).string().not_null())
-                    .col(ColumnDef::new(TransferAgentProcess::TransferDirection).string().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentProcess::TransferDirection).string().not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentProcess::AgreementId).string().not_null())
                     .col(ColumnDef::new(TransferAgentProcess::CallbackAddress).string())
                     .col(ColumnDef::new(TransferAgentProcess::Role).string().not_null())
                     .col(ColumnDef::new(TransferAgentProcess::Properties).json_binary().not_null())
                     .col(ColumnDef::new(TransferAgentProcess::ErrorDetails).json_binary())
-                    .col(ColumnDef::new(TransferAgentProcess::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentProcess::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentProcess::UpdatedAt).timestamp_with_time_zone())
                     .to_owned(),
             )

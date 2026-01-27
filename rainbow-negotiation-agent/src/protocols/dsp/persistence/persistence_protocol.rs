@@ -17,10 +17,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::entities::agreement::{EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
-use crate::entities::negotiation_message::{NegotiationAgentMessagesTrait, NewNegotiationMessageDto};
+use crate::entities::agreement::{
+    EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto,
+};
+use crate::entities::negotiation_message::{
+    NegotiationAgentMessagesTrait, NewNegotiationMessageDto,
+};
 use crate::entities::negotiation_process::{
-    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto, NewNegotiationProcessDto,
+    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto,
+    NewNegotiationProcessDto,
 };
 use crate::entities::offer::{NegotiationAgentOffersTrait, NewOfferDto};
 use crate::protocols::dsp::persistence::NegotiationPersistenceTrait;
@@ -51,25 +56,38 @@ impl NegotiationPersistenceForProtocolService {
         offer_service: Arc<dyn NegotiationAgentOffersTrait>,
         agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
     ) -> Self {
-        Self { negotiation_process_service, negotiation_messages_service, offer_service, agreement_service }
+        Self {
+            negotiation_process_service,
+            negotiation_messages_service,
+            offer_service,
+            agreement_service,
+        }
     }
 }
 
 #[async_trait::async_trait]
 impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
-    async fn get_negotiation_process_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentProcessesTrait>> {
+    async fn get_negotiation_process_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentProcessesTrait>> {
         Ok(self.negotiation_process_service.clone())
     }
 
-    async fn get_negotiation_message_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentMessagesTrait>> {
+    async fn get_negotiation_message_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentMessagesTrait>> {
         Ok(self.negotiation_messages_service.clone())
     }
 
-    async fn get_negotiation_offer_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>> {
+    async fn get_negotiation_offer_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>> {
         Ok(self.offer_service.clone())
     }
 
-    async fn get_negotiation_agreement_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>> {
+    async fn get_negotiation_agreement_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>> {
         Ok(self.agreement_service.clone())
     }
 
@@ -81,7 +99,10 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
             .get_negotiation_process_by_key_value(&id_urn)
             .await?
             .ok_or_else(|| {
-                let err = CommonErrors::missing_resource_new(id_urn.to_string().as_str(), "Process service not found");
+                let err = CommonErrors::missing_resource_new(
+                    id_urn.to_string().as_str(),
+                    "Process service not found",
+                );
                 error!("{}", err.log());
                 err
             })?;
@@ -106,8 +127,12 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
             _ => RoleConfig::Provider,
         };
         let state_from_message_type = match dto_message_type {
-            NegotiationProcessMessageType::NegotiationRequestMessage => NegotiationProcessState::Requested,
-            NegotiationProcessMessageType::NegotiationOfferMessage => NegotiationProcessState::Offered,
+            NegotiationProcessMessageType::NegotiationRequestMessage => {
+                NegotiationProcessState::Requested
+            }
+            NegotiationProcessMessageType::NegotiationOfferMessage => {
+                NegotiationProcessState::Offered
+            }
             _ => NegotiationProcessState::Requested,
         };
         let negotiation_process_id =
@@ -203,7 +228,8 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
         let message_type = payload_dto.get_message();
         // new state request
-        let new_state: NegotiationProcessState = NegotiationProcessState::from(message_type.clone());
+        let new_state: NegotiationProcessState =
+            NegotiationProcessState::from(message_type.clone());
         // current state
         let negotiation_process = self
             .get_negotiation_process_service()
@@ -211,7 +237,10 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
             .get_negotiation_process_by_key_value(&urn_id)
             .await?
             .ok_or_else(|| {
-                let err = CommonErrors::missing_resource_new(urn_id.to_string().as_str(), "Process service not found");
+                let err = CommonErrors::missing_resource_new(
+                    urn_id.to_string().as_str(),
+                    "Process service not found",
+                );
                 error!("{}", err.log());
                 err
             })?;

@@ -1,7 +1,9 @@
 use crate::cache::cache_traits::lookup_cache_trait::LookupCacheTrait;
 use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
+use crate::entities::data_services::{
+    DataServiceDto, DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto,
+};
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
@@ -14,7 +16,10 @@ pub struct DataServiceEntities {
 }
 
 impl DataServiceEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn CatalogAgentRepoTrait>,
+        cache: Arc<dyn CatalogAgentCacheTrait>,
+    ) -> Self {
         Self { repo, cache }
     }
 }
@@ -85,9 +90,17 @@ impl DataServiceEntityTrait for DataServiceEntities {
         Ok(dtos)
     }
 
-    async fn get_data_services_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataServiceDto>> {
+    async fn get_data_services_by_catalog_id(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<Vec<DataServiceDto>> {
         // cache hit using LookupCacheTrait
-        if let Ok(dtos) = self.cache.get_dataservice_cache().get_by_relation("catalogs", catalog_id, None, None).await {
+        if let Ok(dtos) = self
+            .cache
+            .get_dataservice_cache()
+            .get_by_relation("catalogs", catalog_id, None, None)
+            .await
+        {
             if !dtos.is_empty() {
                 return Ok(dtos);
             }
@@ -143,9 +156,13 @@ impl DataServiceEntityTrait for DataServiceEntities {
         Ok(dto)
     }
 
-    async fn get_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<Option<DataServiceDto>> {
+    async fn get_data_service_by_id(
+        &self,
+        data_service_id: &Urn,
+    ) -> anyhow::Result<Option<DataServiceDto>> {
         // cache hit
-        if let Ok(Some(dto)) = self.cache.get_dataservice_cache().get_single(data_service_id).await {
+        if let Ok(Some(dto)) = self.cache.get_dataservice_cache().get_single(data_service_id).await
+        {
             return Ok(Some(dto));
         }
 
@@ -163,7 +180,9 @@ impl DataServiceEntityTrait for DataServiceEntities {
         if let Some(dto) = &dto {
             let cache = self.cache.get_dataservice_cache();
             let _ = cache.set_single(data_service_id, dto).await;
-            let _ = cache.add_to_collection(data_service_id, dto.inner.dct_issued.timestamp() as f64).await;
+            let _ = cache
+                .add_to_collection(data_service_id, dto.inner.dct_issued.timestamp() as f64)
+                .await;
         }
 
         Ok(dto)
@@ -193,7 +212,10 @@ impl DataServiceEntityTrait for DataServiceEntities {
         Ok(dto)
     }
 
-    async fn create_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto> {
+    async fn create_data_service(
+        &self,
+        new_data_service_model: &NewDataServiceDto,
+    ) -> anyhow::Result<DataServiceDto> {
         // db
         let new_model = new_data_service_model.clone().into();
         let data_service = self

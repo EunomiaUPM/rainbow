@@ -20,7 +20,9 @@
 use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
+};
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;

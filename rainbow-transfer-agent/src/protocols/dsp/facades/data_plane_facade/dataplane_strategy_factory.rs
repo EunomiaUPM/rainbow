@@ -17,20 +17,24 @@ impl DataPlaneStrategyFactory {
     pub fn new(dataplane_access_controller: Arc<dyn DataPlaneAccessControllerTrait>) -> Self {
         Self { dataplane_access_controller }
     }
-    pub fn get_strategy(&self, role: &RoleConfig, format: &DctFormats) -> Box<dyn DataPlaneFacadeTrait> {
+    pub fn get_strategy(
+        &self,
+        role: &RoleConfig,
+        format: &DctFormats,
+    ) -> Box<dyn DataPlaneFacadeTrait> {
         match (role, format.action) {
-            (RoleConfig::Provider, FormatAction::Pull) => Box::new(ProviderPullDataplaneStrategy::new(
-                self.dataplane_access_controller.clone(),
-            )),
-            (RoleConfig::Provider, FormatAction::Push) => Box::new(ProviderPushDataplaneStrategy::new(
-                self.dataplane_access_controller.clone(),
-            )),
-            (RoleConfig::Consumer, FormatAction::Pull) => Box::new(ConsumerPullDataplaneStrategy::new(
-                self.dataplane_access_controller.clone(),
-            )),
-            (RoleConfig::Consumer, FormatAction::Push) => Box::new(ConsumerPushDataplaneStrategy::new(
-                self.dataplane_access_controller.clone(),
-            )),
+            (RoleConfig::Provider, FormatAction::Pull) => Box::new(
+                ProviderPullDataplaneStrategy::new(self.dataplane_access_controller.clone()),
+            ),
+            (RoleConfig::Provider, FormatAction::Push) => Box::new(
+                ProviderPushDataplaneStrategy::new(self.dataplane_access_controller.clone()),
+            ),
+            (RoleConfig::Consumer, FormatAction::Pull) => Box::new(
+                ConsumerPullDataplaneStrategy::new(self.dataplane_access_controller.clone()),
+            ),
+            (RoleConfig::Consumer, FormatAction::Push) => Box::new(
+                ConsumerPushDataplaneStrategy::new(self.dataplane_access_controller.clone()),
+            ),
             _ => Box::new(ConsumerPushDataplaneStrategy::new(
                 self.dataplane_access_controller.clone(),
             )),

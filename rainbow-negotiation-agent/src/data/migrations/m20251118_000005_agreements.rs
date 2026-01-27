@@ -33,16 +33,48 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(NegotiationAgentAgreements::Table)
-                    .col(ColumnDef::new(NegotiationAgentAgreements::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::NegotiationAgentProcessId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::NegotiationAgentMessageId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::ConsumerParticipantId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::ProviderParticipantId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::AgreementContent).json_binary().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::NegotiationAgentProcessId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::NegotiationAgentMessageId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::ConsumerParticipantId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::ProviderParticipantId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::AgreementContent)
+                            .json_binary()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentAgreements::Target).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentAgreements::State).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::CreatedAt).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(NegotiationAgentAgreements::UpdatedAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentAgreements::UpdatedAt)
+                            .timestamp_with_time_zone(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-negotiation_agreement-process_id")
@@ -60,10 +92,7 @@ impl MigrationTrait for Migration {
                                 NegotiationAgentAgreements::Table,
                                 NegotiationAgentAgreements::NegotiationAgentMessageId,
                             )
-                            .to(
-                                NegotiationAgentMessages::Table,
-                                NegotiationAgentMessages::Id,
-                            )
+                            .to(NegotiationAgentMessages::Table, NegotiationAgentMessages::Id)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),

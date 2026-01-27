@@ -80,14 +80,17 @@ pub struct NewCatalogModel {
 
 impl From<NewCatalogModel> for ActiveModel {
     fn from(dto: NewCatalogModel) -> Self {
-        let new_urn =
-            UrnBuilder::new("catalog", uuid::Uuid::new_v4().to_string().as_str()).build().expect("UrnBuilder failed");
+        let new_urn = UrnBuilder::new("catalog", uuid::Uuid::new_v4().to_string().as_str())
+            .build()
+            .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone()).to_string()),
             foaf_home_page: ActiveValue::Set(dto.foaf_home_page),
             dct_conforms_to: ActiveValue::Set(dto.dct_conforms_to),
             dct_creator: ActiveValue::Set(dto.dct_creator),
-            dct_identifier: ActiveValue::Set(Some(dto.id.clone().unwrap_or(new_urn.clone()).to_string())),
+            dct_identifier: ActiveValue::Set(Some(
+                dto.id.clone().unwrap_or(new_urn.clone()).to_string(),
+            )),
             dct_issued: ActiveValue::Set(chrono::Utc::now().into()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(dto.dct_title),

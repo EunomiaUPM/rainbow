@@ -34,7 +34,7 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     async fn beg_vc(
         &self,
         payload: ReachAuthority,
-        method: ReachMethod,
+        _method: ReachMethod,
     ) -> anyhow::Result<Option<String>> {
         let (vc_model, int_model) = self.vc_req().start(payload);
         let mut vc_model = self.repo().vc_req().create(vc_model).await?;

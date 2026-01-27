@@ -92,20 +92,32 @@ impl From<dataservice::Model> for DataServiceDto {
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait DataServiceEntityTrait: Send + Sync {
-    async fn get_all_data_services(&self, limit: Option<u64>, page: Option<u64>)
-        -> anyhow::Result<Vec<DataServiceDto>>;
+    async fn get_all_data_services(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<DataServiceDto>>;
     async fn get_batch_data_services(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DataServiceDto>>;
 
-    async fn get_data_services_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataServiceDto>>;
+    async fn get_data_services_by_catalog_id(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<Vec<DataServiceDto>>;
 
     async fn get_main_data_service(&self) -> anyhow::Result<Option<DataServiceDto>>;
-    async fn get_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<Option<DataServiceDto>>;
+    async fn get_data_service_by_id(
+        &self,
+        data_service_id: &Urn,
+    ) -> anyhow::Result<Option<DataServiceDto>>;
     async fn put_data_service_by_id(
         &self,
         data_service_id: &Urn,
         edit_data_service_model: &EditDataServiceDto,
     ) -> anyhow::Result<DataServiceDto>;
-    async fn create_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto>;
+    async fn create_data_service(
+        &self,
+        new_data_service_model: &NewDataServiceDto,
+    ) -> anyhow::Result<DataServiceDto>;
     async fn create_main_data_service(
         &self,
         new_data_service_model: &NewDataServiceDto,

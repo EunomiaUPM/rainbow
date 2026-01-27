@@ -23,7 +23,10 @@ impl PolicyInstantiationEngine {
         Self { odrl_policy_service, policy_templates_service }
     }
 
-    fn substitute_variables_recursive(value: &mut Value, params: &HashMap<String, Value>) -> anyhow::Result<()> {
+    fn substitute_variables_recursive(
+        value: &mut Value,
+        params: &HashMap<String, Value>,
+    ) -> anyhow::Result<()> {
         match value {
             Value::String(s) => {
                 if s.starts_with('$') {
@@ -57,7 +60,10 @@ impl PolicyInstantiationTrait for PolicyInstantiationEngine {
         // fetch policy template
         let policy_template = self
             .policy_templates_service
-            .get_policies_template_by_version_and_id(&instantiation_request.id, &instantiation_request.version)
+            .get_policies_template_by_version_and_id(
+                &instantiation_request.id,
+                &instantiation_request.version,
+            )
             .await?
             .ok_or_else(|| {
                 let err = CommonErrors::missing_resource_new(
@@ -87,13 +93,13 @@ impl PolicyInstantiationTrait for PolicyInstantiationEngine {
             final_params.insert(key.clone(), val_json);
         }
 
-        let mut odrl_content_json =
-            serde_json::to_value(&policy_template.content).context("Failed to serialize template content")?;
+        let mut odrl_content_json = serde_json::to_value(&policy_template.content)
+            .context("Failed to serialize template content")?;
         Self::substitute_variables_recursive(&mut odrl_content_json, &final_params)?;
 
         // create policy info
-        let final_odrl: OdrlPolicyInfo =
-            serde_json::from_value(odrl_content_json).context("Generated policy is not a valid ODRL structure")?;
+        let final_odrl: OdrlPolicyInfo = serde_json::from_value(odrl_content_json)
+            .context("Generated policy is not a valid ODRL structure")?;
 
         // create offer
         let created_offer = self
@@ -105,7 +111,9 @@ impl PolicyInstantiationTrait for PolicyInstantiationEngine {
                 entity_type: instantiation_request.entity_type.clone(),
                 source_template_id: Some(instantiation_request.id.clone()),
                 source_template_version: Some(instantiation_request.version.clone()),
-                instantiation_parameters: Some(serde_json::to_value(&instantiation_request.parameters)?),
+                instantiation_parameters: Some(serde_json::to_value(
+                    &instantiation_request.parameters,
+                )?),
             })
             .await
             .map_err(|e| CommonErrors::database_new(&e.to_string()))?;

@@ -1,6 +1,6 @@
 use crate::protocols::dsp::protocol_types::{
-    CatalogErrorDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper, CatalogRequestMessageDto,
-    DatasetRequestMessage,
+    CatalogErrorDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper,
+    CatalogRequestMessageDto, DatasetRequestMessage,
 };
 use crate::protocols::dsp::types::CatalogDspTraitDefinition;
 use rainbow_common::dsp_common::context_field::ContextField;

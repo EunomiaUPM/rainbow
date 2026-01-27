@@ -453,11 +453,19 @@ pub enum TransferProcessMessageType {
 impl Display for TransferProcessMessageType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            TransferProcessMessageType::TransferRequestMessage => "TransferRequestMessage".to_string(),
+            TransferProcessMessageType::TransferRequestMessage => {
+                "TransferRequestMessage".to_string()
+            }
             TransferProcessMessageType::TransferStartMessage => "TransferStartMessage".to_string(),
-            TransferProcessMessageType::TransferCompletionMessage => "TransferCompletionMessage".to_string(),
-            TransferProcessMessageType::TransferSuspensionMessage => "TransferSuspensionMessage".to_string(),
-            TransferProcessMessageType::TransferTerminationMessage => "TransferTerminationMessage".to_string(),
+            TransferProcessMessageType::TransferCompletionMessage => {
+                "TransferCompletionMessage".to_string()
+            }
+            TransferProcessMessageType::TransferSuspensionMessage => {
+                "TransferSuspensionMessage".to_string()
+            }
+            TransferProcessMessageType::TransferTerminationMessage => {
+                "TransferTerminationMessage".to_string()
+            }
             TransferProcessMessageType::TransferProcess => "TransferProcess".to_string(),
             TransferProcessMessageType::TransferError => "TransferError".to_string(),
         };
@@ -470,9 +478,15 @@ impl From<TransferProcessMessageType> for TransferProcessState {
         match value {
             TransferProcessMessageType::TransferRequestMessage => TransferProcessState::Requested,
             TransferProcessMessageType::TransferStartMessage => TransferProcessState::Started,
-            TransferProcessMessageType::TransferCompletionMessage => TransferProcessState::Completed,
-            TransferProcessMessageType::TransferSuspensionMessage => TransferProcessState::Suspended,
-            TransferProcessMessageType::TransferTerminationMessage => TransferProcessState::Terminated,
+            TransferProcessMessageType::TransferCompletionMessage => {
+                TransferProcessState::Completed
+            }
+            TransferProcessMessageType::TransferSuspensionMessage => {
+                TransferProcessState::Suspended
+            }
+            TransferProcessMessageType::TransferTerminationMessage => {
+                TransferProcessState::Terminated
+            }
             TransferProcessMessageType::TransferProcess => TransferProcessState::Terminated,
             TransferProcessMessageType::TransferError => TransferProcessState::Terminated,
         }
@@ -524,7 +538,9 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let consumer_str = match value.identifiers.get("consumerPid") {
             Some(val) => val,
             None => {
-                let err = CommonErrors::parse_new("Missing 'consumerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new(
+                    "Missing 'consumerPid' in TransferProcessDto identifiers map",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -544,7 +560,9 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
             None => {
-                let err = CommonErrors::parse_new("Missing 'providerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new(
+                    "Missing 'providerPid' in TransferProcessDto identifiers map",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }

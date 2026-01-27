@@ -47,8 +47,10 @@ struct Params {
 
 impl BusinessNotificationsRouter {
     pub fn new(config: GatewayConfig) -> Self {
-        let client =
-            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        let client = Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .expect("Failed to build reqwest client");
         let (notification_tx, _) = broadcast::channel(100);
         Self { config, client, notification_tx }
     }
@@ -59,25 +61,23 @@ impl BusinessNotificationsRouter {
             .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
         Router::new()
             .route("/gateway/api/ws", get(Self::websocket_handler))
-            .route(
-                "/gateway/api/subscriptions",
-                get(Self::subscription_handler),
-            )
+            .route("/gateway/api/subscriptions", get(Self::subscription_handler))
             .route("/incoming-notification", post(Self::incoming_notification))
             .layer(cors)
             .with_state((self.config, self.client, self.notification_tx))
     }
     async fn subscription_handler(
-        State((config, client, _notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, _notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Query(params): Query<Params>,
     ) -> axum::response::Response {
         let callback_address = match params.callback_address {
             Some(cb) => cb,
             None => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    "Callback address not found as parameter",
-                )
+                return (StatusCode::BAD_REQUEST, "Callback address not found as parameter")
                     .into_response()
             }
         };
@@ -113,7 +113,8 @@ impl BusinessNotificationsRouter {
         let headers = backend_res.headers().clone();
 
         let axum_body = axum::body::Body::from_stream(backend_res.bytes_stream());
-        let mut response_builder = axum::response::Response::builder().status(status).version(version);
+        let mut response_builder =
+            axum::response::Response::builder().status(status).version(version);
         if let Some(response_headers_mut) = response_builder.headers_mut() {
             *response_headers_mut = headers;
         }
@@ -128,7 +129,11 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -183,7 +188,11 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

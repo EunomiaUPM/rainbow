@@ -22,9 +22,9 @@ use clap::{Parser, Subcommand};
 use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::vault::vault_rs::VaultService;
 use std::sync::Arc;
 use tracing::{debug, info};
+use ymir::services::vault::vault_rs::VaultService;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]
@@ -43,7 +43,7 @@ pub enum TransferCliCommands {
 #[derive(Parser, Debug, PartialEq)]
 pub struct TransferCliArgs {
     #[arg(short, long)]
-    env_file: Option<String>,
+    env_file: String,
 }
 
 pub struct TransferCommands {}
@@ -67,7 +67,9 @@ impl TransferCommands {
             TransferCliCommands::Setup(args) => {
                 let config = TransferConfig::load(args.env_file);
                 let vault = Arc::new(VaultService::new());
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?)
+                    .collapse()
+                    .to_string();
                 info!("Current Transfer Agent Config:\n{}", table);
                 TransferAgentMigration::run(&config, vault.clone()).await?;
             }

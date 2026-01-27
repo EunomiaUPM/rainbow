@@ -21,12 +21,12 @@ pub struct ReachAuthority {
     pub id: String,
     pub slug: String,
     pub url: String,
-    pub vc_type: String
+    pub vc_type: String,
 }
 
 pub enum ReachMethod {
     Oidc,
-    CrossUser
+    CrossUser,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,5 +34,5 @@ pub struct ReachProvider {
     pub id: String,
     pub slug: String,
     pub url: String,
-    pub actions: String
+    pub actions: String,
 }

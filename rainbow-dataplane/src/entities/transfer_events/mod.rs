@@ -47,12 +47,20 @@ pub trait TransferEventEntitiesTrait: Send + Sync + 'static {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferEventDto>>;
 
-    async fn get_batch_transfer_events(&self, ids: Vec<Urn>) -> anyhow::Result<Vec<TransferEventDto>>;
+    async fn get_batch_transfer_events(
+        &self,
+        ids: Vec<Urn>,
+    ) -> anyhow::Result<Vec<TransferEventDto>>;
 
     async fn get_transfer_event_by_id(&self, id: &Urn) -> anyhow::Result<Option<TransferEventDto>>;
 
-    async fn get_transfer_events_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<TransferEventDto>>;
+    async fn get_transfer_events_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<TransferEventDto>>;
 
-    async fn create_transfer_event(&self, new_transfer_event: &NewTransferEventDto)
-        -> anyhow::Result<TransferEventDto>;
+    async fn create_transfer_event(
+        &self,
+        new_transfer_event: &NewTransferEventDto,
+    ) -> anyhow::Result<TransferEventDto>;
 }

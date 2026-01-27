@@ -20,7 +20,10 @@
 use crate::data::entities::agreement;
 use crate::data::entities::agreement::{EditAgreementModel, Model, NewAgreementModel};
 use crate::data::repo_traits::agreement_repo::{AgreementRepoErrors, AgreementRepoTrait};
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::Urn;
 
 pub struct AgreementRepoForSql {
@@ -52,10 +55,15 @@ impl AgreementRepoTrait for AgreementRepoForSql {
         }
     }
 
-    async fn get_batch_agreements(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>, AgreementRepoErrors> {
+    async fn get_batch_agreements(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<Model>, AgreementRepoErrors> {
         let agreement_ids = ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
-        let agreements =
-            agreement::Entity::find().filter(agreement::Column::Id.is_in(agreement_ids)).all(&self.db_connection).await;
+        let agreements = agreement::Entity::find()
+            .filter(agreement::Column::Id.is_in(agreement_ids))
+            .all(&self.db_connection)
+            .await;
 
         match agreements {
             Ok(agreements) => Ok(agreements),
@@ -63,7 +71,10 @@ impl AgreementRepoTrait for AgreementRepoForSql {
         }
     }
 
-    async fn get_agreement_by_id(&self, id: &Urn) -> anyhow::Result<Option<Model>, AgreementRepoErrors> {
+    async fn get_agreement_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<Model>, AgreementRepoErrors> {
         let aid = id.to_string();
         let agreement = agreement::Entity::find_by_id(aid).one(&self.db_connection).await;
 
@@ -105,9 +116,13 @@ impl AgreementRepoTrait for AgreementRepoForSql {
         }
     }
 
-    async fn create_agreement(&self, new_model: &NewAgreementModel) -> anyhow::Result<Model, AgreementRepoErrors> {
+    async fn create_agreement(
+        &self,
+        new_model: &NewAgreementModel,
+    ) -> anyhow::Result<Model, AgreementRepoErrors> {
         let model: agreement::ActiveModel = new_model.clone().into();
-        let result = agreement::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let result =
+            agreement::Entity::insert(model).exec_with_returning(&self.db_connection).await;
 
         match result {
             Ok(agreement) => Ok(agreement),

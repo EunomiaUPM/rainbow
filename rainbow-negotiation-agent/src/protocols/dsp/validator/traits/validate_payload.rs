@@ -23,11 +23,17 @@ use rainbow_common::config::types::roles::RoleConfig;
 #[async_trait::async_trait]
 pub trait ValidatePayload: Send + Sync + 'static {
     /// Validates with json schema
-    async fn validate_with_json_schema(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<()>;
+    async fn validate_with_json_schema(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<()>;
     /// Validates uri in URL to check if it is URN encoded
     async fn validate_uri_id_as_urn(&self, uri_id: &String) -> anyhow::Result<()>;
     /// Validates if identifiers provider_pid and consumer_pid are urn
-    async fn validate_identifiers_as_urn(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<()>;
+    async fn validate_identifiers_as_urn(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<()>;
     /// Validates depending on role if uri_id == ***_pid
     async fn validate_uri_and_pid(
         &self,
@@ -42,9 +48,15 @@ pub trait ValidatePayload: Send + Sync + 'static {
         dto: &NegotiationProcessDto,
     ) -> anyhow::Result<()>; // db call
     /// Validates if Header Bearer token corresponds to associated_consumer in db
-    async fn validate_auth(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<()>; // db call
+    async fn validate_auth(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<()>; // db call
     /// Validates if data_address_present if format contains PUSH
-    async fn validate_format_data_address(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<()>;
+    async fn validate_format_data_address(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<()>;
     /// Validates if data_address_present if format contains PUSH
     async fn validate_data_address_in_start(
         &self,

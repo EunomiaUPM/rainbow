@@ -18,9 +18,9 @@
  */
 
 mod config;
+mod parse_from;
 pub mod services;
 pub mod traits;
 pub mod types;
-mod parse_from;
 
 pub use config::ApplicationConfig;

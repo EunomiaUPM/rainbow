@@ -37,7 +37,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ConnectorTemplates::Name).string().not_null())
                     .col(ColumnDef::new(ConnectorTemplates::Version).string().not_null())
                     .col(ColumnDef::new(ConnectorTemplates::Author).string().not_null())
-                    .col(ColumnDef::new(ConnectorTemplates::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(ConnectorTemplates::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(ConnectorTemplates::Spec).json_binary().not_null())
                     .to_owned(),
             )

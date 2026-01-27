@@ -30,8 +30,8 @@ use std::sync::Arc;
 
 use crate::protocols::dsp::errors::extract_payload_error;
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcTransferCompletionMessageDto, RpcTransferErrorDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
-    RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
+    RpcTransferCompletionMessageDto, RpcTransferErrorDto, RpcTransferRequestMessageDto,
+    RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
@@ -58,23 +58,11 @@ impl RpcRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/rpc/setup-request",
-                post(Self::handle_transfer_request_rpc),
-            )
+            .route("/rpc/setup-request", post(Self::handle_transfer_request_rpc))
             .route("/rpc/setup-start", post(Self::handle_transfer_start_rpc))
-            .route(
-                "/rpc/setup-completion",
-                post(Self::handle_transfer_completion_rpc),
-            )
-            .route(
-                "/rpc/setup-termination",
-                post(Self::handle_transfer_termination_rpc),
-            )
-            .route(
-                "/rpc/setup-suspension",
-                post(Self::handle_transfer_suspension_rpc),
-            )
+            .route("/rpc/setup-completion", post(Self::handle_transfer_completion_rpc))
+            .route("/rpc/setup-termination", post(Self::handle_transfer_termination_rpc))
+            .route("/rpc/setup-suspension", post(Self::handle_transfer_suspension_rpc))
             .with_state(self)
     }
 
@@ -96,7 +84,8 @@ impl RpcRouter {
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
-        Self::map_service_result(action(payload.clone()).await, success_code, payload).into_response()
+        Self::map_service_result(action(payload.clone()).await, success_code, payload)
+            .into_response()
     }
 
     fn map_service_result<R, T>(

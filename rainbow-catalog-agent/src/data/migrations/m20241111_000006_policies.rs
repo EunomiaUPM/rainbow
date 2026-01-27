@@ -34,13 +34,26 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(CatalogODRLOffers::Table)
                     .col(ColumnDef::new(CatalogODRLOffers::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(CatalogODRLOffers::ODRLOffer).json_binary().not_null().default("{}"))
+                    .col(
+                        ColumnDef::new(CatalogODRLOffers::ODRLOffer)
+                            .json_binary()
+                            .not_null()
+                            .default("{}"),
+                    )
                     .col(ColumnDef::new(CatalogODRLOffers::Entity).string().not_null())
                     .col(ColumnDef::new(CatalogODRLOffers::EntityType).string().not_null())
-                    .col(ColumnDef::new(CatalogODRLOffers::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(CatalogODRLOffers::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(CatalogODRLOffers::SourceTemplateId).string().null())
                     .col(ColumnDef::new(CatalogODRLOffers::SourceTemplateVersion).string().null())
-                    .col(ColumnDef::new(CatalogODRLOffers::InstantiationParameters).json_binary().null())
+                    .col(
+                        ColumnDef::new(CatalogODRLOffers::InstantiationParameters)
+                            .json_binary()
+                            .null(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_odrl_offers_template_source")

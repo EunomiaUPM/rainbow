@@ -22,6 +22,13 @@ use crate::protocols::dsp::types::dataset_definition::Dataset;
 
 #[async_trait::async_trait]
 pub trait ValidationDspSteps: Send + Sync + 'static {
-    async fn on_catalog_request(&self, input: &CatalogMessageWrapper<Catalog>) -> anyhow::Result<()>;
-    async fn on_dataset_request(&self, uri_id: &String, input: &CatalogMessageWrapper<Dataset>) -> anyhow::Result<()>;
+    async fn on_catalog_request(
+        &self,
+        input: &CatalogMessageWrapper<Catalog>,
+    ) -> anyhow::Result<()>;
+    async fn on_dataset_request(
+        &self,
+        uri_id: &String,
+        input: &CatalogMessageWrapper<Dataset>,
+    ) -> anyhow::Result<()>;
 }

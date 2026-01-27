@@ -36,7 +36,9 @@ impl DataPlaneRouter {
         Self { data_plane_process_entity, transfer_event_entity }
     }
     pub fn router(self) -> Router {
-        Router::new().route("/:data_plane_id", get(Self::handle_get_data_plane_by_id)).with_state(self)
+        Router::new()
+            .route("/:data_plane_id", get(Self::handle_get_data_plane_by_id))
+            .with_state(self)
     }
     async fn handle_get_data_plane_by_id(
         State(state): State<DataPlaneRouter>,
@@ -48,7 +50,9 @@ impl DataPlaneRouter {
         };
         match state.data_plane_process_entity.get_data_plane_process_by_id(&data_plane_id).await {
             Ok(dataplane_session) => match dataplane_session {
-                Some(dataplane_session) => (StatusCode::OK, Json(dataplane_session)).into_response(),
+                Some(dataplane_session) => {
+                    (StatusCode::OK, Json(dataplane_session)).into_response()
+                }
                 None => {
                     let err = CommonErrors::missing_resource_new(
                         data_plane_id.to_string().as_str(),

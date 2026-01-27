@@ -14,18 +14,25 @@ pub trait OrchestrationExtractors: Send + Sync {
         Ok(role)
     }
 
-    fn get_state_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<NegotiationProcessState> {
+    fn get_state_from_dto(
+        &self,
+        dto: &NegotiationProcessDto,
+    ) -> anyhow::Result<NegotiationProcessState> {
         let state = &dto.inner.state;
         let state = state.parse::<NegotiationProcessState>().map_err(|_e| {
-            let err =
-                CommonErrors::parse_new("Something is wrong. Seems this process' state is not protocol compliant");
+            let err = CommonErrors::parse_new(
+                "Something is wrong. Seems this process' state is not protocol compliant",
+            );
             log::error!("{}", err.log());
             err
         })?;
         Ok(state)
     }
 
-    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<RoleConfig>;
+    fn get_role_from_message_type(
+        &self,
+        message: &NegotiationProcessMessageType,
+    ) -> anyhow::Result<RoleConfig>;
     fn get_state_from_message_type(
         &self,
         message: &NegotiationProcessMessageType,

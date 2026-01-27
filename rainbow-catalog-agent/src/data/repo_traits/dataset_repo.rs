@@ -10,7 +10,10 @@ pub trait DatasetRepositoryTrait: Send + Sync {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors>;
-    async fn get_batch_datasets(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors>;
+    async fn get_batch_datasets(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors>;
     async fn get_datasets_by_catalog_id(
         &self,
         catalog_id: &Urn,
@@ -30,5 +33,8 @@ pub trait DatasetRepositoryTrait: Send + Sync {
         new_dataset_model: &NewDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogAgentRepoErrors>;
 
-    async fn delete_dataset_by_id(&self, dataset_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_dataset_by_id(
+        &self,
+        dataset_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
 }

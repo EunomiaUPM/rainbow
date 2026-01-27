@@ -6,9 +6,10 @@ use crate::entities::odrl_policies::{CatalogEntityTypes, NewOdrlPolicyDto, OdrlP
 use crate::entities::policy_templates::types::LocalizedText;
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateDto};
 use crate::grpc::api::catalog_agent::{
-    CatalogEntityType, CreateCatalogRequest, CreateDataServiceRequest, CreateDatasetRequest, CreateDistributionRequest,
-    CreateOdrlPolicyRequest, CreatePolicyTemplateRequest, DataService, Dataset, Distribution, OdrlPolicy,
-    PolicyTemplate, PutCatalogRequest, PutDataServiceRequest, PutDatasetRequest, PutDistributionRequest,
+    CatalogEntityType, CreateCatalogRequest, CreateDataServiceRequest, CreateDatasetRequest,
+    CreateDistributionRequest, CreateOdrlPolicyRequest, CreatePolicyTemplateRequest, DataService,
+    Dataset, Distribution, OdrlPolicy, PolicyTemplate, PutCatalogRequest, PutDataServiceRequest,
+    PutDatasetRequest, PutDistributionRequest,
 };
 use prost_types::Struct;
 use rainbow_common::dcat_formats::DctFormats;
@@ -20,9 +21,9 @@ use urn::Urn;
 fn proto_value_to_json(v: prost_types::Value) -> serde_json::Value {
     match v.kind {
         Some(prost_types::value::Kind::NullValue(_)) => serde_json::Value::Null,
-        Some(prost_types::value::Kind::NumberValue(n)) => {
-            serde_json::Number::from_f64(n).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null)
-        }
+        Some(prost_types::value::Kind::NumberValue(n)) => serde_json::Number::from_f64(n)
+            .map(serde_json::Value::Number)
+            .unwrap_or(serde_json::Value::Null),
         Some(prost_types::value::Kind::StringValue(s)) => serde_json::Value::String(s),
         Some(prost_types::value::Kind::BoolValue(b)) => serde_json::Value::Bool(b),
         Some(prost_types::value::Kind::StructValue(s)) => proto_struct_to_json(s),
@@ -45,20 +46,16 @@ fn json_to_proto_value(v: serde_json::Value) -> prost_types::Value {
         serde_json::Value::Bool(b) => Some(prost_types::value::Kind::BoolValue(b)),
         serde_json::Value::Number(n) => {
             // Proto usa f64 para números genéricos
-            Some(prost_types::value::Kind::NumberValue(
-                n.as_f64().unwrap_or(0.0),
-            ))
+            Some(prost_types::value::Kind::NumberValue(n.as_f64().unwrap_or(0.0)))
         }
         serde_json::Value::String(s) => Some(prost_types::value::Kind::StringValue(s)),
         serde_json::Value::Array(a) => {
             let values = a.into_iter().map(json_to_proto_value).collect();
-            Some(prost_types::value::Kind::ListValue(
-                prost_types::ListValue { values },
-            ))
+            Some(prost_types::value::Kind::ListValue(prost_types::ListValue { values }))
         }
-        serde_json::Value::Object(_) => Some(prost_types::value::Kind::StructValue(json_to_proto_struct(
-            v,
-        ))),
+        serde_json::Value::Object(_) => {
+            Some(prost_types::value::Kind::StructValue(json_to_proto_struct(v)))
+        }
     };
     prost_types::Value { kind }
 }
@@ -107,7 +104,10 @@ impl TryFrom<CreateCatalogRequest> for NewCatalogDto {
 
     fn try_from(req: CreateCatalogRequest) -> Result<Self, Self::Error> {
         let id = match req.id {
-            Some(s) => Some(Urn::from_str(&s).map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?),
+            Some(s) => Some(
+                Urn::from_str(&s)
+                    .map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?,
+            ),
             None => None,
         };
 
@@ -160,7 +160,10 @@ impl TryFrom<CreateDataServiceRequest> for NewDataServiceDto {
 
     fn try_from(req: CreateDataServiceRequest) -> Result<Self, Self::Error> {
         let id = match req.id {
-            Some(s) => Some(Urn::from_str(&s).map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?),
+            Some(s) => Some(
+                Urn::from_str(&s)
+                    .map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?,
+            ),
             None => None,
         };
 
@@ -218,7 +221,10 @@ impl TryFrom<CreateDatasetRequest> for NewDatasetDto {
 
     fn try_from(req: CreateDatasetRequest) -> Result<Self, Self::Error> {
         let id = match req.id {
-            Some(s) => Some(Urn::from_str(&s).map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?),
+            Some(s) => Some(
+                Urn::from_str(&s)
+                    .map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?,
+            ),
             None => None,
         };
 
@@ -274,15 +280,20 @@ impl TryFrom<CreateDistributionRequest> for NewDistributionDto {
 
     fn try_from(req: CreateDistributionRequest) -> Result<Self, Self::Error> {
         let id = match req.id {
-            Some(s) => Some(Urn::from_str(&s).map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?),
+            Some(s) => Some(
+                Urn::from_str(&s)
+                    .map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?,
+            ),
             None => None,
         };
 
         let dataset_id = Urn::from_str(&req.dataset_id)
             .map_err(|_| Status::invalid_argument("Invalid URN format for Dataset ID"))?;
 
-        let dct_formats =
-            req.dct_formats.parse::<DctFormats>().map_err(|_| Status::invalid_argument("Invalid URN formats"))?;
+        let dct_formats = req
+            .dct_formats
+            .parse::<DctFormats>()
+            .map_err(|_| Status::invalid_argument("Invalid URN formats"))?;
 
         Ok(Self {
             id,
@@ -343,32 +354,34 @@ impl TryFrom<CreateOdrlPolicyRequest> for NewOdrlPolicyDto {
 
     fn try_from(req: CreateOdrlPolicyRequest) -> Result<Self, Self::Error> {
         let id = match &req.id {
-            Some(s) => Some(Urn::from_str(&s).map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?),
+            Some(s) => Some(
+                Urn::from_str(&s)
+                    .map_err(|_| Status::invalid_argument("Invalid URN format for ID"))?,
+            ),
             None => None,
         };
 
-        let entity_id =
-            Urn::from_str(&req.entity_id).map_err(|_| Status::invalid_argument("Invalid URN format for Entity ID"))?;
+        let entity_id = Urn::from_str(&req.entity_id)
+            .map_err(|_| Status::invalid_argument("Invalid URN format for Entity ID"))?;
 
-        let proto_struct =
-            req.odrl_offer.clone().ok_or_else(|| Status::invalid_argument("odrl_offer (Struct) is required"))?;
+        let proto_struct = req
+            .odrl_offer
+            .clone()
+            .ok_or_else(|| Status::invalid_argument("odrl_offer (Struct) is required"))?;
         if proto_struct.fields.is_empty() {
             return Err(Status::invalid_argument("odrl_offer cannot be empty"));
         }
         let json_value = proto_struct_to_json(proto_struct);
-        let odrl_offer: OdrlPolicyInfo = serde_json::from_value(json_value)
-            .map_err(|e| Status::invalid_argument(format!("Invalid OdrlPolicyInfo structure: {}", e)))?;
+        let odrl_offer: OdrlPolicyInfo = serde_json::from_value(json_value).map_err(|e| {
+            Status::invalid_argument(format!("Invalid OdrlPolicyInfo structure: {}", e))
+        })?;
 
         let entity_type = match req.entity_type() {
             CatalogEntityType::Distribution => CatalogEntityTypes::Distribution,
             CatalogEntityType::DataService => CatalogEntityTypes::DataService,
             CatalogEntityType::Catalog => CatalogEntityTypes::Catalog,
             CatalogEntityType::Dataset => CatalogEntityTypes::Dataset,
-            _ => {
-                return Err(Status::invalid_argument(
-                    "Invalid or Unspecified Entity Type",
-                ))
-            }
+            _ => return Err(Status::invalid_argument("Invalid or Unspecified Entity Type")),
         };
 
         Ok(Self {
@@ -394,7 +407,8 @@ impl From<PolicyTemplateDto> for PolicyTemplate {
             _ => Struct::default(),
         };
 
-        let parameters_json = serde_json::to_value(model.parameters).unwrap_or(serde_json::Value::Null);
+        let parameters_json =
+            serde_json::to_value(model.parameters).unwrap_or(serde_json::Value::Null);
         let parameters_val = json_to_proto_value(parameters_json);
         let parameters = match parameters_val.kind {
             Some(prost_types::value::Kind::StructValue(s)) => s,
@@ -418,16 +432,20 @@ impl TryFrom<CreatePolicyTemplateRequest> for NewPolicyTemplateDto {
     type Error = Status;
 
     fn try_from(req: CreatePolicyTemplateRequest) -> Result<Self, Self::Error> {
-        let content_struct = req.content.ok_or_else(|| Status::invalid_argument("content is required"))?;
-        let content_prost_val =
-            prost_types::Value { kind: Some(prost_types::value::Kind::StructValue(content_struct)) };
+        let content_struct =
+            req.content.ok_or_else(|| Status::invalid_argument("content is required"))?;
+        let content_prost_val = prost_types::Value {
+            kind: Some(prost_types::value::Kind::StructValue(content_struct)),
+        };
         let content_json = proto_value_to_json(content_prost_val);
 
         let content: OdrlPolicyInfo = serde_json::from_value(content_json)
             .map_err(|e| Status::invalid_argument(format!("Invalid ODRL content: {}", e)))?;
 
         let parameters = if let Some(params_struct) = req.parameters {
-            let val = prost_types::Value { kind: Some(prost_types::value::Kind::StructValue(params_struct)) };
+            let val = prost_types::Value {
+                kind: Some(prost_types::value::Kind::StructValue(params_struct)),
+            };
             let json = proto_value_to_json(val);
             serde_json::from_value(json).unwrap_or_default()
         } else {

@@ -17,7 +17,9 @@
  *
  */
 
-use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
+use crate::entities::transfer_process::{
+    EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait,
+};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
@@ -69,7 +71,9 @@ impl TransferAgentProcessesRouter {
             .route("/batch", post(Self::handle_get_batch_processes))
             .route(
                 "/:id",
-                get(Self::handle_get_process_by_id).put(Self::handle_put_process).delete(Self::handle_delete_process),
+                get(Self::handle_get_process_by_id)
+                    .put(Self::handle_put_process)
+                    .delete(Self::handle_delete_process),
             )
             .route("/:id/key/:key_id", get(Self::handle_get_process_by_key_id))
             .with_state(self)

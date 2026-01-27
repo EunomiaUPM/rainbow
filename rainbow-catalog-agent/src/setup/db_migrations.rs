@@ -19,13 +19,13 @@
 
 use crate::data::migrations::get_catalog_migrations;
 use rainbow_common::config::services::CatalogConfig;
-use rainbow_common::config::traits::DatabaseConfigTrait;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_connector::get_connector_migrations;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use std::sync::Arc;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
 
 pub struct CatalogAgentMigration;
 
@@ -43,7 +43,7 @@ impl MigratorTrait for CatalogAgentMigration {
 impl CatalogAgentMigration {
     pub async fn run(config: &CatalogConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         // db_connection
-        let db_connection = vault.get_db_connection(config.clone()).await;
+        let db_connection = vault.get_db_connection(config.common()).await;
         // run migration
         Self::refresh(&db_connection).await?;
         Ok(())

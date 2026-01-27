@@ -31,7 +31,11 @@ pub struct BusMates {
 }
 
 impl BusMates {
-    pub fn default4consumer(id: String, participant_id: Option<String>, token: Option<String>) -> Self {
+    pub fn default4consumer(
+        id: String,
+        participant_id: Option<String>,
+        token: Option<String>,
+    ) -> Self {
         let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
@@ -44,7 +48,11 @@ impl BusMates {
         }
     }
 
-    pub fn default4provider(id: String, participant_id: Option<String>, token: Option<String>) -> Self {
+    pub fn default4provider(
+        id: String,
+        participant_id: Option<String>,
+        token: Option<String>,
+    ) -> Self {
         let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {

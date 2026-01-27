@@ -37,5 +37,8 @@ pub(crate) struct Distribution {
 
 #[async_trait::async_trait]
 pub(crate) trait DistributionFacadeTrait: Send + Sync {
-    async fn resolve_distribution_by_id(&self, distribution_id: &String) -> anyhow::Result<Distribution>;
+    async fn resolve_distribution_by_id(
+        &self,
+        distribution_id: &String,
+    ) -> anyhow::Result<Distribution>;
 }

@@ -36,7 +36,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DataPlaneProcess::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(DataPlaneProcess::State).string().not_null())
                     .col(ColumnDef::new(DataPlaneProcess::Direction).string().not_null())
-                    .col(ColumnDef::new(DataPlaneProcess::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(DataPlaneProcess::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(DataPlaneProcess::UpdatedAt).timestamp_with_time_zone())
                     .to_owned(),
             )

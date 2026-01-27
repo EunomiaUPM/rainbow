@@ -17,7 +17,9 @@ pub struct DataPlaneRepoForSql {
 impl DataPlaneRepoForSql {
     pub fn create_repo(db_connection: DatabaseConnection) -> Self {
         Self {
-            dataplane_process_repo: Arc::new(DataPlaneProcessRepoForSql::new(db_connection.clone())),
+            dataplane_process_repo: Arc::new(DataPlaneProcessRepoForSql::new(
+                db_connection.clone(),
+            )),
             dataplane_fields_repo: Arc::new(DataPlaneFieldRepoForSql::new(db_connection.clone())),
             transfer_events_repo: Arc::new(TransferEventRepoForSql::new(db_connection.clone())),
         }

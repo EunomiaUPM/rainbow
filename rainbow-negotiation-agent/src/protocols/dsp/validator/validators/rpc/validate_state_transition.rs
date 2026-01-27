@@ -17,7 +17,9 @@
  *
  */
 
-use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageType, NegotiationProcessState};
+use crate::protocols::dsp::protocol_types::{
+    NegotiationProcessMessageType, NegotiationProcessState,
+};
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::bail;

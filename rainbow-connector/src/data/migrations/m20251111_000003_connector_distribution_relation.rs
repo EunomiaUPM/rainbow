@@ -14,8 +14,18 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(ConnectorDistroRelations::Table)
-                    .col(ColumnDef::new(ConnectorDistroRelations::DistributionId).string().not_null().primary_key())
-                    .col(ColumnDef::new(ConnectorDistroRelations::ConnectorInstanceId).string().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(ConnectorDistroRelations::DistributionId)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(ConnectorDistroRelations::ConnectorInstanceId)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_instance_template")

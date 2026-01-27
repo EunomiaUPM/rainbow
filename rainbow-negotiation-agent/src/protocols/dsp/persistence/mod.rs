@@ -31,10 +31,18 @@ use urn::Urn;
 #[async_trait::async_trait]
 #[allow(unused)]
 pub trait NegotiationPersistenceTrait: Send + Sync {
-    async fn get_negotiation_process_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentProcessesTrait>>;
-    async fn get_negotiation_message_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentMessagesTrait>>;
-    async fn get_negotiation_offer_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>>;
-    async fn get_negotiation_agreement_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>>;
+    async fn get_negotiation_process_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentProcessesTrait>>;
+    async fn get_negotiation_message_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentMessagesTrait>>;
+    async fn get_negotiation_offer_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>>;
+    async fn get_negotiation_agreement_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>>;
     async fn fetch_process(&self, id: &str) -> anyhow::Result<NegotiationProcessDto>;
     async fn create_process(
         &self,

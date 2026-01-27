@@ -16,7 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageType, NegotiationProcessState};
+use crate::protocols::dsp::protocol_types::{
+    NegotiationProcessMessageType, NegotiationProcessState,
+};
 use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]

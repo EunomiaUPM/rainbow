@@ -1,8 +1,8 @@
 use crate::entities::catalogs::{CatalogEntityTrait, EditCatalogDto, NewCatalogDto};
 use crate::grpc::api::catalog_agent::catalog_entity_service_server::CatalogEntityService;
 use crate::grpc::api::catalog_agent::{
-    Catalog, CatalogListResponse, CatalogResponse, CreateCatalogRequest, DeleteByIdRequest, GetAllCatalogsRequest,
-    GetBatchRequest, GetByIdRequest, PutCatalogRequest,
+    Catalog, CatalogListResponse, CatalogResponse, CreateCatalogRequest, DeleteByIdRequest,
+    GetAllCatalogsRequest, GetBatchRequest, GetByIdRequest, PutCatalogRequest,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -34,9 +34,7 @@ impl CatalogEntityService for CatalogEntityGrpc {
 
         let proto_catalogs: Vec<Catalog> = catalogs.into_iter().map(Into::into).collect();
 
-        Ok(Response::new(CatalogListResponse {
-            catalogs: proto_catalogs,
-        }))
+        Ok(Response::new(CatalogListResponse { catalogs: proto_catalogs }))
     }
 
     async fn get_batch_catalogs(
@@ -52,20 +50,29 @@ impl CatalogEntityService for CatalogEntityGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Status::invalid_argument("One or more IDs are invalid URNs"))?;
 
-        let catalogs = self.service.get_batch_catalogs(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let catalogs = self
+            .service
+            .get_batch_catalogs(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_catalogs = catalogs.into_iter().map(Into::into).collect();
 
-        Ok(Response::new(CatalogListResponse {
-            catalogs: proto_catalogs,
-        }))
+        Ok(Response::new(CatalogListResponse { catalogs: proto_catalogs }))
     }
 
-    async fn get_catalog_by_id(&self, request: Request<GetByIdRequest>) -> Result<Response<CatalogResponse>, Status> {
+    async fn get_catalog_by_id(
+        &self,
+        request: Request<GetByIdRequest>,
+    ) -> Result<Response<CatalogResponse>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 
-        let catalog_opt = self.service.get_catalog_by_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let catalog_opt = self
+            .service
+            .get_catalog_by_id(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         match catalog_opt {
             Some(dto) => Ok(Response::new(CatalogResponse { catalog: Some(dto.into()) })),
@@ -73,8 +80,12 @@ impl CatalogEntityService for CatalogEntityGrpc {
         }
     }
 
-    async fn get_main_catalog(&self, _request: Request<()>) -> Result<Response<CatalogResponse>, Status> {
-        let catalog_opt = self.service.get_main_catalog().await.map_err(|e| Status::internal(e.to_string()))?;
+    async fn get_main_catalog(
+        &self,
+        _request: Request<()>,
+    ) -> Result<Response<CatalogResponse>, Status> {
+        let catalog_opt =
+            self.service.get_main_catalog().await.map_err(|e| Status::internal(e.to_string()))?;
 
         match catalog_opt {
             Some(dto) => Ok(Response::new(CatalogResponse { catalog: Some(dto.into()) })),
@@ -95,9 +106,7 @@ impl CatalogEntityService for CatalogEntityGrpc {
             .await
             .map_err(|e| Status::internal(format!("Failed to create catalog: {}", e)))?;
 
-        Ok(Response::new(CatalogResponse {
-            catalog: Some(created_dto.into()),
-        }))
+        Ok(Response::new(CatalogResponse { catalog: Some(created_dto.into()) }))
     }
 
     async fn create_main_catalog(
@@ -113,9 +122,7 @@ impl CatalogEntityService for CatalogEntityGrpc {
             .await
             .map_err(|e| Status::internal(format!("Failed to create main catalog: {}", e)))?;
 
-        Ok(Response::new(CatalogResponse {
-            catalog: Some(created_dto.into()),
-        }))
+        Ok(Response::new(CatalogResponse { catalog: Some(created_dto.into()) }))
     }
 
     async fn put_catalog_by_id(
@@ -132,12 +139,13 @@ impl CatalogEntityService for CatalogEntityGrpc {
             .await
             .map_err(|e| Status::internal(format!("Failed to update catalog: {}", e)))?;
 
-        Ok(Response::new(CatalogResponse {
-            catalog: Some(updated_dto.into()),
-        }))
+        Ok(Response::new(CatalogResponse { catalog: Some(updated_dto.into()) }))
     }
 
-    async fn delete_catalog_by_id(&self, request: Request<DeleteByIdRequest>) -> Result<Response<()>, Status> {
+    async fn delete_catalog_by_id(
+        &self,
+        request: Request<DeleteByIdRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 

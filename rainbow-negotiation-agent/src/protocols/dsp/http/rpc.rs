@@ -20,10 +20,11 @@
 use crate::protocols::dsp::errors::extract_payload_error;
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcNegotiationAgreementMessageDto, RpcNegotiationErrorDto, RpcNegotiationEventAcceptedMessageDto,
-    RpcNegotiationEventFinalizedMessageDto, RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
-    RpcNegotiationRequestInitMessageDto, RpcNegotiationRequestMessageDto, RpcNegotiationTerminationMessageDto,
-    RpcNegotiationVerificationMessageDto,
+    RpcNegotiationAgreementMessageDto, RpcNegotiationErrorDto,
+    RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
+    RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
+    RpcNegotiationRequestInitMessageDto, RpcNegotiationRequestMessageDto,
+    RpcNegotiationTerminationMessageDto, RpcNegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::protocol_types::{
     NegotiationErrorMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
@@ -66,36 +67,18 @@ impl RpcRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/rpc/setup-request-init",
-                post(Self::negotiation_request_init_rpc),
-            )
+            .route("/rpc/setup-request-init", post(Self::negotiation_request_init_rpc))
             .route("/rpc/setup-request", post(Self::negotiation_request_rpc))
-            .route(
-                "/rpc/setup-offer-init",
-                post(Self::negotiation_offer_init_rpc),
-            )
+            .route("/rpc/setup-offer-init", post(Self::negotiation_offer_init_rpc))
             .route("/rpc/setup-offer", post(Self::negotiation_offer_rpc))
-            .route(
-                "/rpc/setup-acceptance",
-                post(Self::negotiation_event_accepted_rpc),
-            )
-            .route(
-                "/rpc/setup-agreement",
-                post(Self::negotiation_agreement_rpc),
-            )
+            .route("/rpc/setup-acceptance", post(Self::negotiation_event_accepted_rpc))
+            .route("/rpc/setup-agreement", post(Self::negotiation_agreement_rpc))
             .route(
                 "/rpc/setup-verification",
                 post(Self::negotiation_agreement_verification_rpc),
             )
-            .route(
-                "/rpc/setup-finalization",
-                post(Self::negotiation_event_finalized_rpc),
-            )
-            .route(
-                "/rpc/setup-termination",
-                post(Self::negotiation_termination_rpc),
-            )
+            .route("/rpc/setup-finalization", post(Self::negotiation_event_finalized_rpc))
+            .route("/rpc/setup-termination", post(Self::negotiation_termination_rpc))
             .with_state(self)
     }
 
@@ -113,11 +96,13 @@ impl RpcRouter {
         let payload = match extract_payload_error(input) {
             Ok(v) => v,
             Err(e) => {
-                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> = e.into();
+                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> =
+                    e.into();
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
-        Self::map_service_result(action(payload.clone()).await, success_code, payload).into_response()
+        Self::map_service_result(action(payload.clone()).await, success_code, payload)
+            .into_response()
     }
 
     fn map_service_result<R, T>(
@@ -213,7 +198,11 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationVerificationMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().setup_negotiation_agreement_verification_rpc(&data).await
+            state
+                .orchestrator
+                .get_rpc_service()
+                .setup_negotiation_agreement_verification_rpc(&data)
+                .await
         })
         .await
     }

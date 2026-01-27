@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use super::super::VcRequesterTrait;
 use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use anyhow::bail;
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};

@@ -20,7 +20,9 @@
 use crate::data::entities::transfer_message::NewTransferMessageModel;
 use crate::data::factory_trait::TransferAgentRepoTrait;
 use crate::data::repo_traits::transfer_message_repo::TransferMessageRepoErrors;
-use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait, TransferMessageDto};
+use crate::entities::transfer_messages::{
+    NewTransferMessageDto, TransferAgentMessagesTrait, TransferMessageDto,
+};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::sync::Arc;
 use tracing::error;
@@ -57,15 +59,20 @@ impl TransferAgentMessagesTrait for TransferAgentMessagesService {
         Ok(messages.into_iter().map(|m| TransferMessageDto { inner: m }).collect())
     }
 
-    async fn get_messages_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<TransferMessageDto>> {
-        let messages =
-            self.transfer_repo.get_transfer_message_repo().get_messages_by_process_id(process_id).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+    async fn get_messages_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<TransferMessageDto>> {
+        let messages = self
+            .transfer_repo
+            .get_transfer_message_repo()
+            .get_messages_by_process_id(process_id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         Ok(messages.into_iter().map(|m| TransferMessageDto { inner: m }).collect())
     }
@@ -82,7 +89,10 @@ impl TransferAgentMessagesTrait for TransferAgentMessagesService {
                 err
             })?
             .ok_or_else(|| {
-                let err = CommonErrors::missing_resource_new(&id.to_string(), "Transfer Message not found");
+                let err = CommonErrors::missing_resource_new(
+                    &id.to_string(),
+                    "Transfer Message not found",
+                );
                 error!("{}", err.log());
                 err
             })?;
@@ -96,8 +106,12 @@ impl TransferAgentMessagesTrait for TransferAgentMessagesService {
     ) -> anyhow::Result<TransferMessageDto> {
         let new_model: NewTransferMessageModel = new_model_dto.clone().into();
 
-        let created =
-            self.transfer_repo.get_transfer_message_repo().create_transfer_message(&new_model).await.map_err(|e| {
+        let created = self
+            .transfer_repo
+            .get_transfer_message_repo()
+            .create_transfer_message(&new_model)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -107,19 +121,23 @@ impl TransferAgentMessagesTrait for TransferAgentMessagesService {
     }
 
     async fn delete_transfer_message(&self, id: &Urn) -> anyhow::Result<()> {
-        self.transfer_repo.get_transfer_message_repo().delete_transfer_message(id).await.map_err(|e| match e {
-            TransferMessageRepoErrors::TransferMessageNotFound => {
-                let err =
-                    CommonErrors::missing_resource_new(&id.to_string(), "Transfer Message not found for deletion");
-                error!("{}", err.log());
-                err
-            }
-            _ => {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            }
-        })?;
+        self.transfer_repo.get_transfer_message_repo().delete_transfer_message(id).await.map_err(
+            |e| match e {
+                TransferMessageRepoErrors::TransferMessageNotFound => {
+                    let err = CommonErrors::missing_resource_new(
+                        &id.to_string(),
+                        "Transfer Message not found for deletion",
+                    );
+                    error!("{}", err.log());
+                    err
+                }
+                _ => {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                }
+            },
+        )?;
         Ok(())
     }
 }

@@ -21,7 +21,6 @@ use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFac
 use anyhow::bail;
 use rainbow_catalog_agent::{DataServiceDto, DatasetDto, DistributionDto};
 use rainbow_common::config::services::TransferConfig;
-use rainbow_common::config::types::HostType;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -33,6 +32,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
+use ymir::config::types::HostType;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
     config: Arc<TransferConfig>,
@@ -80,11 +80,13 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             dataset_id.clone(),
             formats.unwrap().to_string()
         );
-        let distribution = self.client.get_json::<DistributionDto>(distribution_url.as_str()).await?;
+        let distribution =
+            self.client.get_json::<DistributionDto>(distribution_url.as_str()).await?;
         let access_service_id = Urn::from_str(distribution.inner.id.as_str())?;
 
         // resolve Data service entity
-        let data_service = self.client.get_json::<DataServiceDto>(data_service_url.as_str()).await?;
+        let data_service =
+            self.client.get_json::<DataServiceDto>(data_service_url.as_str()).await?;
 
         Ok(data_service)
     }

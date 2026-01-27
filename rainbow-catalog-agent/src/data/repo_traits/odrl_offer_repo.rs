@@ -26,6 +26,12 @@ pub trait OdrlOfferRepositoryTrait: Send + Sync {
         &self,
         new_odrl_offer_model: &NewOdrlOfferModel,
     ) -> anyhow::Result<odrl_offer::Model, CatalogAgentRepoErrors>;
-    async fn delete_odrl_offer_by_id(&self, odrl_offer_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
-    async fn delete_odrl_offers_by_entity(&self, entity_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_odrl_offer_by_id(
+        &self,
+        odrl_offer_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_odrl_offers_by_entity(
+        &self,
+        entity_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
 }

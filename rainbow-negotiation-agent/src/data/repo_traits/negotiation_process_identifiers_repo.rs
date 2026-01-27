@@ -42,13 +42,19 @@ pub trait NegotiationIdentifierRepoTrait: Send + Sync {
     async fn get_identifier_by_id(
         &self,
         id: &Urn,
-    ) -> anyhow::Result<Option<negotiation_process_identifier::Model>, NegotiationIdentifierRepoErrors>;
+    ) -> anyhow::Result<
+        Option<negotiation_process_identifier::Model>,
+        NegotiationIdentifierRepoErrors,
+    >;
 
     async fn get_identifier_by_key(
         &self,
         process_id: &Urn,
         key: &str,
-    ) -> anyhow::Result<Option<negotiation_process_identifier::Model>, NegotiationIdentifierRepoErrors>;
+    ) -> anyhow::Result<
+        Option<negotiation_process_identifier::Model>,
+        NegotiationIdentifierRepoErrors,
+    >;
 
     async fn create_identifier(
         &self,
@@ -61,7 +67,10 @@ pub trait NegotiationIdentifierRepoTrait: Send + Sync {
         edit_model: &EditNegotiationIdentifierModel,
     ) -> anyhow::Result<negotiation_process_identifier::Model, NegotiationIdentifierRepoErrors>;
 
-    async fn delete_identifier(&self, id: &Urn) -> anyhow::Result<(), NegotiationIdentifierRepoErrors>;
+    async fn delete_identifier(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationIdentifierRepoErrors>;
 }
 
 #[derive(Debug, Error)]

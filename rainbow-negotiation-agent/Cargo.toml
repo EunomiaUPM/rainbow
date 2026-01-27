@@ -46,6 +46,7 @@ prost-types = "0.14.1"
 tonic-reflection = "0.14.2"
 pbjson-types = {version = "0.8.0", features = []}
 json_to_table = {workspace = true}
+ymir = {workspace = true}
 
 [build-dependencies]
 tonic-prost-build = "0.14.2"

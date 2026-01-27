@@ -72,7 +72,11 @@ impl TestingHTTPProxy {
         };
 
         // PDP
-        let dataplane = match state.dataplane_service.get_data_plane_process_by_id(&data_plane_id).await {
+        let dataplane = match state
+            .dataplane_service
+            .get_data_plane_process_by_id(&data_plane_id)
+            .await
+        {
             Ok(dataplane) => match dataplane {
                 Some(dataplane) => dataplane,
                 None => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
@@ -85,9 +89,15 @@ impl TestingHTTPProxy {
         }
         match dataplane.inner.state.parse::<DataPlaneProcessState>().unwrap() {
             DataPlaneProcessState::STARTED => {}
-            DataPlaneProcessState::REQUESTED => return (StatusCode::FORBIDDEN, "state requested").into_response(),
-            DataPlaneProcessState::STOPPED => return (StatusCode::FORBIDDEN, "state stopped").into_response(),
-            DataPlaneProcessState::TERMINATED => return (StatusCode::FORBIDDEN, "state terminated").into_response(),
+            DataPlaneProcessState::REQUESTED => {
+                return (StatusCode::FORBIDDEN, "state requested").into_response()
+            }
+            DataPlaneProcessState::STOPPED => {
+                return (StatusCode::FORBIDDEN, "state stopped").into_response()
+            }
+            DataPlaneProcessState::TERMINATED => {
+                return (StatusCode::FORBIDDEN, "state terminated").into_response()
+            }
         }
 
         // ODRL Evaluation here!!!!!

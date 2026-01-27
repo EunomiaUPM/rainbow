@@ -87,15 +87,24 @@ impl GatewayCommands {
                         );
                         info!("{}", server_message);
                         let listener = match config.is_local() {
-                            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
-                            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
+                            true => {
+                                TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port()))
+                                    .await?
+                            }
+                            false => {
+                                TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port()))
+                                    .await?
+                            }
                         };
                         serve(listener, gateway_router).await?;
                     }
                     GatewayCliCommands::Subscribe(args) => {
                         let config = GatewayConfig::load(RoleConfig::Provider, args.env_file);
-                        let microservices_subs = RainbowProviderGatewaySubscriptions::new(config.clone());
-                        microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::Catalog).await?;
+                        let microservices_subs =
+                            RainbowProviderGatewaySubscriptions::new(config.clone());
+                        microservices_subs
+                            .subscribe_to_microservice(MicroserviceSubscriptionKey::Catalog)
+                            .await?;
                         // TODO when pubsub refactor
                         // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
                         // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::TransferControlPlane).await?;
@@ -115,14 +124,20 @@ impl GatewayCommands {
                     );
                     info!("{}", server_message);
                     let listener = match config.is_local() {
-                        true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
-                        false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
+                        true => {
+                            TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port()))
+                                .await?
+                        }
+                        false => {
+                            TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?
+                        }
                     };
                     serve(listener, gateway_router).await?;
                 }
                 GatewayCliCommands::Subscribe(args) => {
                     let config = GatewayConfig::load(RoleConfig::Consumer, args.env_file);
-                    let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
+                    let microservices_subs =
+                        RainbowConsumerGatewaySubscriptions::new(config.clone());
                     microservices_subs
                         .subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation)
                         .await?;

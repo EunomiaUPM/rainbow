@@ -26,7 +26,9 @@ use tracing::error;
 
 pub(crate) mod error_adapter;
 
-pub(crate) fn extract_payload_error<T>(input: Result<Json<T>, JsonRejection>) -> anyhow::Result<T, DspTransferError> {
+pub(crate) fn extract_payload_error<T>(
+    input: Result<Json<T>, JsonRejection>,
+) -> anyhow::Result<T, DspTransferError> {
     match input {
         Ok(Json(data)) => Ok(data),
         Err(err) => {

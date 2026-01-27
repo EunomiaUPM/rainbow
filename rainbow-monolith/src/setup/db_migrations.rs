@@ -19,8 +19,6 @@
 
 use rainbow_auth::ssi::data::migrator::get_auth_migrations;
 use rainbow_catalog_agent::get_catalog_migrations;
-use rainbow_common::config::traits::MonoConfigTrait;
-use rainbow_common::config::ApplicationConfig;
 use rainbow_connector::get_connector_migrations;
 use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_events::data::migrations::get_events_migrations;
@@ -53,8 +51,8 @@ impl MigratorTrait for CoreProviderMigration {
 }
 
 impl CoreProviderMigration {
-    pub async fn run(db_connection: DatabaseConnection) -> anyhow::Result<()> {
-        Self::refresh(&db_connection).await?;
+    pub async fn run(db_connection: &DatabaseConnection) -> anyhow::Result<()> {
+        Self::refresh(db_connection).await?;
         Ok(())
     }
 }

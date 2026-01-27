@@ -65,8 +65,10 @@ impl GatewayCommands {
             GatewayCliCommands::Start(args) => {
                 let config = GatewayConfig::load(args.env_file);
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
-                let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
-                let gateway_router = RainbowBusinessRouter::new(config.clone(), gateway_service).router();
+                let notifications_router =
+                    BusinessNotificationsRouter::new(config.clone()).router();
+                let gateway_router =
+                    RainbowBusinessRouter::new(config.clone(), gateway_service).router();
                 let global_router = Router::new().merge(notifications_router).merge(gateway_router);
                 let server_message = format!(
                     "Starting provider gateway server in {}",
@@ -75,8 +77,12 @@ impl GatewayCommands {
                 info!("{}", server_message);
 
                 let listener = match config.is_local() {
-                    true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
-                    false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
+                    true => {
+                        TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?
+                    }
+                    false => {
+                        TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?
+                    }
                 };
                 serve(listener, global_router).await?;
             }

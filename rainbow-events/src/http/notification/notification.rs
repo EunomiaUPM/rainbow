@@ -71,7 +71,9 @@ where
             Some(entity) => match entity {
                 SubscriptionEntities::TransferProcess => "/api/v1/transfers".to_string(),
                 SubscriptionEntities::Catalog => "/api/v1/catalog".to_string(),
-                SubscriptionEntities::ContractNegotiationProcess => "/api/v1/contract-negotiations".to_string(),
+                SubscriptionEntities::ContractNegotiationProcess => {
+                    "/api/v1/contract-negotiations".to_string()
+                }
                 SubscriptionEntities::DataPlaneProcess => "/api/v1/data-plane".to_string(),
             },
         }

@@ -100,12 +100,25 @@ pub trait TransferAgentProcessesTrait: Send + Sync + 'static {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferProcessDto>>;
-    async fn get_batch_transfer_processes(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferProcessDto>>;
+    async fn get_batch_transfer_processes(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<TransferProcessDto>>;
     async fn get_transfer_process_by_id(&self, id: &Urn) -> anyhow::Result<TransferProcessDto>;
-    async fn get_transfer_process_by_key_id(&self, key_id: &str, id: &Urn) -> anyhow::Result<TransferProcessDto>;
-    async fn get_transfer_process_by_key_value(&self, id: &Urn) -> anyhow::Result<TransferProcessDto>;
+    async fn get_transfer_process_by_key_id(
+        &self,
+        key_id: &str,
+        id: &Urn,
+    ) -> anyhow::Result<TransferProcessDto>;
+    async fn get_transfer_process_by_key_value(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<TransferProcessDto>;
 
-    async fn create_transfer_process(&self, new_model: &NewTransferProcessDto) -> anyhow::Result<TransferProcessDto>;
+    async fn create_transfer_process(
+        &self,
+        new_model: &NewTransferProcessDto,
+    ) -> anyhow::Result<TransferProcessDto>;
     async fn put_transfer_process(
         &self,
         id: &Urn,

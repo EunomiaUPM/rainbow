@@ -73,9 +73,15 @@ pub trait NegotiationAgentMessagesTrait: Send + Sync + 'static {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<NegotiationMessageDto>>;
 
-    async fn get_messages_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<NegotiationMessageDto>>;
+    async fn get_messages_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<NegotiationMessageDto>>;
 
-    async fn get_negotiation_message_by_id(&self, id: &Urn) -> anyhow::Result<Option<NegotiationMessageDto>>;
+    async fn get_negotiation_message_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationMessageDto>>;
 
     async fn create_negotiation_message(
         &self,

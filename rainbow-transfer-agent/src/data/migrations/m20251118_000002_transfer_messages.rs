@@ -33,14 +33,32 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(TransferAgentMessages::Table)
-                    .col(ColumnDef::new(TransferAgentMessages::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(TransferAgentMessages::TransferAgentProcessId).string().not_null())
-                    .col(ColumnDef::new(TransferAgentMessages::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentMessages::Id).string().not_null().primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(TransferAgentMessages::TransferAgentProcessId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TransferAgentMessages::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentMessages::Direction).string().not_null())
                     .col(ColumnDef::new(TransferAgentMessages::Protocol).string().not_null())
                     .col(ColumnDef::new(TransferAgentMessages::MessageType).string().not_null())
-                    .col(ColumnDef::new(TransferAgentMessages::StateTransitionFrom).string().not_null())
-                    .col(ColumnDef::new(TransferAgentMessages::StateTransitionTo).string().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentMessages::StateTransitionFrom)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TransferAgentMessages::StateTransitionTo)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentMessages::Payload).json_binary())
                     .foreign_key(
                         ForeignKey::create()

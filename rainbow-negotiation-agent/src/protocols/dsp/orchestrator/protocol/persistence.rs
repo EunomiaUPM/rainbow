@@ -1,9 +1,12 @@
-use crate::entities::agreement::{AgreementDto, EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
+use crate::entities::agreement::{
+    AgreementDto, EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto,
+};
 use crate::entities::negotiation_message::{
     NegotiationAgentMessagesTrait, NegotiationMessageDto, NewNegotiationMessageDto,
 };
 use crate::entities::negotiation_process::{
-    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto, NewNegotiationProcessDto,
+    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto,
+    NewNegotiationProcessDto,
 };
 use crate::entities::offer::{NegotiationAgentOffersTrait, NewOfferDto, OfferDto};
 use crate::protocols::dsp::orchestrator::rpc::types::RpcNegotiationProcessMessageTrait;
@@ -38,7 +41,12 @@ impl OrchestrationPersistenceForProtocol {
         offer_service: Arc<dyn NegotiationAgentOffersTrait>,
         agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
     ) -> Self {
-        Self { negotiation_process_service, negotiation_messages_service, offer_service, agreement_service }
+        Self {
+            negotiation_process_service,
+            negotiation_messages_service,
+            offer_service,
+            agreement_service,
+        }
     }
 
     pub async fn create_new(
@@ -95,7 +103,9 @@ impl OrchestrationPersistenceForProtocol {
         let mut new_process = self.update_process(&process_id, payload).await?;
         let message = self.create_message(&process_id, payload, &process).await?;
         let message_id = self.convert_string_to_urn(&message.inner.id)?;
-        let agreement = self.create_agreement(&process_id, &message_id, &associated_agent_peer, payload).await?;
+        let agreement = self
+            .create_agreement(&process_id, &message_id, &associated_agent_peer, payload)
+            .await?;
         new_process.messages.push(message.inner);
         new_process.agreement = Some(agreement.inner);
         Ok(new_process)
@@ -120,7 +130,10 @@ impl OrchestrationPersistenceForProtocol {
 
 impl OrchestrationHelpers for OrchestrationPersistenceForProtocol {}
 impl OrchestrationExtractors for OrchestrationPersistenceForProtocol {
-    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<RoleConfig> {
+    fn get_role_from_message_type(
+        &self,
+        message: &NegotiationProcessMessageType,
+    ) -> anyhow::Result<RoleConfig> {
         match message {
             NegotiationProcessMessageType::NegotiationRequestMessage => Ok(RoleConfig::Provider),
             NegotiationProcessMessageType::NegotiationOfferMessage => Ok(RoleConfig::Consumer),
@@ -140,7 +153,9 @@ impl OrchestrationPersistenceForProtocol {
             .negotiation_process_service
             .get_negotiation_process_by_key_value(&urn)
             .await?
-            .ok_or_else(|| CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process not found"))?;
+            .ok_or_else(|| {
+                CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process not found")
+            })?;
         Ok(process)
     }
 
@@ -172,8 +187,9 @@ impl OrchestrationPersistenceForProtocol {
             RoleConfig::Provider => self.get_dsp_consumer_pid_safely(message)?,
             RoleConfig::Consumer => self.get_dsp_provider_pid_safely(message)?,
             _ => {
-                let err =
-                    CommonErrors::parse_new("Something is wrong. Seems this process' state is not protocol compliant");
+                let err = CommonErrors::parse_new(
+                    "Something is wrong. Seems this process' state is not protocol compliant",
+                );
                 log::error!("{}", err.log());
                 bail!(err);
             }
@@ -190,7 +206,7 @@ impl OrchestrationPersistenceForProtocol {
             .create_negotiation_process(&NewNegotiationProcessDto {
                 id: Some(id),
                 state: state.to_string(),
-                state_attribute: None,                 // O el valor por defecto que corresponda
+                state_attribute: None, // O el valor por defecto que corresponda
                 associated_agent_peer: "".to_string(), // O extraer del mensaje si existe
                 protocol: "DSP".to_string(),
                 callback_address: Some(callback),
@@ -294,7 +310,9 @@ impl OrchestrationPersistenceForProtocol {
             .agreement_service
             .get_agreement_by_negotiation_process(pid)
             .await?
-            .ok_or_else(|| CommonErrors::missing_resource_new(pid.to_string().as_str(), "Agreement not found"))?;
+            .ok_or_else(|| {
+                CommonErrors::missing_resource_new(pid.to_string().as_str(), "Agreement not found")
+            })?;
         let agreement_urn = self.convert_string_to_urn(&fetching_agreement.inner.id)?;
         let agreement = self
             .agreement_service

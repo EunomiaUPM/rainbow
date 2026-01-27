@@ -18,7 +18,9 @@
  */
 
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferMessageDto};
-use crate::grpc::api::transfer_messages::{CreateMessageRequest, PaginationRequestMessages, TransferMessageResponse};
+use crate::grpc::api::transfer_messages::{
+    CreateMessageRequest, PaginationRequestMessages, TransferMessageResponse,
+};
 use crate::http::transfer_messages::PaginationParams;
 use chrono::DateTime;
 use serde_json::Value as JsonValue;
@@ -32,7 +34,10 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
         let process_urn = Urn::from_str(&proto.transfer_agent_process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?;
         let id_urn = if let Some(id_str) = proto.id {
-            Some(Urn::from_str(&id_str).map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?)
+            Some(
+                Urn::from_str(&id_str)
+                    .map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?,
+            )
         } else {
             None
         };
@@ -40,10 +45,9 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
             if json_str.trim().is_empty() {
                 None
             } else {
-                Some(
-                    serde_json::from_str(&json_str)
-                        .map_err(|e| Status::invalid_argument(format!("Invalid JSON payload: {}", e)))?,
-                )
+                Some(serde_json::from_str(&json_str).map_err(|e| {
+                    Status::invalid_argument(format!("Invalid JSON payload: {}", e))
+                })?)
             }
         } else {
             None
@@ -71,7 +75,8 @@ impl From<PaginationRequestMessages> for PaginationParams {
 impl From<TransferMessageDto> for TransferMessageResponse {
     fn from(dto: TransferMessageDto) -> Self {
         let model = dto.inner;
-        let payload_json = model.payload.map(|json| serde_json::to_string(&json).unwrap_or_default());
+        let payload_json =
+            model.payload.map(|json| serde_json::to_string(&json).unwrap_or_default());
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
 
         Self {

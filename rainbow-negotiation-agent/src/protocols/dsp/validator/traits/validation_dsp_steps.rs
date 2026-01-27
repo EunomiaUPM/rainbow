@@ -19,7 +19,8 @@
 use crate::protocols::dsp::protocol_types::{
     NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferInitMessageDto,
     NegotiationOfferMessageDto, NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
-    NegotiationRequestMessageDto, NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
+    NegotiationVerificationMessageDto,
 };
 
 #[async_trait::async_trait]

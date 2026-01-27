@@ -33,17 +33,37 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(NegotiationAgentProcess::Table)
-                    .col(ColumnDef::new(NegotiationAgentProcess::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(NegotiationAgentProcess::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentProcess::State).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentProcess::StateAttribute).string())
-                    .col(ColumnDef::new(NegotiationAgentProcess::AssociatedAgentPeer).string().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentProcess::AssociatedAgentPeer)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentProcess::Protocol).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentProcess::CallbackAddress).string())
                     .col(ColumnDef::new(NegotiationAgentProcess::Role).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentProcess::Properties).json_binary().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentProcess::Properties)
+                            .json_binary()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentProcess::ErrorDetails).json_binary())
-                    .col(ColumnDef::new(NegotiationAgentProcess::CreatedAt).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(NegotiationAgentProcess::UpdatedAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(NegotiationAgentProcess::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentProcess::UpdatedAt)
+                            .timestamp_with_time_zone(),
+                    )
                     .to_owned(),
             )
             .await?;

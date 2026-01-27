@@ -41,7 +41,8 @@ mod test_catalog_complete {
     async fn setup() -> CatalogCacheForRedis {
         let redis_url = "redis://default:ds_core_provider_redis@127.0.0.1:6379";
         let client = redis::Client::open(redis_url).unwrap();
-        let conn = client.get_multiplexed_async_connection().await.expect("Redis connection failed");
+        let conn =
+            client.get_multiplexed_async_connection().await.expect("Redis connection failed");
         CatalogCacheForRedis::new(conn)
     }
 

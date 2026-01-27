@@ -22,9 +22,10 @@ use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::persistence::NegotiationPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
-    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationEventType,
-    NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageWrapper,
-    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
+    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto,
+    NegotiationEventType, NegotiationOfferInitMessageDto, NegotiationOfferMessageDto,
+    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
     NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
@@ -63,10 +64,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_initial_contract_request(
         &self,
         input: &NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>,
-    ) -> anyhow::Result<(
-        NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-        bool,
-    )> {
+    ) -> anyhow::Result<(NegotiationProcessMessageWrapper<NegotiationAckMessageDto>, bool)> {
         self.validator.on_contract_request_init(&input).await?;
 
         // persist
@@ -84,7 +82,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         self.validator.on_contract_request(id, &input).await?;
 
         // persist
-        let negotiation = self.persistence_service.update_with_offer(id.as_str(), &input.dto).await?;
+        let negotiation =
+            self.persistence_service.update_with_offer(id.as_str(), &input.dto).await?;
         // notify
         let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
         Ok(negotiation_process_dto)
@@ -107,10 +106,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_initial_provider_offer(
         &self,
         input: &NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>,
-    ) -> anyhow::Result<(
-        NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-        bool,
-    )> {
+    ) -> anyhow::Result<(NegotiationProcessMessageWrapper<NegotiationAckMessageDto>, bool)> {
         self.validator.on_contract_offer_init(&input).await?;
 
         // persist
@@ -128,7 +124,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         self.validator.on_contract_offer(id, &input).await?;
 
         // persist
-        let negotiation = self.persistence_service.update_with_offer(id.as_str(), &input.dto).await?;
+        let negotiation =
+            self.persistence_service.update_with_offer(id.as_str(), &input.dto).await?;
         // notify
         let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
         Ok(negotiation_process_dto)
@@ -142,7 +139,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         self.validator.on_contract_agreement(id, &input).await?;
 
         // persist
-        let negotiation = self.persistence_service.update_with_new_agreement(id.as_str(), &input.dto).await?;
+        let negotiation =
+            self.persistence_service.update_with_new_agreement(id.as_str(), &input.dto).await?;
         // notify
         let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
         Ok(negotiation_process_dto)
@@ -157,7 +155,9 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
 
         // persist
         let negotiation = match &input.dto.event_type {
-            NegotiationEventType::ACCEPTED => self.persistence_service.update(id.as_str(), &input.dto).await?,
+            NegotiationEventType::ACCEPTED => {
+                self.persistence_service.update(id.as_str(), &input.dto).await?
+            }
             NegotiationEventType::FINALIZED => {
                 self.persistence_service.update_with_agreement(id.as_str(), &input.dto).await?
             }

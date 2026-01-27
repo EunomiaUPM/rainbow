@@ -23,8 +23,8 @@ pub(crate) mod protocol;
 use crate::protocols::dsp::protocol_types::{
     NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto,
     NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageWrapper,
-    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
-    NegotiationVerificationMessageDto,
+    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
+    NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 
 #[async_trait::async_trait]
@@ -37,10 +37,7 @@ pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
     async fn on_initial_contract_request(
         &self,
         input: &NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>,
-    ) -> anyhow::Result<(
-        NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-        bool,
-    )>;
+    ) -> anyhow::Result<(NegotiationProcessMessageWrapper<NegotiationAckMessageDto>, bool)>;
 
     async fn on_consumer_request(
         &self,
@@ -57,10 +54,7 @@ pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
     async fn on_initial_provider_offer(
         &self,
         input: &NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>,
-    ) -> anyhow::Result<(
-        NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-        bool,
-    )>;
+    ) -> anyhow::Result<(NegotiationProcessMessageWrapper<NegotiationAckMessageDto>, bool)>;
 
     async fn on_provider_offer(
         &self,

@@ -6,19 +6,25 @@ use crate::entities::data_plane_process::{
 use rainbow_common::adv_protocol::interplane::data_plane_provision::{
     DataPlaneProvisionRequest, DataPlaneProvisionResponse,
 };
-use rainbow_common::adv_protocol::interplane::data_plane_start::{DataPlaneStart, DataPlaneStartAck};
-use rainbow_common::adv_protocol::interplane::data_plane_status::{DataPlaneStatusRequest, DataPlaneStatusResponse};
+use rainbow_common::adv_protocol::interplane::data_plane_start::{
+    DataPlaneStart, DataPlaneStartAck,
+};
+use rainbow_common::adv_protocol::interplane::data_plane_status::{
+    DataPlaneStatusRequest, DataPlaneStatusResponse,
+};
 use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, DataPlaneStopAck};
 use rainbow_common::adv_protocol::interplane::{
-    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState,
-    DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPResponseField,
+    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection,
+    DataPlaneProcessState, DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes,
+    DataPlaneSDPResponseField,
 };
 use rainbow_common::config::services::TransferConfig;
-use rainbow_common::config::traits::HostConfigTrait;
-use rainbow_common::config::types::HostType;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::dcat_formats::FormatAction;
 use std::collections::HashMap;
 use std::sync::Arc;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
 
 pub struct DataPlaneAccessControllerService {
     data_source_connector_service: Arc<dyn DataSourceConnectorTrait>,
@@ -42,7 +48,7 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
         &self,
         input: &DataPlaneProvisionRequest,
     ) -> anyhow::Result<DataPlaneProvisionResponse> {
-        let process_address = self.config.get_host(HostType::Http);
+        let process_address = self.config.common().get_host(HostType::Http);
         let sdp_config = input.sdp_config.as_ref().unwrap();
         let next_hop_protocol = sdp_config
             .iter()
@@ -74,17 +80,11 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
             next_hop_address.content.to_string(),
         );
         dataplane_fields.insert(String::from("DownstreamHopAddressAuth"), "".to_string());
-        dataplane_fields.insert(
-            String::from("DownstreamHopAddressAuthContent"),
-            "".to_string(),
-        );
+        dataplane_fields.insert(String::from("DownstreamHopAddressAuthContent"), "".to_string());
         dataplane_fields.insert(String::from("UpstreamHopAddressProtocol"), "".to_string());
         dataplane_fields.insert(String::from("UpstreamHopAddressUrl"), "".to_string());
         dataplane_fields.insert(String::from("UpstreamHopAddressAuth"), "".to_string());
-        dataplane_fields.insert(
-            String::from("UpstreamHopAddressAuthContent"),
-            "".to_string(),
-        );
+        dataplane_fields.insert(String::from("UpstreamHopAddressAuthContent"), "".to_string());
         let dataplane_response = self
             .dataplane_process_entity
             .create_data_plane_process(&NewDataPlaneProcessDto {
@@ -102,23 +102,42 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
             sdp_response: vec![
                 DataPlaneSDPResponseField {
                     _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
-                    format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
-                    content: dataplane_response.data_plane_fields.get("ProcessAddressProtocol").unwrap().to_string(),
+                    format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml"
+                        .to_string(),
+                    content: dataplane_response
+                        .data_plane_fields
+                        .get("ProcessAddressProtocol")
+                        .unwrap()
+                        .to_string(),
                 },
                 DataPlaneSDPResponseField {
                     _type: DataPlaneSDPFieldTypes::DataPlaneAddress,
                     format: "uri".to_string(),
-                    content: dataplane_response.data_plane_fields.get("ProcessAddressUrl").unwrap().to_string(),
+                    content: dataplane_response
+                        .data_plane_fields
+                        .get("ProcessAddressUrl")
+                        .unwrap()
+                        .to_string(),
                 },
                 DataPlaneSDPResponseField {
                     _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
-                    format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml".to_string(),
-                    content: dataplane_response.data_plane_fields.get("ProcessAddressAuth").unwrap().to_string(),
+                    format:
+                        "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml"
+                            .to_string(),
+                    content: dataplane_response
+                        .data_plane_fields
+                        .get("ProcessAddressAuth")
+                        .unwrap()
+                        .to_string(),
                 },
                 DataPlaneSDPResponseField {
                     _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
                     format: "jwt".to_string(),
-                    content: dataplane_response.data_plane_fields.get("ProcessAddressAuthContent").unwrap().to_string(),
+                    content: dataplane_response
+                        .data_plane_fields
+                        .get("ProcessAddressAuthContent")
+                        .unwrap()
+                        .to_string(),
                 },
             ],
             sdp_request: None,
@@ -131,7 +150,10 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
             .dataplane_process_entity
             .put_data_plane_process(
                 &input.session_id,
-                &EditDataPlaneProcessDto { state: Some(DataPlaneProcessState::STARTED.to_string()), fields: None },
+                &EditDataPlaneProcessDto {
+                    state: Some(DataPlaneProcessState::STARTED.to_string()),
+                    fields: None,
+                },
             )
             .await?;
         Ok(DataPlaneStartAck {
@@ -146,7 +168,10 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
             .dataplane_process_entity
             .put_data_plane_process(
                 &input.session_id,
-                &EditDataPlaneProcessDto { state: Some(DataPlaneProcessState::STOPPED.to_string()), fields: None },
+                &EditDataPlaneProcessDto {
+                    state: Some(DataPlaneProcessState::STOPPED.to_string()),
+                    fields: None,
+                },
             )
             .await?;
         Ok(DataPlaneStopAck {
@@ -156,7 +181,10 @@ impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
         })
     }
 
-    async fn data_plane_get_status(&self, input: &DataPlaneStatusRequest) -> anyhow::Result<DataPlaneStatusResponse> {
+    async fn data_plane_get_status(
+        &self,
+        input: &DataPlaneStatusRequest,
+    ) -> anyhow::Result<DataPlaneStatusResponse> {
         Ok(DataPlaneStatusResponse {
             _type: DataPlaneControllerMessages::DataPlaneStatusResponse,
             version: DataPlaneControllerVersion::Version10,

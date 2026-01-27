@@ -47,6 +47,7 @@ tonic-prost = "0.14.2"
 prost-types = "0.14.1"
 tonic-reflection = "0.14.2"
 json_to_table = {workspace = true}
+ymir = {workspace = true}
 
 
 [build-dependencies]

@@ -31,5 +31,8 @@ pub trait ConnectorInstanceRepoTrait: Send + Sync {
         version: &String,
     ) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
 
-    async fn delete_instance_by_id(&self, instance_id: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
+    async fn delete_instance_by_id(
+        &self,
+        instance_id: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
 }

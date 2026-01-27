@@ -18,7 +18,9 @@
  */
 
 use crate::entities::negotiation_process::{NegotiationAgentProcessesTrait, NegotiationProcessDto};
-use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageTrait, NegotiationProcessState};
+use crate::protocols::dsp::protocol_types::{
+    NegotiationProcessMessageTrait, NegotiationProcessState,
+};
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::{anyhow, bail};
 use rainbow_common::config::types::roles::RoleConfig;
@@ -51,8 +53,9 @@ impl ValidationHelpers for ValidationHelperService {
             "consumerPid" => Ok(RoleConfig::Consumer),
             "providerPid" => Ok(RoleConfig::Provider),
             _ => {
-                let err =
-                    CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
+                let err = CommonErrors::parse_new(
+                    "Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -64,8 +67,9 @@ impl ValidationHelpers for ValidationHelperService {
             RoleConfig::Provider => Ok("providerPid"),
             RoleConfig::Consumer => Ok("consumerPid"),
             _ => {
-                let err =
-                    CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
+                let err = CommonErrors::parse_new(
+                    "Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -77,7 +81,8 @@ impl ValidationHelpers for ValidationHelperService {
         payload: &dyn NegotiationProcessMessageTrait,
     ) -> anyhow::Result<NegotiationProcessDto> {
         let consumer_pid = payload.get_consumer_pid().ok_or_else(|| {
-            let err = CommonErrors::parse_new("Not a valid DSP payload, consumer_pid is mandatory.");
+            let err =
+                CommonErrors::parse_new("Not a valid DSP payload, consumer_pid is mandatory.");
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -86,7 +91,8 @@ impl ValidationHelpers for ValidationHelperService {
             .get_negotiation_process_by_key_value(&consumer_pid)
             .await
             .map_err(|e| {
-                let err = CommonErrors::database_new(format!("Db error, {}", e.to_string()).as_str());
+                let err =
+                    CommonErrors::database_new(format!("Db error, {}", e.to_string()).as_str());
                 error!("{}", err.log());
                 anyhow!(err)
             })?
@@ -98,7 +104,11 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(dto)
     }
 
-    async fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: &RoleConfig) -> anyhow::Result<Urn> {
+    async fn get_pid_by_role(
+        &self,
+        dto: &NegotiationProcessDto,
+        role: &RoleConfig,
+    ) -> anyhow::Result<Urn> {
         let role_as_identifier = self.parse_role_into_identifier(&role).await?;
         let pid = dto.identifiers.get(role_as_identifier).ok_or_else(|| {
             let err = CommonErrors::parse_new("There is no such a identifier, role is mandatory.");
@@ -115,18 +125,25 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(role)
     }
 
-    async fn get_state_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<NegotiationProcessState> {
+    async fn get_state_from_dto(
+        &self,
+        dto: &NegotiationProcessDto,
+    ) -> anyhow::Result<NegotiationProcessState> {
         let state = &dto.inner.state;
         let state = state.parse::<NegotiationProcessState>().map_err(|_e| {
-            let err =
-                CommonErrors::parse_new("Something is wrong. Seems this process' state is not protocol compliant");
+            let err = CommonErrors::parse_new(
+                "Something is wrong. Seems this process' state is not protocol compliant",
+            );
             log::error!("{}", err.log());
             err
         })?;
         Ok(state)
     }
 
-    async fn get_state_attribute_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<String> {
+    async fn get_state_attribute_from_dto(
+        &self,
+        dto: &NegotiationProcessDto,
+    ) -> anyhow::Result<String> {
         Ok("state_attribute".to_string())
     }
 }

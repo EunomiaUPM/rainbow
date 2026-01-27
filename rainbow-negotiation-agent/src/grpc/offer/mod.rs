@@ -1,9 +1,9 @@
 use crate::entities::offer::{NegotiationAgentOffersTrait, NewOfferDto};
 use crate::grpc::api::negotiation_agent::negotiation_agent_offers_service_server::NegotiationAgentOffersService;
 use crate::grpc::api::negotiation_agent::{
-    CreateOfferRequest, DeleteOfferRequest, GetAllOffersRequest, GetBatchOffersRequest, GetOfferByIdRequest,
-    GetOfferByNegotiationMessageRequest, GetOfferByOfferIdRequest, GetOffersByNegotiationProcessRequest,
-    OfferListResponse, OfferResponse,
+    CreateOfferRequest, DeleteOfferRequest, GetAllOffersRequest, GetBatchOffersRequest,
+    GetOfferByIdRequest, GetOfferByNegotiationMessageRequest, GetOfferByOfferIdRequest,
+    GetOffersByNegotiationProcessRequest, OfferListResponse, OfferResponse,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -28,8 +28,11 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferListResponse>, Status> {
         let req = request.into_inner();
 
-        let offers =
-            self.service.get_all_offers(req.limit, req.page).await.map_err(|e| Status::internal(e.to_string()))?;
+        let offers = self
+            .service
+            .get_all_offers(req.limit, req.page)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_offers = offers
             .into_iter()
@@ -55,7 +58,11 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| Status::invalid_argument(format!("Invalid URN in batch: {}", e)))?;
 
-        let offers = self.service.get_batch_offers(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let offers = self
+            .service
+            .get_batch_offers(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_offers = offers
             .into_iter()
@@ -76,8 +83,11 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
         let urn = Urn::from_str(&req.process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process ID URN: {}", e)))?;
 
-        let offers =
-            self.service.get_offers_by_negotiation_process(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let offers = self
+            .service
+            .get_offers_by_negotiation_process(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_offers = offers
             .into_iter()
@@ -90,9 +100,13 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
         Ok(Response::new(OfferListResponse { offers: proto_offers }))
     }
 
-    async fn get_offer_by_id(&self, request: Request<GetOfferByIdRequest>) -> Result<Response<OfferResponse>, Status> {
+    async fn get_offer_by_id(
+        &self,
+        request: Request<GetOfferByIdRequest>,
+    ) -> Result<Response<OfferResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.get_offer_by_id(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
@@ -133,7 +147,10 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
         }
     }
 
-    async fn create_offer(&self, request: Request<CreateOfferRequest>) -> Result<Response<OfferResponse>, Status> {
+    async fn create_offer(
+        &self,
+        request: Request<CreateOfferRequest>,
+    ) -> Result<Response<OfferResponse>, Status> {
         let req = request.into_inner();
 
         // Usamos el TryFrom definido en los mappers para convertir Request -> DTO
@@ -145,9 +162,13 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
         }
     }
 
-    async fn delete_offer(&self, request: Request<DeleteOfferRequest>) -> Result<Response<()>, Status> {
+    async fn delete_offer(
+        &self,
+        request: Request<DeleteOfferRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.delete_offer(&urn).await {
             Ok(_) => Ok(Response::new(())),

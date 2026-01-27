@@ -21,8 +21,12 @@ use async_trait::async_trait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::{
     DataPlaneProvisionRequest, DataPlaneProvisionResponse,
 };
-use rainbow_common::adv_protocol::interplane::data_plane_start::{DataPlaneStart, DataPlaneStartAck};
-use rainbow_common::adv_protocol::interplane::data_plane_status::{DataPlaneStatusRequest, DataPlaneStatusResponse};
+use rainbow_common::adv_protocol::interplane::data_plane_start::{
+    DataPlaneStart, DataPlaneStartAck,
+};
+use rainbow_common::adv_protocol::interplane::data_plane_status::{
+    DataPlaneStatusRequest, DataPlaneStatusResponse,
+};
 use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, DataPlaneStopAck};
 
 pub mod dataplane_access_controller;
@@ -35,5 +39,8 @@ pub trait DataPlaneAccessControllerTrait: Send + Sync {
     ) -> anyhow::Result<DataPlaneProvisionResponse>;
     async fn data_plane_start(&self, input: &DataPlaneStart) -> anyhow::Result<DataPlaneStartAck>;
     async fn data_plane_stop(&self, input: &DataPlaneStop) -> anyhow::Result<DataPlaneStopAck>;
-    async fn data_plane_get_status(&self, input: &DataPlaneStatusRequest) -> anyhow::Result<DataPlaneStatusResponse>;
+    async fn data_plane_get_status(
+        &self,
+        input: &DataPlaneStatusRequest,
+    ) -> anyhow::Result<DataPlaneStatusResponse>;
 }

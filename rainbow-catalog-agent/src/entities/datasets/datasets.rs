@@ -13,14 +13,21 @@ pub struct DatasetEntities {
 }
 
 impl DatasetEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn CatalogAgentRepoTrait>,
+        cache: Arc<dyn CatalogAgentCacheTrait>,
+    ) -> Self {
         Self { repo, cache }
     }
 }
 
 #[async_trait::async_trait]
 impl DatasetEntityTrait for DatasetEntities {
-    async fn get_all_datasets(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<DatasetDto>> {
+    async fn get_all_datasets(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<DatasetDto>> {
         // cache
         if let Ok(dtos) = self.cache.get_dataset_cache().get_collection(limit, page).await {
             if !dtos.is_empty() {
@@ -79,9 +86,14 @@ impl DatasetEntityTrait for DatasetEntities {
         Ok(dtos)
     }
 
-    async fn get_datasets_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DatasetDto>> {
+    async fn get_datasets_by_catalog_id(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<Vec<DatasetDto>> {
         // cache
-        if let Ok(dtos) = self.cache.get_dataset_cache().get_by_relation("catalogs", catalog_id, None, None).await {
+        if let Ok(dtos) =
+            self.cache.get_dataset_cache().get_by_relation("catalogs", catalog_id, None, None).await
+        {
             if !dtos.is_empty() {
                 return Ok(dtos);
             }
@@ -130,7 +142,8 @@ impl DatasetEntityTrait for DatasetEntities {
         if let Some(dto) = &dto {
             let cache = self.cache.get_dataset_cache();
             let _ = cache.set_single(dataset_id, dto).await;
-            let _ = cache.add_to_collection(dataset_id, dto.inner.dct_issued.timestamp() as f64).await;
+            let _ =
+                cache.add_to_collection(dataset_id, dto.inner.dct_issued.timestamp() as f64).await;
         }
         Ok(dto)
     }
@@ -160,7 +173,10 @@ impl DatasetEntityTrait for DatasetEntities {
         Ok(dto)
     }
 
-    async fn create_dataset(&self, new_dataset_model: &NewDatasetDto) -> anyhow::Result<DatasetDto> {
+    async fn create_dataset(
+        &self,
+        new_dataset_model: &NewDatasetDto,
+    ) -> anyhow::Result<DatasetDto> {
         // db
         let new_model = new_dataset_model.clone().into();
         let dataset = self

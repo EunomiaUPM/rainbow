@@ -34,8 +34,18 @@ pub trait ValidationHelpers: Send + Sync + 'static {
         &self,
         payload: &dyn TransferProcessMessageTrait,
     ) -> anyhow::Result<TransferProcessDto>;
-    async fn get_pid_by_role(&self, dto: &TransferProcessDto, role: RoleConfig) -> anyhow::Result<Urn>;
+    async fn get_pid_by_role(
+        &self,
+        dto: &TransferProcessDto,
+        role: RoleConfig,
+    ) -> anyhow::Result<Urn>;
     async fn get_role_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<RoleConfig>;
-    async fn get_state_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<TransferProcessState>;
-    async fn get_state_attribute_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<TransferStateAttribute>;
+    async fn get_state_from_dto(
+        &self,
+        dto: &TransferProcessDto,
+    ) -> anyhow::Result<TransferProcessState>;
+    async fn get_state_attribute_from_dto(
+        &self,
+        dto: &TransferProcessDto,
+    ) -> anyhow::Result<TransferStateAttribute>;
 }

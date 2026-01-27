@@ -37,10 +37,7 @@ impl TransferEventsRouter {
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/data-plane/:data_plane_id",
-                get(Self::handle_get_data_plane_by_id),
-            )
+            .route("/data-plane/:data_plane_id", get(Self::handle_get_data_plane_by_id))
             .route("/:transfer_id", get(Self::handle_get_by_id))
             .with_state(self)
     }

@@ -27,7 +27,9 @@ impl TemplateVisitable for AuthenticationConfig {
                 visitor.exit_scope();
                 Ok(())
             }
-            AuthenticationConfig::OAuth2 { token_url, client_id, client_secret, scopes, .. } => {
+            AuthenticationConfig::OAuth2 {
+                token_url, client_id, client_secret, scopes, ..
+            } => {
                 visitor.enter_scope("oauth2");
                 token_url.accept(visitor)?;
                 client_id.accept(visitor)?;

@@ -75,11 +75,24 @@ impl From<odrl_offer::Model> for OdrlPolicyDto {
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait OdrlPolicyEntityTrait: Sync + Send {
-    async fn get_all_odrl_offers(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<OdrlPolicyDto>>;
+    async fn get_all_odrl_offers(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<OdrlPolicyDto>>;
     async fn get_batch_odrl_offers(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<OdrlPolicyDto>>;
-    async fn get_all_odrl_offers_by_entity(&self, entity: &Urn) -> anyhow::Result<Vec<OdrlPolicyDto>>;
-    async fn get_odrl_offer_by_id(&self, odrl_offer_id: &Urn) -> anyhow::Result<Option<OdrlPolicyDto>>;
-    async fn create_odrl_offer(&self, new_odrl_offer_model: &NewOdrlPolicyDto) -> anyhow::Result<OdrlPolicyDto>;
+    async fn get_all_odrl_offers_by_entity(
+        &self,
+        entity: &Urn,
+    ) -> anyhow::Result<Vec<OdrlPolicyDto>>;
+    async fn get_odrl_offer_by_id(
+        &self,
+        odrl_offer_id: &Urn,
+    ) -> anyhow::Result<Option<OdrlPolicyDto>>;
+    async fn create_odrl_offer(
+        &self,
+        new_odrl_offer_model: &NewOdrlPolicyDto,
+    ) -> anyhow::Result<OdrlPolicyDto>;
     async fn delete_odrl_offer_by_id(&self, odrl_offer_id: &Urn) -> anyhow::Result<()>;
     async fn delete_odrl_offers_by_entity(&self, entity_id: &Urn) -> anyhow::Result<()>;
 }

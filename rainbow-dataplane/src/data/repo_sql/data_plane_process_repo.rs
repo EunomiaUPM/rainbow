@@ -1,7 +1,14 @@
 use crate::data::entities::data_plane_process;
-use crate::data::entities::data_plane_process::{EditDataPlaneProcessModel, NewDataPlaneProcessModel};
-use crate::data::repo_traits::data_plane_process_repo::{DataPlaneProcessRepoErrors, DataPlaneProcessRepoTrait};
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use crate::data::entities::data_plane_process::{
+    EditDataPlaneProcessModel, NewDataPlaneProcessModel,
+};
+use crate::data::repo_traits::data_plane_process_repo::{
+    DataPlaneProcessRepoErrors, DataPlaneProcessRepoTrait,
+};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::Urn;
 
 pub struct DataPlaneProcessRepoForSql {
@@ -27,9 +34,7 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
             .await;
         match processes {
             Ok(processes) => Ok(processes),
-            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(e.into())),
         }
     }
 
@@ -44,9 +49,7 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
             .await;
         match processes {
             Ok(processes) => Ok(processes),
-            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(e.into())),
         }
     }
 
@@ -58,9 +61,7 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
         let process = data_plane_process::Entity::find_by_id(pid).one(&self.db_connection).await;
         match process {
             Ok(process) => Ok(process),
-            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(e.into())),
         }
     }
 
@@ -69,13 +70,13 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
         new_data_plane_process: &NewDataPlaneProcessModel,
     ) -> anyhow::Result<data_plane_process::Model, DataPlaneProcessRepoErrors> {
         let model: data_plane_process::ActiveModel = new_data_plane_process.clone().into();
-        let process = data_plane_process::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let process = data_plane_process::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
         match process {
             Ok(process) => Ok(process),
             Err(e) => {
-                return Err(DataPlaneProcessRepoErrors::ErrorCreatingDataplaneProcess(
-                    e.into(),
-                ))
+                return Err(DataPlaneProcessRepoErrors::ErrorCreatingDataplaneProcess(e.into()))
             }
         }
     }
@@ -93,9 +94,7 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
                 None => return Err(DataPlaneProcessRepoErrors::DataplaneProcessNotFound),
             },
             Err(e) => {
-                return Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(
-                    e.into(),
-                ))
+                return Err(DataPlaneProcessRepoErrors::ErrorFetchingDataplaneProcess(e.into()))
             }
         };
         let mut old_active_model: data_plane_process::ActiveModel = old_model.into();
@@ -106,23 +105,23 @@ impl DataPlaneProcessRepoTrait for DataPlaneProcessRepoForSql {
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorUpdatingDataplaneProcess(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorUpdatingDataplaneProcess(e.into())),
         }
     }
 
-    async fn delete_data_plane_processes(&self, process_id: &Urn) -> anyhow::Result<(), DataPlaneProcessRepoErrors> {
+    async fn delete_data_plane_processes(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<(), DataPlaneProcessRepoErrors> {
         let id = process_id.to_string();
-        let transfer_process = data_plane_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
+        let transfer_process =
+            data_plane_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
         match transfer_process {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(DataPlaneProcessRepoErrors::DataplaneProcessNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorDeletingDataplaneProcess(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneProcessRepoErrors::ErrorDeletingDataplaneProcess(e.into())),
         }
     }
 }

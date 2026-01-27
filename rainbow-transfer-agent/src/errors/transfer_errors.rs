@@ -58,10 +58,8 @@ impl ErrorLog for TransferErrors {
             TransferErrors::ConsumerAlreadyRegistered { info, cause, http_code } => {
                 let http_code = format!("Http Code: {}", http_code);
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
+                let details =
+                    format!("Details: {}", info.details.as_deref().unwrap_or("No details"));
 
                 format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n{}",
@@ -71,10 +69,8 @@ impl ErrorLog for TransferErrors {
             TransferErrors::ProtocolError { info, cause, http_code } => {
                 let http_code = format!("Http Code: {}", http_code);
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
+                let details =
+                    format!("Details: {}", info.details.as_deref().unwrap_or("No details"));
                 format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n{}",
                     self, http_code, info.error_code, info.message, details, cause
@@ -85,17 +81,17 @@ impl ErrorLog for TransferErrors {
 }
 
 impl TransferErrors {
-    pub fn consumer_already_registered_new(id: Option<String>, cause: Option<String>) -> TransferErrors {
+    pub fn consumer_already_registered_new(
+        id: Option<String>,
+        cause: Option<String>,
+    ) -> TransferErrors {
         TransferErrors::ConsumerAlreadyRegistered {
             info: ErrorInfo {
                 message: "Consumer has been already declared".to_string(),
                 error_code: 2100,
                 status_code: StatusCode::BAD_REQUEST,
-                details: format!(
-                    "Consumer {} has been declared",
-                    id.unwrap_or("".to_string())
-                )
-                .into(),
+                details: format!("Consumer {} has been declared", id.unwrap_or("".to_string()))
+                    .into(),
                 cause: cause.clone().unwrap_or_default(),
             },
             http_code: 400,

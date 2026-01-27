@@ -17,7 +17,9 @@
  *
  */
 
-use crate::entities::agreement::{EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
+use crate::entities::agreement::{
+    EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto,
+};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::{
@@ -57,7 +59,10 @@ impl FromRef<NegotiationAgentAgreementsRouter> for Arc<ContractsConfig> {
 }
 
 impl NegotiationAgentAgreementsRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentAgreementsTrait>, config: Arc<ContractsConfig>) -> Self {
+    pub fn new(
+        service: Arc<dyn NegotiationAgentAgreementsTrait>,
+        config: Arc<ContractsConfig>,
+    ) -> Self {
         Self { service, config }
     }
 

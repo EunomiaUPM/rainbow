@@ -38,5 +38,8 @@ pub trait DistributionRepositoryTrait: Send + Sync {
         &self,
         new_distribution_model: &NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogAgentRepoErrors>;
-    async fn delete_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_distribution_by_id(
+        &self,
+        distribution_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
 }

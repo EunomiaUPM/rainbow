@@ -37,7 +37,9 @@ impl TransferAgentRepoForSql {
     pub fn create_repo(db_connection: DatabaseConnection) -> Self {
         Self {
             transfer_process_repo: Arc::new(TransferProcessRepoForSql::new(db_connection.clone())),
-            transfer_process_identifier_repo: Arc::new(TransferIdentifierRepoForSql::new(db_connection.clone())),
+            transfer_process_identifier_repo: Arc::new(TransferIdentifierRepoForSql::new(
+                db_connection.clone(),
+            )),
             transfer_message_repo: Arc::new(TransferMessageRepoForSql::new(db_connection.clone())),
         }
     }

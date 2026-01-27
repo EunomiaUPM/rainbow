@@ -19,10 +19,11 @@
 
 use crate::facades::distribution_resolver_facade::{Distribution, DistributionFacadeTrait};
 use rainbow_common::config::services::CatalogConfig;
-use rainbow_common::config::traits::HostConfigTrait;
-use rainbow_common::config::types::HostType;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
 
 pub struct DistributionFacadeServiceForConnector {
     config: Arc<CatalogConfig>,
@@ -37,8 +38,11 @@ impl DistributionFacadeServiceForConnector {
 
 #[async_trait::async_trait]
 impl DistributionFacadeTrait for DistributionFacadeServiceForConnector {
-    async fn resolve_distribution_by_id(&self, distribution_id: &String) -> anyhow::Result<Distribution> {
-        let catalog_url = self.config.get_host(HostType::Http);
+    async fn resolve_distribution_by_id(
+        &self,
+        distribution_id: &String,
+    ) -> anyhow::Result<Distribution> {
+        let catalog_url = self.config.common().get_host(HostType::Http);
         let distribution_url = format!(
             "{}/api/v1/catalog-agent/distributions/{}",
             catalog_url, distribution_id

@@ -41,14 +41,19 @@ impl ValidatePayloadService {
 #[async_trait::async_trait]
 impl ValidatePayload for ValidatePayloadService {
     #[allow(unused)]
-    async fn validate_with_json_schema(&self, payload: &dyn TransferProcessMessageTrait) -> anyhow::Result<()> {
+    async fn validate_with_json_schema(
+        &self,
+        payload: &dyn TransferProcessMessageTrait,
+    ) -> anyhow::Result<()> {
         // TODO set json_schema
         Ok(())
     }
 
     async fn validate_uri_id_as_urn(&self, uri_id: &String) -> anyhow::Result<()> {
         self.helpers.parse_urn(uri_id).await.map_err(|e| {
-            let err = CommonErrors::parse_new(format!("Uri id parameter must be urn. {}", e.to_string()).as_str());
+            let err = CommonErrors::parse_new(
+                format!("Uri id parameter must be urn. {}", e.to_string()).as_str(),
+            );
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -56,7 +61,10 @@ impl ValidatePayload for ValidatePayloadService {
     }
 
     #[allow(unused)]
-    async fn validate_identifiers_as_urn(&self, payload: &dyn TransferProcessMessageTrait) -> anyhow::Result<()> {
+    async fn validate_identifiers_as_urn(
+        &self,
+        payload: &dyn TransferProcessMessageTrait,
+    ) -> anyhow::Result<()> {
         // Are as urn defined in dtos
         Ok(())
     }
@@ -96,11 +104,17 @@ impl ValidatePayload for ValidatePayloadService {
         payload: &dyn TransferProcessMessageTrait,
         dto: &TransferProcessDto,
     ) -> anyhow::Result<()> {
-        let provider_pid_in_dto = self.helpers.get_pid_by_role(dto, RoleConfig::Provider).await?.to_string();
-        let consumer_pid_in_dto = self.helpers.get_pid_by_role(dto, RoleConfig::Consumer).await?.to_string();
-        let provider_pid_in_payload = payload.get_provider_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
-        let consumer_pid_in_payload = payload.get_consumer_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
-        if provider_pid_in_dto != provider_pid_in_payload || consumer_pid_in_dto != consumer_pid_in_payload {
+        let provider_pid_in_dto =
+            self.helpers.get_pid_by_role(dto, RoleConfig::Provider).await?.to_string();
+        let consumer_pid_in_dto =
+            self.helpers.get_pid_by_role(dto, RoleConfig::Consumer).await?.to_string();
+        let provider_pid_in_payload =
+            payload.get_provider_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
+        let consumer_pid_in_payload =
+            payload.get_consumer_pid().unwrap_or(Urn::from_str("urn:fake:0")?).to_string();
+        if provider_pid_in_dto != provider_pid_in_payload
+            || consumer_pid_in_dto != consumer_pid_in_payload
+        {
             let err = CommonErrors::parse_new("Uri string and body identifier are not correlated");
             error!("{}", err.log());
             bail!(err);
@@ -114,7 +128,10 @@ impl ValidatePayload for ValidatePayloadService {
         Ok(())
     }
 
-    async fn validate_format_data_address(&self, payload: &dyn TransferProcessMessageTrait) -> anyhow::Result<()> {
+    async fn validate_format_data_address(
+        &self,
+        payload: &dyn TransferProcessMessageTrait,
+    ) -> anyhow::Result<()> {
         let is_data_address_in_payload = payload.get_data_address().is_some();
         let format = payload.get_format().unwrap(); // in this call there is always format
         let format = format.parse::<DctFormats>().map_err(|_e| {
@@ -124,10 +141,20 @@ impl ValidatePayload for ValidatePayloadService {
         })?;
         let format_direction = format.action;
         match (is_data_address_in_payload, format_direction) {
-            (is_data_address_in_payload, FormatAction::Push) if is_data_address_in_payload == true => Ok(()),
-            (is_data_address_in_payload, FormatAction::Pull) if is_data_address_in_payload == false => Ok(()),
+            (is_data_address_in_payload, FormatAction::Push)
+                if is_data_address_in_payload == true =>
+            {
+                Ok(())
+            }
+            (is_data_address_in_payload, FormatAction::Pull)
+                if is_data_address_in_payload == false =>
+            {
+                Ok(())
+            }
             _ => {
-                let err = CommonErrors::parse_new("Data address should be defined if format action is push");
+                let err = CommonErrors::parse_new(
+                    "Data address should be defined if format action is push",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -140,8 +167,12 @@ impl ValidatePayload for ValidatePayloadService {
         dto: &TransferProcessDto,
     ) -> anyhow::Result<()> {
         let role = dto.inner.role.parse::<RoleConfig>()?;
-        let state_attribute =
-            dto.inner.state_attribute.clone().unwrap_or("".to_string()).parse::<TransferStateAttribute>()?;
+        let state_attribute = dto
+            .inner
+            .state_attribute
+            .clone()
+            .unwrap_or("".to_string())
+            .parse::<TransferStateAttribute>()?;
         let is_data_address_in_payload = payload.get_data_address().is_some();
 
         if is_data_address_in_payload == true {

@@ -41,8 +41,10 @@ pub struct ConnectorInstanceDto {
 #[async_trait::async_trait]
 pub trait ConnectorInstanceTrait: Send + Sync {
     async fn get_instance_by_id(&self, id: &Urn) -> anyhow::Result<Option<ConnectorInstanceDto>>;
-    async fn get_instance_by_distribution(&self, distribution_id: &Urn)
-        -> anyhow::Result<Option<ConnectorInstanceDto>>;
+    async fn get_instance_by_distribution(
+        &self,
+        distribution_id: &Urn,
+    ) -> anyhow::Result<Option<ConnectorInstanceDto>>;
     async fn upsert_instance(
         &self,
         instance_dto: &mut ConnectorInstantiationDto,

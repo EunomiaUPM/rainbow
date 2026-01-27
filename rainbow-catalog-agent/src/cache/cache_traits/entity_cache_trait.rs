@@ -13,7 +13,8 @@ pub trait EntityCacheTrait<D>: LookupCacheTrait<D> + Send + Sync {
     async fn delete_single(&self, id: &Urn) -> anyhow::Result<()>;
     async fn get_main(&self) -> anyhow::Result<Option<D>>;
     async fn set_main(&self, id: &Urn, model: &D) -> anyhow::Result<()>;
-    async fn get_collection(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<D>>;
+    async fn get_collection(&self, limit: Option<u64>, page: Option<u64>)
+        -> anyhow::Result<Vec<D>>;
     async fn add_to_collection(&self, id: &Urn, score: f64) -> anyhow::Result<()>;
     async fn remove_from_collection(&self, id: &Urn) -> anyhow::Result<()>;
     async fn get_batch(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<D>>;
@@ -22,7 +23,11 @@ pub trait EntityCacheTrait<D>: LookupCacheTrait<D> + Send + Sync {
 #[async_trait::async_trait]
 impl<T, D> EntityCacheTrait<D> for T
 where
-    T: RedisCacheConnectorTrait<Dto = D> + UtilsCacheTrait<Dto = D> + LookupCacheTrait<D> + Send + Sync,
+    T: RedisCacheConnectorTrait<Dto = D>
+        + UtilsCacheTrait<Dto = D>
+        + LookupCacheTrait<D>
+        + Send
+        + Sync,
     D: Serialize + DeserializeOwned + Send + Sync + Clone + 'static,
 {
     async fn get_single(&self, id: &Urn) -> anyhow::Result<Option<D>> {
@@ -59,7 +64,8 @@ where
     async fn get_main(&self) -> anyhow::Result<Option<D>> {
         tracing::debug!("cache: get main");
         let main_key = self.format_key_name_main(self.get_entity_name());
-        let target_key: Option<String> = redis::cmd("GET").arg(main_key).query_async(&mut self.get_conn()).await?;
+        let target_key: Option<String> =
+            redis::cmd("GET").arg(main_key).query_async(&mut self.get_conn()).await?;
         if let Some(key) = target_key {
             return Self::hydrate_from_single_key(self.get_conn(), key).await;
         }
@@ -71,16 +77,25 @@ where
         let main_key = self.format_key_name_main(self.get_entity_name());
         let key = self.format_key_name_with_id(self.get_entity_name(), id);
         self.set_single(id, model).await?;
-        let _: () = redis::cmd("SET").arg(main_key).arg(&key).query_async(&mut self.get_conn()).await?;
+        let _: () =
+            redis::cmd("SET").arg(main_key).arg(&key).query_async(&mut self.get_conn()).await?;
         Ok(())
     }
 
-    async fn get_collection(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<D>> {
+    async fn get_collection(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<D>> {
         tracing::debug!("cache: get collection all");
         let collection_key = self.format_key_name_all(self.get_entity_name());
         let (start, stop) = self.compute_pagination_range(limit, page);
-        let keys: Vec<String> =
-            redis::cmd("ZREVRANGE").arg(collection_key).arg(start).arg(stop).query_async(&mut self.get_conn()).await?;
+        let keys: Vec<String> = redis::cmd("ZREVRANGE")
+            .arg(collection_key)
+            .arg(start)
+            .arg(stop)
+            .query_async(&mut self.get_conn())
+            .await?;
 
         Self::hydrate_from_multiple_keys(self.get_conn(), keys).await
     }
@@ -89,8 +104,12 @@ where
         tracing::debug!("cache: add to collection all");
         let key = self.format_key_name_with_id(self.get_entity_name(), id);
         let collection_key = self.format_key_name_all(self.get_entity_name());
-        let _: () =
-            redis::cmd("ZADD").arg(collection_key).arg(score).arg(key).query_async(&mut self.get_conn()).await?;
+        let _: () = redis::cmd("ZADD")
+            .arg(collection_key)
+            .arg(score)
+            .arg(key)
+            .query_async(&mut self.get_conn())
+            .await?;
         Ok(())
     }
 
@@ -98,13 +117,18 @@ where
         tracing::debug!("cache: remove from collection all");
         let key = self.format_key_name_with_id(self.get_entity_name(), id);
         let collection_key = self.format_key_name_all(self.get_entity_name());
-        let _: () = redis::cmd("ZREM").arg(collection_key).arg(key).query_async(&mut self.get_conn()).await?;
+        let _: () = redis::cmd("ZREM")
+            .arg(collection_key)
+            .arg(key)
+            .query_async(&mut self.get_conn())
+            .await?;
         Ok(())
     }
 
     async fn get_batch(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<D>> {
         tracing::debug!("cache: get batch");
-        let keys: Vec<String> = ids.iter().map(|id| self.format_key_name_with_id(self.get_entity_name(), id)).collect();
+        let keys: Vec<String> =
+            ids.iter().map(|id| self.format_key_name_with_id(self.get_entity_name(), id)).collect();
         Self::hydrate_from_multiple_keys(self.get_conn(), keys).await
     }
 }

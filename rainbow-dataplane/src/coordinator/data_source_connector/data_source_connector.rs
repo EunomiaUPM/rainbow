@@ -11,7 +11,11 @@ impl DataSourceConnector {
 
 #[async_trait::async_trait]
 impl DataSourceConnectorTrait for DataSourceConnector {
-    async fn start_streaming(&self, session_id: &Urn, sink_address: &DataAddress) -> anyhow::Result<()> {
+    async fn start_streaming(
+        &self,
+        session_id: &Urn,
+        sink_address: &DataAddress,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 

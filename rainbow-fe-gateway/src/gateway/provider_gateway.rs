@@ -46,8 +46,10 @@ pub struct RainbowProviderReactApp;
 
 impl RainbowProviderGateway {
     pub fn new(config: GatewayConfig) -> Self {
-        let client =
-            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        let client = Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .expect("Failed to build reqwest client");
         let (notification_tx, _) = broadcast::channel(100);
         Self { config, client, notification_tx }
     }
@@ -59,15 +61,14 @@ impl RainbowProviderGateway {
                 "/gateway/api/:service_prefix/*extra",
                 any(Self::proxy_handler_with_extra),
             )
-            .route(
-                "/gateway/api/:service_prefix",
-                any(Self::proxy_handler_without_extra),
-            )
+            .route("/gateway/api/:service_prefix", any(Self::proxy_handler_without_extra))
             .route("/gateway/api/ws", get(Self::websocket_handler))
             .route("/incoming-notification", post(Self::incoming_notification));
 
         if self.config.is_production() {
-            router = router.route("/fe-config", get(Self::config_handler)).fallback(Self::static_path_handler);
+            router = router
+                .route("/fe-config", get(Self::config_handler))
+                .fallback(Self::static_path_handler);
         }
 
         router.layer(cors).with_state((self.config, self.client, self.notification_tx))
@@ -104,7 +105,11 @@ impl RainbowProviderGateway {
     }
 
     async fn config_handler(
-        State((config, _client, _notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((config, _client, _notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
     ) -> impl IntoResponse {
         let gateway_host = config.common().hosts.http.url.clone();
         let gateway_port = config.common().hosts.http.port.clone().unwrap_or("80".to_string());
@@ -118,20 +123,23 @@ impl RainbowProviderGateway {
     }
 
     async fn proxy_handler_with_extra(
-        State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Path((service_prefix, extra)): Path<(String, String)>,
         req: Request<Body>,
     ) -> impl IntoResponse {
-        Self::execute_proxy(
-            (config, client, notification_tx),
-            service_prefix,
-            Some(extra),
-            req,
-        )
-        .await
+        Self::execute_proxy((config, client, notification_tx), service_prefix, Some(extra), req)
+            .await
     }
     async fn proxy_handler_without_extra(
-        State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Path(service_prefix): Path<String>,
         req: Request<Body>,
     ) -> impl IntoResponse {
@@ -164,17 +172,14 @@ impl RainbowProviderGateway {
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 
-        execute_proxy(
-            client,
-            microservice_base_url,
-            service_prefix,
-            extra_opt,
-            req,
-        )
-        .await
+        execute_proxy(client, microservice_base_url, service_prefix, extra_opt, req).await
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -229,7 +234,11 @@ impl RainbowProviderGateway {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            GatewayConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

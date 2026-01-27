@@ -1,8 +1,5 @@
 use sea_orm::entity::prelude::*;
-use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
-use serde_json::Value as Json;
-use urn::{Urn, UrnBuilder};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "connector_distribution_relation")]

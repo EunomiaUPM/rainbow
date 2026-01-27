@@ -84,7 +84,7 @@ impl CoreCommands {
                         .collapse()
                         .to_string();
                 info!("Current Core Connector Config:\n{}", table);
-                CoreProviderMigration::run(db_connection).await?;
+                CoreProviderMigration::run(&db_connection).await?;
 
                 let did = config.ssi_auth().did().did;
                 let url = config.monolith().common().get_host(HostType::Http);

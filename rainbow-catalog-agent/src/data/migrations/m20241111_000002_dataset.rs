@@ -37,7 +37,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogDatasets::DctCreator).string())
                     .col(ColumnDef::new(CatalogDatasets::DctIdentifier).string())
-                    .col(ColumnDef::new(CatalogDatasets::DctIssued).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(CatalogDatasets::DctIssued)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(CatalogDatasets::DctModified).timestamp_with_time_zone())
                     .col(ColumnDef::new(CatalogDatasets::DctTitle).string())
                     .col(ColumnDef::new(CatalogDatasets::DctDescription).string())

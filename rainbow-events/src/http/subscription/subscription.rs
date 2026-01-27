@@ -18,7 +18,9 @@
  */
 
 use crate::core::subscription::subscription_err::SubscriptionErrors;
-use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, SubscriptionEntities};
+use crate::core::subscription::subscription_types::{
+    RainbowEventsSubscriptionCreationRequest, SubscriptionEntities,
+};
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
@@ -56,19 +58,10 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/subscriptions", get(Self::handle_get_all_subscriptions))
-            .route(
-                "/subscriptions/:id",
-                get(Self::handle_get_subscription_by_id),
-            )
-            .route(
-                "/subscriptions/:id",
-                put(Self::handle_put_subscription_by_id),
-            )
+            .route("/subscriptions/:id", get(Self::handle_get_subscription_by_id))
+            .route("/subscriptions/:id", put(Self::handle_put_subscription_by_id))
             .route("/subscriptions", post(Self::handle_post_subscription_by_id))
-            .route(
-                "/subscriptions/:id",
-                delete(Self::handle_delete_subscription_by_id),
-            )
+            .route("/subscriptions/:id", delete(Self::handle_delete_subscription_by_id))
             .with_state((self.service, self.entity_type))
     }
     fn serialize_entity_type(entity: &Option<SubscriptionEntities>) -> String {
@@ -77,7 +70,9 @@ where
             Some(entity) => match entity {
                 SubscriptionEntities::TransferProcess => "/api/v1/transfers".to_string(),
                 SubscriptionEntities::Catalog => "/api/v1/catalog".to_string(),
-                SubscriptionEntities::ContractNegotiationProcess => "/api/v1/contract-negotiations".to_string(),
+                SubscriptionEntities::ContractNegotiationProcess => {
+                    "/api/v1/contract-negotiations".to_string()
+                }
                 SubscriptionEntities::DataPlaneProcess => "/api/v1/data-plane".to_string(),
             },
         }
@@ -130,11 +125,7 @@ where
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         info!("mal");
-        info!(
-            "GET {}/subscriptions/{}",
-            Self::serialize_entity_type(&entity),
-            id
-        );
+        info!("GET {}/subscriptions/{}", Self::serialize_entity_type(&entity), id);
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
@@ -159,11 +150,7 @@ where
         Path(id): Path<String>,
         input: Result<Json<RainbowEventsSubscriptionCreationRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!(
-            "PUT {}/subscriptions/{}",
-            Self::serialize_entity_type(&entity),
-            id
-        );
+        info!("PUT {}/subscriptions/{}", Self::serialize_entity_type(&entity), id);
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
@@ -191,10 +178,7 @@ where
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
         input: Result<Json<RainbowEventsSubscriptionCreationRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!(
-            "POST {}/subscriptions",
-            Self::serialize_entity_type(&entity)
-        );
+        info!("POST {}/subscriptions", Self::serialize_entity_type(&entity));
         let input = match input {
             Ok(input) => input.0,
             Err(err) => return SubscriptionErrors::JsonRejection(err).into_response(),
@@ -218,11 +202,7 @@ where
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        info!(
-            "DELETE {}/subscriptions/{}",
-            Self::serialize_entity_type(&entity),
-            id
-        );
+        info!("DELETE {}/subscriptions/{}", Self::serialize_entity_type(&entity), id);
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),

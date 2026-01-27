@@ -30,17 +30,34 @@ pub trait OfferRepoTrait: Send + Sync {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
-    async fn get_batch_offers(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
-    async fn get_offers_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
+    async fn get_batch_offers(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
+    async fn get_offers_by_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
     async fn get_last_offer_by_negotiation_process(
         &self,
         id: &Urn,
     ) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
-    async fn get_offer_by_id(&self, id: &Urn) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
-    async fn get_offer_by_negotiation_message(&self, id: &Urn)
-    -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
-    async fn get_offer_by_offer_id(&self, id: &Urn) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
-    async fn create_offer(&self, new_model: &NewOfferModel) -> anyhow::Result<offer::Model, OfferRepoErrors>;
+    async fn get_offer_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
+    async fn get_offer_by_negotiation_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
+    async fn get_offer_by_offer_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
+    async fn create_offer(
+        &self,
+        new_model: &NewOfferModel,
+    ) -> anyhow::Result<offer::Model, OfferRepoErrors>;
     async fn delete_offer(&self, id: &Urn) -> anyhow::Result<(), OfferRepoErrors>;
 }
 

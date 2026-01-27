@@ -28,7 +28,12 @@ impl<'a> TemplateValidator<'a> {
         self.context_stack.join(".")
     }
 
-    fn validate_compatibility(&mut self, param_name: &str, defined: ParameterType, expected: ExpectedType) {
+    fn validate_compatibility(
+        &mut self,
+        param_name: &str,
+        defined: ParameterType,
+        expected: ExpectedType,
+    ) {
         let is_compatible = match (expected, &defined) {
             (ExpectedType::AnyString, _) => true,
             (ExpectedType::StrictInt, ParameterType::Int) => true,

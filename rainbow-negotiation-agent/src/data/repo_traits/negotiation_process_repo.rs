@@ -18,7 +18,9 @@
  */
 
 use crate::data::entities::negotiation_process;
-use crate::data::entities::negotiation_process::{EditNegotiationProcessModel, NewNegotiationProcessModel};
+use crate::data::entities::negotiation_process::{
+    EditNegotiationProcessModel, NewNegotiationProcessModel,
+};
 use anyhow::Error;
 use thiserror::Error;
 use urn::Urn;
@@ -56,7 +58,10 @@ pub trait NegotiationProcessRepoTrait: Send + Sync {
         id: &Urn,
         edit_model: &EditNegotiationProcessModel,
     ) -> anyhow::Result<negotiation_process::Model, NegotiationProcessRepoErrors>;
-    async fn delete_negotiation_process(&self, id: &Urn) -> anyhow::Result<(), NegotiationProcessRepoErrors>;
+    async fn delete_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationProcessRepoErrors>;
 }
 
 #[derive(Debug, Error)]

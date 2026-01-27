@@ -17,7 +17,9 @@
  *
  */
 
-use crate::protocols::dsp::protocol_types::{TransferProcessMessageType, TransferProcessState, TransferStateAttribute};
+use crate::protocols::dsp::protocol_types::{
+    TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
+};
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::bail;
@@ -129,12 +131,16 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
                 TransferProcessState::Suspended => {}
             },
             TransferProcessMessageType::TransferProcess => {
-                let err = CommonErrors::parse_new("TransferProcessMessageType TransferProcess is not allowed here");
+                let err = CommonErrors::parse_new(
+                    "TransferProcessMessageType TransferProcess is not allowed here",
+                );
                 error!("{}", err.log());
                 bail!(err)
             }
             TransferProcessMessageType::TransferError => {
-                let err = CommonErrors::parse_new("TransferProcessMessageType TransferProcess is not allowed here");
+                let err = CommonErrors::parse_new(
+                    "TransferProcessMessageType TransferProcess is not allowed here",
+                );
                 error!("{}", err.log());
                 bail!(err)
             }

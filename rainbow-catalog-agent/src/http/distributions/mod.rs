@@ -1,4 +1,6 @@
-use crate::entities::distributions::{DistributionEntityTrait, EditDistributionDto, NewDistributionDto};
+use crate::entities::distributions::{
+    DistributionEntityTrait, EditDistributionDto, NewDistributionDto,
+};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
@@ -48,10 +50,7 @@ impl DistributionEntityRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(Self::handle_get_all_distributions))
-            .route(
-                "/dataset/:id",
-                get(Self::handle_get_distributions_by_dataset_id),
-            )
+            .route("/dataset/:id", get(Self::handle_get_distributions_by_dataset_id))
             .route(
                 "/dataset/:id/format/:format",
                 get(Self::handle_get_distribution_by_dataset_id_and_dct_format),
@@ -151,7 +150,9 @@ impl DistributionEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_distribution_by_id(&id_urn).await {
-            Ok(Some(distribution)) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
+            Ok(Some(distribution)) => {
+                (StatusCode::OK, Json(ToCamelCase(distribution))).into_response()
+            }
             Ok(None) => {
                 let err = CommonErrors::missing_resource_new(id.as_str(), "Distribution not found");
                 err.into_response()

@@ -16,7 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::protocols::dsp::protocol_types::{TransferProcessMessageType, TransferProcessState, TransferStateAttribute};
+use crate::protocols::dsp::protocol_types::{
+    TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
+};
 use rainbow_common::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]

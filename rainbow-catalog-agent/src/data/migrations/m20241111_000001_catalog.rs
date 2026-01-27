@@ -38,11 +38,20 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogCatalogs::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctCreator).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctIdentifier).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctIssued).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(CatalogCatalogs::DctIssued)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(CatalogCatalogs::DctModified).timestamp_with_time_zone())
                     .col(ColumnDef::new(CatalogCatalogs::DctTitle).string())
                     .col(ColumnDef::new(CatalogCatalogs::DspaceParticipantId).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DspaceMainCatalog).boolean().not_null().default(false))
+                    .col(
+                        ColumnDef::new(CatalogCatalogs::DspaceMainCatalog)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .to_owned(),
             )
             .await

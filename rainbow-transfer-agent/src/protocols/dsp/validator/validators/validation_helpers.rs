@@ -53,8 +53,9 @@ impl ValidationHelpers for ValidationHelperService {
             "consumerPid" => Ok(RoleConfig::Consumer),
             "providerPid" => Ok(RoleConfig::Provider),
             _ => {
-                let err =
-                    CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
+                let err = CommonErrors::parse_new(
+                    "Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -66,8 +67,9 @@ impl ValidationHelpers for ValidationHelperService {
             RoleConfig::Provider => Ok("providerPid"),
             RoleConfig::Consumer => Ok("consumerPid"),
             _ => {
-                let err =
-                    CommonErrors::parse_new("Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.");
+                let err = CommonErrors::parse_new(
+                    "Not a valid DSP identifiers. Please use 'consumerPid' or 'providerPid'.",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -79,7 +81,8 @@ impl ValidationHelpers for ValidationHelperService {
         payload: &dyn TransferProcessMessageTrait,
     ) -> anyhow::Result<TransferProcessDto> {
         let consumer_pid = payload.get_consumer_pid().ok_or_else(|| {
-            let err = CommonErrors::parse_new("Not a valid DSP payload, consumer_pid is mandatory.");
+            let err =
+                CommonErrors::parse_new("Not a valid DSP payload, consumer_pid is mandatory.");
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -104,7 +107,11 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(dto)
     }
 
-    async fn get_pid_by_role(&self, dto: &TransferProcessDto, role: RoleConfig) -> anyhow::Result<Urn> {
+    async fn get_pid_by_role(
+        &self,
+        dto: &TransferProcessDto,
+        role: RoleConfig,
+    ) -> anyhow::Result<Urn> {
         let role_as_identifier = self.parse_role_into_identifier(&role).await?;
         let pid = dto.identifiers.get(role_as_identifier).ok_or_else(|| {
             let err = CommonErrors::parse_new("There is no such a identifier, role is mandatory.");
@@ -121,18 +128,25 @@ impl ValidationHelpers for ValidationHelperService {
         Ok(role)
     }
 
-    async fn get_state_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<TransferProcessState> {
+    async fn get_state_from_dto(
+        &self,
+        dto: &TransferProcessDto,
+    ) -> anyhow::Result<TransferProcessState> {
         let state = &dto.inner.state;
         let state = state.parse::<TransferProcessState>().map_err(|_e| {
-            let err =
-                CommonErrors::parse_new("Something is wrong. Seems this process' state is not protocol compliant");
+            let err = CommonErrors::parse_new(
+                "Something is wrong. Seems this process' state is not protocol compliant",
+            );
             log::error!("{}", err.log());
             err
         })?;
         Ok(state)
     }
 
-    async fn get_state_attribute_from_dto(&self, dto: &TransferProcessDto) -> anyhow::Result<TransferStateAttribute> {
+    async fn get_state_attribute_from_dto(
+        &self,
+        dto: &TransferProcessDto,
+    ) -> anyhow::Result<TransferStateAttribute> {
         let state_attribute = dto
             .inner
             .state_attribute

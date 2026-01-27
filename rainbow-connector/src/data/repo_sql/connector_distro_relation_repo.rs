@@ -1,8 +1,11 @@
 use crate::data::entities::connector_distro_relation;
 use crate::data::repo_traits::connector_distro_relation_repo::ConnectorDistroRelationRepoTrait;
-use crate::data::repo_traits::connector_repo_errors::{ConnectorAgentRepoErrors, ConnectorDistroRelationRepoErrors};
+use crate::data::repo_traits::connector_repo_errors::{
+    ConnectorAgentRepoErrors, ConnectorDistroRelationRepoErrors,
+};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter,
 };
 pub struct ConnectorDistroRelationRepoForSql {
     db_connection: DatabaseConnection,
@@ -25,8 +28,9 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
             distribution_id: ActiveValue::Set(distro.clone()),
             connector_instance_id: ActiveValue::Set(instance.clone()),
         };
-        let instance =
-            connector_distro_relation::Entity::insert(relation).exec_with_returning(&self.db_connection).await;
+        let instance = connector_distro_relation::Entity::insert(relation)
+            .exec_with_returning(&self.db_connection)
+            .await;
         match instance {
             Ok(instance) => Ok(instance),
             Err(err) => Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(
@@ -77,7 +81,8 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
         &self,
         instance: &String,
     ) -> anyhow::Result<Option<connector_distro_relation::Model>, ConnectorAgentRepoErrors> {
-        let relation = connector_distro_relation::Entity::find_by_id(instance).one(&self.db_connection).await;
+        let relation =
+            connector_distro_relation::Entity::find_by_id(instance).one(&self.db_connection).await;
         match relation {
             Ok(relation) => Ok(relation),
             Err(err) => Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(
@@ -86,7 +91,10 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
         }
     }
 
-    async fn delete_relation_by_distribution(&self, distro: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
+    async fn delete_relation_by_distribution(
+        &self,
+        distro: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
         let relation = self.get_relation_by_distribution(distro).await?;
         if relation.is_none() {
             return Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(
@@ -95,8 +103,9 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
         }
         let relation = relation.unwrap();
 
-        let relation =
-            connector_distro_relation::Entity::delete(relation.into_active_model()).exec(&self.db_connection).await;
+        let relation = connector_distro_relation::Entity::delete(relation.into_active_model())
+            .exec(&self.db_connection)
+            .await;
         match relation {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(
@@ -110,8 +119,12 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
         }
     }
 
-    async fn delete_relation_by_instance(&self, distro: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
-        let relation = connector_distro_relation::Entity::delete_by_id(distro).exec(&self.db_connection).await;
+    async fn delete_relation_by_instance(
+        &self,
+        distro: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
+        let relation =
+            connector_distro_relation::Entity::delete_by_id(distro).exec(&self.db_connection).await;
         match relation {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(

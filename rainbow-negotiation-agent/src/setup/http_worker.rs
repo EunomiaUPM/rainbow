@@ -32,11 +32,8 @@ use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{Router, serve};
 use rainbow_common::config::services::ContractsConfig;
-use rainbow_common::config::traits::{ApiConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::errors::CommonErrors;
-use rainbow_common::health::HealthRouter;
-use rainbow_common::vault::VaultTrait;
-use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::well_known::WellKnownRoot;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -44,6 +41,11 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
+use ymir::config::traits::{ApiConfigTrait, HostsConfigTrait};
+use ymir::config::types::HostType;
+use ymir::http::HealthRouter;
+use ymir::services::vault::VaultTrait;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct NegotiationHttpWorker {}
 impl NegotiationHttpWorker {
@@ -56,10 +58,12 @@ impl NegotiationHttpWorker {
         let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module transfer router
-        let router =
-            Self::create_root_http_router(&config, vault.clone()).await?.merge(well_known_router).merge(health_router);
-        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_weird_port();
+        let router = Self::create_root_http_router(&config, vault.clone())
+            .await?
+            .merge(well_known_router)
+            .merge(health_router);
+        let host = if config.common().is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.common().get_weird_port(HostType::Http);
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -79,47 +83,61 @@ impl NegotiationHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &ContractsConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
-        let router = create_root_http_router(config, vault.clone()).await?.fallback(Self::handler_404).layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
-                .on_request(|request: &Request<_>, _span: &tracing::Span| {
-                    tracing::info!("{} {}", request.method(), request.uri());
-                })
-                .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
-        );
+    pub async fn create_root_http_router(
+        config: &ContractsConfig,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<Router> {
+        let router = create_root_http_router(config, vault.clone())
+            .await?
+            .fallback(Self::handler_404)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(
+                        |_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()),
+                    )
+                    .on_request(|request: &Request<_>, _span: &tracing::Span| {
+                        tracing::info!("{} {}", request.method(), request.uri());
+                    })
+                    .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
+            );
         Ok(router)
     }
     async fn handler_404(uri: axum::http::Uri) -> impl IntoResponse {
-        let err = CommonErrors::missing_resource_new(&uri.to_string(), "Route not found or Method not allowed");
+        let err = CommonErrors::missing_resource_new(
+            &uri.to_string(),
+            "Route not found or Method not allowed",
+        );
         tracing::info!("404 Not Found: {}", uri);
         err.into_response()
     }
 }
 
-pub async fn create_root_http_router(config: &ContractsConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(
+    config: &ContractsConfig,
+    vault: Arc<VaultService>,
+) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
-    let db_connection = vault.get_db_connection(config.clone()).await;
+    let db_connection = vault.get_db_connection(config.common()).await;
     let config = Arc::new(config.clone());
-    let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
-        db_connection.clone(),
-    ));
+    let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(db_connection.clone()));
 
     // entities
-    let messages_controller_service = Arc::new(NegotiationAgentMessagesService::new(
-        negotiation_repo.clone(),
-    ));
-    let messages_router = NegotiationAgentMessagesRouter::new(messages_controller_service.clone(), config.clone());
-    let entities_controller_service = Arc::new(NegotiationAgentProcessesService::new(
-        negotiation_repo.clone(),
-    ));
-    let entities_router = NegotiationAgentProcessesRouter::new(entities_controller_service.clone(), config.clone());
-    let offer_controller_service = Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
-    let offer_router = NegotiationAgentOffersRouter::new(offer_controller_service.clone(), config.clone());
-    let agreement_controller_service = Arc::new(NegotiationAgentAgreementsService::new(
-        negotiation_repo.clone(),
-    ));
-    let agreement_router = NegotiationAgentAgreementsRouter::new(agreement_controller_service.clone(), config.clone());
+    let messages_controller_service =
+        Arc::new(NegotiationAgentMessagesService::new(negotiation_repo.clone()));
+    let messages_router =
+        NegotiationAgentMessagesRouter::new(messages_controller_service.clone(), config.clone());
+    let entities_controller_service =
+        Arc::new(NegotiationAgentProcessesService::new(negotiation_repo.clone()));
+    let entities_router =
+        NegotiationAgentProcessesRouter::new(entities_controller_service.clone(), config.clone());
+    let offer_controller_service =
+        Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
+    let offer_router =
+        NegotiationAgentOffersRouter::new(offer_controller_service.clone(), config.clone());
+    let agreement_controller_service =
+        Arc::new(NegotiationAgentAgreementsService::new(negotiation_repo.clone()));
+    let agreement_router =
+        NegotiationAgentAgreementsRouter::new(agreement_controller_service.clone(), config.clone());
 
     // dsp
     let dsp_router = NegotiationDSP::new(
@@ -133,7 +151,7 @@ pub async fn create_root_http_router(config: &ContractsConfig, vault: Arc<VaultS
     .await?;
 
     // router
-    let router_str = format!("/api/{}/negotiation-agent", config.get_api_version());
+    let router_str = format!("/api/{}/negotiation-agent", config.common().get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/negotiation-messages", router_str.as_str()).as_str(),

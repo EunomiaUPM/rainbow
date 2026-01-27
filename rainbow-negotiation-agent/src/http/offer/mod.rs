@@ -57,16 +57,16 @@ impl FromRef<NegotiationAgentOffersRouter> for Arc<ContractsConfig> {
 }
 
 impl NegotiationAgentOffersRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentOffersTrait>, config: Arc<ContractsConfig>) -> Self {
+    pub fn new(
+        service: Arc<dyn NegotiationAgentOffersTrait>,
+        config: Arc<ContractsConfig>,
+    ) -> Self {
         Self { service, config }
     }
 
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/",
-                get(Self::handle_get_all_offers).post(Self::handle_create_offer),
-            )
+            .route("/", get(Self::handle_get_all_offers).post(Self::handle_create_offer))
             .route("/batch", post(Self::handle_get_batch_offers))
             .route(
                 "/:id",
@@ -80,10 +80,7 @@ impl NegotiationAgentOffersRouter {
                 "/message/:message_id",
                 get(Self::handle_get_offer_by_negotiation_message),
             )
-            .route(
-                "/offer-id/:offer_id",
-                get(Self::handle_get_offer_by_offer_id),
-            )
+            .route("/offer-id/:offer_id", get(Self::handle_get_offer_by_offer_id))
             .with_state(self)
     }
 

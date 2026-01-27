@@ -17,8 +17,7 @@
  *
  */
 
-use crate::data::entities::connector_templates::NewConnectorTemplateModel;
-use crate::data::entities::{connector_distro_relation, connector_templates};
+use crate::data::entities::connector_distro_relation;
 use crate::data::repo_traits::connector_repo_errors::ConnectorAgentRepoErrors;
 
 #[async_trait::async_trait]
@@ -45,7 +44,13 @@ pub trait ConnectorDistroRelationRepoTrait: Send + Sync {
         instance: &String,
     ) -> anyhow::Result<Option<connector_distro_relation::Model>, ConnectorAgentRepoErrors>;
 
-    async fn delete_relation_by_distribution(&self, distro: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
+    async fn delete_relation_by_distribution(
+        &self,
+        distro: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
 
-    async fn delete_relation_by_instance(&self, distro: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
+    async fn delete_relation_by_instance(
+        &self,
+        distro: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors>;
 }

@@ -19,9 +19,7 @@ impl ConnectorRepoForSql {
         Self {
             templates_repo: Arc::new(ConnectorTemplateRepoForSql::new(db_connection.clone())),
             instances_repo: Arc::new(ConnectorInstanceRepoForSql::new(db_connection.clone())),
-            relation_repo: Arc::new(ConnectorDistroRelationRepoForSql::new(
-                db_connection.clone(),
-            )),
+            relation_repo: Arc::new(ConnectorDistroRelationRepoForSql::new(db_connection.clone())),
         }
     }
 }

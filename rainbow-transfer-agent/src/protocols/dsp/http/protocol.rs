@@ -31,8 +31,9 @@ use std::sync::Arc;
 use crate::protocols::dsp::errors::extract_payload_error;
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
-    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType,
+    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto,
+    TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::CommonErrors;
@@ -85,7 +86,10 @@ impl DspRouter {
         Self::map_service_result(action(payload).await, success_code).into_response()
     }
 
-    fn map_service_result<R>(result: anyhow::Result<R>, success_code: StatusCode) -> impl IntoResponse
+    fn map_service_result<R>(
+        result: anyhow::Result<R>,
+        success_code: StatusCode,
+    ) -> impl IntoResponse
     where
         R: Serialize,
     {
@@ -98,26 +102,31 @@ impl DspRouter {
     fn map_service_error(err: anyhow::Error) -> impl IntoResponse {
         match err.downcast::<CommonErrors>() {
             Ok(common_errors) => {
-                let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = common_errors.into();
+                let error_dto: TransferProcessMessageWrapper<TransferErrorDto> =
+                    common_errors.into();
                 (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
             }
             Err(original_err) => {
-                let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = TransferProcessMessageWrapper {
-                    context: ContextField::default(),
-                    _type: TransferProcessMessageType::TransferError,
-                    dto: TransferErrorDto {
-                        consumer_pid: None,
-                        provider_pid: None,
-                        code: Some("5000".to_string()),
-                        reason: Some(vec![original_err.to_string()]),
-                    },
-                };
+                let error_dto: TransferProcessMessageWrapper<TransferErrorDto> =
+                    TransferProcessMessageWrapper {
+                        context: ContextField::default(),
+                        _type: TransferProcessMessageType::TransferError,
+                        dto: TransferErrorDto {
+                            consumer_pid: None,
+                            provider_pid: None,
+                            code: Some("5000".to_string()),
+                            reason: Some(vec![original_err.to_string()]),
+                        },
+                    };
                 (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
             }
         }
     }
 
-    async fn handle_get_transfer_process(State(state): State<DspRouter>, Path(id): Path<String>) -> impl IntoResponse {
+    async fn handle_get_transfer_process(
+        State(state): State<DspRouter>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
         Self::map_service_result(
             state.orchestrator.get_protocol_service().on_get_transfer_process(&id).await,
             StatusCode::OK,
@@ -126,7 +135,10 @@ impl DspRouter {
 
     async fn handle_transfer_request(
         State(state): State<DspRouter>,
-        input: Result<Json<TransferProcessMessageWrapper<TransferRequestMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<TransferProcessMessageWrapper<TransferRequestMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         let payload = match extract_payload_error(input) {
             Ok(v) => v,
@@ -162,7 +174,10 @@ impl DspRouter {
     async fn handle_transfer_completion(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<TransferProcessMessageWrapper<TransferCompletionMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<TransferProcessMessageWrapper<TransferCompletionMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_transfer_completion(&id, &data).await
@@ -173,7 +188,10 @@ impl DspRouter {
     async fn handle_transfer_termination(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<TransferProcessMessageWrapper<TransferTerminationMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<TransferProcessMessageWrapper<TransferTerminationMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_transfer_termination(&id, &data).await
@@ -184,7 +202,10 @@ impl DspRouter {
     async fn handle_transfer_suspension(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<TransferProcessMessageWrapper<TransferSuspensionMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<TransferProcessMessageWrapper<TransferSuspensionMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_transfer_suspension(&id, &data).await

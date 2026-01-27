@@ -20,8 +20,9 @@
 pub(crate) mod protocol;
 
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
-    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper,
+    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
+    TransferTerminationMessageDto,
 };
 
 #[async_trait::async_trait]

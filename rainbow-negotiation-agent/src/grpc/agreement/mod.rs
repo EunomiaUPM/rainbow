@@ -1,9 +1,12 @@
-use crate::entities::agreement::{EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
+use crate::entities::agreement::{
+    EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto,
+};
 use crate::grpc::api::negotiation_agent::negotiation_agent_agreements_service_server::NegotiationAgentAgreementsService;
 use crate::grpc::api::negotiation_agent::{
-    AgreementListResponse, AgreementResponse, CreateAgreementRequest, DeleteAgreementRequest, GetAgreementByIdRequest,
-    GetAgreementByNegotiationMessageRequest, GetAgreementByNegotiationProcessRequest, GetAllAgreementsRequest,
-    GetBatchAgreementsRequest, PutAgreementRequest,
+    AgreementListResponse, AgreementResponse, CreateAgreementRequest, DeleteAgreementRequest,
+    GetAgreementByIdRequest, GetAgreementByNegotiationMessageRequest,
+    GetAgreementByNegotiationProcessRequest, GetAllAgreementsRequest, GetBatchAgreementsRequest,
+    PutAgreementRequest,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -28,8 +31,11 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
     ) -> Result<Response<AgreementListResponse>, Status> {
         let req = request.into_inner();
 
-        let agreements =
-            self.service.get_all_agreements(req.limit, req.page).await.map_err(|e| Status::internal(e.to_string()))?;
+        let agreements = self
+            .service
+            .get_all_agreements(req.limit, req.page)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_agreements = agreements
             .into_iter()
@@ -39,9 +45,7 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
             })
             .collect();
 
-        Ok(Response::new(AgreementListResponse {
-            agreements: proto_agreements,
-        }))
+        Ok(Response::new(AgreementListResponse { agreements: proto_agreements }))
     }
 
     async fn get_batch_agreements(
@@ -57,7 +61,11 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| Status::invalid_argument(format!("Invalid URN in batch: {}", e)))?;
 
-        let agreements = self.service.get_batch_agreements(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let agreements = self
+            .service
+            .get_batch_agreements(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_agreements = agreements
             .into_iter()
@@ -67,9 +75,7 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
             })
             .collect();
 
-        Ok(Response::new(AgreementListResponse {
-            agreements: proto_agreements,
-        }))
+        Ok(Response::new(AgreementListResponse { agreements: proto_agreements }))
     }
 
     async fn get_agreement_by_id(
@@ -77,7 +83,8 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
         request: Request<GetAgreementByIdRequest>,
     ) -> Result<Response<AgreementResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.get_agreement_by_id(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
@@ -96,9 +103,7 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
 
         match self.service.get_agreement_by_negotiation_process(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
-            Ok(None) => Err(Status::not_found(
-                "Agreement not found for this negotiation process",
-            )),
+            Ok(None) => Err(Status::not_found("Agreement not found for this negotiation process")),
             Err(e) => Err(Status::internal(e.to_string())),
         }
     }
@@ -113,9 +118,7 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
 
         match self.service.get_agreement_by_negotiation_message(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
-            Ok(None) => Err(Status::not_found(
-                "Agreement not found for this negotiation message",
-            )),
+            Ok(None) => Err(Status::not_found("Agreement not found for this negotiation message")),
             Err(e) => Err(Status::internal(e.to_string())),
         }
     }
@@ -139,7 +142,8 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
         request: Request<PutAgreementRequest>,
     ) -> Result<Response<AgreementResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         let edit_dto: EditAgreementDto = req.try_into()?;
 
@@ -149,9 +153,13 @@ impl NegotiationAgentAgreementsService for NegotiationAgentAgreementGrpc {
         }
     }
 
-    async fn delete_agreement(&self, request: Request<DeleteAgreementRequest>) -> Result<Response<()>, Status> {
+    async fn delete_agreement(
+        &self,
+        request: Request<DeleteAgreementRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.delete_agreement(&urn).await {
             Ok(_) => Ok(Response::new(())),

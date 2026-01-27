@@ -18,8 +18,8 @@
  */
 
 use crate::adv_protocol::interplane::{
-    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPRequestField,
-    DataPlaneSDPResponseField,
+    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField,
+    DataPlaneSDPRequestField, DataPlaneSDPResponseField,
 };
 use serde::{Deserialize, Serialize};
 use urn::Urn;

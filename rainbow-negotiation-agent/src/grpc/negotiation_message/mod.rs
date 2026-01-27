@@ -17,12 +17,14 @@
  *
  */
 
-use crate::entities::negotiation_message::{NegotiationAgentMessagesTrait, NewNegotiationMessageDto};
+use crate::entities::negotiation_message::{
+    NegotiationAgentMessagesTrait, NewNegotiationMessageDto,
+};
 use crate::grpc::api::negotiation_agent::negotiation_agent_messages_service_server::NegotiationAgentMessagesService;
 use crate::grpc::api::negotiation_agent::{
-    CreateNegotiationMessageRequest, DeleteNegotiationMessageRequest, GetAllNegotiationMessagesRequest,
-    GetMessagesByProcessIdRequest, GetNegotiationMessageByIdRequest, NegotiationMessageListResponse,
-    NegotiationMessageResponse,
+    CreateNegotiationMessageRequest, DeleteNegotiationMessageRequest,
+    GetAllNegotiationMessagesRequest, GetMessagesByProcessIdRequest,
+    GetNegotiationMessageByIdRequest, NegotiationMessageListResponse, NegotiationMessageResponse,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -74,8 +76,11 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
         let urn = Urn::from_str(&req.process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process ID URN: {}", e)))?;
 
-        let messages =
-            self.service.get_messages_by_process_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let messages = self
+            .service
+            .get_messages_by_process_id(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_messages = messages
             .into_iter()
@@ -95,7 +100,8 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
         request: Request<GetNegotiationMessageByIdRequest>,
     ) -> Result<Response<NegotiationMessageResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.get_negotiation_message_by_id(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
@@ -123,7 +129,8 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
         request: Request<DeleteNegotiationMessageRequest>,
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.delete_negotiation_message(&urn).await {
             Ok(_) => Ok(Response::new(())),

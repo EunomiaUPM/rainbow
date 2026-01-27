@@ -74,10 +74,7 @@ impl PolicyTemplateEntityRouter {
                 "/:id/:version",
                 delete(Self::handle_delete_policy_template_by_id_and_version),
             )
-            .route(
-                "/instantiate-odrl-offer",
-                post(Self::handle_instantiate_offer),
-            )
+            .route("/instantiate-odrl-offer", post(Self::handle_instantiate_offer))
             .with_state(self)
     }
 
@@ -119,7 +116,8 @@ impl PolicyTemplateEntityRouter {
         match state.service.get_policies_template_by_version_and_id(&id, &version).await {
             Ok(Some(template)) => (StatusCode::OK, Json(ToCamelCase(template))).into_response(),
             Ok(None) => {
-                let err = CommonErrors::missing_resource_new(id.as_str(), "Policy template not found");
+                let err =
+                    CommonErrors::missing_resource_new(id.as_str(), "Policy template not found");
                 err.into_response()
             }
             Err(err) => err.to_response(),
@@ -148,10 +146,7 @@ impl PolicyTemplateEntityRouter {
                 if silent {
                     (
                         StatusCode::NOT_ACCEPTABLE,
-                        format!(
-                            "Silent mode: Failed to create policy template. Error: {:?}",
-                            err
-                        ),
+                        format!("Silent mode: Failed to create policy template. Error: {:?}", err),
                     )
                         .into_response()
                 } else {

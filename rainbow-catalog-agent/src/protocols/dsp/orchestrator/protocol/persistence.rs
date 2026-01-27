@@ -4,8 +4,9 @@ use crate::entities::datasets::{DatasetDto, DatasetEntityTrait};
 use crate::entities::distributions::{DistributionDto, DistributionEntityTrait};
 use crate::entities::odrl_policies::{OdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::protocols::dsp::types::catalog_definition::{
-    Catalog, CatalogCatalogTypes, CatalogDSpaceDeclaration, CatalogDatasetTypes, CatalogDcatDeclaration,
-    CatalogDctDeclaration, CatalogFoafDeclaration, CatalogMinimized, CatalogServiceTypes,
+    Catalog, CatalogCatalogTypes, CatalogDSpaceDeclaration, CatalogDatasetTypes,
+    CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration, CatalogMinimized,
+    CatalogServiceTypes,
 };
 use crate::protocols::dsp::types::dataservice_definition::{
     DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
@@ -70,7 +71,8 @@ impl OrchestrationPersistenceForProtocol {
         // 3b. Dataservice in main catalog
         let main_dataservice = self.map_data_service(main_dataservice_dto);
         // 4. Assembly
-        let catalog = self.map_main_catalog(main_catalog_dto, main_dataservice, sub_catalogs, datasets);
+        let catalog =
+            self.map_main_catalog(main_catalog_dto, main_dataservice, sub_catalogs, datasets);
         Ok(catalog)
     }
 
@@ -90,7 +92,8 @@ impl OrchestrationPersistenceForProtocol {
     // Builders
     // =========================================================================
     async fn build_sub_catalogs(&self, exclude_id: &Urn) -> anyhow::Result<Vec<CatalogMinimized>> {
-        let catalogs_dtos = self.catalog_entities_service.get_all_catalogs(None, None, false).await?;
+        let catalogs_dtos =
+            self.catalog_entities_service.get_all_catalogs(None, None, false).await?;
         let mut dcat_catalogs = Vec::with_capacity(catalogs_dtos.len());
         for catalog_dto in catalogs_dtos {
             let catalog_urn = Urn::from_str(&catalog_dto.inner.id)?;
@@ -104,7 +107,8 @@ impl OrchestrationPersistenceForProtocol {
         Ok(dcat_catalogs)
     }
     async fn build_datasets_for_catalog(&self, catalog_id: &Urn) -> anyhow::Result<Vec<Dataset>> {
-        let datasets_dtos = self.dataset_entities_service.get_datasets_by_catalog_id(catalog_id).await?;
+        let datasets_dtos =
+            self.dataset_entities_service.get_datasets_by_catalog_id(catalog_id).await?;
         let mut dcat_datasets = Vec::with_capacity(datasets_dtos.len());
 
         for dataset_dto in datasets_dtos {
@@ -116,8 +120,12 @@ impl OrchestrationPersistenceForProtocol {
         Ok(dcat_datasets)
     }
 
-    async fn build_dataservices_for_catalog(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataService>> {
-        let dataservices_dtos = self.data_service_entities_service.get_data_services_by_catalog_id(catalog_id).await?;
+    async fn build_dataservices_for_catalog(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<Vec<DataService>> {
+        let dataservices_dtos =
+            self.data_service_entities_service.get_data_services_by_catalog_id(catalog_id).await?;
         let mut dcat_dataservices = Vec::with_capacity(dataservices_dtos.len());
 
         for dataservices_dto in dataservices_dtos {
@@ -128,14 +136,24 @@ impl OrchestrationPersistenceForProtocol {
     }
 
     async fn build_odrl_policies(&self, entity_id: &Urn) -> anyhow::Result<Vec<OdrlOffer>> {
-        let policies_dtos =
-            self.odrl_policies_service.get_all_odrl_offers_by_entity(entity_id).await.unwrap_or_default();
-        let offers = policies_dtos.into_iter().map(|dto| self.map_odrl_policy(dto)).collect::<Result<Vec<_>, _>>()?;
+        let policies_dtos = self
+            .odrl_policies_service
+            .get_all_odrl_offers_by_entity(entity_id)
+            .await
+            .unwrap_or_default();
+        let offers = policies_dtos
+            .into_iter()
+            .map(|dto| self.map_odrl_policy(dto))
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(offers)
     }
 
-    async fn build_distributions_with_services(&self, dataset_id: &Urn) -> anyhow::Result<Vec<Distribution>> {
-        let distributions_dtos = self.distributions_entity_service.get_distributions_by_dataset_id(dataset_id).await?;
+    async fn build_distributions_with_services(
+        &self,
+        dataset_id: &Urn,
+    ) -> anyhow::Result<Vec<Distribution>> {
+        let distributions_dtos =
+            self.distributions_entity_service.get_distributions_by_dataset_id(dataset_id).await?;
         // batch dataservices
         let access_services_ids: Vec<Urn> = distributions_dtos
             .iter()
@@ -144,10 +162,15 @@ impl OrchestrationPersistenceForProtocol {
             .collect::<Result<Vec<_>, _>>()
             .unwrap_or_default();
 
-        let services_batch = self.data_service_entities_service.get_batch_data_services(&access_services_ids).await?;
+        let services_batch = self
+            .data_service_entities_service
+            .get_batch_data_services(&access_services_ids)
+            .await?;
         // index indices
-        let services_map: HashMap<String, DataService> =
-            services_batch.into_iter().map(|dto| (dto.inner.id.clone(), self.map_data_service(dto))).collect();
+        let services_map: HashMap<String, DataService> = services_batch
+            .into_iter()
+            .map(|dto| (dto.inner.id.clone(), self.map_data_service(dto)))
+            .collect();
 
         // map distributions
         let mut distributions = Vec::with_capacity(distributions_dtos.len());
@@ -190,7 +213,8 @@ impl OrchestrationPersistenceForProtocol {
         match self.dataset_entities_service.get_dataset_by_id(dataset_id).await? {
             Some(d) => Ok(d),
             None => {
-                let err = CommonErrors::missing_resource_new(dataset_id.as_str(), "Dataset not found");
+                let err =
+                    CommonErrors::missing_resource_new(dataset_id.as_str(), "Dataset not found");
                 error!("{}", err.log());
                 bail!(err)
             }
@@ -211,7 +235,8 @@ impl OrchestrationPersistenceForProtocol {
         Catalog {
             context: ContextField::default(),
             _type: "Catalog".to_string(),
-            id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
+            id: Urn::from_str(&dto.inner.id)
+                .unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
             dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
@@ -227,7 +252,9 @@ impl OrchestrationPersistenceForProtocol {
             odrl_offer: None,
             extra_fields: Default::default(),
             catalogs: CatalogCatalogTypes::CatalogMultipleMinimized(catalogs),
-            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(
+                datasets.iter().map(|d| d.into()).collect(),
+            ),
             data_services: CatalogServiceTypes::ServiceMinimized(main_dataservice_dto.into()),
         }
     }
@@ -242,7 +269,8 @@ impl OrchestrationPersistenceForProtocol {
         Catalog {
             context: ContextField::default(),
             _type: "Catalog".to_string(),
-            id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
+            id: Urn::from_str(&dto.inner.id)
+                .unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
             dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
@@ -257,8 +285,12 @@ impl OrchestrationPersistenceForProtocol {
             dspace: CatalogDSpaceDeclaration { participant_id: None },
             odrl_offer: None,
             extra_fields: Default::default(),
-            catalogs: CatalogCatalogTypes::CatalogMultipleMinimized(catalogs.iter().map(|cat| cat.into()).collect()),
-            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            catalogs: CatalogCatalogTypes::CatalogMultipleMinimized(
+                catalogs.iter().map(|cat| cat.into()).collect(),
+            ),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(
+                datasets.iter().map(|d| d.into()).collect(),
+            ),
             data_services: CatalogServiceTypes::ServiceMultiple(main_dataservice_dto),
         }
     }
@@ -271,7 +303,8 @@ impl OrchestrationPersistenceForProtocol {
     ) -> CatalogMinimized {
         CatalogMinimized {
             _type: "Catalog".to_string(),
-            id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
+            id: Urn::from_str(&dto.inner.id)
+                .unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
             dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
@@ -286,12 +319,19 @@ impl OrchestrationPersistenceForProtocol {
             dspace: CatalogDSpaceDeclaration { participant_id: None },
             odrl_offer: None,
             extra_fields: Default::default(),
-            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(
+                datasets.iter().map(|d| d.into()).collect(),
+            ),
             data_services: CatalogServiceTypes::ServiceMultiple(main_dataservice_dto),
         }
     }
 
-    fn map_dataset(&self, dto: DatasetDto, policies: Vec<OdrlOffer>, distributions: Vec<Distribution>) -> Dataset {
+    fn map_dataset(
+        &self,
+        dto: DatasetDto,
+        policies: Vec<OdrlOffer>,
+        distributions: Vec<Distribution>,
+    ) -> Dataset {
         Dataset {
             context: ContextField::default(),
             _type: "Dataset".to_string(),
@@ -314,9 +354,16 @@ impl OrchestrationPersistenceForProtocol {
         }
     }
 
-    fn map_distribution(&self, dto: DistributionDto, service: Option<DataService>) -> anyhow::Result<Distribution> {
+    fn map_distribution(
+        &self,
+        dto: DistributionDto,
+        service: Option<DataService>,
+    ) -> anyhow::Result<Distribution> {
         let format = if let Some(f) = dto.inner.dct_format {
-            f.parse::<DctFormats>().unwrap_or(DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull })
+            f.parse::<DctFormats>().unwrap_or(DctFormats {
+                protocol: FormatProtocol::Http,
+                action: FormatAction::Pull,
+            })
         } else {
             DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull }
         };

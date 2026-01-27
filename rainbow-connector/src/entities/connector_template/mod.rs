@@ -68,12 +68,22 @@ pub trait ConnectorTemplateEntitiesTrait: Send + Sync {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<ConnectorTemplateDto>>;
-    async fn get_templates_by_id(&self, template_id: &String) -> anyhow::Result<Vec<ConnectorTemplateDto>>;
+    async fn get_templates_by_id(
+        &self,
+        template_id: &String,
+    ) -> anyhow::Result<Vec<ConnectorTemplateDto>>;
     async fn get_template_by_name_and_version(
         &self,
         name: &String,
         version: &String,
     ) -> anyhow::Result<Option<ConnectorTemplateDto>>;
-    async fn create_template(&self, new_template: &mut ConnectorTemplateDto) -> anyhow::Result<ConnectorTemplateDto>;
-    async fn delete_template_by_name_and_version(&self, name: &String, version: &String) -> anyhow::Result<()>;
+    async fn create_template(
+        &self,
+        new_template: &mut ConnectorTemplateDto,
+    ) -> anyhow::Result<ConnectorTemplateDto>;
+    async fn delete_template_by_name_and_version(
+        &self,
+        name: &String,
+        version: &String,
+    ) -> anyhow::Result<()>;
 }

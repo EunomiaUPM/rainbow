@@ -12,18 +12,22 @@ impl NewPolicyTemplateDto {
         // syntactic validation already performed by serde deserializing
         // template name just alphanumeric,-,:,.,_
         if let Some(id) = &self.id {
-            self.validate_value_and_regex(id, REGEX_ID).map_err(|_| PolicyTemplateError::InvalidFormat {
-                field: "id".to_string(),
-                value: id.clone(),
-                pattern: REGEX_ID,
+            self.validate_value_and_regex(id, REGEX_ID).map_err(|_| {
+                PolicyTemplateError::InvalidFormat {
+                    field: "id".to_string(),
+                    value: id.clone(),
+                    pattern: REGEX_ID,
+                }
             })?;
         }
         // version just alphanumeric and .
         if let Some(ver) = &self.version {
-            self.validate_value_and_regex(ver, REGEX_VERSION).map_err(|_| PolicyTemplateError::InvalidFormat {
-                field: "version".to_string(),
-                value: ver.clone(),
-                pattern: REGEX_VERSION,
+            self.validate_value_and_regex(ver, REGEX_VERSION).map_err(|_| {
+                PolicyTemplateError::InvalidFormat {
+                    field: "version".to_string(),
+                    value: ver.clone(),
+                    pattern: REGEX_VERSION,
+                }
             })?;
         }
         // parameters regex
@@ -32,8 +36,9 @@ impl NewPolicyTemplateDto {
         let unique_params: HashSet<&String> = parameters.iter().collect();
 
         for param in unique_params {
-            self.validate_value_and_regex(param, REGEX_PARAM)
-                .map_err(|_| PolicyTemplateError::InvalidParameterSyntax { parameter: param.to_string() })?;
+            self.validate_value_and_regex(param, REGEX_PARAM).map_err(|_| {
+                PolicyTemplateError::InvalidParameterSyntax { parameter: param.to_string() }
+            })?;
             self.validate_parameter_existence(param)?;
         }
         Ok(())
@@ -41,7 +46,11 @@ impl NewPolicyTemplateDto {
 }
 
 pub trait NewPolicyTemplateDtoValidator: Send + Sync {
-    fn validate_value_and_regex(&self, value: &str, regex: &str) -> Result<(), PolicyTemplateError> {
+    fn validate_value_and_regex(
+        &self,
+        value: &str,
+        regex: &str,
+    ) -> Result<(), PolicyTemplateError> {
         let re = Regex::new(regex)?;
         if !re.is_match(value) {
             return Err(PolicyTemplateError::InvalidFormat {
@@ -65,7 +74,9 @@ impl NewPolicyTemplateDtoValidator for NewPolicyTemplateDto {
     }
     fn validate_parameter_existence(&self, parameter: &str) -> Result<(), PolicyTemplateError> {
         if !self.parameters.contains_key(parameter) {
-            return Err(PolicyTemplateError::MissingParameterDefinition { parameter: parameter.to_string() });
+            return Err(PolicyTemplateError::MissingParameterDefinition {
+                parameter: parameter.to_string(),
+            });
         }
         Ok(())
     }
@@ -73,7 +84,9 @@ impl NewPolicyTemplateDtoValidator for NewPolicyTemplateDto {
 
 #[derive(Error, Debug)]
 pub enum PolicyTemplateError {
-    #[error("Invalid format for field '{field}'. Value '{value}' does not match pattern '{pattern}'")]
+    #[error(
+        "Invalid format for field '{field}'. Value '{value}' does not match pattern '{pattern}'"
+    )]
     InvalidFormat { field: String, value: String, pattern: &'static str },
     #[error("Invalid parameter syntax: '{parameter}'. Parameters must start with '$' followed by alphanumeric chars.")]
     InvalidParameterSyntax { parameter: String },

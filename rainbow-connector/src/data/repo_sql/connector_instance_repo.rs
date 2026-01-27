@@ -1,8 +1,12 @@
 use crate::data::entities::connector_instances;
 use crate::data::entities::connector_instances::NewConnectorInstanceModel;
 use crate::data::repo_traits::connector_instance_repo::ConnectorInstanceRepoTrait;
-use crate::data::repo_traits::connector_repo_errors::{ConnectorAgentRepoErrors, ConnectorInstanceRepoErrors};
-use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, RuntimeErr, SqlxError};
+use crate::data::repo_traits::connector_repo_errors::{
+    ConnectorAgentRepoErrors, ConnectorInstanceRepoErrors,
+};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, RuntimeErr, SqlxError,
+};
 
 pub struct ConnectorInstanceRepoForSql {
     db_connection: DatabaseConnection,
@@ -21,7 +25,9 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
         new_instance_model: &NewConnectorInstanceModel,
     ) -> anyhow::Result<connector_instances::Model, ConnectorAgentRepoErrors> {
         let model: connector_instances::ActiveModel = new_instance_model.clone().into();
-        let instance = connector_instances::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let instance = connector_instances::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
 
         match instance {
             Ok(instance) => Ok(instance),
@@ -29,9 +35,13 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
                 DbErr::Query(RuntimeErr::SqlxError(SqlxError::Database(ref db_err)))
                 | DbErr::Exec(RuntimeErr::SqlxError(SqlxError::Database(ref db_err))) => {
                     if let Some(code) = db_err.code() {
-                        if code == "23505" && db_err.message().contains("idx_unique_distribution_connector") {
+                        if code == "23505"
+                            && db_err.message().contains("idx_unique_distribution_connector")
+                        {
                             Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
-                                ConnectorInstanceRepoErrors::ErrorCreatingTemplateByDuplication(err.into()),
+                                ConnectorInstanceRepoErrors::ErrorCreatingTemplateByDuplication(
+                                    err.into(),
+                                ),
                             ))
                         } else {
                             Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
@@ -55,7 +65,8 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
         &self,
         instance_id: &String,
     ) -> anyhow::Result<Option<connector_instances::Model>, ConnectorAgentRepoErrors> {
-        let result = connector_instances::Entity::find_by_id(instance_id).one(&self.db_connection).await;
+        let result =
+            connector_instances::Entity::find_by_id(instance_id).one(&self.db_connection).await;
         match result {
             Ok(opt) => Ok(opt),
             Err(err) => Err(ConnectorAgentRepoErrors::ConnectorInstanceRepoErrors(
@@ -110,7 +121,8 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
             ));
         }
         let instance = instance.unwrap();
-        let result = connector_instances::Entity::delete_by_id(instance.id).exec(&self.db_connection).await;
+        let result =
+            connector_instances::Entity::delete_by_id(instance.id).exec(&self.db_connection).await;
 
         match result {
             Ok(delete_result) => match delete_result.rows_affected {
@@ -125,8 +137,12 @@ impl ConnectorInstanceRepoTrait for ConnectorInstanceRepoForSql {
         }
     }
 
-    async fn delete_instance_by_id(&self, instance_id: &String) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
-        let result = connector_instances::Entity::delete_by_id(instance_id).exec(&self.db_connection).await;
+    async fn delete_instance_by_id(
+        &self,
+        instance_id: &String,
+    ) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
+        let result =
+            connector_instances::Entity::delete_by_id(instance_id).exec(&self.db_connection).await;
 
         match result {
             Ok(delete_result) => match delete_result.rows_affected {

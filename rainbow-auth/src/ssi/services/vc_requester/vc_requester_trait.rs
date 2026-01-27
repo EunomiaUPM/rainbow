@@ -18,7 +18,7 @@
 use async_trait::async_trait;
 use reqwest::Response;
 
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use ymir::data::entities::{mates, req_interaction, req_vc, req_verification};
 
 #[async_trait]

@@ -30,18 +30,28 @@ pub struct ValidationDspStepsService {
     helpers: Arc<dyn ValidationHelpers>,
 }
 impl ValidationDspStepsService {
-    pub fn new(payload_validator: Arc<dyn ValidatePayload>, helpers: Arc<dyn ValidationHelpers>) -> Self {
+    pub fn new(
+        payload_validator: Arc<dyn ValidatePayload>,
+        helpers: Arc<dyn ValidationHelpers>,
+    ) -> Self {
         Self { payload_validator, helpers }
     }
 }
 
 #[async_trait::async_trait]
 impl ValidationDspSteps for ValidationDspStepsService {
-    async fn on_catalog_request(&self, input: &CatalogMessageWrapper<Catalog>) -> anyhow::Result<()> {
+    async fn on_catalog_request(
+        &self,
+        input: &CatalogMessageWrapper<Catalog>,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 
-    async fn on_dataset_request(&self, uri_id: &String, input: &CatalogMessageWrapper<Dataset>) -> anyhow::Result<()> {
+    async fn on_dataset_request(
+        &self,
+        uri_id: &String,
+        input: &CatalogMessageWrapper<Dataset>,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 }

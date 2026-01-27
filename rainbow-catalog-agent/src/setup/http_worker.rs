@@ -39,15 +39,10 @@ use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
 use rainbow_common::config::services::CatalogConfig;
-use rainbow_common::config::traits::{
-    ApiConfigTrait, CacheConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
-};
+use rainbow_common::config::traits::{CacheConfigTrait, CommonConfigTrait};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
-use rainbow_common::health::HealthRouter;
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
 use rainbow_common::well_known::WellKnownRoot;
 use rainbow_connector::ConnectorSetup;
 use sea_orm::Database;
@@ -58,6 +53,11 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
+use ymir::config::traits::{ApiConfigTrait, HostsConfigTrait};
+use ymir::config::types::HostType;
+use ymir::http::HealthRouter;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
 
 pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
@@ -70,10 +70,12 @@ impl CatalogHttpWorker {
         let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module catalog router
-        let router =
-            Self::create_root_http_router(&config, vault.clone()).await?.merge(well_known_router).merge(health_router);
-        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_weird_port();
+        let router = Self::create_root_http_router(&config, vault.clone())
+            .await?
+            .merge(well_known_router)
+            .merge(health_router);
+        let host = if config.common().is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.common().get_weird_port(HostType::Http);
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -93,31 +95,46 @@ impl CatalogHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
-        let router = create_root_http_router(config, vault.clone()).await?.fallback(Self::handler_404).layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
-                .on_request(|request: &Request<_>, _span: &tracing::Span| {
-                    tracing::info!("{} {}", request.method(), request.uri());
-                })
-                .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
-        );
+    pub async fn create_root_http_router(
+        config: &CatalogConfig,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<Router> {
+        let router = create_root_http_router(config, vault.clone())
+            .await?
+            .fallback(Self::handler_404)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(
+                        |_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()),
+                    )
+                    .on_request(|request: &Request<_>, _span: &tracing::Span| {
+                        tracing::info!("{} {}", request.method(), request.uri());
+                    })
+                    .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
+            );
         Ok(router)
     }
     async fn handler_404(uri: axum::http::Uri) -> impl IntoResponse {
-        let err = CommonErrors::missing_resource_new(&uri.to_string(), "Route not found or Method not allowed");
+        let err = CommonErrors::missing_resource_new(
+            &uri.to_string(),
+            "Route not found or Method not allowed",
+        );
         tracing::info!("404 Not Found: {}", uri);
         err.into_response()
     }
 }
 
-pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultService>) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(
+    config: &CatalogConfig,
+    vault: Arc<VaultService>,
+) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
-    let db_connection = vault.get_db_connection(config.clone()).await;
+    let db_connection = vault.get_db_connection(config.common()).await;
     let config = Arc::new(config.clone());
     let cache_connection_url = config.get_full_cache_url();
     let redis_client = redis::Client::open(cache_connection_url)?;
-    let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
+    let redis_connection =
+        redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
     let http_client = Arc::new(HttpClient::new(20, 3));
 
     // repo
@@ -126,39 +143,43 @@ pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultSer
 
     // facades
     let ssi_auth_config = Arc::new(config.ssi_auth());
-    let mates_facade = Arc::new(MatesFacadeService::new(
-        ssi_auth_config.clone(),
-        http_client.clone(),
-    ));
+    let mates_facade =
+        Arc::new(MatesFacadeService::new(ssi_auth_config.clone(), http_client.clone()));
 
     // entities
     let catalog_controller_service = Arc::new(CatalogEntities::new(
         catalog_agent_repo.clone(),
         catalog_agent_cache.clone(),
     ));
-    let catalog_router = CatalogEntityRouter::new(catalog_controller_service.clone(), config.clone());
+    let catalog_router =
+        CatalogEntityRouter::new(catalog_controller_service.clone(), config.clone());
     let data_services_controller_service = Arc::new(DataServiceEntities::new(
         catalog_agent_repo.clone(),
         catalog_agent_cache.clone(),
     ));
-    let data_services_router = DataServiceEntityRouter::new(data_services_controller_service.clone(), config.clone());
+    let data_services_router =
+        DataServiceEntityRouter::new(data_services_controller_service.clone(), config.clone());
     let datasets_controller_service = Arc::new(DatasetEntities::new(
         catalog_agent_repo.clone(),
         catalog_agent_cache.clone(),
     ));
-    let datasets_router = DatasetEntityRouter::new(datasets_controller_service.clone(), config.clone());
+    let datasets_router =
+        DatasetEntityRouter::new(datasets_controller_service.clone(), config.clone());
     let distributions_controller_service = Arc::new(DistributionEntities::new(
         catalog_agent_repo.clone(),
         catalog_agent_cache.clone(),
     ));
-    let distributions_router = DistributionEntityRouter::new(distributions_controller_service.clone(), config.clone());
+    let distributions_router =
+        DistributionEntityRouter::new(distributions_controller_service.clone(), config.clone());
     let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(
         catalog_agent_repo.clone(),
         catalog_agent_cache.clone(),
     ));
-    let odrl_offer_router = OdrlOfferEntityRouter::new(odrl_offer_controller_service.clone(), config.clone());
+    let odrl_offer_router =
+        OdrlOfferEntityRouter::new(odrl_offer_controller_service.clone(), config.clone());
 
-    let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
+    let policy_templates_controller_service =
+        Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
     let policy_engine_service = Arc::new(PolicyInstantiationEngine::new(
         odrl_offer_controller_service.clone(),
         policy_templates_controller_service.clone(),
@@ -172,7 +193,8 @@ pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultSer
     let peer_catalog_router = PeerCatalogEntityRouter::new(peer_catalog_service.clone());
 
     // connector module
-    let connector_router = ConnectorSetup::new().build_control_router(config.deref()).await;
+    let connector_router =
+        ConnectorSetup::new().build_control_router(config.deref(), vault.clone()).await;
 
     // dsp
     let dsp_router = CatalogDSP::new(
@@ -188,8 +210,8 @@ pub async fn create_root_http_router(config: &CatalogConfig, vault: Arc<VaultSer
     .build_router()
     .await?;
 
-    let catalog_router_str = format!("{}/catalog-agent", config.get_api_version());
-    let connector_router_str = format!("{}/connector", config.get_api_version());
+    let catalog_router_str = format!("{}/catalog-agent", config.common().get_api_version());
+    let connector_router_str = format!("{}/connector", config.common().get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/catalogs", catalog_router_str.as_str()).as_str(),

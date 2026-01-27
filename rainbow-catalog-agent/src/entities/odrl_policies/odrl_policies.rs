@@ -13,14 +13,21 @@ pub struct OdrlPolicyEntities {
 }
 
 impl OdrlPolicyEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn CatalogAgentRepoTrait>,
+        cache: Arc<dyn CatalogAgentCacheTrait>,
+    ) -> Self {
         Self { repo, cache }
     }
 }
 
 #[async_trait::async_trait]
 impl OdrlPolicyEntityTrait for OdrlPolicyEntities {
-    async fn get_all_odrl_offers(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<OdrlPolicyDto>> {
+    async fn get_all_odrl_offers(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<OdrlPolicyDto>> {
         // 1. Cache hit
         if let Ok(dtos) = self.cache.get_odrl_offer_cache().get_collection(limit, page).await {
             if !dtos.is_empty() {
@@ -79,9 +86,14 @@ impl OdrlPolicyEntityTrait for OdrlPolicyEntities {
         Ok(dtos)
     }
 
-    async fn get_all_odrl_offers_by_entity(&self, entity: &Urn) -> anyhow::Result<Vec<OdrlPolicyDto>> {
+    async fn get_all_odrl_offers_by_entity(
+        &self,
+        entity: &Urn,
+    ) -> anyhow::Result<Vec<OdrlPolicyDto>> {
         // cache
-        if let Ok(dtos) = self.cache.get_odrl_offer_cache().get_by_relation("target", entity, None, None).await {
+        if let Ok(dtos) =
+            self.cache.get_odrl_offer_cache().get_by_relation("target", entity, None, None).await
+        {
             if !dtos.is_empty() {
                 return Ok(dtos);
             }
@@ -109,7 +121,10 @@ impl OdrlPolicyEntityTrait for OdrlPolicyEntities {
         Ok(dtos)
     }
 
-    async fn get_odrl_offer_by_id(&self, odrl_offer_id: &Urn) -> anyhow::Result<Option<OdrlPolicyDto>> {
+    async fn get_odrl_offer_by_id(
+        &self,
+        odrl_offer_id: &Urn,
+    ) -> anyhow::Result<Option<OdrlPolicyDto>> {
         // cache
         if let Ok(Some(dto)) = self.cache.get_odrl_offer_cache().get_single(odrl_offer_id).await {
             return Ok(Some(dto));
@@ -132,7 +147,10 @@ impl OdrlPolicyEntityTrait for OdrlPolicyEntities {
         Ok(dto)
     }
 
-    async fn create_odrl_offer(&self, new_odrl_offer_model: &NewOdrlPolicyDto) -> anyhow::Result<OdrlPolicyDto> {
+    async fn create_odrl_offer(
+        &self,
+        new_odrl_offer_model: &NewOdrlPolicyDto,
+    ) -> anyhow::Result<OdrlPolicyDto> {
         // db
         let new_model = new_odrl_offer_model.clone().into();
         let odrl_policy = self

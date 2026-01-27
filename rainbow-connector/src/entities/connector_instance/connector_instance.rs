@@ -1,7 +1,9 @@
 use crate::data::entities::connector_instances;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::auth_config::AuthenticationConfig;
-use crate::entities::connector_instance::{ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto};
+use crate::entities::connector_instance::{
+    ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto,
+};
 use crate::entities::connector_template::ConnectorMetadata;
 use crate::entities::interaction::InteractionConfig;
 use crate::facades::distribution_resolver_facade::DistributionFacadeTrait;
@@ -17,22 +19,33 @@ pub struct ConnectorInstanceEntitiesService {
 }
 
 impl ConnectorInstanceEntitiesService {
-    pub fn new(repo: Arc<dyn ConnectorRepoTrait>, distribution_facade: Arc<dyn DistributionFacadeTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn ConnectorRepoTrait>,
+        distribution_facade: Arc<dyn DistributionFacadeTrait>,
+    ) -> Self {
         Self { repo, distribution_facade }
     }
 
     fn map_model_to_dto(model: connector_instances::Model) -> anyhow::Result<ConnectorInstanceDto> {
-        let auth_config: AuthenticationConfig = serde_json::from_value(model.authentication.clone()).map_err(|e| {
-            let err = CommonErrors::parse_new(&format!("Error deserializing authentication config: {}", e));
-            error!("{}", err.log());
-            err
-        })?;
+        let auth_config: AuthenticationConfig =
+            serde_json::from_value(model.authentication.clone()).map_err(|e| {
+                let err = CommonErrors::parse_new(&format!(
+                    "Error deserializing authentication config: {}",
+                    e
+                ));
+                error!("{}", err.log());
+                err
+            })?;
 
-        let interaction_config: InteractionConfig = serde_json::from_value(model.interaction.clone()).map_err(|e| {
-            let err = CommonErrors::parse_new(&format!("Error deserializing interaction config: {}", e));
-            error!("{}", err.log());
-            err
-        })?;
+        let interaction_config: InteractionConfig =
+            serde_json::from_value(model.interaction.clone()).map_err(|e| {
+                let err = CommonErrors::parse_new(&format!(
+                    "Error deserializing interaction config: {}",
+                    e
+                ));
+                error!("{}", err.log());
+                err
+            })?;
 
         let urn = Urn::from_str(&model.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Error parsing URN: {}", e));
@@ -65,11 +78,12 @@ impl ConnectorInstanceEntitiesService {
 impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
     async fn get_instance_by_id(&self, id: &Urn) -> anyhow::Result<Option<ConnectorInstanceDto>> {
         let id_str = id.to_string();
-        let instance = self.repo.get_instances_repo().get_instance_by_id(&id_str).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let instance =
+            self.repo.get_instances_repo().get_instance_by_id(&id_str).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         match instance {
             Some(model) => Ok(Some(Self::map_model_to_dto(model)?)),
@@ -83,11 +97,16 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
     ) -> anyhow::Result<Option<ConnectorInstanceDto>> {
         let dist_id_str = distribution_id.to_string();
 
-        let result = self.repo.get_instances_repo().get_instances_by_distribution(&dist_id_str).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let result = self
+            .repo
+            .get_instances_repo()
+            .get_instances_by_distribution(&dist_id_str)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         match result {
             Some(model) => Ok(Some(Self::map_model_to_dto(model)?)),
@@ -103,7 +122,10 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
         let template = self
             .repo
             .get_templates_repo()
-            .get_template_by_name_and_version(&instance_dto.template_name, &instance_dto.template_version)
+            .get_template_by_name_and_version(
+                &instance_dto.template_name,
+                &instance_dto.template_version,
+            )
             .await
             .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
@@ -128,15 +150,25 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
 
         // fetch distribution
         let distribution_id = instance_dto.distribution_id.to_string();
-        let _ = self.distribution_facade.resolve_distribution_by_id(&distribution_id).await.map_err(|e| {
-            let err = CommonErrors::parse_new(&format!("Error resolving associated distribution: {}", e));
-            error!("{}", err.log());
-            err
-        })?;
+        let _ =
+            self.distribution_facade.resolve_distribution_by_id(&distribution_id).await.map_err(
+                |e| {
+                    let err = CommonErrors::parse_new(&format!(
+                        "Error resolving associated distribution: {}",
+                        e
+                    ));
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
 
         // edit or create
-        let current_instance =
-            self.repo.get_instances_repo().get_instances_by_distribution(&distribution_id).await.map_err(|e| {
+        let _ = self
+            .repo
+            .get_instances_repo()
+            .get_instances_by_distribution(&distribution_id)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -171,11 +203,12 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             authentication: auth_json,
             interaction: inter_json,
         };
-        let saved_model = self.repo.get_instances_repo().create_instance(&new_instance).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let saved_model =
+            self.repo.get_instances_repo().create_instance(&new_instance).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         // persist relation
 

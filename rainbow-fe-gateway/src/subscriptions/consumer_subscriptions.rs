@@ -34,8 +34,10 @@ pub struct RainbowConsumerGatewaySubscriptions {
 
 impl RainbowConsumerGatewaySubscriptions {
     pub fn new(config: GatewayConfig) -> Self {
-        let client =
-            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        let client = Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .expect("Failed to build reqwest client");
         Self { config, client }
     }
     pub async fn subscribe_to_microservice(
@@ -43,8 +45,12 @@ impl RainbowConsumerGatewaySubscriptions {
         microservice_key_name: MicroserviceSubscriptionKey,
     ) -> anyhow::Result<()> {
         let microservice_url = match microservice_key_name {
-            MicroserviceSubscriptionKey::ContractNegotiation => self.config.contracts().get_host(HostType::Http),
-            MicroserviceSubscriptionKey::TransferControlPlane => self.config.transfer().get_host(HostType::Http),
+            MicroserviceSubscriptionKey::ContractNegotiation => {
+                self.config.contracts().get_host(HostType::Http)
+            }
+            MicroserviceSubscriptionKey::TransferControlPlane => {
+                self.config.transfer().get_host(HostType::Http)
+            }
             _ => todo!(),
         };
         let microservice_url = microservice_url.trim_end_matches("/");

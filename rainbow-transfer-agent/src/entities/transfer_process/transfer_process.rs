@@ -20,7 +20,9 @@
 use crate::data::entities::transfer_process::{
     self as transfer_process_model, EditTransferProcessModel, NewTransferProcessModel,
 };
-use crate::data::entities::transfer_process_identifier::{EditTransferIdentifierModel, NewTransferIdentifierModel};
+use crate::data::entities::transfer_process_identifier::{
+    EditTransferIdentifierModel, NewTransferIdentifierModel,
+};
 use crate::data::factory_trait::TransferAgentRepoTrait;
 use crate::data::repo_traits::transfer_process_repo::TransferProcessRepoErrors;
 use crate::entities::transfer_process::{
@@ -43,7 +45,10 @@ impl TransferAgentProcessesService {
         Self { transfer_repo }
     }
 
-    async fn enrich_process(&self, process: transfer_process_model::Model) -> anyhow::Result<TransferProcessDto> {
+    async fn enrich_process(
+        &self,
+        process: transfer_process_model::Model,
+    ) -> anyhow::Result<TransferProcessDto> {
         let process_urn = Urn::from_str(&process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
                 "Invalid URN found in database for process {}. Error: {}",
@@ -53,14 +58,16 @@ impl TransferAgentProcessesService {
             err
         })?;
 
-        let messages =
-            self.transfer_repo.get_transfer_message_repo().get_messages_by_process_id(&process_urn).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let messages = self
+            .transfer_repo
+            .get_transfer_message_repo()
+            .get_messages_by_process_id(&process_urn)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let identifiers_models = self
             .transfer_repo
@@ -92,14 +99,16 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferProcessDto>> {
-        let processes =
-            self.transfer_repo.get_transfer_process_repo().get_all_transfer_processes(limit, page).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let processes = self
+            .transfer_repo
+            .get_transfer_process_repo()
+            .get_all_transfer_processes(limit, page)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let mut dtos = Vec::with_capacity(processes.len());
         for p in processes {
@@ -110,9 +119,16 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
         Ok(dtos)
     }
 
-    async fn get_batch_transfer_processes(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferProcessDto>> {
-        let processes =
-            self.transfer_repo.get_transfer_process_repo().get_batch_transfer_processes(ids).await.map_err(|e| {
+    async fn get_batch_transfer_processes(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<TransferProcessDto>> {
+        let processes = self
+            .transfer_repo
+            .get_transfer_process_repo()
+            .get_batch_transfer_processes(ids)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -139,7 +155,10 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
                 err
             })?
             .ok_or_else(|| {
-                let err = CommonErrors::missing_resource_new(&id.to_string(), "Transfer Process not found");
+                let err = CommonErrors::missing_resource_new(
+                    &id.to_string(),
+                    "Transfer Process not found",
+                );
                 error!("{}", err.log());
                 err
             })?;
@@ -147,7 +166,11 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
         self.enrich_process(process).await
     }
 
-    async fn get_transfer_process_by_key_id(&self, key_id: &str, id: &Urn) -> anyhow::Result<TransferProcessDto> {
+    async fn get_transfer_process_by_key_id(
+        &self,
+        key_id: &str,
+        id: &Urn,
+    ) -> anyhow::Result<TransferProcessDto> {
         let process = self
             .transfer_repo
             .get_transfer_process_repo()
@@ -170,7 +193,10 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
         self.enrich_process(process).await
     }
 
-    async fn get_transfer_process_by_key_value(&self, id: &Urn) -> anyhow::Result<TransferProcessDto> {
+    async fn get_transfer_process_by_key_value(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<TransferProcessDto> {
         let process = self
             .transfer_repo
             .get_transfer_process_repo()
@@ -199,14 +225,16 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
     ) -> anyhow::Result<TransferProcessDto> {
         let new_process_model: NewTransferProcessModel = new_model_dto.clone().into();
 
-        let created_process =
-            self.transfer_repo.get_transfer_process_repo().create_transfer_process(&new_process_model).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let created_process = self
+            .transfer_repo
+            .get_transfer_process_repo()
+            .create_transfer_process(&new_process_model)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let process_urn = Urn::from_str(&created_process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Generated ID is not a valid URN: {}", e));
@@ -228,7 +256,10 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
                     .create_identifier(&new_ident_model)
                     .await
                     .map_err(|e| {
-                        let err = CommonErrors::database_new(&format!("Error creating identifier {}: {}", key, e));
+                        let err = CommonErrors::database_new(&format!(
+                            "Error creating identifier {}: {}",
+                            key, e
+                        ));
                         error!("{}", err.log());
                         err
                     })?;
@@ -245,26 +276,28 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
     ) -> anyhow::Result<TransferProcessDto> {
         let edit_model: EditTransferProcessModel = edit_model_dto.clone().into();
 
-        let updated_process =
-            self.transfer_repo.get_transfer_process_repo().put_transfer_process(id, &edit_model).await.map_err(
-                |e| {
-                    match e {
-                        TransferProcessRepoErrors::TransferProcessNotFound => {
-                            let err = CommonErrors::missing_resource_new(
-                                &id.to_string(),
-                                "Transfer process not found for update",
-                            );
-                            error!("{}", err.log());
-                            err // Convertimos a anyhow::Error compatible
-                        }
-                        _ => {
-                            let err = CommonErrors::database_new(&e.to_string());
-                            error!("{}", err.log());
-                            err
-                        }
+        let updated_process = self
+            .transfer_repo
+            .get_transfer_process_repo()
+            .put_transfer_process(id, &edit_model)
+            .await
+            .map_err(|e| {
+                match e {
+                    TransferProcessRepoErrors::TransferProcessNotFound => {
+                        let err = CommonErrors::missing_resource_new(
+                            &id.to_string(),
+                            "Transfer process not found for update",
+                        );
+                        error!("{}", err.log());
+                        err // Convertimos a anyhow::Error compatible
                     }
-                },
-            )?;
+                    _ => {
+                        let err = CommonErrors::database_new(&e.to_string());
+                        error!("{}", err.log());
+                        err
+                    }
+                }
+            })?;
 
         let process_urn = Urn::from_str(&updated_process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Updated ID is not a valid URN: {}", e));
@@ -301,24 +334,33 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
                         })
                         .await
                         .map_err(|e| {
-                            let err =
-                                CommonErrors::database_new(&format!("Error creating new identifier {}: {}", key, e));
+                            let err = CommonErrors::database_new(&format!(
+                                "Error creating new identifier {}: {}",
+                                key, e
+                            ));
                             error!("{}", err.log());
                             err
                         })?;
                 } else {
-                    let id_urn_ident = Urn::from_str(identifier_model.unwrap().id.as_str()).map_err(|e| {
-                        let err = CommonErrors::parse_new(&format!("Identifier URN malformed: {}", e));
-                        error!("{}", err.log());
-                        err
-                    })?;
+                    let id_urn_ident = Urn::from_str(identifier_model.unwrap().id.as_str())
+                        .map_err(|e| {
+                            let err = CommonErrors::parse_new(&format!(
+                                "Identifier URN malformed: {}",
+                                e
+                            ));
+                            error!("{}", err.log());
+                            err
+                        })?;
 
                     self.transfer_repo
                         .get_transfer_process_identifiers_repo()
                         .put_identifier(&id_urn_ident, &new_ident_model)
                         .await
                         .map_err(|e| {
-                            let err = CommonErrors::database_new(&format!("Error updating identifier {}: {}", key, e));
+                            let err = CommonErrors::database_new(&format!(
+                                "Error updating identifier {}: {}",
+                                key, e
+                            ));
                             error!("{}", err.log());
                             err
                         })?;
@@ -330,19 +372,23 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
     }
 
     async fn delete_transfer_process(&self, id: &Urn) -> anyhow::Result<()> {
-        self.transfer_repo.get_transfer_process_repo().delete_transfer_process(id).await.map_err(|e| match e {
-            TransferProcessRepoErrors::TransferProcessNotFound => {
-                let err =
-                    CommonErrors::missing_resource_new(&id.to_string(), "Transfer process not found for deletion");
-                error!("{}", err.log());
-                err
-            }
-            _ => {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            }
-        })?;
+        self.transfer_repo.get_transfer_process_repo().delete_transfer_process(id).await.map_err(
+            |e| match e {
+                TransferProcessRepoErrors::TransferProcessNotFound => {
+                    let err = CommonErrors::missing_resource_new(
+                        &id.to_string(),
+                        "Transfer process not found for deletion",
+                    );
+                    error!("{}", err.log());
+                    err
+                }
+                _ => {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                }
+            },
+        )?;
         Ok(())
     }
 }

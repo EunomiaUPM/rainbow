@@ -110,7 +110,9 @@ impl CatalogEntityRouter {
             },
         }
     }
-    async fn handle_get_main_catalog(State(state): State<CatalogEntityRouter>) -> impl IntoResponse {
+    async fn handle_get_main_catalog(
+        State(state): State<CatalogEntityRouter>,
+    ) -> impl IntoResponse {
         match state.service.get_main_catalog().await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
             Ok(None) => {

@@ -22,10 +22,11 @@ use crate::entities::negotiation_process::{
 };
 use crate::grpc::api::negotiation_agent::negotiation_agent_processes_service_server::NegotiationAgentProcessesService;
 use crate::grpc::api::negotiation_agent::{
-    CreateNegotiationProcessRequest, DeleteNegotiationProcessRequest, GetAllNegotiationProcessesRequest,
-    GetBatchNegotiationProcessesRequest, GetNegotiationProcessByIdRequest, GetNegotiationProcessByKeyIdRequest,
-    GetNegotiationProcessByKeyValueRequest, NegotiationProcessListResponse, NegotiationProcessResponse,
-    PutNegotiationProcessRequest,
+    CreateNegotiationProcessRequest, DeleteNegotiationProcessRequest,
+    GetAllNegotiationProcessesRequest, GetBatchNegotiationProcessesRequest,
+    GetNegotiationProcessByIdRequest, GetNegotiationProcessByKeyIdRequest,
+    GetNegotiationProcessByKeyValueRequest, NegotiationProcessListResponse,
+    NegotiationProcessResponse, PutNegotiationProcessRequest,
 };
 
 use std::str::FromStr;
@@ -85,8 +86,11 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| Status::invalid_argument(format!("Invalid URN in batch: {}", e)))?;
 
-        let processes =
-            self.service.get_batch_negotiation_processes(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let processes = self
+            .service
+            .get_batch_negotiation_processes(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_processes = processes
             .into_iter()
@@ -106,7 +110,8 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
         request: Request<GetNegotiationProcessByIdRequest>,
     ) -> Result<Response<NegotiationProcessResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.get_negotiation_process_by_id(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
@@ -120,14 +125,12 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
         request: Request<GetNegotiationProcessByKeyIdRequest>,
     ) -> Result<Response<NegotiationProcessResponse>, Status> {
         let req = request.into_inner();
-        let urn =
-            Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid Process ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid Process ID URN: {}", e)))?;
 
         match self.service.get_negotiation_process_by_key_id(&req.key_id, &urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
-            Ok(None) => Err(Status::not_found(
-                "Negotiation process not found by identifier key",
-            )),
+            Ok(None) => Err(Status::not_found("Negotiation process not found by identifier key")),
             Err(e) => Err(Status::internal(e.to_string())),
         }
     }
@@ -138,14 +141,13 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
     ) -> Result<Response<NegotiationProcessResponse>, Status> {
         let req = request.into_inner();
         // Aquí 'id' representa el valor del URN del identificador
-        let urn = Urn::from_str(&req.id)
-            .map_err(|e| Status::invalid_argument(format!("Invalid Identifier Value URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id).map_err(|e| {
+            Status::invalid_argument(format!("Invalid Identifier Value URN: {}", e))
+        })?;
 
         match self.service.get_negotiation_process_by_key_value(&urn).await {
             Ok(Some(dto)) => Ok(Response::new(dto.into())),
-            Ok(None) => Err(Status::not_found(
-                "Negotiation process not found by identifier value",
-            )),
+            Ok(None) => Err(Status::not_found("Negotiation process not found by identifier value")),
             Err(e) => Err(Status::internal(e.to_string())),
         }
     }
@@ -170,7 +172,8 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
         request: Request<PutNegotiationProcessRequest>,
     ) -> Result<Response<NegotiationProcessResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         // Conversión Request -> EditDto
         let edit_process_dto: EditNegotiationProcessDto = req.try_into()?;
@@ -186,7 +189,8 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
         request: Request<DeleteNegotiationProcessRequest>,
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
+        let urn = Urn::from_str(&req.id)
+            .map_err(|e| Status::invalid_argument(format!("Invalid ID URN: {}", e)))?;
 
         match self.service.delete_negotiation_process(&urn).await {
             Ok(_) => Ok(Response::new(())),

@@ -32,4 +32,3 @@ pub fn get_pretty_client_config_helper(
 
     Ok(client)
 }
-

@@ -53,7 +53,9 @@ impl WellKnownRouter {
             .with_state(self)
     }
 
-    async fn handle_get_well_known_version(State(state): State<WellKnownRouter>) -> impl IntoResponse {
+    async fn handle_get_well_known_version(
+        State(state): State<WellKnownRouter>,
+    ) -> impl IntoResponse {
         let response = state.dspace_version_service.get_dspace_version().unwrap();
         (StatusCode::OK, Json(response)).into_response()
     }

@@ -14,7 +14,10 @@ pub struct CatalogEntities {
 }
 
 impl CatalogEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn CatalogAgentRepoTrait>,
+        cache: Arc<dyn CatalogAgentCacheTrait>,
+    ) -> Self {
         Self { repo, cache }
     }
 }
@@ -109,7 +112,8 @@ impl CatalogEntityTrait for CatalogEntities {
         if let Some(dto) = &dto {
             let cache = self.cache.get_catalog_cache();
             let _ = cache.set_single(catalog_id, dto).await;
-            let _ = cache.add_to_collection(catalog_id, dto.inner.dct_issued.timestamp() as f64).await;
+            let _ =
+                cache.add_to_collection(catalog_id, dto.inner.dct_issued.timestamp() as f64).await;
         }
 
         Ok(dto)
@@ -158,12 +162,16 @@ impl CatalogEntityTrait for CatalogEntities {
         // cache
         let cache = self.cache.get_catalog_cache();
         let _ = cache.set_single(&catalog_urn, &dto).await;
-        let _ = cache.add_to_collection(&catalog_urn, dto.inner.dct_issued.timestamp() as f64).await;
+        let _ =
+            cache.add_to_collection(&catalog_urn, dto.inner.dct_issued.timestamp() as f64).await;
 
         Ok(dto)
     }
 
-    async fn create_catalog(&self, new_catalog_model: &NewCatalogDto) -> anyhow::Result<CatalogDto> {
+    async fn create_catalog(
+        &self,
+        new_catalog_model: &NewCatalogDto,
+    ) -> anyhow::Result<CatalogDto> {
         let new_model: NewCatalogModel = new_catalog_model.clone().into();
         let catalog = self
             .repo
@@ -178,18 +186,23 @@ impl CatalogEntityTrait for CatalogEntities {
         // hydration
         let cache = self.cache.get_catalog_cache();
         let _ = cache.set_single(&catalog_urn, &dto).await;
-        let _ = cache.add_to_collection(&catalog_urn, dto.inner.dct_issued.timestamp() as f64).await;
+        let _ =
+            cache.add_to_collection(&catalog_urn, dto.inner.dct_issued.timestamp() as f64).await;
 
         Ok(dto)
     }
 
-    async fn create_main_catalog(&self, new_catalog_model: &NewCatalogDto) -> anyhow::Result<CatalogDto> {
+    async fn create_main_catalog(
+        &self,
+        new_catalog_model: &NewCatalogDto,
+    ) -> anyhow::Result<CatalogDto> {
         let new_model: NewCatalogModel = new_catalog_model.clone().into();
-        let catalog = self.repo.get_catalog_repo().create_main_catalog(&new_model).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let catalog =
+            self.repo.get_catalog_repo().create_main_catalog(&new_model).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
         let catalog_urn = Urn::from_str(&*catalog.id)?;
         let dto = catalog.into();
 

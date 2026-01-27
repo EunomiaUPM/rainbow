@@ -21,17 +21,20 @@ use crate::entities::negotiation_process::NegotiationProcessDto;
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
 use crate::protocols::dsp::orchestrator::rpc::persistence::OrchestrationPersistenceForRpc;
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
-    RpcNegotiationMessageDto, RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
-    RpcNegotiationProcessMessageTrait, RpcNegotiationRequestInitMessageDto, RpcNegotiationRequestMessageDto,
-    RpcNegotiationTerminationMessageDto, RpcNegotiationVerificationMessageDto,
+    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto,
+    RpcNegotiationEventFinalizedMessageDto, RpcNegotiationMessageDto,
+    RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
+    RpcNegotiationProcessMessageTrait, RpcNegotiationRequestInitMessageDto,
+    RpcNegotiationRequestMessageDto, RpcNegotiationTerminationMessageDto,
+    RpcNegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::orchestrator::traits::orchestration_helpers::OrchestrationHelpers;
 use crate::protocols::dsp::persistence::NegotiationPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
-    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationEventType,
-    NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageTrait,
-    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
+    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto,
+    NegotiationEventType, NegotiationOfferInitMessageDto, NegotiationOfferMessageDto,
+    NegotiationProcessMessageTrait, NegotiationProcessMessageWrapper,
+    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
     NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
@@ -76,16 +79,21 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // send to peer
         let provider_address = self.get_rpc_provider_address_safely(input)?;
         let peer_url = format!("{}/negotiations/request", provider_address);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process = self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
+        let negotiation_process =
+            self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -105,17 +113,23 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/request", peer_address, identifier);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process =
-            self.persistence_service.update_with_offer(id.as_str(), input, &request_body.dto, &response.dto).await?;
+        let negotiation_process = self
+            .persistence_service
+            .update_with_offer(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -128,16 +142,21 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // send to peer
         let provider_address = self.get_rpc_provider_address_safely(input)?;
         let peer_url = format!("{}/negotiations/offers", provider_address);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process = self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
+        let negotiation_process =
+            self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -157,17 +176,23 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/offers", peer_address, identifier);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process =
-            self.persistence_service.update_with_offer(id.as_str(), input, &request_body.dto, &response.dto).await?;
+        let negotiation_process = self
+            .persistence_service
+            .update_with_offer(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -185,13 +210,16 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let peer_address = current_process.inner.callback_address.unwrap();
 
         // get last offer
-        let last_offer =
-            self.persistence_service.fetch_last_offer_by_process(current_process.inner.id.as_str()).await?;
+        let last_offer = self
+            .persistence_service
+            .fetch_last_offer_by_process(current_process.inner.id.as_str())
+            .await?;
         let offer = serde_json::from_value::<OdrlMessageOffer>(last_offer.inner.offer_content)?;
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/agreement", peer_address, identifier);
-        let mut request_body: NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto> = input.clone().into();
+        let mut request_body: NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto> =
+            input.clone().into();
         request_body.dto.agreement = OdrlAgreement {
             id: self.create_entity_urn("agreement")?,
             profile: offer.profile,
@@ -214,8 +242,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .update_with_new_agreement(id.as_str(), input, &request_body.dto, &response.dto)
             .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -234,11 +265,10 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let peer_address = current_process.inner.callback_address.unwrap();
 
         // send to peer
-        let peer_url = format!(
-            "{}/negotiations/{}/agreement/verification",
-            peer_address, identifier
-        );
-        let request_body: NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto> = input.clone().into();
+        let peer_url =
+            format!("{}/negotiations/{}/agreement/verification", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
@@ -249,8 +279,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .update_with_agreement(id.as_str(), input, &request_body.dto, &response.dto)
             .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -270,17 +303,23 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/events", peer_address, identifier);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process =
-            self.persistence_service.update(id.as_str(), input, &request_body.dto, &response.dto).await?;
+        let negotiation_process = self
+            .persistence_service
+            .update(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -300,7 +339,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/events", peer_address, identifier);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
@@ -311,8 +351,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .update_with_agreement(id.as_str(), input, &request_body.dto, &response.dto)
             .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 
@@ -332,17 +375,23 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
 
         // send to peer
         let peer_url = format!("{}/negotiations/{}/termination", peer_address, identifier);
-        let request_body: NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> = input.clone().into();
+        let request_body: NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> =
+            input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process =
-            self.persistence_service.update(id.as_str(), input, &request_body.dto, &response.dto).await?;
+        let negotiation_process = self
+            .persistence_service
+            .update(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
 
-        let response =
-            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        let response = RpcNegotiationMessageDto {
+            request: input.clone(),
+            response,
+            negotiation_agent_model: negotiation_process,
+        };
         Ok(response)
     }
 }

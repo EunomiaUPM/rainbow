@@ -1,6 +1,8 @@
 use crate::data::entities::connector_templates;
 use crate::data::entities::connector_templates::NewConnectorTemplateModel;
-use crate::data::repo_traits::connector_repo_errors::{ConnectorAgentRepoErrors, ConnectorTemplateRepoErrors};
+use crate::data::repo_traits::connector_repo_errors::{
+    ConnectorAgentRepoErrors, ConnectorTemplateRepoErrors,
+};
 use crate::data::repo_traits::connector_template_repo::ConnectorTemplateRepoTrait;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 
@@ -21,7 +23,9 @@ impl ConnectorTemplateRepoTrait for ConnectorTemplateRepoForSql {
         new_template_model: &NewConnectorTemplateModel,
     ) -> anyhow::Result<connector_templates::Model, ConnectorAgentRepoErrors> {
         let model: connector_templates::ActiveModel = new_template_model.clone().into();
-        let template = connector_templates::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let template = connector_templates::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
 
         match template {
             Ok(template) => Ok(template),
@@ -54,8 +58,9 @@ impl ConnectorTemplateRepoTrait for ConnectorTemplateRepoForSql {
         name: &String,
         version: &String,
     ) -> anyhow::Result<Option<connector_templates::Model>, ConnectorAgentRepoErrors> {
-        let result =
-            connector_templates::Entity::find_by_id((name.clone(), version.clone())).one(&self.db_connection).await;
+        let result = connector_templates::Entity::find_by_id((name.clone(), version.clone()))
+            .one(&self.db_connection)
+            .await;
         match result {
             Ok(opt) => Ok(opt),
             Err(err) => Err(ConnectorAgentRepoErrors::ConnectorTemplateRepoErrors(
@@ -90,8 +95,9 @@ impl ConnectorTemplateRepoTrait for ConnectorTemplateRepoForSql {
         name: &String,
         version: &String,
     ) -> anyhow::Result<(), ConnectorAgentRepoErrors> {
-        let result =
-            connector_templates::Entity::delete_by_id((name.clone(), version.clone())).exec(&self.db_connection).await;
+        let result = connector_templates::Entity::delete_by_id((name.clone(), version.clone()))
+            .exec(&self.db_connection)
+            .await;
 
         match result {
             Ok(delete_result) => match delete_result.rows_affected {

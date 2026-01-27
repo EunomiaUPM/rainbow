@@ -38,7 +38,11 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(belongs_to = "super::dataset::Entity", from = "Column::DatasetId", to = "super::dataset::Column::Id")]
+    #[sea_orm(
+        belongs_to = "super::dataset::Entity",
+        from = "Column::DatasetId",
+        to = "super::dataset::Column::Id"
+    )]
     Dataset,
     #[sea_orm(
         belongs_to = "super::dataservice::Entity",

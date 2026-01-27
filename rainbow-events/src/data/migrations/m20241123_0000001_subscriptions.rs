@@ -36,7 +36,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Subscriptions::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Subscriptions::CallbackAddress).string().not_null())
                     .col(ColumnDef::new(Subscriptions::TransferProcess).boolean().default("false"))
-                    .col(ColumnDef::new(Subscriptions::ContractNegotiationProcess).boolean().default("false"))
+                    .col(
+                        ColumnDef::new(Subscriptions::ContractNegotiationProcess)
+                            .boolean()
+                            .default("false"),
+                    )
                     .col(ColumnDef::new(Subscriptions::Catalog).boolean().default("false"))
                     .col(ColumnDef::new(Subscriptions::DataPlane).boolean().default("false"))
                     .col(ColumnDef::new(Subscriptions::Active).boolean().default("true"))

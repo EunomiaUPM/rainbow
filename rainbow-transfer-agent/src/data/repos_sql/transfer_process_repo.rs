@@ -18,12 +18,16 @@
  */
 
 use crate::data::entities::transfer_process;
-use crate::data::entities::transfer_process::{EditTransferProcessModel, Model, NewTransferProcessModel};
+use crate::data::entities::transfer_process::{
+    EditTransferProcessModel, Model, NewTransferProcessModel,
+};
 use crate::data::entities::transfer_process_identifier;
-use crate::data::repo_traits::transfer_process_repo::{TransferProcessRepoErrors, TransferProcessRepoTrait};
+use crate::data::repo_traits::transfer_process_repo::{
+    TransferProcessRepoErrors, TransferProcessRepoTrait,
+};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect,
-    RelationTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType,
+    QueryFilter, QuerySelect, RelationTrait,
 };
 use urn::Urn;
 
@@ -51,9 +55,7 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
             .await;
         match processes {
             Ok(processes) => Ok(processes),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into())),
         }
     }
 
@@ -68,9 +70,7 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into())),
         }
     }
 
@@ -79,12 +79,11 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
         id: &Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>, TransferProcessRepoErrors> {
         let pid = id.to_string();
-        let transfer_process = transfer_process::Entity::find_by_id(pid).one(&self.db_connection).await;
+        let transfer_process =
+            transfer_process::Entity::find_by_id(pid).one(&self.db_connection).await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into())),
         }
     }
 
@@ -95,19 +94,14 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
     ) -> anyhow::Result<Option<transfer_process::Model>, TransferProcessRepoErrors> {
         let id = id.to_string();
         let transfer_process = transfer_process::Entity::find()
-            .join(
-                JoinType::InnerJoin,
-                transfer_process::Relation::Identifiers.def(),
-            )
+            .join(JoinType::InnerJoin, transfer_process::Relation::Identifiers.def())
             .filter(transfer_process_identifier::Column::IdKey.eq(key_id))
             .filter(transfer_process_identifier::Column::IdValue.eq(id))
             .one(&self.db_connection)
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into())),
         }
     }
 
@@ -117,18 +111,13 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
     ) -> anyhow::Result<Option<Model>, TransferProcessRepoErrors> {
         let id = id.to_string();
         let transfer_process = transfer_process::Entity::find()
-            .join(
-                JoinType::InnerJoin,
-                transfer_process::Relation::Identifiers.def(),
-            )
+            .join(JoinType::InnerJoin, transfer_process::Relation::Identifiers.def())
             .filter(transfer_process_identifier::Column::IdValue.eq(id))
             .one(&self.db_connection)
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into())),
         }
     }
 
@@ -137,13 +126,12 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
         new_process: &NewTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model, TransferProcessRepoErrors> {
         let model: transfer_process::ActiveModel = new_process.clone().into();
-        let transfer_proces = transfer_process::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let transfer_proces =
+            transfer_process::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match transfer_proces {
             Ok(transfer_process) => Ok(transfer_process),
             Err(e) => {
-                return Err(TransferProcessRepoErrors::ErrorCreatingTransferProcess(
-                    e.into(),
-                ))
+                return Err(TransferProcessRepoErrors::ErrorCreatingTransferProcess(e.into()))
             }
         }
     }
@@ -161,9 +149,7 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
                 None => return Err(TransferProcessRepoErrors::TransferProcessNotFound),
             },
             Err(e) => {
-                return Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(
-                    e.into(),
-                ))
+                return Err(TransferProcessRepoErrors::ErrorFetchingTransferProcess(e.into()))
             }
         };
         let mut old_active_model: transfer_process::ActiveModel = old_model.into();
@@ -183,23 +169,23 @@ impl TransferProcessRepoTrait for TransferProcessRepoForSql {
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(e) => Err(TransferProcessRepoErrors::ErrorUpdatingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorUpdatingTransferProcess(e.into())),
         }
     }
 
-    async fn delete_transfer_process(&self, id: &Urn) -> anyhow::Result<(), TransferProcessRepoErrors> {
+    async fn delete_transfer_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), TransferProcessRepoErrors> {
         let id = id.to_string();
-        let transfer_process = transfer_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
+        let transfer_process =
+            transfer_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
         match transfer_process {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(TransferProcessRepoErrors::TransferProcessNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(TransferProcessRepoErrors::ErrorDeletingTransferProcess(
-                e.into(),
-            )),
+            Err(e) => Err(TransferProcessRepoErrors::ErrorDeletingTransferProcess(e.into())),
         }
     }
 }

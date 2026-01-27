@@ -18,7 +18,9 @@
  */
 
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
+};
 use axum::{
     extract::{rejection::JsonRejection, FromRef, Path, State},
     response::IntoResponse,

@@ -19,9 +19,9 @@
 
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::protocols::dsp::protocol_types::{
-    DataAddressDto, TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType,
-    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
-    TransferTerminationMessageDto,
+    DataAddressDto, TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto,
+    TransferProcessMessageType, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use rainbow_common::dsp_common::context_field::ContextField;
 use serde::{Deserialize, Serialize};
@@ -56,7 +56,9 @@ pub struct RpcTransferRequestMessageDto {
     pub callback_address: String,
 }
 
-impl Into<TransferProcessMessageWrapper<TransferRequestMessageDto>> for RpcTransferRequestMessageDto {
+impl Into<TransferProcessMessageWrapper<TransferRequestMessageDto>>
+    for RpcTransferRequestMessageDto
+{
     fn into(self) -> TransferProcessMessageWrapper<TransferRequestMessageDto> {
         let consumer_pid = format!("urn:consumer-pid:{}", uuid::Uuid::new_v4());
         let consumer_pid_urn = Urn::from_str(consumer_pid.as_str()).unwrap();
@@ -137,7 +139,11 @@ impl Into<TransferProcessMessageWrapper<TransferStartMessageDto>> for RpcTransfe
         TransferProcessMessageWrapper {
             context: ContextField::default(),
             _type: TransferProcessMessageType::TransferStartMessage,
-            dto: TransferStartMessageDto { data_address: self.data_address, provider_pid, consumer_pid },
+            dto: TransferStartMessageDto {
+                data_address: self.data_address,
+                provider_pid,
+                consumer_pid,
+            },
         }
     }
 }
@@ -198,7 +204,9 @@ pub struct RpcTransferSuspensionMessageDto {
     pub reason: Option<Vec<String>>,
 }
 
-impl Into<TransferProcessMessageWrapper<TransferSuspensionMessageDto>> for RpcTransferSuspensionMessageDto {
+impl Into<TransferProcessMessageWrapper<TransferSuspensionMessageDto>>
+    for RpcTransferSuspensionMessageDto
+{
     fn into(self) -> TransferProcessMessageWrapper<TransferSuspensionMessageDto> {
         let consumer_pid = self.get_consumer_pid().unwrap();
         let provider_pid = self.get_provider_pid().unwrap();
@@ -269,7 +277,9 @@ pub struct RpcTransferCompletionMessageDto {
     pub provider_pid: Urn,
 }
 
-impl Into<TransferProcessMessageWrapper<TransferCompletionMessageDto>> for RpcTransferCompletionMessageDto {
+impl Into<TransferProcessMessageWrapper<TransferCompletionMessageDto>>
+    for RpcTransferCompletionMessageDto
+{
     fn into(self) -> TransferProcessMessageWrapper<TransferCompletionMessageDto> {
         let consumer_pid = self.get_consumer_pid().unwrap();
         let provider_pid = self.get_provider_pid().unwrap();
@@ -337,7 +347,9 @@ pub struct RpcTransferTerminationMessageDto {
     pub reason: Option<Vec<String>>,
 }
 
-impl Into<TransferProcessMessageWrapper<TransferTerminationMessageDto>> for RpcTransferTerminationMessageDto {
+impl Into<TransferProcessMessageWrapper<TransferTerminationMessageDto>>
+    for RpcTransferTerminationMessageDto
+{
     fn into(self) -> TransferProcessMessageWrapper<TransferTerminationMessageDto> {
         let consumer_pid = self.get_consumer_pid().unwrap();
         let provider_pid = self.get_provider_pid().unwrap();

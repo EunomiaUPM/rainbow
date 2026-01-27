@@ -200,13 +200,16 @@ impl ErrorLog for CommonErrors {
             )
         }
 
-        fn format_http_error(info: &ErrorInfo, url: &str, method: &str, http_code: Option<u16>, cause: &str) -> String {
+        fn format_http_error(
+            info: &ErrorInfo,
+            url: &str,
+            method: &str,
+            http_code: Option<u16>,
+            cause: &str,
+        ) -> String {
             let base = format_info(info, cause);
             let code = http_code.unwrap_or(0);
-            format!(
-                "{}\nMethod: {}\nUrl: {}\nHttp Code: {}",
-                base, method, url, code
-            )
+            format!("{}\nMethod: {}\nUrl: {}\nHttp Code: {}", base, method, url, code)
         }
 
         match self {
@@ -244,7 +247,12 @@ impl ErrorLog for CommonErrors {
 }
 
 impl CommonErrors {
-    pub fn petition_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
+    pub fn petition_new(
+        url: &str,
+        method: &str,
+        http_code: Option<u16>,
+        cause: &str,
+    ) -> CommonErrors {
         CommonErrors::PetitionError {
             info: ErrorInfo {
                 message: "A petition went wrong".to_string(),
@@ -259,7 +267,12 @@ impl CommonErrors {
             cause: cause.to_string(),
         }
     }
-    pub fn provider_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
+    pub fn provider_new(
+        url: &str,
+        method: &str,
+        http_code: Option<u16>,
+        cause: &str,
+    ) -> CommonErrors {
         CommonErrors::ProviderError {
             info: ErrorInfo {
                 message: "Unexpected response from the Provider".to_string(),
@@ -274,7 +287,12 @@ impl CommonErrors {
             cause: cause.to_string(),
         }
     }
-    pub fn consumer_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
+    pub fn consumer_new(
+        url: &str,
+        method: &str,
+        http_code: Option<u16>,
+        cause: &str,
+    ) -> CommonErrors {
         CommonErrors::ConsumerError {
             info: ErrorInfo {
                 message: "Unexpected response from the Consumer".to_string(),
@@ -289,7 +307,12 @@ impl CommonErrors {
             cause: cause.to_string(),
         }
     }
-    pub fn authority_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
+    pub fn authority_new(
+        url: &str,
+        method: &str,
+        http_code: Option<u16>,
+        cause: &str,
+    ) -> CommonErrors {
         CommonErrors::AuthorityError {
             info: ErrorInfo {
                 message: "Unexpected response from the Authority".to_string(),
@@ -315,10 +338,7 @@ impl CommonErrors {
         };
         CommonErrors::MissingActionError {
             info: ErrorInfo {
-                message: format!(
-                    "The action {} is required to proceed with this step",
-                    action
-                ),
+                message: format!("The action {} is required to proceed with this step", action),
                 error_code,
                 status_code: StatusCode::PRECONDITION_FAILED,
                 details: None,
@@ -331,7 +351,8 @@ impl CommonErrors {
     pub fn missing_resource_new(resource_id: &str, cause: &str) -> CommonErrors {
         CommonErrors::MissingResourceError {
             info: ErrorInfo {
-                message: "A key resource is missing in order to complete the required action ".to_string(),
+                message: "A key resource is missing in order to complete the required action "
+                    .to_string(),
                 error_code: 3200,
                 status_code: StatusCode::NOT_FOUND,
                 details: None,

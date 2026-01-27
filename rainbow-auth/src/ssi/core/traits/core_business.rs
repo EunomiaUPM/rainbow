@@ -18,8 +18,8 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use ymir::services::verifier::VerifierTrait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
+use ymir::services::verifier::VerifierTrait;
 
 use crate::ssi::services::business::BusinessTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
@@ -39,7 +39,7 @@ pub trait CoreBusinessTrait: Send + Sync + 'static {
     }
     async fn token(
         &self,
-        payload: RainbowBusinessLoginRequest
+        payload: RainbowBusinessLoginRequest,
     ) -> anyhow::Result<BusinessResponse> {
         let bus_model = self.repo().business_mates().get_by_id(&payload.auth_request_id).await?;
         let mate = self.repo().mates().get_by_id(&bus_model.participant_id).await?;

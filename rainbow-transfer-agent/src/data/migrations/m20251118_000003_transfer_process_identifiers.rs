@@ -33,8 +33,17 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(TransferAgentIdentifiers::Table)
-                    .col(ColumnDef::new(TransferAgentIdentifiers::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(TransferAgentIdentifiers::TransferAgentProcessId).string().not_null())
+                    .col(
+                        ColumnDef::new(TransferAgentIdentifiers::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(TransferAgentIdentifiers::TransferAgentProcessId)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(TransferAgentIdentifiers::IdKey).string().not_null())
                     .col(ColumnDef::new(TransferAgentIdentifiers::IdValue).string())
                     .foreign_key(

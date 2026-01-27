@@ -16,7 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
+use crate::protocols::dsp::orchestrator::rpc::types::{
+    RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto,
+};
 
 #[async_trait::async_trait]
 pub trait ValidationRpcSteps: Send + Sync + 'static {
