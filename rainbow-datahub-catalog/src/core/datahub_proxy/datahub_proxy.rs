@@ -20,7 +20,7 @@
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DomainProperties, GlossaryTerm, TagProperties};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::config::services::CatalogConfig;
 use reqwest::Client;
 use std::time::Duration;

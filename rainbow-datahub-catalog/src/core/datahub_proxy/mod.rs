@@ -19,7 +19,7 @@
 
 use crate::core::datahub_proxy::datahub_proxy_types::DatahubDomain;
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, Tag};
-use axum::async_trait;
+use async_trait::async_trait;
 
 pub mod datahub_proxy;
 pub mod datahub_proxy_types;

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 pub mod error_adapter;
 mod error_log_trait;
 pub mod helpers;
@@ -28,7 +29,6 @@ use axum::Json;
 use helpers::{BadFormat, MissingAction};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ErrorInfo {
@@ -150,6 +150,18 @@ pub enum CommonErrors {
         info: ErrorInfo,
         cause: String,
     },
+    #[error("Environment Variable Error")]
+    EnvVarError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        cause: String,
+    },
+    #[error("Vault Error")]
+    VaultError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        cause: String,
+    },
 }
 
 impl IntoResponse for &CommonErrors {
@@ -169,6 +181,8 @@ impl IntoResponse for &CommonErrors {
             | CommonErrors::WriteError { info, .. }
             | CommonErrors::ParseError { info, .. }
             | CommonErrors::ModuleNotActiveError { info, .. }
+            | CommonErrors::VaultError { info, .. }
+            | CommonErrors::EnvVarError { info, .. }
             | CommonErrors::FeatureNotImplError { info, .. } => info,
         };
 
@@ -222,6 +236,8 @@ impl ErrorLog for CommonErrors {
             | CommonErrors::ModuleNotActiveError { info, cause }
             | CommonErrors::ForbiddenError { info, cause }
             | CommonErrors::DatabaseError { info, cause }
+            | CommonErrors::EnvVarError { info, cause }
+            | CommonErrors::VaultError { info, cause }
             | CommonErrors::ParseError { info, cause } => format_info(info, cause),
         }
     }
@@ -441,6 +457,30 @@ impl CommonErrors {
                 cause: module.to_string(),
             },
             cause: format!("module {} is not active", module),
+        }
+    }
+    pub fn env_new(e: String) -> Self {
+        Self::EnvVarError {
+            info: ErrorInfo {
+                message: "You are trying to use an undefined env variable".to_string(),
+                error_code: 800,
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                details: None,
+                cause: e.clone(),
+            },
+            cause: e,
+        }
+    }
+    pub fn vault_new(e: String) -> Self {
+        Self::VaultError {
+            info: ErrorInfo {
+                message: "Error related to the vault".to_string(),
+                error_code: 800,
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                details: None,
+                cause: e.clone(),
+            },
+            cause: e,
         }
     }
 }

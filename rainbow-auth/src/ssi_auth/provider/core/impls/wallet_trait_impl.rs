@@ -27,7 +27,7 @@ use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;

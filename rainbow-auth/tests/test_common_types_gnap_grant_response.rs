@@ -1,10 +1,18 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_response.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\common\types\gnap\grant_response.rs'
 
 #[cfg(test)]
 mod tests {
     use rainbow_auth::ssi_auth::common::types::gnap::{
+<<<<<<< HEAD
+        grant_response::{
+            Continue4GResponse, Interact4GResponse, Subject4GResponse, UserCodeUri4Int
+        },
+        AccessToken, GrantResponse
+=======
         grant_response::{Continue4GResponse, Interact4GResponse, Subject4GResponse, UserCodeUri4Int},
         AccessToken, GrantResponse,
+>>>>>>> origin/main
     };
     use serde_json;
 
@@ -15,7 +23,7 @@ mod tests {
             "https://continue.uri".to_string(),
             "token123".to_string(),
             "nonce123".to_string(),
-            "https://oidc4vp.uri".to_string(),
+            "https://oidc4vp.uri".to_string()
         );
         assert!(grant.r#continue.is_some());
         assert!(grant.interact.is_some());
@@ -41,7 +49,7 @@ mod tests {
             "instance456".to_string(),
             "https://cross.uri".to_string(),
             "token456".to_string(),
-            "nonce456".to_string(),
+            "nonce456".to_string()
         );
         assert!(grant.r#continue.is_some());
         assert!(grant.interact.is_some());
@@ -53,7 +61,7 @@ mod tests {
         let cont = Continue4GResponse {
             uri: "https://continue.uri".to_string(),
             wait: Some(10),
-            access_token: AccessToken::default("token789".to_string()),
+            access_token: AccessToken::default("token789".to_string())
         };
         let json = serde_json::to_string(&cont).unwrap();
         let deserialized: Continue4GResponse = serde_json::from_str(&json).unwrap();
@@ -63,7 +71,8 @@ mod tests {
 
     #[test]
     fn test_interact4gresponse_defaults() {
-        let interact_oidc = Interact4GResponse::default4oidc4vp("oidc_uri".to_string(), "nonce".to_string());
+        let interact_oidc =
+            Interact4GResponse::default4oidc4vp("oidc_uri".to_string(), "nonce".to_string());
         assert!(interact_oidc.oidc4vp.is_some());
         assert_eq!(interact_oidc.finish.unwrap(), "nonce");
 
@@ -77,7 +86,7 @@ mod tests {
         let subject = Subject4GResponse {
             sub_ids: Some(vec![serde_json::json!("sub1"), serde_json::json!("sub2")]),
             assertion: Some(vec![serde_json::json!("assert1")]),
-            updated_at: Some("2025-11-14".to_string()),
+            updated_at: Some("2025-11-14".to_string())
         };
         let json = serde_json::to_string(&subject).unwrap();
         let deserialized: Subject4GResponse = serde_json::from_str(&json).unwrap();
@@ -86,7 +95,14 @@ mod tests {
 
     #[test]
     fn test_usercodeuri4int_serialization() {
+<<<<<<< HEAD
+        let user_code_uri = UserCodeUri4Int {
+            code: "code123".to_string(),
+            uri: "https://usercode.uri".to_string()
+        };
+=======
         let user_code_uri = UserCodeUri4Int { code: "code123".to_string(), uri: "https://usercode.uri".to_string() };
+>>>>>>> origin/main
         let json = serde_json::to_string(&user_code_uri).unwrap();
         let deserialized: UserCodeUri4Int = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.code, "code123");

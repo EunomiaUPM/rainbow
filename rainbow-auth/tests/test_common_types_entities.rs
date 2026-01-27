@@ -1,9 +1,14 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\common\types\entities\mod.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\common\types\entities\mod.rs'
 
 #[cfg(test)]
 mod tests {
     use rainbow_auth::ssi_auth::common::types::entities::{
+<<<<<<< HEAD
+        ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity
+=======
         ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity,
+>>>>>>> origin/main
     };
     use serde_json;
 
@@ -23,7 +28,7 @@ mod tests {
             id: "1".to_string(),
             slug: "auth".to_string(),
             url: "https://auth.com".to_string(),
-            vc_type: "typeA".to_string(),
+            vc_type: "typeA".to_string()
         };
         let json = serde_json::to_string(&obj).unwrap();
         assert!(json.contains("auth"));
@@ -38,7 +43,7 @@ mod tests {
             id: "2".to_string(),
             slug: "prov".to_string(),
             url: "https://prov.com".to_string(),
-            actions: "actionX".to_string(),
+            actions: "actionX".to_string()
         };
         let json = serde_json::to_string(&obj).unwrap();
         assert!(json.contains("prov"));
@@ -66,12 +71,12 @@ mod tests {
 
         match WhatEntity::Provider {
             WhatEntity::Provider => assert_eq!(provider_expected, "Provider"),
-            _ => panic!("Unexpected variant"),
+            _ => panic!("Unexpected variant")
         }
 
         match WhatEntity::Authority {
             WhatEntity::Authority => assert_eq!(authority_expected, "Authority"),
-            _ => panic!("Unexpected variant"),
+            _ => panic!("Unexpected variant")
         }
     }
 

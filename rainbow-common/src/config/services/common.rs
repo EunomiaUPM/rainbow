@@ -17,18 +17,17 @@
  *
  */
 
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig};
 use serde::{Deserialize, Serialize};
+use ymir::config::traits::{
+    ApiConfigTrait, DatabaseConfigTrait, HostsConfigTrait, IsLocalConfigTrait,
+};
+use ymir::config::types::{ApiConfig, CommonHostsConfig, DatabaseConfig, HostConfig};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CommonConfig {
     pub hosts: CommonHostsConfig,
     pub db: DatabaseConfig,
-    pub role: RoleConfig,
     pub api: ApiConfig,
-    pub keys_path: String,
     pub is_local: bool,
 }
 
@@ -39,16 +38,42 @@ impl CommonConfig {
     pub fn db(&self) -> &DatabaseConfig {
         &self.db
     }
-    pub fn role(&self) -> &RoleConfig {
-        &self.role
-    }
     pub fn api(&self) -> &ApiConfig {
         &self.api
     }
-    pub fn keys_path(&self) -> &str {
-        &self.keys_path
-    }
     pub fn is_local(&self) -> bool {
         self.is_local
+    }
+}
+
+impl HostsConfigTrait for CommonConfig {
+    fn http(&self) -> &HostConfig {
+        &self.hosts().http()
+    }
+
+    fn grpc(&self) -> Option<&HostConfig> {
+        self.hosts().grpc()
+    }
+
+    fn graphql(&self) -> Option<&HostConfig> {
+        self.hosts().graphql()
+    }
+}
+
+impl DatabaseConfigTrait for CommonConfig {
+    fn db(&self) -> &DatabaseConfig {
+        &self.db
+    }
+}
+
+impl IsLocalConfigTrait for CommonConfig {
+    fn is_local(&self) -> bool {
+        self.is_local
+    }
+}
+
+impl ApiConfigTrait for CommonConfig {
+    fn api(&self) -> &ApiConfig {
+        &self.api
     }
 }

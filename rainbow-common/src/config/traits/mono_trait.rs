@@ -18,9 +18,5 @@
  */
 
 pub trait MonoConfigTrait {
-    fn get_mono_host(&self) -> String;
-    fn get_weird_mono_port(&self) -> String;
-    fn get_mono_db(&self) -> String;
-    fn is_mono_local(&self) -> bool;
     fn is_mono_catalog_datahub(&self) -> bool;
 }

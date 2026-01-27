@@ -16,39 +16,44 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::setup::CoreHttpWorker;
-use rainbow_auth::mates;
 use rainbow_catalog_agent::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
 use rainbow_common::boot::BootstrapServiceTrait;
-use rainbow_common::config::traits::{ApiConfigTrait, HostConfigTrait};
-use rainbow_common::config::types::roles::RoleConfig;
-use rainbow_common::config::types::HostType;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_common::http_client::{HttpClient, HttpClientError};
 use std::str::FromStr;
+use std::sync::Arc;
 use tokio::fs;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::Sender;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, warn};
 use urn::Urn;
+use ymir::config::traits::{ApiConfigTrait, HostsConfigTrait};
+use ymir::config::types::HostType;
+use ymir::data::entities::mates;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct CoreBoot;
 
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for CoreBoot {
     type Config = ApplicationConfig;
-    async fn load_config(role_config: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config> {
-        let config = Self::Config::load(role_config, env_file)?;
-        let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
+    async fn load_config(env_file: String) -> anyhow::Result<Self::Config> {
+        let config = Self::Config::load(env_file)?;
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?)
+            .collapse()
+            .to_string();
         tracing::info!("Current Monolith Dataspace Agent Config:\n{}", table);
         Ok(config)
     }
 
     async fn create_participant(config: &Self::Config) -> anyhow::Result<String> {
         let client = HttpClient::new(1, 30);
-        let base_url = config.ssi_auth().get_host(HostType::Http);
-        let api = config.ssi_auth().get_api_version();
+        let base_url = config.ssi_auth().common().get_host(HostType::Http);
+        let api = config.ssi_auth().common().get_api_version();
 
         // attempt first
         let url = format!("{}{}/mates/myself", base_url, api);
@@ -77,28 +82,37 @@ impl BootstrapServiceTrait for CoreBoot {
         }
     }
 
-    async fn load_catalog(participant_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_catalog(
+        participant_id: &Option<String>,
+        config: &Self::Config,
+    ) -> anyhow::Result<String> {
         let participant_id = participant_id.clone().unwrap_or_default();
         let client = HttpClient::new(1, 3);
-        let base_url = config.catalog().get_host(HostType::Http);
-        let api = config.catalog().get_api_version();
+        let base_url = config.catalog().common().get_host(HostType::Http);
+        let api = config.catalog().common().get_api_version();
         let url = format!("{}{}/catalog-agent/catalogs/main", base_url, api);
         let catalog = client
             .post_json::<NewCatalogDto, CatalogDto>(
                 url.as_str(),
-                &NewCatalogDto { dspace_participant_id: Some(participant_id), ..NewCatalogDto::default() },
+                &NewCatalogDto {
+                    dspace_participant_id: Some(participant_id),
+                    ..NewCatalogDto::default()
+                },
             )
             .await?;
         Ok(catalog.inner.id)
     }
 
-    async fn load_dataservice(catalog_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_dataservice(
+        catalog_id: &Option<String>,
+        config: &Self::Config,
+    ) -> anyhow::Result<String> {
         let catalog_id = catalog_id.clone().unwrap_or_default();
         let client = HttpClient::new(1, 3);
-        let base_url = config.catalog().get_host(HostType::Http);
-        let negotiation_url = config.contracts().get_host(HostType::Http);
+        let base_url = config.catalog().common().get_host(HostType::Http);
+        let negotiation_url = config.contracts().common().get_host(HostType::Http);
 
-        let api = config.catalog().get_api_version();
+        let api = config.catalog().common().get_api_version();
         let url = format!("{}{}/catalog-agent/data-services/main", base_url, api);
         let catalog = client
             .post_json::<NewDataServiceDto, DataServiceDto>(
@@ -115,12 +129,9 @@ impl BootstrapServiceTrait for CoreBoot {
 
     async fn load_policy_templates(config: &Self::Config) -> anyhow::Result<()> {
         let client = HttpClient::new(1, 3);
-        let base_url = config.catalog().get_host(HostType::Http);
-        let api = config.catalog().get_api_version();
-        let url = format!(
-            "{}{}/catalog-agent/policy-templates?silent=true",
-            base_url, api
-        );
+        let base_url = config.catalog().common().get_host(HostType::Http);
+        let api = config.catalog().common().get_api_version();
+        let url = format!("{}{}/catalog-agent/policy-templates?silent=true", base_url, api);
         // load files
         let policies_folder = config.catalog().get_policy_templates_folder();
         let mut read_dir = match fs::read_dir(&policies_folder).await {
@@ -147,27 +158,32 @@ impl BootstrapServiceTrait for CoreBoot {
                         continue;
                     }
                 };
-                let _ =
-                    match client.post_json::<serde_json::Value, serde_json::Value>(url.as_str(), &json_payload).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            warn!("Invalid request {:?}: {}", path, e);
-                            continue;
-                        }
-                    };
+                let _ = match client
+                    .post_json::<serde_json::Value, serde_json::Value>(url.as_str(), &json_payload)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        warn!("Invalid request {:?}: {}", path, e);
+                        continue;
+                    }
+                };
             }
         }
         Ok(())
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<Sender<()>> {
+    async fn start_services_background(
+        config: &Self::Config,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();
 
         // workers
         tracing::info!("Spawning HTTP subsystem...");
-        let http_handle = CoreHttpWorker::spawn(config, &cancel_token).await?;
+        let http_handle = CoreHttpWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         // todo set grpc
 

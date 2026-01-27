@@ -16,13 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::services::{
-    CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
+    CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig,
+    TransferConfig,
 };
-use crate::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, MonoConfigTrait};
-use crate::config::types::database::{DatabaseConfig, DbType};
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig, HostType};
+use crate::config::traits::MonoConfigTrait;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -41,7 +40,7 @@ pub struct ApplicationConfig {
 }
 
 impl ApplicationConfig {
-    pub(crate) fn new(common_config: CommonConfig) -> Self {
+    pub fn new(common_config: CommonConfig) -> Self {
         Self {
             monolith: Some(MonolithConfig::new(common_config)),
             transfer: None,
@@ -54,24 +53,6 @@ impl ApplicationConfig {
 }
 
 impl MonoConfigTrait for ApplicationConfig {
-    fn get_mono_host(&self) -> String {
-        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.get_host(HostType::Http)
-    }
-    fn get_weird_mono_port(&self) -> String {
-        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.get_weird_port()
-    }
-    fn get_mono_db(&self) -> String {
-        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.get_full_db_url()
-    }
-
-    fn is_mono_local(&self) -> bool {
-        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.is_local()
-    }
-
     fn is_mono_catalog_datahub(&self) -> bool {
         match &self.catalog {
             Some(catalog) => catalog.is_datahub(),
@@ -149,41 +130,20 @@ impl ApplicationConfig {
         module.expect("Trying to access core mode without it being defined")
     }
 
-    pub fn load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self> {
-        if let Some(env_file) = env_file {
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
-            debug!("Config file path: {}", path.display());
+    pub fn load(env_file: String) -> anyhow::Result<Self> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
+        debug!("Config file path: {}", path.display());
 
-            let data = fs::read_to_string(&path).expect("Unable to read config file");
-            let config = match serde_norway::from_str(&data) {
-                Ok(config) => config,
-                Err(e) => {
-                    let error = CommonErrors::parse_new(&format!("Unable to parse config file: {}", e));
-                    error!("{}", error.log());
-                    bail!(error)
-                }
-            };
-
-            Ok(config)
-        } else {
-            Ok(Self::new(Self::common(role)))
-        }
-    }
-
-    pub fn common(role: RoleConfig) -> CommonConfig {
-        let host =
-            HostConfig { protocol: "http".to_string(), url: "127.0.0.1".to_string(), port: Some("1200".to_string()) };
-        let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
-        let db = DatabaseConfig {
-            db_type: DbType::Postgres,
-            url: "127.0.0.1".to_string(),
-            port: "1400".to_string(),
-            user: "ds_provider".to_string(),
-            password: "ds_provider".to_string(),
-            name: "ds_provider".to_string(),
+        let data = fs::read_to_string(&path).expect("Unable to read config file");
+        let config = match serde_norway::from_str(&data) {
+            Ok(config) => config,
+            Err(e) => {
+                let error = CommonErrors::parse_new(&format!("Unable to parse config file: {}", e));
+                error!("{}", error.log());
+                bail!(error)
+            }
         };
-        let keys_path = "static/certificates/".to_string();
-        let api = ApiConfig { version: "v1".to_string(), openapi_path: "/static/specs/openapi/auth".to_string() };
-        CommonConfig { hosts, db, role, api, keys_path, is_local: true }
+
+        Ok(config)
     }
 }

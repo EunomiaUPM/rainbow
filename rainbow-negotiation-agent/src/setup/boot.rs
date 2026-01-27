@@ -21,7 +21,8 @@ use crate::setup::http_worker::NegotiationHttpWorker;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::vault::vault_rs::VaultService;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::Sender;
 use tokio_util::sync::CancellationToken;
@@ -31,8 +32,8 @@ pub struct NegotiationAgentBoot;
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for NegotiationAgentBoot {
     type Config = ContractsConfig;
-    async fn load_config(role_config: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config> {
-        let config = Self::Config::load(role_config, env_file);
+    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config> {
+        let config = Self::Config::load(env_file);
         let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         tracing::info!("Current Negotiation Agent Config:\n{}", table);
         Ok(config)
@@ -50,17 +51,17 @@ impl BootstrapServiceTrait for NegotiationAgentBoot {
         false
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<Sender<()>> {
+    async fn start_services_background(config: &Self::Config, vault: Arc<VaultService>) -> anyhow::Result<Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();
 
         // workers
         tracing::info!("Spawning HTTP subsystem...");
-        let http_handle = NegotiationHttpWorker::spawn(config, &cancel_token).await?;
+        let http_handle = NegotiationHttpWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         tracing::info!("Spawning gRPC subsystem...");
-        let grpc_handle = NegotiationGrpcWorker::spawn(config, &cancel_token).await?;
+        let grpc_handle = NegotiationGrpcWorker::spawn(config, vault.clone(), &cancel_token).await?;
 
         // non-blocking thread
         let token_clone = cancel_token.clone();

@@ -21,7 +21,7 @@ use crate::ssi_auth::common::types::ssi::dids::DidsInfo;
 use crate::ssi_auth::common::types::ssi::keys::KeyDefinition;
 use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use crate::ssi_auth::common::types::ssi::wallet::WalletInfo;
-use axum::async_trait;
+use async_trait::async_trait;
 use serde_json::Value;
 
 #[mockall::automock]

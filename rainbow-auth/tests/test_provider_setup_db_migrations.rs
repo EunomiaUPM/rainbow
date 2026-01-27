@@ -1,19 +1,33 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\provider\setup\db_migrations.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\provider\setup\db_migrations.rs'
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
+    use std::env;
+    use std::panic::AssertUnwindSafe;
+
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
+    use rainbow_common::config::{
+        database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig
+=======
     use futures::FutureExt;
     use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
     use rainbow_common::config::{
         database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig,
+>>>>>>> origin/main
     };
     use sea_orm::Database;
     use sea_orm::{sea_query, DbErr};
     use sea_orm_migration::MigrationName;
     use sea_orm_migration::{async_trait, SchemaManager};
     use sea_orm_migration::{MigrationTrait, MigratorTrait};
+<<<<<<< HEAD
+=======
     use std::env;
     use std::panic::AssertUnwindSafe;
+>>>>>>> origin/main
 
     struct TestMigration;
 
@@ -25,31 +39,46 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
+                        .col(
+                            sea_query::ColumnDef::new(sea_query::Alias::new("id"))
+                                .integer()
+                                .not_null()
+                                .primary_key()
+                        )
+                        .to_owned()
+=======
                         .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
                         .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
+                .drop_table(
+                    sea_query::Table::drop()
+                        .table(sea_query::Alias::new("dummy"))
+                        .if_exists()
+                        .to_owned()
+                )
+=======
                 .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }
 
     impl MigrationName for TestMigration {
-        fn name(&self) -> &str {
-            "DummyMigration"
-        }
+        fn name(&self) -> &str { "DummyMigration" }
     }
 
     struct MockedMigrations;
 
     impl MigratorTrait for MockedMigrations {
-        fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-            vec![Box::new(TestMigration)]
-        }
+        fn migrations() -> Vec<Box<dyn MigrationTrait>> { vec![Box::new(TestMigration)] }
     }
 
     fn sqlite_config() -> ApplicationProviderConfig {
@@ -60,7 +89,7 @@ mod tests {
             port: "".to_string(),
             user: "".to_string(),
             password: "".to_string(),
-            name: "".to_string(),
+            name: "".to_string()
         };
         config
     }
@@ -101,7 +130,7 @@ mod tests {
             port: "5432".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
 
         let result = AssertUnwindSafe(SSIAuthProviderMigrations::run(&config)).catch_unwind().await;
@@ -130,7 +159,7 @@ mod tests {
             port: "3306".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
         let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config)).catch_unwind().await;
         assert!(result.is_err(), "Expected panic for invalid MySQL config");
@@ -145,7 +174,7 @@ mod tests {
             port: "5432".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
         let result = std::panic::AssertUnwindSafe(SSIAuthProviderMigrations::run(&config)).catch_unwind().await;
         assert!(
@@ -173,9 +202,7 @@ mod tests {
     fn test_empty_migrations_vector() {
         struct EmptyMigrator;
         impl MigratorTrait for EmptyMigrator {
-            fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> {
-                vec![]
-            }
+            fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> { vec![] }
         }
         assert!(
             EmptyMigrator::migrations().is_empty(),

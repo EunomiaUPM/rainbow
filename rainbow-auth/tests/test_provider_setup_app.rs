@@ -2,6 +2,23 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
+    use std::env;
+    use std::panic::AssertUnwindSafe;
+
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::provider::setup::app::{
+        create_ssi_provider_router, SSIAuthProviderApplication
+    };
+    use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
+    use rainbow_common::config::{
+        database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig
+    };
+    use sea_orm::{sea_query, DbErr};
+    use sea_orm_migration::MigrationName;
+    use sea_orm_migration::{async_trait, SchemaManager};
+    use sea_orm_migration::{MigrationTrait, MigratorTrait};
+=======
     use futures::FutureExt;
     use rainbow_auth::ssi_auth::provider::setup::app::{create_ssi_provider_router, SSIAuthProviderApplication};
     use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
@@ -14,6 +31,7 @@ mod tests {
     use sea_orm_migration::{MigrationTrait, MigratorTrait};
     use std::env;
     use std::panic::AssertUnwindSafe;
+>>>>>>> origin/main
 
     // Test
 
@@ -27,31 +45,46 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
+                        .col(
+                            sea_query::ColumnDef::new(sea_query::Alias::new("id"))
+                                .integer()
+                                .not_null()
+                                .primary_key()
+                        )
+                        .to_owned()
+=======
                         .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
                         .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
+                .drop_table(
+                    sea_query::Table::drop()
+                        .table(sea_query::Alias::new("dummy"))
+                        .if_exists()
+                        .to_owned()
+                )
+=======
                 .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }
 
     impl MigrationName for TestMigration {
-        fn name(&self) -> &str {
-            "DummyMigration"
-        }
+        fn name(&self) -> &str { "DummyMigration" }
     }
 
     struct MockedMigrations;
 
     impl MigratorTrait for MockedMigrations {
-        fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-            vec![Box::new(TestMigration)]
-        }
+        fn migrations() -> Vec<Box<dyn MigrationTrait>> { vec![Box::new(TestMigration)] }
     }
 
     fn valid_config() -> ApplicationProviderConfig {
@@ -62,7 +95,7 @@ mod tests {
             port: "".to_string(),
             user: "".to_string(),
             password: "".to_string(),
-            name: "".to_string(),
+            name: "".to_string()
         };
         config.is_local = true;
         config
@@ -84,25 +117,25 @@ mod tests {
         assert!(!migrations.is_empty(), "Expected at least one migration");
     }
 
-    /* #[tokio::test]
-    async fn test_run_environment_scenario_true_with_test_mode() {
-        env::set_var("TEST_MODE", "1");
-        let mut config = valid_config();
-        config.is_local = true;
-        let result = SSIAuthProviderApplication::run(&config).await;
-        env::remove_var("TEST_MODE");
-        assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
-    } */
+    // #[tokio::test]
+    // async fn test_run_environment_scenario_true_with_test_mode() {
+    // env::set_var("TEST_MODE", "1");
+    // let mut config = valid_config();
+    // config.is_local = true;
+    // let result = SSIAuthProviderApplication::run(&config).await;
+    // env::remove_var("TEST_MODE");
+    // assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
+    // }
 
-    /* #[tokio::test]
-    async fn test_run_environment_scenario_false_with_test_mode() {
-        env::set_var("TEST_MODE", "1");
-        let mut config = valid_config();
-        config.is_local = false;
-        let result = SSIAuthProviderApplication::run(&config).await;
-        env::remove_var("TEST_MODE");
-        assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
-    } */
+    // #[tokio::test]
+    // async fn test_run_environment_scenario_false_with_test_mode() {
+    // env::set_var("TEST_MODE", "1");
+    // let mut config = valid_config();
+    // config.is_local = false;
+    // let result = SSIAuthProviderApplication::run(&config).await;
+    // env::remove_var("TEST_MODE");
+    // assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
+    // }
 
     #[tokio::test]
     async fn test_run_success_simulated() {
@@ -122,29 +155,30 @@ mod tests {
         assert!(result.is_ok(), "Expected refresh() to succeed");
     }
 
-    /* #[tokio::test]
-    async fn test_run_with_invalid_db_url_should_fail() {
-        use std::panic;
-
-        let mut config = ApplicationProviderConfig::default();
-        config.database_config = DatabaseConfig {
-            db_type: DbType::Postgres,
-            url: "invalid_url".to_string(),
-            port: "5432".to_string(),
-            user: "user".to_string(),
-            password: "pass".to_string(),
-            name: "db".to_string(),
-        };
-
-        let result = panic::AssertUnwindSafe(SSIAuthProviderApplication::run(&config))
-            .catch_unwind()
-            .await;
-
-        assert!(
-            result.is_err(),
-            "Expected panic due to invalid DB URL, but function completed successfully"
-        );
-    } */
+    // #[tokio::test]
+    // async fn test_run_with_invalid_db_url_should_fail() {
+    // use std::panic;
+    //
+    // let mut config = ApplicationProviderConfig::default();
+    // config.database_config = DatabaseConfig {
+    // db_type: DbType::Postgres,
+    // url: "invalid_url".to_string(),
+    // port: "5432".to_string(),
+    // user: "user".to_string(),
+    // password: "pass".to_string(),
+    // name: "db".to_string(),
+    // };
+    //
+    // let result =
+    // panic::AssertUnwindSafe(SSIAuthProviderApplication::run(&config))
+    // .catch_unwind()
+    // .await;
+    //
+    // assert!(
+    // result.is_err(),
+    // "Expected panic due to invalid DB URL, but function completed successfully"
+    // );
+    // }
 
     #[tokio::test]
     async fn test_create_ssi_provider_router_should_panic_on_invalid_db() {
@@ -155,7 +189,7 @@ mod tests {
             port: "5432".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
 
         let result = AssertUnwindSafe(create_ssi_provider_router(config)).catch_unwind().await;

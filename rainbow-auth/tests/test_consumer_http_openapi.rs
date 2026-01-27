@@ -2,10 +2,20 @@
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
+    use std::sync::Arc;
+
+    use actix_web::{http::StatusCode, test, web, App, HttpResponse};
+    use axum::response::IntoResponse;
+    use rainbow_auth::ssi_auth::consumer::http::openapi::{
+        get_open_api, route_openapi, OPENAPI_JSON
+    };
+=======
     use actix_web::{http::StatusCode, test, web, App, HttpResponse};
     use axum::response::IntoResponse;
     use rainbow_auth::ssi_auth::consumer::http::openapi::{get_open_api, route_openapi, OPENAPI_JSON};
     use std::sync::Arc;
+>>>>>>> origin/main
     use utoipa_swagger_ui::{serve, Config};
 
     #[tokio::test]
@@ -32,7 +42,7 @@ mod tests {
     async fn test_openapi_json_route() {
         use axum::{
             body::to_bytes,
-            http::{Request, StatusCode},
+            http::{Request, StatusCode}
         };
         use tower::ServiceExt;
 
@@ -62,11 +72,21 @@ mod tests {
                 let config = config.clone();
                 async move {
                     match serve("/api/v1/auth/openapi.json", config) {
+<<<<<<< HEAD
+                        Ok(Some(file)) => HttpResponse::Ok()
+                            .content_type(file.content_type)
+                            .body(file.bytes.to_vec()),
+                        _ => HttpResponse::NotFound().finish()
+                    }
+                }
+            })
+=======
                         Ok(Some(file)) => HttpResponse::Ok().content_type(file.content_type).body(file.bytes.to_vec()),
                         _ => HttpResponse::NotFound().finish(),
                     }
                 }
             }),
+>>>>>>> origin/main
         ))
         .await;
 

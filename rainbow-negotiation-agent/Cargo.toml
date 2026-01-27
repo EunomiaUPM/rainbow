@@ -35,7 +35,7 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 mockall = { workspace = true }
 url = { workspace = true }
-async-trait = "0.1.89"
+async-trait = {workspace = true}
 tokio-util = "0.7.17"
 uuid = "1.18.1"
 tower-http = { version = "0.6.6", features = ["trace"] }

@@ -1,4 +1,5 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\setup\db_migrations.rs'
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\consumer\setup\db_migrations.rs'
 
 #[cfg(test)]
 mod tests {
@@ -26,37 +27,57 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
+<<<<<<< HEAD
+                        .col(
+                            sea_query::ColumnDef::new(sea_query::Alias::new("id"))
+                                .integer()
+                                .not_null()
+                                .primary_key()
+                        )
+                        .to_owned()
+=======
                         .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
                         .to_owned(),
+>>>>>>> origin/main
                 )
                 .await
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
+<<<<<<< HEAD
+                .drop_table(
+                    sea_query::Table::drop()
+                        .table(sea_query::Alias::new("dummy"))
+                        .if_exists()
+                        .to_owned()
+                )
+=======
                 .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
+>>>>>>> origin/main
                 .await
         }
     }
 
     impl MigrationName for TestMigration {
-        fn name(&self) -> &str {
-            "DummyMigration"
-        }
+        fn name(&self) -> &str { "DummyMigration" }
     }
 
     struct MockedMigrations;
 
     impl MigratorTrait for MockedMigrations {
-        fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-            vec![Box::new(TestMigration)]
-        }
+        fn migrations() -> Vec<Box<dyn MigrationTrait>> { vec![Box::new(TestMigration)] }
     }
 
     #[tokio::test]
     async fn test_migrations_run_success_sqlite_memory() {
         let db_url = "sqlite::memory:";
+<<<<<<< HEAD
+        let db_connection: DbConn =
+            Database::connect(db_url).await.expect("Database can't connect");
+=======
         let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
+>>>>>>> origin/main
 
         MockedMigrations::refresh(&db_connection).await.expect("Migration failed");
 
@@ -78,34 +99,30 @@ mod tests {
                 ))
             }
 
-            async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
-                Ok(())
-            }
+            async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> { Ok(()) }
         }
 
         impl MigrationName for FailingMigration {
-            fn name(&self) -> &str {
-                "FailingMigration"
-            }
+            fn name(&self) -> &str { "FailingMigration" }
         }
 
         struct FailingMigrator;
 
         impl MigratorTrait for FailingMigrator {
-            fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-                vec![Box::new(FailingMigration)]
-            }
+            fn migrations() -> Vec<Box<dyn MigrationTrait>> { vec![Box::new(FailingMigration)] }
         }
 
         let db_url = "sqlite::memory:";
+<<<<<<< HEAD
+        let db_connection: DbConn =
+            Database::connect(db_url).await.expect("Database can't connect");
+=======
         let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
+>>>>>>> origin/main
 
         let result = FailingMigrator::refresh(&db_connection).await;
 
-        assert!(
-            result.is_err(),
-            "Expected migration to fail, but it succeeded"
-        );
+        assert!(result.is_err(), "Expected migration to fail, but it succeeded");
     }
 
     #[tokio::test]
@@ -133,10 +150,7 @@ mod tests {
         let db_url = "invalid::url";
         let result = Database::connect(db_url).await;
 
-        assert!(
-            result.is_err(),
-            "Expected connection to fail with invalid URL"
-        );
+        assert!(result.is_err(), "Expected connection to fail with invalid URL");
     }
 
     fn sqlite_config() -> ApplicationConsumerConfig {
@@ -147,7 +161,7 @@ mod tests {
             port: "".to_string(),
             user: "".to_string(),
             password: "".to_string(),
-            name: "".to_string(),
+            name: "".to_string()
         };
         config
     }
@@ -170,7 +184,7 @@ mod tests {
             port: "5432".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
 
         let result = AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
@@ -199,7 +213,7 @@ mod tests {
             port: "3306".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
         let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
         assert!(result.is_err(), "Expected panic for invalid MySQL config");
@@ -214,7 +228,7 @@ mod tests {
             port: "5432".to_string(),
             user: "user".to_string(),
             password: "pass".to_string(),
-            name: "db".to_string(),
+            name: "db".to_string()
         };
         let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
         assert!(
@@ -242,9 +256,7 @@ mod tests {
     fn test_empty_migrations_vector() {
         struct EmptyMigrator;
         impl MigratorTrait for EmptyMigrator {
-            fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> {
-                vec![]
-            }
+            fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> { vec![] }
         }
         assert!(
             EmptyMigrator::migrations().is_empty(),

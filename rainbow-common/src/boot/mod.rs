@@ -1,15 +1,16 @@
 pub mod shutdown;
 
-use crate::config::types::roles::RoleConfig;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::sync::Arc;
 use tokio::sync::broadcast;
+use ymir::services::vault::vault_rs::VaultService;
 
 #[async_trait::async_trait]
 pub trait BootstrapServiceTrait: Send + Sync {
     type Config: Debug + Clone + Send + Sync;
 
-    async fn load_config(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config>;
+    async fn load_config(env_file: String) -> anyhow::Result<Self::Config>;
 
     fn enable_participant() -> bool {
         true
@@ -21,14 +22,20 @@ pub trait BootstrapServiceTrait: Send + Sync {
     fn enable_catalog() -> bool {
         true
     }
-    async fn load_catalog(_participant_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_catalog(
+        _participant_id: &Option<String>,
+        _config: &Self::Config,
+    ) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of catalogs.");
     }
 
     fn enable_dataservice() -> bool {
         true
     }
-    async fn load_dataservice(_catalog_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_dataservice(
+        _catalog_id: &Option<String>,
+        _config: &Self::Config,
+    ) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of data services.");
     }
 
@@ -39,7 +46,10 @@ pub trait BootstrapServiceTrait: Send + Sync {
         anyhow::bail!("This service does not support creation of policy templates.");
     }
 
-    async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>>;
+    async fn start_services_background(
+        config: &Self::Config,
+        vault_service: Arc<VaultService>,
+    ) -> anyhow::Result<broadcast::Sender<()>>;
 }
 
 #[async_trait::async_trait]
@@ -52,20 +62,18 @@ pub struct BootstrapCurrentState<S: BootstrapStepTrait>(pub S);
 
 pub struct BootstrapInit<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
-    pub env_file: Option<String>,
-    pub role: RoleConfig,
+    pub env_file: String,
 }
 
 impl<S: BootstrapServiceTrait> BootstrapInit<S> {
-    pub fn new(role: RoleConfig, env_file: Option<String>) -> Self {
-        Self { _marker: PhantomData, env_file, role }
+    pub fn new(env_file: String) -> Self {
+        Self { _marker: PhantomData, env_file }
     }
 }
 
 pub struct BootstrapConfigLoaded<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
-    pub env_file: Option<String>,
-    pub role: RoleConfig,
+    pub env_file: String,
 }
 
 pub struct BootstrapServicesStarted<S: BootstrapServiceTrait> {
@@ -115,7 +123,6 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapInit<S> {
         Ok(BootstrapCurrentState(BootstrapConfigLoaded {
             _marker: PhantomData,
             env_file: self.env_file,
-            role: self.role,
         }))
     }
 }
@@ -126,10 +133,11 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [2/8]: Configuration loading");
-        let config = S::load_config(self.role, self.env_file).await?;
+        let config = S::load_config(self.env_file).await?;
+        let vault = Arc::new(VaultService::new());
 
         tracing::info!("Step [3/8]: Starting Services in Background");
-        let shutdown_tx = S::start_services_background(&config).await?;
+        let shutdown_tx = S::start_services_background(&config, vault.clone()).await?;
 
         // waiting for port setup
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
@@ -148,8 +156,11 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapServicesStarted<S
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [4/8]: Creating self participant");
 
-        let participant_id =
-            if S::enable_participant() { Some(S::create_participant(&self.config).await?) } else { None };
+        let participant_id = if S::enable_participant() {
+            Some(S::create_participant(&self.config).await?)
+        } else {
+            None
+        };
 
         Ok(BootstrapCurrentState(BootstrapSelfParticipantOnBoarded {
             config: self.config,
@@ -166,8 +177,11 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapSelfParticipantOn
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [5/8]: Loading main catalog");
 
-        let catalog_id =
-            if S::enable_catalog() { Some(S::load_catalog(&self.participant_id, &self.config).await?) } else { None };
+        let catalog_id = if S::enable_catalog() {
+            Some(S::load_catalog(&self.participant_id, &self.config).await?)
+        } else {
+            None
+        };
 
         Ok(BootstrapCurrentState(BootstrapCatalogLoaded {
             config: self.config,

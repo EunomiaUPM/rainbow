@@ -1,9 +1,19 @@
+<<<<<<< HEAD
+// Tests corresponding to
+// 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs'
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+=======
 // Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs'
 
 #[cfg(test)]
 mod tests {
+>>>>>>> origin/main
     use anyhow::Result;
-    use axum::async_trait;
+    use async_trait::async_trait;
     use base64::Engine;
     use httpmock::Method::POST;
     use httpmock::MockServer;
@@ -15,7 +25,13 @@ mod tests {
     use rainbow_auth::ssi_auth::common::types::ssi::other::MatchingVCs;
     use rainbow_auth::ssi_auth::common::types::ssi::other::RedirectResponse;
     use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletSession};
+<<<<<<< HEAD
+    use rainbow_auth::ssi_auth::common::{
+        traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo
+    };
+=======
     use rainbow_auth::ssi_auth::common::{traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo};
+>>>>>>> origin/main
     use rainbow_auth::ssi_auth::consumer::core::Manager;
     use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
     use rainbow_common::config::database::DbType;
@@ -28,11 +44,18 @@ mod tests {
     use rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::{
+<<<<<<< HEAD
+        AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait
+    };
+    use reqwest::Client;
+    use serde_json::{json, Value};
+=======
         AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
     };
     use reqwest::Client;
     use serde_json::{json, Value};
     use std::sync::Arc;
+>>>>>>> origin/main
     use tokio::sync::Mutex;
 
     mock! {
@@ -152,7 +175,13 @@ mod tests {
         }
     }
 
+<<<<<<< HEAD
+    pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(
+        service: &T
+    ) -> anyhow::Result<()> {
+=======
     pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(service: &T) -> anyhow::Result<()> {
+>>>>>>> origin/main
         service.login_wallet().await?;
         service.retrieve_wallet_info().await?;
         service.retrieve_keys().await?;
@@ -164,6 +193,26 @@ mod tests {
     struct MockRepo;
 
     impl AuthRepoFactoryTrait for MockRepo {
+<<<<<<< HEAD
+        fn request(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthRequestRepoTrait>
+        {
+            todo!()
+        }
+
+        fn interaction(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthInteractionRepoTrait>
+        {
+            todo!()
+        }
+
+        fn verification(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait>
+        {
+=======
         fn request(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthRequestRepoTrait> {
             todo!()
         }
@@ -173,10 +222,29 @@ mod tests {
         }
 
         fn verification(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait> {
+>>>>>>> origin/main
             todo!()
         }
 
         fn token_requirements(
+<<<<<<< HEAD
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait>
+        {
+            todo!()
+        }
+
+        fn mates(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait> {
+            todo!()
+        }
+
+        fn authority(
+            &self
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait>
+        {
+=======
             &self,
         ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait> {
             todo!()
@@ -187,6 +255,7 @@ mod tests {
         }
 
         fn authority(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait> {
+>>>>>>> origin/main
             todo!()
         }
     }
@@ -205,9 +274,7 @@ mod tests {
     }
 
     impl Clone for MockRepoFactory {
-        fn clone(&self) -> Self {
-            Self::new()
-        }
+        fn clone(&self) -> Self { Self::new() }
     }
 
     fn build_test_config(server_address: &std::net::SocketAddr) -> ApplicationConsumerConfig {
@@ -225,7 +292,7 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
-                name: "test_db".to_string(),
+                name: "test_db".to_string()
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -237,16 +304,16 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
-                wallet_id: Some("mocked_wallet_id".to_string()),
+                wallet_id: Some("mocked_wallet_id".to_string())
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
-                display: None,
+                display: None
             },
             role: ConfigRoles::Consumer,
             is_local: true,
-            is_gateway_in_production: true,
+            is_gateway_in_production: true
         }
     }
 
@@ -254,10 +321,11 @@ mod tests {
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
-            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         Manager {
@@ -271,8 +339,8 @@ mod tests {
                     created_on: "2023-01-01".to_string(),
                     added_on: "2023-01-02".to_string(),
                     permission: "read".to_string(),
-                    dids: vec![did_info],
-                }],
+                    dids: vec![did_info]
+                }]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepoFactory::new()),
@@ -281,14 +349,20 @@ mod tests {
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("Failed to build reqwest client"),
-            config,
+            config
         }
     }
 
     #[tokio::test]
     async fn test_register_wallet_success() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
         use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -321,8 +395,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_wallet_error_response() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
         use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -357,9 +437,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_wallet_success() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+        use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+        use serde_json::json;
+=======
         use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
         use serde_json::json;
         use std::sync::Arc;
+>>>>>>> origin/main
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -408,6 +495,9 @@ mod tests {
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
         let mock_server = MockServer::start().await;
 
         // Simula respuesta 401 Unauthorized
@@ -436,6 +526,9 @@ mod tests {
     #[tokio::test]
     async fn test_logout_wallet_success() {
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -473,6 +566,9 @@ mod tests {
     #[tokio::test]
     async fn test_logout_wallet_error_response() {
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
         use wiremock::matchers::{method, path};
         use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -523,8 +619,13 @@ mod tests {
                     alias: "Test alias".to_string(),
                     key_id: "did:example:123".to_string(),
                     default: true,
+<<<<<<< HEAD
+                    created_on: "did:example:123".to_string()
+                }]
+=======
                     created_on: "did:example:123".to_string(),
                 }],
+>>>>>>> origin/main
             })
         });
         mock.expect_get_key().returning(|| {
@@ -533,7 +634,11 @@ mod tests {
                 algorithm: "Test algorithm".to_string(),
                 crypto_provider: "Test crypto_provider".to_string(),
                 key_pair: serde_json::Value::String("Test key_pair".to_string()),
+<<<<<<< HEAD
+                keyset_handle: None
+=======
                 keyset_handle: None,
+>>>>>>> origin/main
             })
         });
         mock.expect_delete_did().returning(|_| Ok(()));
@@ -549,10 +654,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_missing_did_error() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::consumer::core::Manager;
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+=======
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use rainbow_auth::ssi_auth::consumer::core::Manager;
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
         use std::sync::Arc;
+>>>>>>> origin/main
 
         let config = ApplicationConsumerConfig::default();
         let repo = Arc::new(MockRepo);
@@ -571,7 +684,7 @@ mod tests {
                 created_on: "2025-01-01T00:00:00Z".to_string(),
                 added_on: "2025-01-01T00:00:00Z".to_string(),
                 permission: "owner".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -614,6 +727,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_wallet_success() {
         use std::sync::Arc;
+
         use tokio::sync::Mutex;
 
         let wallet_info = WalletInfo {
@@ -622,14 +736,14 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![],
+            dids: vec![]
         };
 
         let session = WalletSession {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![wallet_info.clone()],
+            wallets: vec![wallet_info.clone()]
         };
 
         let manager = Manager {
@@ -638,7 +752,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_wallet().await;
@@ -652,7 +766,7 @@ mod tests {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![],
+            wallets: vec![]
         };
 
         let manager = Manager {
@@ -661,7 +775,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_wallet().await;
@@ -685,7 +799,7 @@ mod tests {
             document: "id: did:example:123456789".to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         let wallet_info = WalletInfo {
@@ -694,14 +808,14 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![_did_info.clone()],
+            dids: vec![_did_info.clone()]
         };
 
         let session = WalletSession {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![wallet_info],
+            wallets: vec![wallet_info]
         };
 
         let manager = Manager {
@@ -710,7 +824,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_did().await;
@@ -726,14 +840,14 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![], // No DIDs
+            dids: vec![] // No DIDs
         };
 
         let session = WalletSession {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![wallet_info],
+            wallets: vec![wallet_info]
         };
 
         let manager = Manager {
@@ -742,7 +856,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_did().await;
@@ -750,7 +864,8 @@ mod tests {
 
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("Missing Action Error") || error_msg.contains("No DIDs found in wallet"),
+            error_msg.contains("Missing Action Error")
+                || error_msg.contains("No DIDs found in wallet"),
             "Mensaje de error inesperado: {}",
             error_msg
         );
@@ -762,7 +877,7 @@ mod tests {
             account_id: Some("account1".to_string()),
             token: Some("token_abc_123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![],
+            wallets: vec![]
         };
 
         let manager = Manager {
@@ -771,7 +886,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_token().await;
@@ -785,7 +900,7 @@ mod tests {
             account_id: Some("account1".to_string()),
             token: None, // No token presente
             token_exp: Some(9999999999),
-            wallets: vec![],
+            wallets: vec![]
         };
 
         let manager = Manager {
@@ -794,7 +909,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_token().await;
@@ -802,7 +917,8 @@ mod tests {
 
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("Missing Action Error") || error_msg.contains("There is no token available for use"),
+            error_msg.contains("Missing Action Error")
+                || error_msg.contains("There is no token available for use"),
             "Mensaje de error inesperado: {}",
             error_msg
         );
@@ -813,10 +929,11 @@ mod tests {
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
-            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         let wallet_info = WalletInfo {
@@ -825,14 +942,14 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![did_info],
+            dids: vec![did_info]
         };
 
         let session = WalletSession {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![wallet_info],
+            wallets: vec![wallet_info]
         };
 
         let manager = Manager {
@@ -841,7 +958,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_did_doc().await;
@@ -860,14 +977,14 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![], // No DIDs
+            dids: vec![] // No DIDs
         };
 
         let session = WalletSession {
             account_id: Some("account1".to_string()),
             token: Some("token123".to_string()),
             token_exp: Some(9999999999),
-            wallets: vec![wallet_info],
+            wallets: vec![wallet_info]
         };
 
         let manager = Manager {
@@ -876,7 +993,7 @@ mod tests {
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_did_doc().await;
@@ -884,7 +1001,8 @@ mod tests {
 
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("Missing Action Error") || error_msg.contains("No DIDs found in wallet"),
+            error_msg.contains("Missing Action Error")
+                || error_msg.contains("No DIDs found in wallet"),
             "Mensaje de error inesperado: {}",
             error_msg
         );
@@ -902,7 +1020,7 @@ mod tests {
             }),
             keyset_handle: Some(serde_json::json!({
                 "handle": "some_handle_data"
-            })),
+            }))
         };
 
         let manager = Manager {
@@ -910,13 +1028,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![],
+                wallets: vec![]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![key.clone()]),
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_key().await;
@@ -931,13 +1049,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![],
+                wallets: vec![]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]), // No claves
             client: reqwest::Client::new(),
-            config: ApplicationConsumerConfig::default(),
+            config: ApplicationConsumerConfig::default()
         };
 
         let result = manager.get_key().await;
@@ -986,13 +1104,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![],
+                wallets: vec![]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_wallet_info().await;
@@ -1014,7 +1132,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path("/wallet-api/wallet/accounts/wallets");
+<<<<<<< HEAD
+            then.status(500)
+                .header("content-type", "application/json")
+                .body("Internal Server Error");
+=======
             then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1026,13 +1150,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![],
+                wallets: vec![]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_wallet_info().await;
@@ -1089,7 +1213,7 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![],
+            dids: vec![]
         };
 
         let manager = Manager {
@@ -1097,13 +1221,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![wallet_info],
+                wallets: vec![wallet_info]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_keys().await;
@@ -1126,7 +1250,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path(format!("/wallet-api/wallet/{}/keys", wallet_id));
+<<<<<<< HEAD
+            then.status(500)
+                .header("content-type", "application/json")
+                .body("Internal Server Error");
+=======
             then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1139,7 +1269,7 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![],
+            dids: vec![]
         };
 
         let manager = Manager {
@@ -1147,13 +1277,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![wallet_info],
+                wallets: vec![wallet_info]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_keys().await;
@@ -1207,7 +1337,7 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![],
+            dids: vec![]
         };
 
         let manager = Manager {
@@ -1215,13 +1345,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![wallet_info],
+                wallets: vec![wallet_info]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_wallet_dids().await;
@@ -1244,7 +1374,13 @@ mod tests {
 
         let mock = server.mock(|when, then| {
             when.method(GET).path(format!("/wallet-api/wallet/{}/dids", wallet_id));
+<<<<<<< HEAD
+            then.status(500)
+                .header("content-type", "application/json")
+                .body("Internal Server Error");
+=======
             then.status(500).header("content-type", "application/json").body("Internal Server Error");
+>>>>>>> origin/main
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1257,7 +1393,7 @@ mod tests {
             created_on: "2023-01-01".to_string(),
             added_on: "2023-01-02".to_string(),
             permission: "read".to_string(),
-            dids: vec![],
+            dids: vec![]
         };
 
         let manager = Manager {
@@ -1265,13 +1401,13 @@ mod tests {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
-                wallets: vec![wallet_info],
+                wallets: vec![wallet_info]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepo),
             key_data: Mutex::new(vec![]),
             client: reqwest::Client::new(),
-            config,
+            config
         };
 
         let result = manager.retrieve_wallet_dids().await;
@@ -1291,8 +1427,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_key_success() {
-        use mockito::Server;
         use std::sync::Arc;
+
+        use mockito::Server;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1328,7 +1465,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![], // Si necesitas DIDs simulados, puedes añadirlos aquí
+                dids: vec![] // Si necesitas DIDs simulados, puedes añadirlos aquí
             });
         }
 
@@ -1340,6 +1477,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_key_http_error() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use std::sync::Arc;
@@ -1379,7 +1521,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1391,6 +1533,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_success() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
@@ -1435,7 +1582,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1449,7 +1596,7 @@ mod tests {
                     "publicKey": "public_key_data",
                     "privateKey": "private_key_data"
                 }),
-                keyset_handle: None,
+                keyset_handle: None
             });
         }
 
@@ -1461,6 +1608,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_did_conflict() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
@@ -1503,7 +1655,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1517,7 +1669,7 @@ mod tests {
                     "publicKey": "public_key_data",
                     "privateKey": "private_key_data"
                 }),
-                keyset_handle: None,
+                keyset_handle: None
             });
         }
 
@@ -1529,6 +1681,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_success() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use std::sync::Arc;
@@ -1568,7 +1725,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1580,7 +1737,7 @@ mod tests {
                 document: "Test document".to_string(),
                 key_id: "Test key_id".to_string(),
                 default: true,
-                created_on: "Test".to_string(),
+                created_on: "Test".to_string()
             });
         }
 
@@ -1592,6 +1749,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_default_did_error() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use std::sync::Arc;
@@ -1629,7 +1791,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1641,7 +1803,7 @@ mod tests {
                 document: "Test document".to_string(),
                 key_id: "Test key_id".to_string(),
                 default: true,
-                created_on: "Test".to_string(),
+                created_on: "Test".to_string()
             });
         }
 
@@ -1653,6 +1815,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_key_success() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use serde_json::json;
@@ -1693,7 +1860,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1705,7 +1872,7 @@ mod tests {
                 "publicKey": "public_key_data",
                 "privateKey": "private_key_data"
             }),
-            keyset_handle: None,
+            keyset_handle: None
         };
 
         {
@@ -1719,11 +1886,17 @@ mod tests {
         assert!(result.is_ok());
 
         let key_data = manager.key_data.lock().await;
-        assert!(!key_data.contains(&key)); // Verifica que se eliminó de la estructura interna
+        assert!(!key_data.contains(&key)); // Verifica que se eliminó de la
+                                           // estructura interna
     }
 
     #[tokio::test]
     async fn test_delete_key_error() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+
+=======
+>>>>>>> origin/main
         use mockito::Server;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
@@ -1763,7 +1936,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![],
+                dids: vec![]
             });
         }
 
@@ -1775,7 +1948,7 @@ mod tests {
                 "publicKey": "public_key_data",
                 "privateKey": "private_key_data"
             }),
-            keyset_handle: None,
+            keyset_handle: None
         };
 
         {
@@ -1791,8 +1964,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_did_success() {
-        use mockito::Server;
         use std::sync::Arc;
+
+        use mockito::Server;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1826,7 +2000,7 @@ mod tests {
             document: "Test document".to_string(),
             key_id: "Test key_id".to_string(),
             default: true,
-            created_on: "Test".to_string(),
+            created_on: "Test".to_string()
         };
         {
             let mut session = manager.wallet_session.lock().await;
@@ -1837,7 +2011,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![did_info.clone()],
+                dids: vec![did_info.clone()]
             });
         }
 
@@ -1848,13 +2022,15 @@ mod tests {
 
         let session = manager.wallet_session.lock().await;
         let wallet = &session.wallets[0];
-        assert!(!wallet.dids.contains(&did_info)); // Verifica que se eliminó del wallet
+        assert!(!wallet.dids.contains(&did_info)); // Verifica que se eliminó
+                                                   // del wallet
     }
 
     #[tokio::test]
     async fn test_delete_did_error() {
-        use mockito::Server;
         use std::sync::Arc;
+
+        use mockito::Server;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1886,7 +2062,7 @@ mod tests {
             document: "Test document".to_string(),
             key_id: "Test key_id".to_string(),
             default: true,
-            created_on: "Test".to_string(),
+            created_on: "Test".to_string()
         };
 
         {
@@ -1898,7 +2074,7 @@ mod tests {
                 created_on: "2025-01-01".to_string(),
                 added_on: "2025-01-01".to_string(),
                 permission: "read_write".to_string(),
-                dids: vec![did_info.clone()],
+                dids: vec![did_info.clone()]
             });
         }
 
@@ -1927,7 +2103,13 @@ mod tests {
                     .header("content-type", "text/plain")
                     .header("accept", "text/plain")
                     .header("authorization", "Bearer mocked_token");
+<<<<<<< HEAD
+                then.status(200)
+                    .header("content-type", "text/plain")
+                    .body("Exchange joined successfully");
+=======
                 then.status(200).header("content-type", "text/plain").body("Exchange joined successfully");
+>>>>>>> origin/main
             })
             .await;
 
@@ -1950,7 +2132,7 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
-                name: "test_db".to_string(),
+                name: "test_db".to_string()
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -1962,26 +2144,34 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
-                wallet_id: Some("mocked_wallet_id".to_string()),
+                wallet_id: Some("mocked_wallet_id".to_string())
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
-                display: None,
+                display: None
             },
             role: ConfigRoles::Consumer,
             is_local: true,
-            is_gateway_in_production: true,
+            is_gateway_in_production: true
         };
 
         // Mocks
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
+<<<<<<< HEAD
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
+            key_id: "key1".to_string(),
+            default: true,
+            created_on: "2023-01-01T00:00:00Z".to_string()
+=======
             document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
             key_id: "key1".to_string(),
             default: true,
             created_on: "2023-01-01T00:00:00Z".to_string(),
+>>>>>>> origin/main
         };
 
         let manager = Manager {
@@ -1995,8 +2185,8 @@ mod tests {
                     created_on: "2023-01-01".to_string(),
                     added_on: "2023-01-02".to_string(),
                     permission: "read".to_string(),
-                    dids: vec![did_info],
-                }],
+                    dids: vec![did_info]
+                }]
             }),
             wallet_onboard: false,
             repo: mock_repo_factory,
@@ -2005,7 +2195,7 @@ mod tests {
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("Failed to build reqwest client"),
-            config,
+            config
         };
         println!("Mock server URL: {}", server.url(""));
 
@@ -2060,7 +2250,7 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
-                name: "test_db".to_string(),
+                name: "test_db".to_string()
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -2072,25 +2262,26 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
-                wallet_id: Some("mocked_wallet_id".to_string()),
+                wallet_id: Some("mocked_wallet_id".to_string())
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
-                display: None,
+                display: None
             },
             role: ConfigRoles::Consumer,
             is_local: true,
-            is_gateway_in_production: true,
+            is_gateway_in_production: true
         };
 
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
-            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         let manager = Manager {
@@ -2104,8 +2295,8 @@ mod tests {
                     created_on: "2023-01-01".to_string(),
                     added_on: "2023-01-02".to_string(),
                     permission: "read".to_string(),
-                    dids: vec![did_info],
-                }],
+                    dids: vec![did_info]
+                }]
             }),
             wallet_onboard: false,
             repo: mock_repo_factory,
@@ -2114,7 +2305,7 @@ mod tests {
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("Failed to build reqwest client"),
-            config,
+            config
         };
 
         // We execute the function
@@ -2125,7 +2316,9 @@ mod tests {
 
         // We verified the type and content of the error
         let err = result.unwrap_err();
-        if let Some(AuthErrors::WalletError { http_code, cause, .. }) = err.downcast_ref::<AuthErrors>() {
+        if let Some(AuthErrors::WalletError { http_code, cause, .. }) =
+            err.downcast_ref::<AuthErrors>()
+        {
             assert_eq!(*http_code, 500);
             assert!(
                 cause.as_ref().map_or(false, |msg| msg.contains("Error joining the exchange")),
@@ -2191,7 +2384,11 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
+<<<<<<< HEAD
+                name: "test_db".to_string()
+=======
                 name: "test_db".to_string(),
+>>>>>>> origin/main
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -2203,25 +2400,38 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
+<<<<<<< HEAD
+                wallet_id: Some("mocked_wallet_id".to_string())
+=======
                 wallet_id: Some("mocked_wallet_id".to_string()),
+>>>>>>> origin/main
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
+<<<<<<< HEAD
+                display: None
+            },
+            role: ConfigRoles::Consumer,
+            is_local: true,
+            is_gateway_in_production: true
+=======
                 display: None,
             },
             role: ConfigRoles::Consumer,
             is_local: true,
             is_gateway_in_production: true,
+>>>>>>> origin/main
         };
 
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
-            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         let binding = presentation_definition.to_string();
@@ -2242,8 +2452,8 @@ mod tests {
                     created_on: "2023-01-01".to_string(),
                     added_on: "2023-01-02".to_string(),
                     permission: "read".to_string(),
-                    dids: vec![did_info],
-                }],
+                    dids: vec![did_info]
+                }]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepoFactory::new()),
@@ -2252,7 +2462,7 @@ mod tests {
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("Failed to build reqwest client"),
-            config,
+            config
         };
 
         let result = manager.parse_vpd(vpd_url).await;
@@ -2266,7 +2476,8 @@ mod tests {
     async fn test_parse_vpd_invalid_json_error() {
         use urlencoding::encode;
 
-        // Iniciamos el servidor mock HTTP (aunque no se usará en este test, por consistencia)
+        // Iniciamos el servidor mock HTTP (aunque no se usará en este test, por
+        // consistencia)
         let server = MockServer::start_async().await;
         let server_address = server.address();
 
@@ -2296,7 +2507,7 @@ mod tests {
                 port: "5432".to_string(),
                 user: "test_user".to_string(),
                 password: "test_pass".to_string(),
-                name: "test_db".to_string(),
+                name: "test_db".to_string()
             },
             ssh_user: None,
             ssh_private_key_path: None,
@@ -2308,25 +2519,26 @@ mod tests {
                 wallet_name: "mock_wallet_name".to_string(),
                 wallet_email: "wallet@example.com".to_string(),
                 wallet_password: "supersecret".to_string(),
-                wallet_id: Some("mocked_wallet_id".to_string()),
+                wallet_id: Some("mocked_wallet_id".to_string())
             },
             client_config: ClientConfig {
                 class_id: "mock_class".to_string(),
                 cert_path: "/path/to/mock/cert.pem".to_string(),
-                display: None,
+                display: None
             },
             role: ConfigRoles::Consumer,
             is_local: true,
-            is_gateway_in_production: true,
+            is_gateway_in_production: true
         };
 
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
             alias: "alias1".to_string(),
-            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#
+                .to_string(),
             key_id: "key1".to_string(),
             default: true,
-            created_on: "2023-01-01T00:00:00Z".to_string(),
+            created_on: "2023-01-01T00:00:00Z".to_string()
         };
 
         let manager = Manager {
@@ -2340,8 +2552,8 @@ mod tests {
                     created_on: "2023-01-01".to_string(),
                     added_on: "2023-01-02".to_string(),
                     permission: "read".to_string(),
-                    dids: vec![did_info],
-                }],
+                    dids: vec![did_info]
+                }]
             }),
             wallet_onboard: false,
             repo: Arc::new(MockRepoFactory::new()),
@@ -2350,7 +2562,7 @@ mod tests {
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("Failed to build reqwest client"),
-            config,
+            config
         };
 
         // Ejecutamos la función con JSON inválido
@@ -2381,12 +2593,21 @@ mod tests {
 
         let mock = server
             .mock_async(|when, then| {
+<<<<<<< HEAD
+                when.method(POST,)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition",)
+                    .header("content-type", "application/json",)
+                    .header("accept", "application/json",)
+                    .header("authorization", "Bearer mocked_token",);
+                then.status(200,).header("content-type", "application/json",).json_body(json!([
+=======
                 when.method(POST)
                     .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
                     .header("content-type", "application/json")
                     .header("accept", "application/json")
                     .header("authorization", "Bearer mocked_token");
                 then.status(200).header("content-type", "application/json").json_body(json!([
+>>>>>>> origin/main
                     {
                         "addedOn": "2023-01-01T00:00:00Z",
                         "disclosures": "[]",
@@ -2404,8 +2625,13 @@ mod tests {
                         "pending": false,
                         "wallet": "mocked_wallet_id"
                     }
+<<<<<<< HEAD
+                ]),);
+            },)
+=======
                 ]));
             })
+>>>>>>> origin/main
             .await;
 
         let config = build_test_config(&server_address);
@@ -2438,6 +2664,15 @@ mod tests {
 
         let mock = server
             .mock_async(|when, then| {
+<<<<<<< HEAD
+                when.method(POST,)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition",)
+                    .header("content-type", "application/json",)
+                    .header("accept", "application/json",)
+                    .header("authorization", "Bearer mocked_token",);
+                then.status(500,).header("content-type", "application/json",).body("Internal Server Error",);
+            },)
+=======
                 when.method(POST)
                     .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
                     .header("content-type", "application/json")
@@ -2445,6 +2680,7 @@ mod tests {
                     .header("authorization", "Bearer mocked_token");
                 then.status(500).header("content-type", "application/json").body("Internal Server Error");
             })
+>>>>>>> origin/main
             .await;
 
         let config = build_test_config(&server_address);
@@ -2514,7 +2750,13 @@ mod tests {
                     .header("content-type", "application/json")
                     .header("accept", "application/json")
                     .header("authorization", "Bearer mocked_token");
+<<<<<<< HEAD
+                then.status(500)
+                    .header("content-type", "application/json")
+                    .body("this is not a valid JSON");
+=======
                 then.status(500).header("content-type", "application/json").body("this is not a valid JSON");
+>>>>>>> origin/main
                 // fuerza fallo de deserialización
             })
             .await;
@@ -2527,11 +2769,19 @@ mod tests {
         assert!(result.is_err());
 
         let err = result.unwrap_err();
-        if let Some(AuthErrors::WalletError { http_code, cause, .. }) = err.downcast_ref::<AuthErrors>() {
+        if let Some(AuthErrors::WalletError { http_code, cause, .. }) =
+            err.downcast_ref::<AuthErrors>()
+        {
             assert_eq!(*http_code, 500);
             assert!(
+<<<<<<< HEAD
+                cause
+                    .as_ref()
+                    .map_or(false, |msg| msg.contains("Petition to present credentials failed")),
+=======
                 cause.as_ref().map_or(false, |msg| msg
                     .contains("Petition to present credentials failed")),
+>>>>>>> origin/main
                 "Mensaje de error inesperado en cause: {:?}",
                 cause
             );
@@ -2633,10 +2883,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_ok_token_expired_and_updated_successfully() {
+<<<<<<< HEAD
+        use std::sync::Arc;
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        use mockito::Server;
+        use serde_json::json;
+=======
         use mockito::Server;
         use serde_json::json;
         use std::sync::Arc;
         use std::time::{SystemTime, UNIX_EPOCH};
+>>>>>>> origin/main
 
         let mut server = Server::new_async().await;
 
@@ -2656,7 +2914,8 @@ mod tests {
             "aud": "mock-audience"
         });
 
-        let encoded_payload = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(jwt_payload.to_string());
+        let encoded_payload =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(jwt_payload.to_string());
 
         let mock_token = format!("header.{}.signature", encoded_payload);
 
@@ -2673,7 +2932,11 @@ mod tests {
                     "token": mock_token
                 })
                 .to_string()
+<<<<<<< HEAD
+                .into_bytes()
+=======
                 .into_bytes(),
+>>>>>>> origin/main
             )
             .create_async()
             .await;
@@ -2708,9 +2971,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_ok_token_expired_and_update_failed() {
-        use mockito::Server;
         use std::sync::Arc;
         use std::time::{SystemTime, UNIX_EPOCH};
+
+        use mockito::Server;
 
         let mut server = Server::new_async().await;
 

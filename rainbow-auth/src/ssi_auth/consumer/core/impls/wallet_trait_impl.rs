@@ -27,7 +27,7 @@ use crate::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletInfoResponse
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;

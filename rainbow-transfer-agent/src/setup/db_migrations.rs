@@ -16,13 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::data::migrations::get_transfer_agent_migrations;
 use rainbow_common::config::services::TransferConfig;
-use rainbow_common::config::traits::DatabaseConfigTrait;
+use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::vault::VaultTrait;
 use rainbow_dataplane::get_dataplane_migrations;
-use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use std::sync::Arc;
 
 pub struct TransferAgentMigration;
 
@@ -39,10 +39,9 @@ impl MigratorTrait for TransferAgentMigration {
 }
 
 impl TransferAgentMigration {
-    pub async fn run(config: &TransferConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &TransferConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+        let db_connection = vault.get_db_connection(config.clone()).await;
         // run migration
         Self::refresh(&db_connection).await?;
         Ok(())

@@ -17,37 +17,37 @@
  *
  */
 
-use crate::consumer::router::create_core_consumer_router;
-use crate::provider::router::create_core_provider_router;
+use crate::http::router::create_core_provider_router;
 use axum::serve;
-use rainbow_common::config::traits::{MonoConfigTrait, RoleTrait};
-use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::ApplicationConfig;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct CoreHttpWorker;
 
 impl CoreHttpWorker {
-    pub async fn spawn(config: &ApplicationConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(
+        config: &ApplicationConfig,
+        vault: Arc<VaultService>,
+        token: &CancellationToken,
+    ) -> anyhow::Result<JoinHandle<()>> {
         // message
         let server_message = format!(
             "Starting Dataspace http server in {}",
-            config.get_mono_host()
+            config.monolith().common().get_host(HostType::Http)
         );
         tracing::info!("{}", server_message);
         // router
-        let router = match config.monolith().get_role() {
-            RoleConfig::Consumer => create_core_consumer_router(config).await,
-            RoleConfig::Provider => create_core_provider_router(config).await,
-            _ => {
-                panic!("Unsupported role");
-            }
-        };
+        let router = create_core_provider_router(config, vault.clone()).await;
         // config
-        let host = if config.is_mono_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_weird_mono_port();
+        let host = if config.monolith().common().is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.monolith().common().get_weird_port(HostType::Http);
         let addr = format!("{}{}", host, port);
         // listener
         let listener = TcpListener::bind(&addr).await?;

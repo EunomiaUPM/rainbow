@@ -66,6 +66,8 @@ impl From<CommonErrors> for NegotiationProcessMessageWrapper<NegotiationErrorMes
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
             CommonErrors::ModuleNotActiveError { info, .. } => info,
+            CommonErrors::VaultError { info, .. } => info,
+            CommonErrors::EnvVarError { info, .. } => info,
         };
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
@@ -99,6 +101,8 @@ impl From<DspNegotiationError> for NegotiationProcessMessageWrapper<NegotiationE
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
             CommonErrors::ModuleNotActiveError { info, .. } => info,
+            CommonErrors::VaultError { info, .. } => info,
+            CommonErrors::EnvVarError { info, .. } => info,
         };
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
