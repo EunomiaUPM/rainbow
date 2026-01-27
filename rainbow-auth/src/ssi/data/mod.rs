@@ -15,5 +15,5 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod entities;
-pub mod migrations;
+
+pub mod migrator;

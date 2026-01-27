@@ -17,12 +17,12 @@
 
 use std::sync::Arc;
 
-use axum::async_trait;
-
 use crate::ssi::services::business::BusinessTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
-use crate::ssi::services::verifier::VerifierTrait;
-use crate::ssi::types::vcs::{VPDef, VerifyPayload};
+use async_trait::async_trait;
+use ymir::services::verifier::VerifierTrait;
+use ymir::types::vcs::VPDef;
+use ymir::types::verifying::VerifyPayload;
 
 #[async_trait]
 pub trait CoreVerifierTrait: Send + Sync + 'static {
@@ -31,15 +31,15 @@ pub trait CoreVerifierTrait: Send + Sync + 'static {
     fn business(&self) -> Arc<dyn BusinessTrait>;
     async fn get_vpd(&self, state: String) -> anyhow::Result<VPDef> {
         let ver_model = self.repo().verification_rcv().get_by_state(&state).await?;
-        Ok(self.verifier().get_vpd(&ver_model))
+        Ok(self.verifier().generate_vpd(ver_model))
     }
     async fn verify(
         &self,
         state: String,
-        payload: VerifyPayload
+        payload: VerifyPayload,
     ) -> anyhow::Result<Option<String>> {
         let mut ver_model = self.repo().verification_rcv().get_by_state(&state).await?;
-        let result = self.verifier().verify_all(&mut ver_model, &payload);
+        let result = self.verifier().verify_all(&mut ver_model, payload.vp_token).await;
         match self.repo().interaction_rcv().get_by_some_id(&ver_model.id).await? {
             Some(int_model) => {
                 self.repo().verification_rcv().update(ver_model).await?;

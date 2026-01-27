@@ -17,15 +17,8 @@
  *
  */
 
-mod api;
 pub mod cache;
 mod client;
-pub mod database;
-mod host;
 pub mod roles;
-mod wallet;
 
-pub use api::ApiConfig;
 pub use client::*;
-pub use host::*;
-pub use wallet::*;

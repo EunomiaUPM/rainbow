@@ -14,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-use rainbow_common::config::types::CommonHostsConfig;
+use ymir::config::types::CommonHostsConfig;
 
 pub trait GnapGateKeeperConfigTrait {
     fn hosts(&self) -> &CommonHostsConfig;

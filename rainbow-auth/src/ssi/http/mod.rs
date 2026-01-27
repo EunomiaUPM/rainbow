@@ -22,7 +22,6 @@ mod mate_router;
 mod onboarder_router;
 mod vc_requester_router;
 mod verifier_router;
-mod wallet_router;
 
 pub use business_router::BusinessRouter;
 pub use core_router::AuthRouter;
@@ -32,4 +31,3 @@ pub use mate_router::MateRouter;
 pub use onboarder_router::OnboarderRouter;
 pub use vc_requester_router::VcRequesterRouter;
 pub use verifier_router::VerifierRouter;
-pub use wallet_router::WalletRouter;

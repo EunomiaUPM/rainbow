@@ -19,7 +19,7 @@
 
 use crate::data::entities::{notification, subscription};
 use anyhow::Error;
-use axum::async_trait;
+use async_trait::async_trait;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
@@ -68,7 +68,9 @@ impl Default for EditSubscription {
 
 #[async_trait]
 pub trait SubscriptionRepo {
-    async fn get_all_subscriptions(&self) -> anyhow::Result<Vec<subscription::Model>, EventRepoErrors>;
+    async fn get_all_subscriptions(
+        &self,
+    ) -> anyhow::Result<Vec<subscription::Model>, EventRepoErrors>;
     async fn get_subscription_by_id(
         &self,
         subscription_id: Urn,
@@ -86,7 +88,10 @@ pub trait SubscriptionRepo {
         &self,
         new_subscription: NewSubscription,
     ) -> anyhow::Result<subscription::Model, EventRepoErrors>;
-    async fn delete_subscription_by_id(&self, subscription_id: Urn) -> anyhow::Result<(), EventRepoErrors>;
+    async fn delete_subscription_by_id(
+        &self,
+        subscription_id: Urn,
+    ) -> anyhow::Result<(), EventRepoErrors>;
 }
 
 pub struct NewNotification {
@@ -100,7 +105,9 @@ pub struct NewNotification {
 
 #[async_trait]
 pub trait NotificationRepo {
-    async fn get_all_notifications(&self) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors>;
+    async fn get_all_notifications(
+        &self,
+    ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors>;
     async fn get_notifications_by_subscription_id(
         &self,
         subscription_id: Urn,

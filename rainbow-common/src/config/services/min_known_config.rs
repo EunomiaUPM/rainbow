@@ -18,10 +18,11 @@
  */
 
 use crate::config::services::{CatalogConfig, ContractsConfig, SsiAuthConfig, TransferConfig};
-use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ExtraHostsTrait};
-use crate::config::types::{CommonHostsConfig, HostType};
+use crate::config::traits::CommonConfigTrait;
 use crate::config::ApplicationConfig;
 use serde::{Deserialize, Serialize};
+use ymir::config::traits::{ApiConfigTrait, HostsConfigTrait};
+use ymir::config::types::{CommonHostsConfig, HostType};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MinKnownConfig {
@@ -40,13 +41,13 @@ impl MinKnownConfig {
 
 impl From<SsiAuthConfig> for MinKnownConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+        Self { hosts: value.common().hosts.clone(), api_version: value.common().get_api_version() }
     }
 }
 
 impl From<CatalogConfig> for MinKnownConfig {
     fn from(value: CatalogConfig) -> Self {
-        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+        Self { hosts: value.common().hosts.clone(), api_version: value.common().get_api_version() }
     }
 }
 
@@ -58,7 +59,7 @@ impl From<&CatalogConfig> for MinKnownConfig {
 
 impl From<ContractsConfig> for MinKnownConfig {
     fn from(value: ContractsConfig) -> Self {
-        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+        Self { hosts: value.common().hosts.clone(), api_version: value.common().get_api_version() }
     }
 }
 
@@ -70,7 +71,7 @@ impl From<&ContractsConfig> for MinKnownConfig {
 
 impl From<TransferConfig> for MinKnownConfig {
     fn from(value: TransferConfig) -> Self {
-        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
+        Self { hosts: value.common().hosts.clone(), api_version: value.common().get_api_version() }
     }
 }
 
@@ -82,7 +83,10 @@ impl From<&TransferConfig> for MinKnownConfig {
 
 impl From<ApplicationConfig> for MinKnownConfig {
     fn from(value: ApplicationConfig) -> Self {
-        Self { hosts: value.monolith().common().hosts.clone(), api_version: value.monolith().get_api_version() }
+        Self {
+            hosts: value.monolith().common().hosts.clone(),
+            api_version: value.monolith().common().get_api_version(),
+        }
     }
 }
 

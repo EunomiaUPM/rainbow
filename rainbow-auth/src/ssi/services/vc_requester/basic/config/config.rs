@@ -15,18 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
-use rainbow_common::config::types::{ClientConfig, CommonHostsConfig};
-use serde_json::Value;
-
 use super::VCRequesterConfigTrait;
 use crate::ssi::utils::get_pretty_client_config_helper;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
+use rainbow_common::config::types::ClientConfig;
+use ymir::config::traits::ApiConfigTrait;
+use ymir::config::types::CommonHostsConfig;
+use ymir::types::gnap::grant_request::Client4GR;
 
 pub struct VCRequesterConfig {
     hosts: CommonHostsConfig,
     client: ClientConfig,
-    api_path: String
+    api_path: String,
 }
 
 impl From<SsiAuthConfig> for VCRequesterConfig {
@@ -34,15 +35,19 @@ impl From<SsiAuthConfig> for VCRequesterConfig {
         VCRequesterConfig {
             hosts: value.common().hosts.clone(),
             client: value.client(),
-            api_path: value.get_api_version()
+            api_path: value.common().get_api_version(),
         }
     }
 }
 
 impl VCRequesterConfigTrait for VCRequesterConfig {
-    fn get_pretty_client_config(&self, cert: &str) -> anyhow::Result<Value> {
+    fn get_pretty_client_config(&self, cert: &str) -> anyhow::Result<Client4GR> {
         get_pretty_client_config_helper(&self.client, &cert)
     }
-    fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
-    fn get_api_path(&self) -> String { self.api_path.clone() }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
+    }
 }

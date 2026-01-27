@@ -19,14 +19,15 @@
 
 use crate::http::router::create_core_provider_router;
 use axum::serve;
-use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
-use rainbow_common::config::types::HostType;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_common::vault::vault_rs::VaultService;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct CoreHttpWorker;
 
@@ -39,14 +40,14 @@ impl CoreHttpWorker {
         // message
         let server_message = format!(
             "Starting Dataspace http server in {}",
-            config.monolith().get_host(HostType::Http)
+            config.monolith().common().get_host(HostType::Http)
         );
         tracing::info!("{}", server_message);
         // router
         let router = create_core_provider_router(config, vault.clone()).await;
         // config
-        let host = if config.monolith().is_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.monolith().get_weird_port();
+        let host = if config.monolith().common().is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.monolith().common().get_weird_port(HostType::Http);
         let addr = format!("{}{}", host, port);
         // listener
         let listener = TcpListener::bind(&addr).await?;

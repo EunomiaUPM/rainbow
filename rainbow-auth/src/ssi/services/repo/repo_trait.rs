@@ -16,14 +16,10 @@
  */
 
 use std::sync::Arc;
-
-use crate::ssi::services::repo::subtraits::business_mates_trait::BusinessMatesRepoTrait;
-use crate::ssi::services::repo::subtraits::recv_interaction_trait::RecvInteractionTrait;
-use crate::ssi::services::repo::subtraits::recv_request_trait::RecvRequestTrait;
-use crate::ssi::services::repo::subtraits::recv_verification_trait::RecvVerificationTrait;
-use crate::ssi::services::repo::subtraits::req_request_trait::ReqRequestTrait;
-use crate::ssi::services::repo::subtraits::{
-    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait
+use ymir::services::repo::subtraits::{
+    BusinessMatesRepoTrait, MatesTrait, RecvInteractionTrait, RecvRequestTrait,
+    RecvVerificationTrait, ReqInteractionTrait, ReqRequestTrait, ReqVcTrait, ReqVerificationTrait,
+    TokenRequirementsTrait,
 };
 
 pub trait AuthRepoTrait: Send + Sync + 'static {

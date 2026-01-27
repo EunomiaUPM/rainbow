@@ -19,12 +19,13 @@
 
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::{
-    RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities,
+    RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse,
+    SubscriptionEntities,
 };
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
 use crate::data::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::utils::get_urn;
 use std::sync::Arc;
 use urn::Urn;
@@ -44,8 +45,14 @@ impl<T> RainbowEventsSubscriptionTrait for RainbowEventsSubscriptionService<T>
 where
     T: EventsRepoFactory + Send + Sync + 'static,
 {
-    async fn get_all_subscriptions(&self) -> anyhow::Result<Vec<RainbowEventsSubscriptionCreationResponse>> {
-        let subscriptions = self.repo.get_all_subscriptions().await.map_err(|e| SubscriptionErrors::DbErr(e.into()))?;
+    async fn get_all_subscriptions(
+        &self,
+    ) -> anyhow::Result<Vec<RainbowEventsSubscriptionCreationResponse>> {
+        let subscriptions = self
+            .repo
+            .get_all_subscriptions()
+            .await
+            .map_err(|e| SubscriptionErrors::DbErr(e.into()))?;
         let subscriptions = subscriptions
             .iter()
             .map(|sub| RainbowEventsSubscriptionCreationResponse::try_from(sub.to_owned()).unwrap())
@@ -62,7 +69,10 @@ where
             .get_subscription_by_id(subscription_id.clone())
             .await
             .map_err(|e| SubscriptionErrors::DbErr(e.into()))?
-            .ok_or(SubscriptionErrors::NotFound { id: subscription_id, entity: "Subscription".to_string() })?;
+            .ok_or(SubscriptionErrors::NotFound {
+                id: subscription_id,
+                entity: "Subscription".to_string(),
+            })?;
         let subscription = RainbowEventsSubscriptionCreationResponse::try_from(subscription)?;
         Ok(subscription)
     }
@@ -76,7 +86,10 @@ where
             .get_subscription_by_callback_string(callback_url)
             .await
             .map_err(|e| SubscriptionErrors::DbErr(e.into()))?
-            .ok_or(SubscriptionErrors::NotFound { id: get_urn(None), entity: "Subscription".to_string() })?;
+            .ok_or(SubscriptionErrors::NotFound {
+                id: get_urn(None),
+                entity: "Subscription".to_string(),
+            })?;
         let subscription = RainbowEventsSubscriptionCreationResponse::try_from(subscription)?;
         Ok(subscription)
     }
@@ -123,7 +136,8 @@ where
             .create_subscription(NewSubscription {
                 callback_address: input.callback_address,
                 transfer_process: subscription_type == SubscriptionEntities::TransferProcess,
-                contract_negotiation_process: subscription_type == SubscriptionEntities::ContractNegotiationProcess,
+                contract_negotiation_process: subscription_type
+                    == SubscriptionEntities::ContractNegotiationProcess,
                 catalog: subscription_type == SubscriptionEntities::Catalog,
                 data_plane: subscription_type == SubscriptionEntities::DataPlaneProcess,
                 active: true,

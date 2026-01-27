@@ -1,4 +1,4 @@
-use crate::config::min_know_services::MinKnownConfig;
+use crate::config::services::MinKnownConfig;
 use crate::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use crate::http_client::HttpClient;
 use crate::well_known::dspace_version::dspace_version::WellKnownDSpaceVersionService;
@@ -18,10 +18,8 @@ impl WellKnownRoot {
         let mates_facade = Arc::new(MatesFacadeService::new(config.clone(), http_client.clone()));
 
         let dspace_version_service = WellKnownDSpaceVersionService::new();
-        let dspace_version_rpc = Arc::new(WellKnownRPCService::new(
-            http_client.clone(),
-            mates_facade.clone(),
-        ));
+        let dspace_version_rpc =
+            Arc::new(WellKnownRPCService::new(http_client.clone(), mates_facade.clone()));
         let router = WellKnownRouter::new(dspace_version_service, dspace_version_rpc.clone());
         Ok(router.router())
     }

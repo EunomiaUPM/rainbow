@@ -19,7 +19,7 @@
 use crate::data::into_active_trait::IntoActiveSet;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QuerySelect};
 use tracing::log::error;
 

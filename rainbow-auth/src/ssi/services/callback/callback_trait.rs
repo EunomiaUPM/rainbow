@@ -15,18 +15,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::async_trait;
+use async_trait::async_trait;
 use reqwest::Response;
 
-use crate::ssi::data::entities::req_interaction;
-use crate::ssi::types::gnap::CallbackBody;
+use ymir::data::entities::req_interaction;
+use ymir::types::gnap::CallbackBody;
 
 #[async_trait]
 pub trait CallbackTrait: Send + Sync + 'static {
     fn check_callback(
         &self,
         int_model: &mut req_interaction::Model,
-        payload: &CallbackBody
+        payload: &CallbackBody,
     ) -> anyhow::Result<()>;
     async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<Response>;
 }

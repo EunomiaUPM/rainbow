@@ -17,7 +17,6 @@
 
 pub mod core;
 pub mod data;
-pub mod errors;
 pub mod http;
 pub mod services;
 pub mod setup;

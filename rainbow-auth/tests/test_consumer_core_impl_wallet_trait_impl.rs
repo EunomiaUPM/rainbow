@@ -13,7 +13,7 @@ mod tests {
 mod tests {
 >>>>>>> origin/main
     use anyhow::Result;
-    use axum::async_trait;
+    use async_trait::async_trait;
     use base64::Engine;
     use httpmock::Method::POST;
     use httpmock::MockServer;

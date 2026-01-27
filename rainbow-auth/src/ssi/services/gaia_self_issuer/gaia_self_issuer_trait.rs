@@ -14,12 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 use async_trait::async_trait;
 use serde_json::Value;
-
-use crate::ssi::types::vc_issuing::{
-    AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer
-};
+use ymir::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
 
 #[async_trait]
 pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {

@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use rainbow_common::config::types::CommonHostsConfig;
-use serde_json::Value;
+use ymir::config::types::CommonHostsConfig;
+use ymir::types::gnap::grant_request::Client4GR;
 
 pub trait GnapOnboarderConfigTrait {
-    fn get_pretty_client_config(&self, cert: &str) -> anyhow::Result<Value>;
+    fn get_pretty_client_config(&self, cert: &str) -> anyhow::Result<Client4GR>;
     fn hosts(&self) -> &CommonHostsConfig;
     fn get_api_path(&self) -> String;
 }

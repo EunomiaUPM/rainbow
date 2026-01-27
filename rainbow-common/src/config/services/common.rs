@@ -17,9 +17,11 @@
  *
  */
 
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig};
 use serde::{Deserialize, Serialize};
+use ymir::config::traits::{
+    ApiConfigTrait, DatabaseConfigTrait, HostsConfigTrait, IsLocalConfigTrait,
+};
+use ymir::config::types::{ApiConfig, CommonHostsConfig, DatabaseConfig, HostConfig};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CommonConfig {
@@ -41,5 +43,37 @@ impl CommonConfig {
     }
     pub fn is_local(&self) -> bool {
         self.is_local
+    }
+}
+
+impl HostsConfigTrait for CommonConfig {
+    fn http(&self) -> &HostConfig {
+        &self.hosts().http()
+    }
+
+    fn grpc(&self) -> Option<&HostConfig> {
+        self.hosts().grpc()
+    }
+
+    fn graphql(&self) -> Option<&HostConfig> {
+        self.hosts().graphql()
+    }
+}
+
+impl DatabaseConfigTrait for CommonConfig {
+    fn db(&self) -> &DatabaseConfig {
+        &self.db
+    }
+}
+
+impl IsLocalConfigTrait for CommonConfig {
+    fn is_local(&self) -> bool {
+        self.is_local
+    }
+}
+
+impl ApiConfigTrait for CommonConfig {
+    fn api(&self) -> &ApiConfig {
+        &self.api
     }
 }

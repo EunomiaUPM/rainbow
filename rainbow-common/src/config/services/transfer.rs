@@ -17,11 +17,8 @@
  *
  */
 
-use crate::config::min_know_services::MinKnownConfig;
-use crate::config::services::CommonConfig;
-use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
-};
+use crate::config::services::{CommonConfig, MinKnownConfig};
+use crate::config::traits::{CommonConfigTrait, ConfigLoader};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -48,19 +45,7 @@ impl TransferConfig {
     }
 }
 impl ConfigLoader for TransferConfig {
-    fn default(common_config: CommonConfig) -> Self {
-        let min_known_config =
-            MinKnownConfig { hosts: common_config.hosts.clone(), api_version: common_config.api.version.clone() };
-        Self {
-            common: common_config,
-            contracts: min_known_config.clone(),
-            catalog: min_known_config.clone(),
-            is_catalog_datahub: false,
-            ssi_auth: min_known_config,
-        }
-    }
-
-    fn load(env_file: Option<String>) -> Self {
+    fn load(env_file: String) -> Self {
         match Self::global_load(env_file.clone()) {
             Ok(data) => data.transfer(),
             Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
@@ -73,11 +58,3 @@ impl CommonConfigTrait for TransferConfig {
         &self.common
     }
 }
-
-impl HostConfigTrait for TransferConfig {}
-
-impl DatabaseConfigTrait for TransferConfig {}
-
-impl IsLocalTrait for TransferConfig {}
-
-impl ApiConfigTrait for TransferConfig {}

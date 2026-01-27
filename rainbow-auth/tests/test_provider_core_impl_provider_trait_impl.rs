@@ -9,7 +9,7 @@ mod tests {
 =======
 >>>>>>> origin/main
     use anyhow::Result;
-    use axum::async_trait;
+    use async_trait::async_trait;
     use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
     use chrono::Utc;
     use jsonwebtoken::{encode, EncodingKey, Header};

@@ -23,5 +23,6 @@ urn = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 hyper = { version = "1.5.0", features = ["full"] }
-async-trait = "0.1.89"
+async-trait = {workspace = true}
 uuid = "1.18.1"
+

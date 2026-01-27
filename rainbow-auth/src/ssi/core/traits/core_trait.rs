@@ -15,14 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::Arc;
-
-use rainbow_common::config::services::SsiAuthConfig;
-
 use crate::ssi::core::traits::{
     CoreBusinessTrait, CoreGaiaSelfIssuerTrait, CoreGateKeeperTrait, CoreMateTrait,
-    CoreOnboarderTrait, CoreVcRequesterTrait, CoreVerifierTrait, CoreWalletTrait
+    CoreOnboarderTrait, CoreVcRequesterTrait, CoreVerifierTrait,
 };
+use rainbow_common::config::services::SsiAuthConfig;
+use std::sync::Arc;
+use ymir::core_traits::CoreWalletTrait;
 
 pub trait AuthCoreTrait:
     CoreOnboarderTrait

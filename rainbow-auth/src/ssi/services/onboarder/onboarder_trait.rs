@@ -15,35 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::async_trait;
+use async_trait::async_trait;
 use reqwest::Response;
 
-use crate::ssi::data::entities::req_request;
-use crate::ssi::data::entities::{mates, req_interaction, req_verification, token_requirements};
 use crate::ssi::types::entities::ReachProvider;
+use ymir::data::entities::req_request;
+use ymir::data::entities::{mates, req_interaction, req_verification, token_requirements};
 
 #[async_trait]
 pub trait OnboarderTrait: Send + Sync + 'static {
     fn start(
         &self,
-        payload: &ReachProvider
+        payload: &ReachProvider,
     ) -> (
         req_request::NewModel,
         req_interaction::NewModel,
-        token_requirements::Model
+        token_requirements::Model,
     );
     async fn send_req(
         &self,
         req_model: &mut req_request::Model,
-        int_model: &mut req_interaction::Model
+        int_model: &mut req_interaction::Model,
     ) -> anyhow::Result<()>;
     fn save_verification(
         &self,
-        int_model: &req_interaction::Model
+        int_model: &req_interaction::Model,
     ) -> anyhow::Result<req_verification::NewModel>;
     async fn manage_res(
         &self,
         req_model: &mut req_request::Model,
-        res: Response
+        res: Response,
     ) -> anyhow::Result<mates::NewModel>;
 }

@@ -17,7 +17,7 @@
  *
  */
 
-use axum::async_trait;
+use async_trait::async_trait;
 
 pub mod inner_auth_facade;
 

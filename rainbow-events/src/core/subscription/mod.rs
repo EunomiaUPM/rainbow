@@ -18,9 +18,10 @@
  */
 
 use crate::core::subscription::subscription_types::{
-    RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities,
+    RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse,
+    SubscriptionEntities,
 };
-use axum::async_trait;
+use async_trait::async_trait;
 use urn::Urn;
 
 pub mod subscription;
@@ -30,7 +31,9 @@ pub mod subscription_types;
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowEventsSubscriptionTrait: Send + Sync {
-    async fn get_all_subscriptions(&self) -> anyhow::Result<Vec<RainbowEventsSubscriptionCreationResponse>>;
+    async fn get_all_subscriptions(
+        &self,
+    ) -> anyhow::Result<Vec<RainbowEventsSubscriptionCreationResponse>>;
     async fn get_subscription_by_id(
         &self,
         subscription_id: Urn,

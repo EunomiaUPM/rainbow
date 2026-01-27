@@ -23,7 +23,7 @@ use crate::ssi_auth::common::utils::format::trim_4_base;
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;

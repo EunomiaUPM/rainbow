@@ -17,40 +17,40 @@
 
 use std::sync::Arc;
 
+use super::super::VcRequesterTrait;
+use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
+use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
 use anyhow::bail;
-use axum::async_trait;
-use rainbow_common::config::traits::ExtraHostsTrait;
-use rainbow_common::config::types::HostType;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::{expect_from_env, get_from_opt};
-use rainbow_common::vault::secrets::PemHelper;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
+use async_trait::async_trait;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
 use tracing::{error, info};
 use url::Url;
-
-use super::super::VcRequesterTrait;
-use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
-use crate::ssi::data::entities::{mates, req_interaction, req_vc, req_verification};
-use crate::ssi::services::client::ClientServiceTrait;
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
-use crate::ssi::types::enums::request::Body;
-use crate::ssi::types::gnap::{GrantRequest, GrantResponse};
-use crate::ssi::utils::{get_query_param, trim_4_base};
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::data::entities::{mates, req_interaction, req_vc, req_verification};
+use ymir::errors::{ErrorLogTrait, Errors};
+use ymir::services::client::ClientTrait;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
+use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::grant_response::GrantResponse;
+use ymir::types::gnap::GRUse;
+use ymir::types::http::Body;
+use ymir::types::secrets::StringHelper;
+use ymir::utils::{expect_from_env, get_from_opt, get_query_param, trim_4_base};
 
 pub struct VCReqService {
-    client: Arc<dyn ClientServiceTrait>,
+    client: Arc<dyn ClientTrait>,
     vault: Arc<VaultService>,
-    config: VCRequesterConfig
+    config: VCRequesterConfig,
 }
 
 impl VCReqService {
     pub fn new(
-        client: Arc<dyn ClientServiceTrait>,
+        client: Arc<dyn ClientTrait>,
         vault: Arc<VaultService>,
-        config: VCRequesterConfig
+        config: VCRequesterConfig,
     ) -> Self {
         VCReqService { client, config, vault }
     }
@@ -74,7 +74,7 @@ impl VcRequesterTrait for VCReqService {
             authority_id: payload.id.clone(),
             authority_slug: payload.slug.clone(),
             grant_endpoint: payload.url.clone(),
-            vc_type: payload.vc_type.clone()
+            vc_type: payload.vc_type.clone(),
         };
 
         let int_model = req_interaction::NewModel {
@@ -84,7 +84,7 @@ impl VcRequesterTrait for VCReqService {
             uri: callback_uri,
             hash_method: None,
             hints: None,
-            grant_endpoint: payload.url.clone()
+            grant_endpoint: payload.url.clone(),
         };
 
         (vc_model, int_model)
@@ -94,29 +94,14 @@ impl VcRequesterTrait for VCReqService {
         &self,
         vc_model: &mut req_vc::Model,
         int_model: &mut req_interaction::Model,
-        method: ReachMethod
     ) -> anyhow::Result<Option<String>> {
         info!("Sending grant request request to authority");
 
         let cert = expect_from_env("VAULT_F_CERT");
-        let cert: PemHelper = self.vault.read(None, &cert).await?;
+        let cert: StringHelper = self.vault.read(None, &cert).await?;
         let client = self.config.get_pretty_client_config(&cert.data())?;
 
-        let grant_request = match method {
-            ReachMethod::Oidc => GrantRequest::vc_oidc(
-                client,
-                int_model.method.clone(),
-                Some(int_model.uri.clone()),
-                vc_model.vc_type.clone(),
-                Some(int_model.client_nonce.clone())
-            ),
-            ReachMethod::CrossUser => GrantRequest::vc_cross_user(
-                client,
-                Some(int_model.uri.clone()),
-                vc_model.vc_type.clone(),
-                Some(int_model.client_nonce.clone())
-            )
-        };
+        let grant_request = GrantRequest::new(GRUse::VcReq, client, int_model);
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -127,7 +112,7 @@ impl VcRequesterTrait for VCReqService {
             .post(
                 &vc_model.grant_endpoint,
                 Some(headers),
-                Body::Json(serde_json::to_value(grant_request)?)
+                Body::Json(serde_json::to_value(grant_request)?),
             )
             .await?;
 
@@ -139,11 +124,11 @@ impl VcRequesterTrait for VCReqService {
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = CommonErrors::authority_new(
+                let error = Errors::authority_new(
                     &vc_model.grant_endpoint,
                     "POST",
                     http_code,
-                    &error_res.error.unwrap_or("Unknown error".to_string())
+                    &error_res.error.unwrap_or("Unknown error".to_string()),
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -188,14 +173,14 @@ impl VcRequesterTrait for VCReqService {
             pd_uri,
             client_id_scheme,
             nonce,
-            response_uri
+            response_uri,
         })
     }
 
     async fn manage_res(
         &self,
         vc_req_model: &mut req_vc::Model,
-        res: Response
+        res: Response,
     ) -> anyhow::Result<mates::NewModel> {
         info!("Managing response");
         let res = match res.status().as_u16() {
@@ -206,11 +191,11 @@ impl VcRequesterTrait for VCReqService {
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = CommonErrors::authority_new(
+                let error = Errors::authority_new(
                     "authority/continue",
                     "POST",
                     http_code,
-                    &error_res.error.unwrap_or("Error with authority continue request".to_string())
+                    &error_res.error.unwrap_or("Error with authority continue request".to_string()),
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -227,7 +212,7 @@ impl VcRequesterTrait for VCReqService {
             participant_type: "Authority".to_string(),
             base_url,
             token: None,
-            is_me: false
+            is_me: false,
         };
 
         Ok(mate)

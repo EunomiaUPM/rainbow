@@ -34,3 +34,4 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 mockall = { workspace = true }
 once_cell = { workspace = true }
+async-trait = {workspace = true}

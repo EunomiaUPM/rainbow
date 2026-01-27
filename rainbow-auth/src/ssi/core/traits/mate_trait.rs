@@ -17,11 +17,11 @@
 
 use std::sync::Arc;
 
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 
-use crate::ssi::data::entities::mates::Model;
+use ymir::data::entities::mates::Model;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 
 #[async_trait]
