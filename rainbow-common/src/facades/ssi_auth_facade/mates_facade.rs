@@ -18,12 +18,12 @@
  */
 
 use super::MatesFacadeTrait;
-use crate::config::min_know_services::MinKnownConfig;
-use crate::config::types::HostType;
+use crate::config::services::MinKnownConfig;
 use crate::http_client::HttpClient;
 use crate::mates::Mates;
-use axum::async_trait;
+use async_trait::async_trait;
 use std::sync::Arc;
+use ymir::config::types::HostType;
 
 pub struct MatesFacadeService {
     config: Arc<MinKnownConfig>,

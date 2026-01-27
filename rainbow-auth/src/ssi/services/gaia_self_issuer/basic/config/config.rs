@@ -15,35 +15,43 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait, IsLocalTrait};
-use rainbow_common::config::types::CommonHostsConfig;
-
 use super::GaiaGaiaSelfIssuerConfigTrait;
-use crate::ssi::types::enums::VcDataModelVersion;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
+use ymir::config::traits::ApiConfigTrait;
+use ymir::config::types::CommonHostsConfig;
+use ymir::types::vcs::W3cDataModelVersion;
 
 pub struct GaiaSelfIssuerConfig {
     hosts: CommonHostsConfig,
     is_local: bool,
     api_path: String,
-    vc_data_model: VcDataModelVersion
+    vc_data_model: W3cDataModelVersion,
 }
 
 impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        let api_path = value.get_api_version();
+        let api_path = value.common().get_api_version();
         Self {
             hosts: value.common().hosts.clone(),
-            is_local: value.is_local(),
+            is_local: value.common().is_local(),
             api_path,
-            vc_data_model: VcDataModelVersion::V1
+            vc_data_model: W3cDataModelVersion::V1,
         }
     }
 }
 
 impl GaiaGaiaSelfIssuerConfigTrait for GaiaSelfIssuerConfig {
-    fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
-    fn is_local(&self) -> bool { self.is_local }
-    fn get_api_path(&self) -> String { self.api_path.clone() }
-    fn get_data_model_version(&self) -> VcDataModelVersion { self.vc_data_model.clone() }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
+    }
+    fn is_local(&self) -> bool {
+        self.is_local
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
+    }
+    fn get_data_model_version(&self) -> W3cDataModelVersion {
+        self.vc_data_model.clone()
+    }
 }

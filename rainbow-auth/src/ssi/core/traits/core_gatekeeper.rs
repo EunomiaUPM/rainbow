@@ -17,12 +17,13 @@
 
 use std::sync::Arc;
 
-use axum::async_trait;
-
 use crate::ssi::services::gatekeeper::GateKeeperTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
-use crate::ssi::services::verifier::VerifierTrait;
-use crate::ssi::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
+use async_trait::async_trait;
+use ymir::services::verifier::VerifierTrait;
+use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::grant_response::GrantResponse;
+use ymir::types::gnap::{AccessToken, RefBody};
 
 #[async_trait]
 pub trait CoreGateKeeperTrait: Send + Sync + 'static {
@@ -35,9 +36,9 @@ pub trait CoreGateKeeperTrait: Send + Sync + 'static {
         let req_model = self.repo().request_rcv().create(req_model).await?;
         let int_model = self.repo().interaction_rcv().create(int_model).await?;
         let _token_model = self.repo().token_requirements().create(token_model).await?;
-        let ver_model = self.verifier().start(&req_model.id);
+        let ver_model = self.verifier().start_vp(&req_model.id)?;
         let ver_model = self.repo().verification_rcv().create(ver_model).await?;
-        let uri = self.verifier().generate_uri(&ver_model);
+        let uri = self.verifier().generate_verification_uri(ver_model);
         Ok(self.gatekeeper().respond_req(&int_model, &uri))
     }
 
@@ -45,7 +46,7 @@ pub trait CoreGateKeeperTrait: Send + Sync + 'static {
         &self,
         id: String,
         payload: RefBody,
-        token: String
+        token: String,
     ) -> anyhow::Result<AccessToken> {
         let int_model = self.repo().interaction_rcv().get_by_cont_id(&id).await?;
         let mut req_model = self.repo().request_rcv().get_by_id(&int_model.id).await?;

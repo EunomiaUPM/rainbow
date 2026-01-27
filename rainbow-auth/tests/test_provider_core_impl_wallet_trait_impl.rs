@@ -5,7 +5,7 @@
 mod tests {
     use std::sync::Arc;
 
-    use axum::async_trait;
+    use async_trait::async_trait;
     use rainbow_auth::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
     use rainbow_auth::ssi_auth::common::types::oidc::{InputDescriptor, Vpd};
     use rainbow_auth::ssi_auth::common::types::ssi::dids::DidsInfo;

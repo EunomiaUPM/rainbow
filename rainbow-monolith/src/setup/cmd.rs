@@ -21,12 +21,16 @@ use crate::setup::boot::CoreBoot;
 use crate::setup::db_migrations::CoreProviderMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
 use std::cmp::PartialEq;
 use std::sync::Arc;
 use tracing::{debug, info};
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::data::seeders::MateSeeder;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -45,7 +49,7 @@ pub enum CoreCliCommands {
 #[derive(Parser, Debug, PartialEq)]
 pub struct CoreCliArgs {
     #[arg(short, long)]
-    env_file: Option<String>,
+    env_file: String,
 }
 
 pub struct CoreCommands;
@@ -72,11 +76,19 @@ impl CoreCommands {
             CoreCliCommands::Setup(args) => {
                 let config = ApplicationConfig::load(args.env_file)?;
                 let vault = Arc::new(VaultService::new());
-                let db_connection = vault.get_db_connection(config.monolith().clone()).await;
+                vault.write_all_secrets(None).await?;
+
+                let db_connection = vault.get_db_connection(config.monolith().common()).await;
                 let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
+                    json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?)
+                        .collapse()
+                        .to_string();
                 info!("Current Core Connector Config:\n{}", table);
                 CoreProviderMigration::run(db_connection).await?;
+
+                let did = config.ssi_auth().did().did;
+                let url = config.monolith().common().get_host(HostType::Http);
+                MateSeeder::seed(&db_connection, did, url).await?
             }
         };
 

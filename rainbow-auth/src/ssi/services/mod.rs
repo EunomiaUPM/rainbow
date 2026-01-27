@@ -17,11 +17,8 @@
 
 pub mod business;
 pub mod callback;
-pub mod client;
 pub mod gaia_self_issuer;
 pub mod gatekeeper;
 pub mod onboarder;
 pub mod repo;
 pub mod vc_requester;
-pub mod verifier;
-pub mod wallet;

@@ -17,7 +17,6 @@
  *
  */
 
-use crate::config::services::CommonConfig;
 use crate::config::ApplicationConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use serde::de::DeserializeOwned;
@@ -26,24 +25,19 @@ use std::path::PathBuf;
 use tracing::error;
 
 pub trait ConfigLoader: Sized + DeserializeOwned {
-    fn default(common_config: CommonConfig) -> Self;
-    fn load(env_file: Option<String>) -> Self;
-    fn global_load(env_file: Option<String>) -> anyhow::Result<ApplicationConfig> {
+    fn load(env_file: String) -> Self;
+    fn global_load(env_file: String) -> anyhow::Result<ApplicationConfig> {
         ApplicationConfig::load(env_file)
     }
 
-    fn local_load(env_file: Option<String>) -> anyhow::Result<Self> {
-        if let Some(file) = env_file {
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(file);
-            let data = fs::read_to_string(&path).expect("Cannot read local config");
-            let config: Self = serde_norway::from_str(&data).map_err(|e| {
-                let error = CommonErrors::parse_new(&format!("Unable to load local config: {}", e));
-                error!("{}", error.log());
-                error
-            })?;
-            Ok(config)
-        } else {
-            Ok(Self::default(ApplicationConfig::common()))
-        }
+    fn local_load(env_file: String) -> anyhow::Result<Self> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
+        let data = fs::read_to_string(&path).expect("Cannot read local config");
+        let config: Self = serde_norway::from_str(&data).map_err(|e| {
+            let error = CommonErrors::parse_new(&format!("Unable to load local config: {}", e));
+            error!("{}", error.log());
+            error
+        })?;
+        Ok(config)
     }
 }

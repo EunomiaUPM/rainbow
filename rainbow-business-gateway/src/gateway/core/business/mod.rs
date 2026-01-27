@@ -20,7 +20,7 @@
 use crate::gateway::http::business_router_types::{
     RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
 };
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};

@@ -18,27 +18,27 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::ssi::core::traits::CoreOnboarderTrait;
+use crate::ssi::types::entities::ReachProvider;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
 use tracing::error;
-
-use crate::ssi::core::traits::CoreOnboarderTrait;
-use crate::ssi::errors::CustomToResponse;
-use crate::ssi::types::entities::ReachProvider;
-use crate::ssi::types::gnap::CallbackBody;
+use ymir::errors::{CustomToResponse, ErrorLogTrait, Errors};
+use ymir::types::errors::BadFormat;
+use ymir::types::gnap::CallbackBody;
 
 pub struct OnboarderRouter {
-    onboarder: Arc<dyn CoreOnboarderTrait>
+    onboarder: Arc<dyn CoreOnboarderTrait>,
 }
 
 impl OnboarderRouter {
-    pub fn new(onboarder: Arc<dyn CoreOnboarderTrait>) -> Self { Self { onboarder } }
+    pub fn new(onboarder: Arc<dyn CoreOnboarderTrait>) -> Self {
+        Self { onboarder }
+    }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -50,25 +50,25 @@ impl OnboarderRouter {
 
     async fn onboard(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
-        Json(payload): Json<ReachProvider>
+        Json(payload): Json<ReachProvider>,
     ) -> impl IntoResponse {
         match onboarder.onboard_req(payload).await {
             Ok(uri) => uri.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn get_callback(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
-        Query(params): Query<HashMap<String, String>>
+        Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
         let hash = match params.get("hash") {
             Some(hash) => hash.clone(),
             None => {
-                let error = CommonErrors::format_new(
+                let error = Errors::format_new(
                     BadFormat::Received,
-                    "Unable to retrieve hash from callback"
+                    "Unable to retrieve hash from callback",
                 );
                 error!("{}", error.log());
                 return error.into_response();
@@ -78,9 +78,9 @@ impl OnboarderRouter {
         let interact_ref = match params.get("interact_ref") {
             Some(interact_ref) => interact_ref.clone(),
             None => {
-                let error = CommonErrors::format_new(
+                let error = Errors::format_new(
                     BadFormat::Received,
-                    "Unable to retrieve interact reference"
+                    "Unable to retrieve interact reference",
                 );
                 error!("{}", error.log());
                 return error.into_response();
@@ -90,23 +90,23 @@ impl OnboarderRouter {
         let payload = CallbackBody { interact_ref, hash };
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn post_callback(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
-        payload: Result<Json<CallbackBody>, JsonRejection>
+        payload: Result<Json<CallbackBody>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 }

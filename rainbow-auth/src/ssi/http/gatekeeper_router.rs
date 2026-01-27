@@ -17,26 +17,27 @@
 
 use std::sync::Arc;
 
+use crate::ssi::core::traits::CoreGateKeeperTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use rainbow_common::errors::{CommonErrors, ErrorLog};
 use tracing::error;
-
-use crate::ssi::core::traits::CoreGateKeeperTrait;
-use crate::ssi::errors::CustomToResponse;
-use crate::ssi::types::gnap::{GrantRequest, RefBody};
-use crate::ssi::utils::extract_gnap_token;
+use ymir::errors::{CustomToResponse, ErrorLogTrait, Errors};
+use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::RefBody;
+use ymir::utils::extract_gnap_token;
 
 pub struct GateKeeperRouter {
-    gatekeeper: Arc<dyn CoreGateKeeperTrait>
+    gatekeeper: Arc<dyn CoreGateKeeperTrait>,
 }
 
 impl GateKeeperRouter {
-    pub fn new(gatekeeper: Arc<dyn CoreGateKeeperTrait>) -> Self { GateKeeperRouter { gatekeeper } }
+    pub fn new(gatekeeper: Arc<dyn CoreGateKeeperTrait>) -> Self {
+        GateKeeperRouter { gatekeeper }
+    }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -47,7 +48,7 @@ impl GateKeeperRouter {
 
     async fn manage_req(
         State(gatekeeper): State<Arc<dyn CoreGateKeeperTrait>>,
-        payload: Result<Json<GrantRequest>, JsonRejection>
+        payload: Result<Json<GrantRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
@@ -59,7 +60,7 @@ impl GateKeeperRouter {
 
         match gatekeeper.manage_req(payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
@@ -67,12 +68,12 @@ impl GateKeeperRouter {
         State(gatekeeper): State<Arc<dyn CoreGateKeeperTrait>>,
         headers: HeaderMap,
         Path(id): Path<String>,
-        Json(payload): Json<RefBody>
+        Json(payload): Json<RefBody>,
     ) -> impl IntoResponse {
         let token = match extract_gnap_token(headers) {
             Some(token) => token,
             None => {
-                let error = CommonErrors::unauthorized_new("Missing token");
+                let error = Errors::unauthorized_new("Missing token");
                 error!("{}", error.log());
                 return error.into_response();
             }
@@ -80,7 +81,7 @@ impl GateKeeperRouter {
 
         match gatekeeper.continue_req(id, payload, token).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 }

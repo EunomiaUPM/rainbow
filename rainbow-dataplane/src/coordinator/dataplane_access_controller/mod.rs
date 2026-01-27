@@ -17,7 +17,7 @@
  *
  */
 
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::{
     DataPlaneProvisionRequest, DataPlaneProvisionResponse,
 };

@@ -17,7 +17,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::ssi::data::entities::mates::Model;
+use ymir::data::entities::mates::Model;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BusinessResponse {

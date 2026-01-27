@@ -17,14 +17,14 @@
 
 use std::sync::Arc;
 
-use axum::async_trait;
+use async_trait::async_trait;
 
-use crate::ssi::data::entities::mates;
 use crate::ssi::services::callback::CallbackTrait;
 use crate::ssi::services::onboarder::OnboarderTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use crate::ssi::types::entities::ReachProvider;
-use crate::ssi::types::gnap::CallbackBody;
+use ymir::data::entities::mates;
+use ymir::types::gnap::CallbackBody;
 
 #[async_trait]
 pub trait CoreOnboarderTrait: Send + Sync + 'static {

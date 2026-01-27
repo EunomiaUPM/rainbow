@@ -1,16 +1,16 @@
 pub mod shutdown;
 
-use crate::vault::vault_rs::VaultService;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use tokio::sync::broadcast;
+use ymir::services::vault::vault_rs::VaultService;
 
 #[async_trait::async_trait]
 pub trait BootstrapServiceTrait: Send + Sync {
     type Config: Debug + Clone + Send + Sync;
 
-    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config>;
+    async fn load_config(env_file: String) -> anyhow::Result<Self::Config>;
 
     fn enable_participant() -> bool {
         true
@@ -22,14 +22,20 @@ pub trait BootstrapServiceTrait: Send + Sync {
     fn enable_catalog() -> bool {
         true
     }
-    async fn load_catalog(_participant_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_catalog(
+        _participant_id: &Option<String>,
+        _config: &Self::Config,
+    ) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of catalogs.");
     }
 
     fn enable_dataservice() -> bool {
         true
     }
-    async fn load_dataservice(_catalog_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_dataservice(
+        _catalog_id: &Option<String>,
+        _config: &Self::Config,
+    ) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of data services.");
     }
 
@@ -56,18 +62,18 @@ pub struct BootstrapCurrentState<S: BootstrapStepTrait>(pub S);
 
 pub struct BootstrapInit<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
-    pub env_file: Option<String>,
+    pub env_file: String,
 }
 
 impl<S: BootstrapServiceTrait> BootstrapInit<S> {
-    pub fn new(env_file: Option<String>) -> Self {
+    pub fn new(env_file: String) -> Self {
         Self { _marker: PhantomData, env_file }
     }
 }
 
 pub struct BootstrapConfigLoaded<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
-    pub env_file: Option<String>,
+    pub env_file: String,
 }
 
 pub struct BootstrapServicesStarted<S: BootstrapServiceTrait> {
@@ -150,8 +156,11 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapServicesStarted<S
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [4/8]: Creating self participant");
 
-        let participant_id =
-            if S::enable_participant() { Some(S::create_participant(&self.config).await?) } else { None };
+        let participant_id = if S::enable_participant() {
+            Some(S::create_participant(&self.config).await?)
+        } else {
+            None
+        };
 
         Ok(BootstrapCurrentState(BootstrapSelfParticipantOnBoarded {
             config: self.config,
@@ -168,8 +177,11 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapSelfParticipantOn
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [5/8]: Loading main catalog");
 
-        let catalog_id =
-            if S::enable_catalog() { Some(S::load_catalog(&self.participant_id, &self.config).await?) } else { None };
+        let catalog_id = if S::enable_catalog() {
+            Some(S::load_catalog(&self.participant_id, &self.config).await?)
+        } else {
+            None
+        };
 
         Ok(BootstrapCurrentState(BootstrapCatalogLoaded {
             config: self.config,

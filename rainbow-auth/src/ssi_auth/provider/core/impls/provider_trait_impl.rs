@@ -24,7 +24,7 @@ use crate::ssi_auth::common::utils::token::create_opaque_token;
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use chrono::{DateTime, Utc};

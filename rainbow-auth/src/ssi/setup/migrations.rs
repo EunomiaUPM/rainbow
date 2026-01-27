@@ -18,7 +18,7 @@
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
-use crate::ssi::data::migrations::migrator::get_auth_migrations;
+use crate::ssi::data::migrator::get_auth_migrations;
 
 pub struct AuthMigrator;
 
@@ -33,8 +33,8 @@ impl MigratorTrait for AuthMigrator {
 }
 
 impl AuthMigrator {
-    pub async fn run(db_connection: DatabaseConnection) -> anyhow::Result<()> {
-        Self::refresh(&db_connection).await?;
+    pub async fn run(db_connection: &DatabaseConnection) -> anyhow::Result<()> {
+        Self::refresh(db_connection).await?;
         Ok(())
     }
 }

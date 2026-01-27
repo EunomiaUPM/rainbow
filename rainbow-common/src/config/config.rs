@@ -18,11 +18,10 @@
  */
 
 use crate::config::services::{
-    CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
+    CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig,
+    TransferConfig,
 };
 use crate::config::traits::MonoConfigTrait;
-use crate::config::types::database::{DatabaseConfig, DbType};
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -131,33 +130,20 @@ impl ApplicationConfig {
         module.expect("Trying to access core mode without it being defined")
     }
 
-    pub fn load(env_file: Option<String>) -> anyhow::Result<Self> {
-        if let Some(env_file) = env_file {
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
-            debug!("Config file path: {}", path.display());
+    pub fn load(env_file: String) -> anyhow::Result<Self> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
+        debug!("Config file path: {}", path.display());
 
-            let data = fs::read_to_string(&path).expect("Unable to read config file");
-            let config = match serde_norway::from_str(&data) {
-                Ok(config) => config,
-                Err(e) => {
-                    let error = CommonErrors::parse_new(&format!("Unable to parse config file: {}", e));
-                    error!("{}", error.log());
-                    bail!(error)
-                }
-            };
+        let data = fs::read_to_string(&path).expect("Unable to read config file");
+        let config = match serde_norway::from_str(&data) {
+            Ok(config) => config,
+            Err(e) => {
+                let error = CommonErrors::parse_new(&format!("Unable to parse config file: {}", e));
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
 
-            Ok(config)
-        } else {
-            Ok(Self::new(Self::common()))
-        }
-    }
-
-    pub fn common() -> CommonConfig {
-        let host =
-            HostConfig { protocol: "http".to_string(), url: "127.0.0.1".to_string(), port: Some("1200".to_string()) };
-        let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
-        let db = DatabaseConfig { db_type: DbType::Postgres, url: "127.0.0.1".to_string(), port: "1400".to_string() };
-        let api = ApiConfig { version: "v1".to_string(), openapi_path: "/static/specs/openapi/auth".to_string() };
-        CommonConfig { hosts, db, api, is_local: true }
+        Ok(config)
     }
 }

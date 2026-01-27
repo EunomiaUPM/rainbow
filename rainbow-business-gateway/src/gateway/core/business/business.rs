@@ -22,7 +22,7 @@ use crate::gateway::http::business_router_types::{
     RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
 };
 use anyhow::{anyhow, bail};
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::config::services::GatewayConfig;
 use rainbow_common::config::types::HostType;

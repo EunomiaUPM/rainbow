@@ -99,6 +99,22 @@ services:
           "default_lease_ttl": "168h",
           "max_lease_ttl": "720h"
         }
+#      VAULT_LOCAL_CONFIG: >
+#        {
+#          "storage": { "file": { "path": "/vault/file" } },
+#          "listener": [{
+#            "tcp": {
+#              "address": "0.0.0.0:8200",
+#              "tls_disable": 1
+#
+#
+#            }
+#          }],
+#          "ui": true,
+#          "api_addr": "http://127.0.0.1:8200",
+#          "default_lease_ttl": "168h",
+#          "max_lease_ttl": "720h"
+#        }
     command: server
   ds_core_consumer_redis:
     image: redis:alpine

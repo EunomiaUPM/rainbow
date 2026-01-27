@@ -25,3 +25,4 @@ log = { workspace = true }
 mockall = { workspace = true }
 sea-orm = {workspace = true}
 sea-orm-migration = {workspace = true}
+async-trait = {workspace = true}

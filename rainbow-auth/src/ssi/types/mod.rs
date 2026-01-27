@@ -17,9 +17,3 @@
 
 pub mod business;
 pub mod entities;
-pub mod enums;
-pub mod gnap;
-pub mod jwt;
-pub mod vc_issuing;
-pub mod vcs;
-pub mod wallet;

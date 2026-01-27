@@ -17,35 +17,33 @@
 
 use std::sync::Arc;
 
-use axum::extract::Request;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use axum::routing::get;
-use axum::Router;
-use rainbow_common::config::traits::ApiConfigTrait;
-use rainbow_common::openapi_http::OpenapiRouter;
-use rainbow_common::utils::server_status;
-use tower_http::cors::{Any, CorsLayer};
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tracing::{error, info, Level};
-use uuid::Uuid;
-
 use crate::ssi::core::traits::AuthCoreTrait;
 use crate::ssi::core::AuthCore;
 use crate::ssi::http::business_router::BusinessRouter;
 use crate::ssi::http::gatekeeper_router::GateKeeperRouter;
 use crate::ssi::http::onboarder_router::OnboarderRouter;
 use crate::ssi::http::verifier_router::VerifierRouter;
-use crate::ssi::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
+use crate::ssi::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter};
+use axum::extract::Request;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Router;
+use rainbow_common::config::traits::CommonConfigTrait;
+use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tracing::{error, info, Level};
+use uuid::Uuid;
+use ymir::config::traits::ApiConfigTrait;
+use ymir::http::{HealthRouter, OpenapiRouter, WalletRouter};
 
 pub struct AuthRouter {
     core: Arc<AuthCore>,
-    openapi: String
+    openapi: String,
 }
 
 impl AuthRouter {
     pub fn new(core: Arc<AuthCore>) -> Self {
-        let openapi = core.config().get_openapi().expect("Invalid openapi path");
+        let openapi = core.config().common().get_openapi().expect("Invalid openapi path");
         AuthRouter { core, openapi }
     }
 
@@ -57,21 +55,22 @@ impl AuthRouter {
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.core.clone()).router();
         let onboarder_router = OnboarderRouter::new(self.core.clone()).router();
+        let health_router = HealthRouter::new().router();
 
-        let api_path = self.core.config().get_api_version();
+        let api_path = self.core.config().common().get_api_version();
 
         let cors = CorsLayer::new()
-            .allow_origin(Any) // Temporal: permite cualquier origen
+            .allow_origin(Any)
             .allow_methods([
                 axum::http::Method::GET,
                 axum::http::Method::POST,
-                axum::http::Method::DELETE
+                axum::http::Method::DELETE,
             ])
             .allow_headers(Any)
             .allow_credentials(false);
 
         let router = Router::new()
-            .route(&format!("{}/health", api_path), get(server_status))
+            .nest(&format!("{}", api_path), health_router)
             .nest(&format!("{}/mates", api_path), mate_router)
             .nest(&format!("{}/vc-request", api_path), vc_requester_router)
             .nest(&format!("{}/gate", api_path), gatekeeper_router)
@@ -85,7 +84,7 @@ impl AuthRouter {
                 let gaia_router = GaiaSelfIssuerRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/gaia", api_path), gaia_router)
             }
-            false => router
+            false => router,
         };
 
         let router = match self.core.is_wallet_active() {
@@ -93,18 +92,18 @@ impl AuthRouter {
                 let wallet_router = WalletRouter::new(self.core.clone()).router();
                 router.nest(&format!("{}/wallet", api_path), wallet_router)
             }
-            false => router
+            false => router,
         };
 
         router.fallback(Self::fallback).layer(cors).layer(
             TraceLayer::new_for_http()
                 .make_span_with(
-                    |_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4())
+                    |_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4()),
                 )
                 .on_request(|req: &Request<_>, _span: &tracing::Span| {
                     info!("{} {}", req.method(), req.uri().path());
                 })
-                .on_response(DefaultOnResponse::new().level(Level::TRACE))
+                .on_response(DefaultOnResponse::new().level(Level::TRACE)),
         )
     }
 

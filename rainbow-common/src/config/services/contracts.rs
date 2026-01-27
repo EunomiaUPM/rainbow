@@ -17,11 +17,8 @@
  *
  */
 
-use crate::config::min_know_services::MinKnownConfig;
-use crate::config::services::CommonConfig;
-use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
-};
+use crate::config::services::{CommonConfig, MinKnownConfig};
+use crate::config::traits::{CommonConfigTrait, ConfigLoader};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -41,15 +38,7 @@ impl ContractsConfig {
 }
 
 impl ConfigLoader for ContractsConfig {
-    fn default(common_config: CommonConfig) -> Self {
-        Self {
-            common: common_config.clone(),
-            ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
-            is_catalog_datahub: false,
-        }
-    }
-
-    fn load(env_file: Option<String>) -> Self {
+    fn load(env_file: String) -> Self {
         match Self::global_load(env_file.clone()) {
             Ok(data) => data.contracts(),
             Err(_) => Self::local_load(env_file).expect("Unable to load catalog config"),
@@ -62,11 +51,3 @@ impl CommonConfigTrait for ContractsConfig {
         &self.common
     }
 }
-
-impl HostConfigTrait for ContractsConfig {}
-
-impl DatabaseConfigTrait for ContractsConfig {}
-
-impl IsLocalTrait for ContractsConfig {}
-
-impl ApiConfigTrait for ContractsConfig {}

@@ -18,35 +18,37 @@
 use std::cmp::PartialEq;
 use std::sync::Arc;
 
-use clap::{Parser, Subcommand};
-use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
-use tracing::{debug, info};
-
 use super::app::AuthApplication;
 use crate::ssi::setup::migrations::AuthMigrator;
+use clap::{Parser, Subcommand};
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{CommonConfigTrait, ConfigLoader};
+use tracing::{debug, info};
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::data::seeders::MateSeeder;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Aut Server")]
 #[command(version = "0.1")]
 struct AuthCli {
     #[command(subcommand)]
-    command: AuthCliCommands
+    command: AuthCliCommands,
 }
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum AuthCliCommands {
     Start(AuthCliArgs),
     Setup(AuthCliArgs),
-    Vault
+    Vault,
 }
 
 #[derive(Parser, Debug, PartialEq)]
 pub struct AuthCliArgs {
     #[arg(short, long)]
-    env_file: Option<String>
+    env_file: String,
 }
 
 pub struct AuthCommands;
@@ -73,12 +75,16 @@ impl AuthCommands {
                     .collapse()
                     .to_string();
                 info!("Current Auth Config:\n{}", table);
-                let connection = vault.get_db_connection(config).await;
-                AuthMigrator::run(connection).await?;
+                vault.write_all_secrets(None).await?;
+
+                let connection = vault.get_db_connection(config.common()).await;
+                AuthMigrator::run(&connection).await?;
+
+                let did = config.did().did;
+                let url = config.common().hosts().get_host(HostType::Http);
+                MateSeeder::seed(&connection, did, url).await?
             }
-            AuthCliCommands::Vault => {
-                vault.write_all_secrets().await?;
-            }
+            AuthCliCommands::Vault => {}
         }
 
         Ok(())

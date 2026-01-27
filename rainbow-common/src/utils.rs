@@ -16,21 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::config::types::HostConfig;
+
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::{env, fs};
-use std::path::Path;
-use tracing::{error, info};
+use tracing::error;
 use urn::Urn;
 use uuid::Uuid;
+use ymir::config::types::HostConfig;
 
 static UUID_PREFIX: &str = "urn:uuid:";
 
@@ -55,56 +51,6 @@ pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
     }
 }
 
-pub async fn server_status() -> impl IntoResponse {
-    info!("Someone checked server status");
-    (StatusCode::OK, "Server is Okay!").into_response()
-}
-
-pub fn get_from_opt<T>(value: &Option<T>, field_name: &str) -> anyhow::Result<T>
-where
-    T: Clone + Serialize + DeserializeOwned,
-{
-    match value {
-        Some(v) => Ok(v.clone()),
-        None => {
-            let error = CommonErrors::format_new(
-                BadFormat::Received,
-                &format!("Missing field: {}", field_name),
-            );
-            error!("{}", error.log());
-            bail!(error);
-        }
-    }
-}
-
-pub fn read<P>(path: P) -> anyhow::Result<String>
-where
-    P: AsRef<Path>,
-{
-    let path_ref = path.as_ref();
-    match fs::read_to_string(path_ref) {
-        Ok(data) => Ok(data),
-        Err(e) => {
-            let error = CommonErrors::read_new(
-                &path_ref.display().to_string(),
-                &e.to_string()
-            );
-            error!("{}", error.log());
-            bail!(error)
-        }
-    }
-}
-
-pub fn read_json<T, P>(path: P) -> anyhow::Result<T>
-where
-    T: DeserializeOwned,
-    P: AsRef<Path>,
-{
-    let data = read(path)?;
-    let json = serde_json::from_str(&data)?;
-    Ok(json)
-}
-
 pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
     match host {
         Some(host) => match host.port.as_ref() {
@@ -117,20 +63,6 @@ pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Resul
             bail!(error)
         }
     }
-}
-
-
-pub fn expect_from_env(env: &str) -> String {
-    let result = env::var(env);
-    let data = match result {
-        Ok(data) => Some(data),
-        Err(e) => {
-            let error = CommonErrors::env_new(format!("{} not found -> {}", &env, e.to_string()));
-            error!("{}", error.log());
-            None
-        }
-    };
-    data.expect("Error with env variable")
 }
 
 pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Response> {

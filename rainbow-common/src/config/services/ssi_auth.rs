@@ -18,19 +18,24 @@
  */
 
 use crate::config::services::CommonConfig;
-use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
-};
-use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
-use crate::errors::{CommonErrors, ErrorLog};
+use crate::config::traits::{CommonConfigTrait, ConfigLoader};
+use crate::config::types::ClientConfig;
 use serde::{Deserialize, Serialize};
 use tracing::error;
+use ymir::errors::{ErrorLogTrait, Errors};
+use ymir::types::dids::did_config::DidConfig;
+use ymir::types::issuing::StuffToIssue;
+use ymir::types::verifying::RequirementsToVerify;
+use ymir::types::wallet::WalletConfig;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SsiAuthConfig {
     common: CommonConfig,
     wallet: Option<WalletConfig>,
     client: ClientConfig,
+    did: DidConfig,
+    stuff_to_issue: StuffToIssue,
+    requirements_to_verify: RequirementsToVerify,
     gaia_active: bool,
 }
 
@@ -39,7 +44,7 @@ impl SsiAuthConfig {
         let wallet = match self.wallet.as_ref() {
             Some(wallet) => Some(wallet.clone()),
             None => {
-                let error = CommonErrors::module_new("wallet");
+                let error = Errors::module_new("wallet");
                 error!("{}", error.log());
                 None
             }
@@ -55,26 +60,19 @@ impl SsiAuthConfig {
     pub fn is_wallet_active(&self) -> bool {
         self.wallet.is_some()
     }
+    pub fn did(&self) -> DidConfig {
+        self.did.clone()
+    }
+    pub fn stuff_to_issue(&self) -> StuffToIssue {
+        self.stuff_to_issue.clone()
+    }
+    pub fn requirements_to_verify(&self) -> RequirementsToVerify {
+        self.requirements_to_verify.clone()
+    }
 }
 
 impl ConfigLoader for SsiAuthConfig {
-    fn default(common_config: CommonConfig) -> Self {
-        Self {
-            common: common_config,
-            wallet: Some(WalletConfig {
-                api: HostConfig {
-                    protocol: "http".to_string(),
-                    url: "127.0.0.1".to_string(),
-                    port: Some("7001".to_string()),
-                },
-                id: None,
-            }),
-            client: ClientConfig { class_id: "rainbow".to_string(), display: None },
-            gaia_active: false,
-        }
-    }
-
-    fn load(env_file: Option<String>) -> Self {
+    fn load(env_file: String) -> Self {
         match Self::global_load(env_file.clone()) {
             Ok(data) => data.ssi_auth(),
             Err(_) => Self::local_load(env_file).expect("Unable to load auth config"),
@@ -87,11 +85,3 @@ impl CommonConfigTrait for SsiAuthConfig {
         &self.common
     }
 }
-
-impl HostConfigTrait for SsiAuthConfig {}
-
-impl DatabaseConfigTrait for SsiAuthConfig {}
-
-impl IsLocalTrait for SsiAuthConfig {}
-
-impl ApiConfigTrait for SsiAuthConfig {}

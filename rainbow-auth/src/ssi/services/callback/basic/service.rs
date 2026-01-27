@@ -18,29 +18,28 @@
 use std::sync::Arc;
 
 use anyhow::bail;
-use axum::async_trait;
+use async_trait::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use rainbow_common::errors::ErrorLog;
-use rainbow_common::utils::get_from_opt;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Response;
 use sha2::{Digest, Sha256};
 use tracing::{error, info};
 
 use super::super::CallbackTrait;
-use crate::ssi::data::entities::req_interaction;
-use crate::ssi::errors::AuthErrors;
-use crate::ssi::services::client::ClientServiceTrait;
-use crate::ssi::types::enums::request::Body;
-use crate::ssi::types::gnap::{CallbackBody, RefBody};
+use ymir::data::entities::req_interaction;
+use ymir::errors::{ErrorLogTrait, Errors};
+use ymir::services::client::ClientTrait;
+use ymir::types::gnap::{CallbackBody, RefBody};
+use ymir::types::http::Body;
+use ymir::utils::get_from_opt;
 
 pub struct BasicCallbackService {
-    client: Arc<dyn ClientServiceTrait>
+    client: Arc<dyn ClientTrait>,
 }
 
 impl BasicCallbackService {
-    pub fn new(client: Arc<dyn ClientServiceTrait>) -> BasicCallbackService {
+    pub fn new(client: Arc<dyn ClientTrait>) -> BasicCallbackService {
         BasicCallbackService { client }
     }
 }
@@ -50,7 +49,7 @@ impl CallbackTrait for BasicCallbackService {
     fn check_callback(
         &self,
         int_model: &mut req_interaction::Model,
-        payload: &CallbackBody
+        payload: &CallbackBody,
     ) -> anyhow::Result<()> {
         info!("Checking callback");
 
@@ -71,7 +70,7 @@ impl CallbackTrait for BasicCallbackService {
 
         let hash = get_from_opt(&int_model.hash, "hash")?;
         if calculated_hash != hash {
-            let error = AuthErrors::security_new("Hash does not match the calculated one");
+            let error = Errors::security_new("Hash does not match the calculated one");
             error!("{}", error.log());
             bail!(error);
         }

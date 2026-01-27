@@ -21,7 +21,7 @@ use crate::core::rainbow_rpc::rainbow_rpc_types::{
     RainbowRPCDatahubCatalogResolveDataServiceRequest, RainbowRPCDatahubCatalogResolveOfferByIdRequest,
 };
 use crate::core::rainbow_rpc::RainbowRPCDatahubCatalogTrait;
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_catalog::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::EntityTypes;

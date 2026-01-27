@@ -17,7 +17,7 @@
  *
  */
 use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
 use serde_json::Value;
 

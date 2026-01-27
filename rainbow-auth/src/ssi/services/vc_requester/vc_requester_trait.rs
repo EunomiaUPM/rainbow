@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::async_trait;
+use async_trait::async_trait;
 use reqwest::Response;
 
-use crate::ssi::data::entities::{mates, req_interaction, req_vc, req_verification};
 use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use ymir::data::entities::{mates, req_interaction, req_vc, req_verification};
 
 #[async_trait]
 pub trait VcRequesterTrait: Send + Sync + 'static {
@@ -28,12 +28,11 @@ pub trait VcRequesterTrait: Send + Sync + 'static {
         &self,
         vc_model: &mut req_vc::Model,
         int_model: &mut req_interaction::Model,
-        method: ReachMethod
     ) -> anyhow::Result<Option<String>>;
     fn save_ver_data(&self, uri: &str, id: &str) -> anyhow::Result<req_verification::NewModel>;
     async fn manage_res(
         &self,
         vc_req_model: &mut req_vc::Model,
-        res: Response
+        res: Response,
     ) -> anyhow::Result<mates::NewModel>;
 }

@@ -16,19 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use axum::extract::Request;
 use axum::Router;
 use rainbow_auth::ssi::setup::app::AuthApplication;
 use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
 use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
+use ymir::services::vault::vault_rs::VaultService;
 
-pub async fn create_core_provider_router(config: &ApplicationConfig, vault: Arc<VaultService>) -> Router {
+pub async fn create_core_provider_router(
+    config: &ApplicationConfig,
+    vault: Arc<VaultService>,
+) -> Router {
     let well_known_root_dspace =
         WellKnownRoot::get_well_known_router(&config.into()).expect("Failed to well known router");
     let auth_router = AuthApplication::create_router(&config.ssi_auth(), vault.clone()).await;
@@ -36,8 +40,9 @@ pub async fn create_core_provider_router(config: &ApplicationConfig, vault: Arc<
     let transfer_agent_router = create_root_http_router(&config.transfer(), vault.clone())
         .await
         .expect("Failed to create transfer agent router");
-    let catalog_agent_router =
-        catalog_router(&config.catalog(), vault.clone()).await.expect("Failed to create catalog router");
+    let catalog_agent_router = catalog_router(&config.catalog(), vault.clone())
+        .await
+        .expect("Failed to create catalog router");
 
     Router::new()
         //.merge(cn_router)
@@ -47,7 +52,9 @@ pub async fn create_core_provider_router(config: &ApplicationConfig, vault: Arc<
         .merge(transfer_agent_router)
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
+                .make_span_with(
+                    |_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()),
+                )
                 .on_request(|request: &Request<_>, _span: &tracing::Span| {
                     tracing::info!("{} {}", request.method(), request.uri());
                 })

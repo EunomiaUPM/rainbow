@@ -23,7 +23,6 @@ mod gaia_self_issuer_trait;
 mod mate_trait;
 mod onboarder_trait;
 mod vc_requester;
-mod wallet_trait;
 
 pub use core_business::CoreBusinessTrait;
 pub use core_gatekeeper::CoreGateKeeperTrait;
@@ -33,4 +32,3 @@ pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
 pub use mate_trait::CoreMateTrait;
 pub use onboarder_trait::CoreOnboarderTrait;
 pub use vc_requester::CoreVcRequesterTrait;
-pub use wallet_trait::CoreWalletTrait;

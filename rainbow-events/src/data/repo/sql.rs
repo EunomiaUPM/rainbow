@@ -22,13 +22,15 @@ use crate::data::entities::subscription;
 
 use crate::data::entities::notification::Model;
 use crate::data::repo::{
-    EditSubscription, EventRepoErrors, EventsRepoFactory, NewNotification, NewSubscription, NotificationRepo,
-    SubscriptionRepo,
+    EditSubscription, EventRepoErrors, EventsRepoFactory, NewNotification, NewSubscription,
+    NotificationRepo, SubscriptionRepo,
 };
-use axum::async_trait;
+use async_trait::async_trait;
 use rainbow_common::utils::get_urn;
 use sea_orm::prelude::Expr;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+};
 use urn::Urn;
 
 pub struct EventsRepoForSql {
@@ -52,7 +54,9 @@ impl EventsRepoFactory for EventsRepoForSql {
 
 #[async_trait]
 impl SubscriptionRepo for EventsRepoForSql {
-    async fn get_all_subscriptions(&self) -> anyhow::Result<Vec<subscription::Model>, EventRepoErrors> {
+    async fn get_all_subscriptions(
+        &self,
+    ) -> anyhow::Result<Vec<subscription::Model>, EventRepoErrors> {
         let subscriptions = subscription::Entity::find().all(&self.db_connection).await;
         match subscriptions {
             Ok(subscriptions) => Ok(subscriptions),
@@ -65,7 +69,8 @@ impl SubscriptionRepo for EventsRepoForSql {
         subscription_id: Urn,
     ) -> anyhow::Result<Option<subscription::Model>, EventRepoErrors> {
         let subscription_id = subscription_id.to_string();
-        let subscriptions = subscription::Entity::find_by_id(subscription_id).one(&self.db_connection).await;
+        let subscriptions =
+            subscription::Entity::find_by_id(subscription_id).one(&self.db_connection).await;
         match subscriptions {
             Ok(subscriptions) => Ok(subscriptions),
             Err(e) => Err(EventRepoErrors::ErrorFetchingSubscription(e.into())),
@@ -112,7 +117,8 @@ impl SubscriptionRepo for EventsRepoForSql {
             old_active_model.transfer_process = ActiveValue::Set(transfer_process);
         }
         if let Some(contract_negotiation_process) = edit_subscription.contract_negotiation_process {
-            old_active_model.contract_negotiation_process = ActiveValue::Set(contract_negotiation_process);
+            old_active_model.contract_negotiation_process =
+                ActiveValue::Set(contract_negotiation_process);
         }
         if let Some(data_plane) = edit_subscription.data_plane {
             old_active_model.data_plane = ActiveValue::Set(data_plane);
@@ -123,7 +129,8 @@ impl SubscriptionRepo for EventsRepoForSql {
         if let Some(expiration_time) = edit_subscription.expiration_time {
             old_active_model.expiration_time = ActiveValue::Set(Option::from(expiration_time));
         }
-        old_active_model.updated_at = ActiveValue::Set(Option::from(chrono::Utc::now().naive_utc()));
+        old_active_model.updated_at =
+            ActiveValue::Set(Option::from(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
@@ -139,7 +146,9 @@ impl SubscriptionRepo for EventsRepoForSql {
             id: ActiveValue::Set(get_urn(None).to_string()),
             callback_address: ActiveValue::Set(new_subscription.callback_address),
             transfer_process: ActiveValue::Set(new_subscription.transfer_process),
-            contract_negotiation_process: ActiveValue::Set(new_subscription.contract_negotiation_process),
+            contract_negotiation_process: ActiveValue::Set(
+                new_subscription.contract_negotiation_process,
+            ),
             catalog: ActiveValue::Set(new_subscription.catalog),
             data_plane: ActiveValue::Set(new_subscription.data_plane),
             active: ActiveValue::Set(new_subscription.active),
@@ -147,16 +156,21 @@ impl SubscriptionRepo for EventsRepoForSql {
             updated_at: ActiveValue::Set(None),
             expiration_time: ActiveValue::Set(new_subscription.expiration_time),
         };
-        let subscription = subscription::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let subscription =
+            subscription::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match subscription {
             Ok(subscription) => Ok(subscription),
             Err(e) => Err(EventRepoErrors::ErrorCreatingSubscription(e.into())),
         }
     }
 
-    async fn delete_subscription_by_id(&self, subscription_id: Urn) -> anyhow::Result<(), EventRepoErrors> {
+    async fn delete_subscription_by_id(
+        &self,
+        subscription_id: Urn,
+    ) -> anyhow::Result<(), EventRepoErrors> {
         let subscription_id = subscription_id.to_string();
-        let subscription = subscription::Entity::delete_by_id(subscription_id).exec(&self.db_connection).await;
+        let subscription =
+            subscription::Entity::delete_by_id(subscription_id).exec(&self.db_connection).await;
         match subscription {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(EventRepoErrors::SubscriptionNotFound),
@@ -169,7 +183,9 @@ impl SubscriptionRepo for EventsRepoForSql {
 
 #[async_trait]
 impl NotificationRepo for EventsRepoForSql {
-    async fn get_all_notifications(&self) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors> {
+    async fn get_all_notifications(
+        &self,
+    ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors> {
         let notifications = notification::Entity::find().all(&self.db_connection).await;
         match notifications {
             Ok(notifications) => Ok(notifications),
@@ -266,7 +282,8 @@ impl NotificationRepo for EventsRepoForSql {
             Err(e) => return Err(EventRepoErrors::ErrorFetchingSubscription(e.into())),
         };
         let notification_id = notification_id.to_string();
-        let notifications = notification::Entity::find_by_id(notification_id).one(&self.db_connection).await;
+        let notifications =
+            notification::Entity::find_by_id(notification_id).one(&self.db_connection).await;
         match notifications {
             Ok(notifications) => Ok(notifications),
             Err(e) => Err(EventRepoErrors::ErrorFetchingNotification(e.into())),
@@ -298,7 +315,8 @@ impl NotificationRepo for EventsRepoForSql {
             status: ActiveValue::Set(new_notification.status),
             subscription_id: ActiveValue::Set(subscription_id),
         };
-        let notification = notification::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let notification =
+            notification::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match notification {
             Ok(notification) => Ok(notification),
             Err(e) => Err(EventRepoErrors::ErrorCreatingNotification(e.into())),
