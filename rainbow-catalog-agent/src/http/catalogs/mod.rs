@@ -51,9 +51,9 @@ impl CatalogEntityRouter {
             .route("/main", get(Self::handle_get_main_catalog))
             .route("/main", post(Self::handle_create_main_catalog))
             .route("/batch", post(Self::handle_get_batch_catalogs))
-            .route("/:id", get(Self::handle_get_catalog_by_id))
-            .route("/:id", put(Self::handle_put_catalog_by_id))
-            .route("/:id", delete(Self::handle_delete_catalog_by_id))
+            .route("/{id}", get(Self::handle_get_catalog_by_id))
+            .route("/{id}", put(Self::handle_put_catalog_by_id))
+            .route("/{id}", delete(Self::handle_delete_catalog_by_id))
             .with_state(self)
     }
 
@@ -110,7 +110,9 @@ impl CatalogEntityRouter {
             },
         }
     }
-    async fn handle_get_main_catalog(State(state): State<CatalogEntityRouter>) -> impl IntoResponse {
+    async fn handle_get_main_catalog(
+        State(state): State<CatalogEntityRouter>,
+    ) -> impl IntoResponse {
         match state.service.get_main_catalog().await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
             Ok(None) => {

@@ -114,7 +114,9 @@ pub async fn execute_proxy(
         );
     }
     // X-Forwarded-*
-    if let Some(client_ip) = req.extensions().get::<axum::extract::ConnectInfo<std::net::SocketAddr>>() {
+    if let Some(client_ip) =
+        req.extensions().get::<axum::extract::ConnectInfo<std::net::SocketAddr>>()
+    {
         if let Ok(x_forwarded_for_val) = HeaderValue::from_str(&client_ip.0.ip().to_string()) {
             original_headers.insert("x-forwarded-for", x_forwarded_for_val);
         }
@@ -130,14 +132,18 @@ pub async fn execute_proxy(
     // Body
     let axum_body = req.into_body();
     let stream_for_reqwest = http_body_util::BodyStream::new(axum_body)
-        .try_filter_map(|frame: http_body::Frame<bytes::Bytes>| futures_util::future::ready(Ok(frame.into_data().ok())))
+        .try_filter_map(|frame: http_body::Frame<bytes::Bytes>| {
+            futures_util::future::ready(Ok(frame.into_data().ok()))
+        })
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync + 'static>);
 
     let reqwest_body = reqwest::Body::wrap_stream(stream_for_reqwest);
 
     // Send
-    let backend_request =
-        client.request(original_method, target_url_str.clone()).headers(original_headers).body(reqwest_body);
+    let backend_request = client
+        .request(original_method, target_url_str.clone())
+        .headers(original_headers)
+        .body(reqwest_body);
 
     // Handle request
     match backend_request.send().await {
@@ -166,18 +172,10 @@ pub async fn execute_proxy(
             })
         }
         Err(e) => {
-            error!(
-                "Error on requesting microservice '{}': {}",
-                target_url_str.clone(),
-                e
-            );
+            error!("Error on requesting microservice '{}': {}", target_url_str.clone(), e);
             (
                 StatusCode::BAD_GATEWAY,
-                format!(
-                    "Error on requesting backend '{}': {}",
-                    target_url_str.clone(),
-                    e
-                ),
+                format!("Error on requesting backend '{}': {}", target_url_str.clone(), e),
             )
                 .into_response()
         }

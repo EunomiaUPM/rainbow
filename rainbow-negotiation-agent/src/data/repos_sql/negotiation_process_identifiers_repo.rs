@@ -24,7 +24,10 @@ use crate::data::entities::negotiation_process_identifier::{
 use crate::data::repo_traits::negotiation_process_identifiers_repo::{
     NegotiationIdentifierRepoErrors, NegotiationIdentifierRepoTrait,
 };
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::Urn;
 
 pub struct NegotiationProcessIdentifierRepoForSql {
@@ -52,7 +55,9 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
 
         match identifiers {
             Ok(identifiers) => Ok(identifiers),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
@@ -68,17 +73,25 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
 
         match identifiers {
             Ok(identifiers) => Ok(identifiers),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
-    async fn get_identifier_by_id(&self, id: &Urn) -> anyhow::Result<Option<Model>, NegotiationIdentifierRepoErrors> {
+    async fn get_identifier_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<Model>, NegotiationIdentifierRepoErrors> {
         let iid = id.to_string();
-        let identifier = negotiation_process_identifier::Entity::find_by_id(iid).one(&self.db_connection).await;
+        let identifier =
+            negotiation_process_identifier::Entity::find_by_id(iid).one(&self.db_connection).await;
 
         match identifier {
             Ok(identifier) => Ok(identifier),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
@@ -96,7 +109,9 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
 
         match identifier {
             Ok(identifier) => Ok(identifier),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
@@ -105,11 +120,14 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
         new_model: &NewNegotiationIdentifierModel,
     ) -> anyhow::Result<Model, NegotiationIdentifierRepoErrors> {
         let model: negotiation_process_identifier::ActiveModel = new_model.clone().into();
-        let result =
-            negotiation_process_identifier::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let result = negotiation_process_identifier::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
         match result {
             Ok(identifier) => Ok(identifier),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorCreatingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorCreatingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
@@ -119,11 +137,16 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
         edit_model: &EditNegotiationIdentifierModel,
     ) -> anyhow::Result<Model, NegotiationIdentifierRepoErrors> {
         let iid = id.to_string();
-        let old_model = negotiation_process_identifier::Entity::find_by_id(&iid).one(&self.db_connection).await;
+        let old_model =
+            negotiation_process_identifier::Entity::find_by_id(&iid).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(Some(model)) => model,
             Ok(None) => return Err(NegotiationIdentifierRepoErrors::NegotiationIdentifierNotFound),
-            Err(e) => return Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(e.into())),
+            Err(e) => {
+                return Err(NegotiationIdentifierRepoErrors::ErrorFetchingNegotiationIdentifier(
+                    e.into(),
+                ));
+            }
         };
 
         let mut active_model: negotiation_process_identifier::ActiveModel = old_model.into();
@@ -137,20 +160,29 @@ impl NegotiationIdentifierRepoTrait for NegotiationProcessIdentifierRepoForSql {
         let result = active_model.update(&self.db_connection).await;
         match result {
             Ok(updated_model) => Ok(updated_model),
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorUpdatingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorUpdatingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 
-    async fn delete_identifier(&self, id: &Urn) -> anyhow::Result<(), NegotiationIdentifierRepoErrors> {
+    async fn delete_identifier(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationIdentifierRepoErrors> {
         let iid = id.to_string();
-        let result = negotiation_process_identifier::Entity::delete_by_id(iid).exec(&self.db_connection).await;
+        let result = negotiation_process_identifier::Entity::delete_by_id(iid)
+            .exec(&self.db_connection)
+            .await;
 
         match result {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(NegotiationIdentifierRepoErrors::NegotiationIdentifierNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorDeletingNegotiationIdentifier(e.into())),
+            Err(e) => Err(NegotiationIdentifierRepoErrors::ErrorDeletingNegotiationIdentifier(
+                e.into(),
+            )),
         }
     }
 }

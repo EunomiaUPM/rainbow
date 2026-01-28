@@ -38,29 +38,26 @@ impl NegotiationAgentOffersService {
 
 #[async_trait::async_trait]
 impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
-    async fn get_all_offers(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<OfferDto>> {
-        let offers = self.negotiation_repo.get_offer_repo().get_all_offers(limit, page).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+    async fn get_all_offers(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<OfferDto>> {
+        let offers =
+            self.negotiation_repo.get_offer_repo().get_all_offers(limit, page).await.map_err(
+                |e| {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
 
         Ok(offers.into_iter().map(|m| OfferDto { inner: m }).collect())
     }
 
     async fn get_batch_offers(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<OfferDto>> {
-        let offers = self.negotiation_repo.get_offer_repo().get_batch_offers(ids).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-
-        Ok(offers.into_iter().map(|m| OfferDto { inner: m }).collect())
-    }
-
-    async fn get_offers_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Vec<OfferDto>> {
         let offers =
-            self.negotiation_repo.get_offer_repo().get_offers_by_negotiation_process(id).await.map_err(|e| {
+            self.negotiation_repo.get_offer_repo().get_batch_offers(ids).await.map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -69,9 +66,31 @@ impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
         Ok(offers.into_iter().map(|m| OfferDto { inner: m }).collect())
     }
 
-    async fn get_last_offer_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
-        let offers =
-            self.negotiation_repo.get_offer_repo().get_last_offer_by_negotiation_process(id).await.map_err(|e| {
+    async fn get_offers_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Vec<OfferDto>> {
+        let offers = self
+            .negotiation_repo
+            .get_offer_repo()
+            .get_offers_by_negotiation_process(id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
+
+        Ok(offers.into_iter().map(|m| OfferDto { inner: m }).collect())
+    }
+
+    async fn get_last_offer_by_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<OfferDto>> {
+        let offers = self
+            .negotiation_repo
+            .get_offer_repo()
+            .get_last_offer_by_negotiation_process(id)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -81,31 +100,40 @@ impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
     }
 
     async fn get_offer_by_id(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
-        let offer = self.negotiation_repo.get_offer_repo().get_offer_by_id(id).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let offer =
+            self.negotiation_repo.get_offer_repo().get_offer_by_id(id).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         Ok(offer.map(|m| OfferDto { inner: m }))
     }
 
     async fn get_offer_by_negotiation_message(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
-        let offer = self.negotiation_repo.get_offer_repo().get_offer_by_negotiation_message(id).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let offer = self
+            .negotiation_repo
+            .get_offer_repo()
+            .get_offer_by_negotiation_message(id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         Ok(offer.map(|m| OfferDto { inner: m }))
     }
 
     async fn get_offer_by_offer_id(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
-        let offer = self.negotiation_repo.get_offer_repo().get_offer_by_offer_id(id).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let offer =
+            self.negotiation_repo.get_offer_repo().get_offer_by_offer_id(id).await.map_err(
+                |e| {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
 
         Ok(offer.map(|m| OfferDto { inner: m }))
     }
@@ -113,11 +141,12 @@ impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
     async fn create_offer(&self, new_model_dto: &NewOfferDto) -> anyhow::Result<OfferDto> {
         let new_model: NewOfferModel = new_model_dto.clone().into();
 
-        let created = self.negotiation_repo.get_offer_repo().create_offer(&new_model).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let created =
+            self.negotiation_repo.get_offer_repo().create_offer(&new_model).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         Ok(OfferDto { inner: created })
     }
@@ -125,7 +154,10 @@ impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
     async fn delete_offer(&self, id: &Urn) -> anyhow::Result<()> {
         self.negotiation_repo.get_offer_repo().delete_offer(id).await.map_err(|e| match e {
             OfferRepoErrors::OfferNotFound => {
-                let err = CommonErrors::missing_resource_new(&id.to_string(), "Offer not found for deletion");
+                let err = CommonErrors::missing_resource_new(
+                    &id.to_string(),
+                    "Offer not found for deletion",
+                );
                 error!("{}", err.log());
                 err
             }

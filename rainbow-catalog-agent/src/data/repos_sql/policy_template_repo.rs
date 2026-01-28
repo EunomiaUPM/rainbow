@@ -81,7 +81,9 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         template_id: &String,
         version: &String,
     ) -> anyhow::Result<Option<Model>, CatalogAgentRepoErrors> {
-        match policy_template::Entity::find_by_id((template_id.clone(), version.clone())).one(&self.db_connection).await
+        match policy_template::Entity::find_by_id((template_id.clone(), version.clone()))
+            .one(&self.db_connection)
+            .await
         {
             Ok(template) => Ok(template),
             Err(err) => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
@@ -95,7 +97,8 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         new_policy_template: &NewPolicyTemplateModel,
     ) -> anyhow::Result<policy_template::Model, CatalogAgentRepoErrors> {
         let model: policy_template::ActiveModel = new_policy_template.into();
-        match policy_template::Entity::insert(model).exec_with_returning(&self.db_connection).await {
+        match policy_template::Entity::insert(model).exec_with_returning(&self.db_connection).await
+        {
             Ok(template) => Ok(template),
             Err(err) => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
                 PolicyTemplatesRepoErrors::ErrorCreatingPolicyTemplate(err.into()),

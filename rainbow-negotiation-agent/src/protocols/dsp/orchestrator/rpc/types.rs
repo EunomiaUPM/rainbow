@@ -19,9 +19,10 @@
 
 use crate::entities::negotiation_process::NegotiationProcessDto;
 use crate::protocols::dsp::protocol_types::{
-    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationErrorMessageDto, NegotiationEventMessageDto,
-    NegotiationEventType, NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageType,
-    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
+    NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationErrorMessageDto,
+    NegotiationEventMessageDto, NegotiationEventType, NegotiationOfferInitMessageDto,
+    NegotiationOfferMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
+    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
     NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use rainbow_common::dsp_common::context_field::ContextField;
@@ -58,7 +59,9 @@ pub struct RpcNegotiationRequestInitMessageDto {
     offer: ContractRequestMessageOfferTypes,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>> for RpcNegotiationRequestInitMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>>
+    for RpcNegotiationRequestInitMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> {
         let consumer_pid = format!("urn:consumer-pid:{}", uuid::Uuid::new_v4());
         let consumer_pid_urn = Urn::from_str(consumer_pid.as_str()).unwrap();
@@ -131,7 +134,9 @@ pub struct RpcNegotiationRequestMessageDto {
     consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>> for RpcNegotiationRequestMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>>
+    for RpcNegotiationRequestMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
@@ -203,7 +208,9 @@ pub struct RpcNegotiationOfferInitMessageDto {
     offer: ContractRequestMessageOfferTypes,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>> for RpcNegotiationOfferInitMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>>
+    for RpcNegotiationOfferInitMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto> {
         let provider_pid = format!("urn:provider-pid:{}", uuid::Uuid::new_v4());
         let provider_pid_urn = Urn::from_str(provider_pid.as_str()).unwrap();
@@ -276,7 +283,9 @@ pub struct RpcNegotiationOfferMessageDto {
     consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>> for RpcNegotiationOfferMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>>
+    for RpcNegotiationOfferMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
@@ -348,7 +357,9 @@ pub struct RpcNegotiationAgreementMessageDto {
     consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>> for RpcNegotiationAgreementMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>>
+    for RpcNegotiationAgreementMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
@@ -426,7 +437,10 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>>
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationAgreementVerificationMessage,
-            dto: NegotiationVerificationMessageDto { consumer_pid: self.consumer_pid, provider_pid: self.provider_pid },
+            dto: NegotiationVerificationMessageDto {
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
+            },
         }
     }
 }
@@ -488,11 +502,15 @@ pub struct RpcNegotiationEventAcceptedMessageDto {
     consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcNegotiationEventAcceptedMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>>
+    for RpcNegotiationEventAcceptedMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationEventMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
-            _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED),
+            _type: NegotiationProcessMessageType::NegotiationEventMessage(
+                NegotiationEventType::ACCEPTED,
+            ),
             dto: NegotiationEventMessageDto {
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
@@ -558,11 +576,15 @@ pub struct RpcNegotiationEventFinalizedMessageDto {
     consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcNegotiationEventFinalizedMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>>
+    for RpcNegotiationEventFinalizedMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationEventMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
-            _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::FINALIZED),
+            _type: NegotiationProcessMessageType::NegotiationEventMessage(
+                NegotiationEventType::FINALIZED,
+            ),
             dto: NegotiationEventMessageDto {
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
@@ -629,7 +651,9 @@ pub struct RpcNegotiationTerminationMessageDto {
     pub reason: Option<Vec<String>>,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>> for RpcNegotiationTerminationMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>>
+    for RpcNegotiationTerminationMessageDto
+{
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),

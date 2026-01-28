@@ -1,6 +1,8 @@
 use crate::data::entities::transfer_event::NewTransferEventModel;
 use crate::data::factory_trait::DataPlaneRepoTrait;
-use crate::entities::transfer_events::{NewTransferEventDto, TransferEventDto, TransferEventEntitiesTrait};
+use crate::entities::transfer_events::{
+    NewTransferEventDto, TransferEventDto, TransferEventEntitiesTrait,
+};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::sync::Arc;
 use tracing::error;
@@ -23,21 +25,30 @@ impl TransferEventEntitiesTrait for TransferEventEntityService {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferEventDto>> {
-        let events =
-            self.data_plane_repo.get_transfer_events_repo().get_all_transfer_events(limit, page).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let events = self
+            .data_plane_repo
+            .get_transfer_events_repo()
+            .get_all_transfer_events(limit, page)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         Ok(events.into_iter().map(|e| TransferEventDto { inner: e }).collect())
     }
 
-    async fn get_batch_transfer_events(&self, ids: Vec<Urn>) -> anyhow::Result<Vec<TransferEventDto>> {
-        let events =
-            self.data_plane_repo.get_transfer_events_repo().get_batch_transfer_events(&ids).await.map_err(|e| {
+    async fn get_batch_transfer_events(
+        &self,
+        ids: Vec<Urn>,
+    ) -> anyhow::Result<Vec<TransferEventDto>> {
+        let events = self
+            .data_plane_repo
+            .get_transfer_events_repo()
+            .get_batch_transfer_events(&ids)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -47,8 +58,12 @@ impl TransferEventEntitiesTrait for TransferEventEntityService {
     }
 
     async fn get_transfer_event_by_id(&self, id: &Urn) -> anyhow::Result<Option<TransferEventDto>> {
-        let event =
-            self.data_plane_repo.get_transfer_events_repo().get_transfer_event_by_id(id).await.map_err(|e| {
+        let event = self
+            .data_plane_repo
+            .get_transfer_events_repo()
+            .get_transfer_event_by_id(id)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -57,7 +72,10 @@ impl TransferEventEntitiesTrait for TransferEventEntityService {
         Ok(event.map(|e| TransferEventDto { inner: e }))
     }
 
-    async fn get_transfer_events_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<TransferEventDto>> {
+    async fn get_transfer_events_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<TransferEventDto>> {
         let events = self
             .data_plane_repo
             .get_transfer_events_repo()

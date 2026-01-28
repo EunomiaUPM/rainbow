@@ -20,22 +20,38 @@ use crate::data::into_active_trait::IntoActiveSet;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use async_trait::async_trait;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PrimaryKeyTrait, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PrimaryKeyTrait,
+    QuerySelect,
+};
 use tracing::log::error;
 
 #[async_trait]
 pub trait BasicRepoTrait<T, U>
 where
     T: EntityTrait + Sync + Send + 'static,
-    T::Model: Send + Sync + Clone + IntoActiveModel<T::ActiveModel> + IntoActiveSet<T::ActiveModel> + 'static,
+    T::Model: Send
+        + Sync
+        + Clone
+        + IntoActiveModel<T::ActiveModel>
+        + IntoActiveSet<T::ActiveModel>
+        + 'static,
     T::ActiveModel: ActiveModelTrait<Entity = T> + Send + Sync + 'static,
     U: IntoActiveSet<T::ActiveModel> + Send + Sync + 'static,
     <T as EntityTrait>::PrimaryKey: PrimaryKeyTrait<ValueType = String>,
 {
     fn db(&self) -> &DatabaseConnection;
 
-    async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<T::Model>> {
-        let models = T::find().limit(limit.unwrap_or(100000)).offset(offset.unwrap_or(0)).all(self.db()).await;
+    async fn get_all(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<T::Model>> {
+        let models = T::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(offset.unwrap_or(0))
+            .all(self.db())
+            .await;
         match models {
             Ok(data) => Ok(data),
             Err(e) => {
@@ -52,7 +68,10 @@ where
         match model {
             Ok(Some(model)) => Ok(model),
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id, &format!("Missing resource with id: {}", id));
+                let error = CommonErrors::missing_resource_new(
+                    id,
+                    &format!("Missing resource with id: {}", id),
+                );
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -94,7 +113,10 @@ where
         let active_model: T::ActiveModel = match T::find_by_id(id).one(self.db()).await {
             Ok(Some(model)) => model.to_active(),
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id, &format!("Missing resource with id: {}", id));
+                let error = CommonErrors::missing_resource_new(
+                    id,
+                    &format!("Missing resource with id: {}", id),
+                );
                 error!("{}", error.log());
                 bail!(error)
             }

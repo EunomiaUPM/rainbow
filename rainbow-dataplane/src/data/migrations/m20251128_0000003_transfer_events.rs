@@ -38,7 +38,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferEvents::DataplaneProcessId).string().not_null())
                     .col(ColumnDef::new(TransferEvents::From).string().not_null())
                     .col(ColumnDef::new(TransferEvents::To).string().not_null())
-                    .col(ColumnDef::new(TransferEvents::Payload).json_binary().not_null().default("{}"))
+                    .col(
+                        ColumnDef::new(TransferEvents::Payload)
+                            .json_binary()
+                            .not_null()
+                            .default("{}"),
+                    )
                     .col(ColumnDef::new(TransferEvents::CreatedAt).date_time().not_null())
                     .foreign_key(
                         ForeignKey::create()

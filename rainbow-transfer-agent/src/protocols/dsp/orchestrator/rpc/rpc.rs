@@ -20,14 +20,15 @@
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
-    RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
+    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto,
+    RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageTrait, TransferProcessMessageWrapper,
-    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageTrait,
+    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto,
+    TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::dcat_formats::DctFormats;
@@ -64,7 +65,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferRequestMessageDto>> {
         self.validator.transfer_request_rpc(input).await?;
         // get from input
-        let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> = input.clone().into();
+        let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> =
+            input.clone().into();
         let provider_address = input.provider_address.clone();
         // create url
         let peer_url = format!("{}/transfers/request", provider_address);
@@ -96,8 +98,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
 
-        let response =
-            RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
+        let response = RpcTransferMessageDto {
+            request: input.clone(),
+            response,
+            transfer_agent_model: transfer_process,
+        };
         Ok(response)
     }
 
@@ -110,7 +115,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let input_data_address = input.data_address.clone();
         let input_transfer_id = input.consumer_pid.clone();
         // fetch current process
-        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
+        let transfer_process =
+            self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         // create message
@@ -148,8 +154,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .on_transfer_start_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
-        let response =
-            RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
+        let response = RpcTransferMessageDto {
+            request: input.clone(),
+            response,
+            transfer_agent_model: transfer_process,
+        };
         Ok(response)
     }
 
@@ -163,7 +172,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let input_code = input.code.clone();
         let input_reason = input.reason.clone();
         // fetch current process
-        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
+        let transfer_process =
+            self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         // create message
@@ -202,8 +212,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .on_transfer_suspension_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
-        let response =
-            RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
+        let response = RpcTransferMessageDto {
+            request: input.clone(),
+            response,
+            transfer_agent_model: transfer_process,
+        };
         Ok(response)
     }
 
@@ -215,7 +228,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // get from input
         let input_transfer_id = input.consumer_pid.clone();
         // fetch current process
-        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
+        let transfer_process =
+            self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         // create message
@@ -252,8 +266,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .on_transfer_completion_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
-        let response =
-            RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
+        let response = RpcTransferMessageDto {
+            request: input.clone(),
+            response,
+            transfer_agent_model: transfer_process,
+        };
         Ok(response)
     }
 
@@ -267,7 +284,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let input_code = input.code.clone();
         let input_reason = input.reason.clone();
         // fetch current process
-        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
+        let transfer_process =
+            self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         // create message
@@ -306,8 +324,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .on_transfer_termination_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
             .await?;
         // bye!
-        let response =
-            RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
+        let response = RpcTransferMessageDto {
+            request: input.clone(),
+            response,
+            transfer_agent_model: transfer_process,
+        };
         Ok(response)
     }
 }
@@ -329,7 +350,8 @@ impl RPCOrchestratorService {
         // self.state_machine_service.validate_transition(None, payload.clone()).await?;
         // self.validator_service.validate(None, payload.clone()).await?;
         // where to send
-        let callback_url = transfer_process.inner.callback_address.clone().unwrap_or("".to_string());
+        let callback_url =
+            transfer_process.inner.callback_address.clone().unwrap_or("".to_string());
         let peer_url = format!("{}/transfers/{}/{}", callback_url, peer_url_id, url_suffix);
         // create final message
         let message = TransferProcessMessageWrapper {

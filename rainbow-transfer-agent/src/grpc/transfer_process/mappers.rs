@@ -17,7 +17,9 @@
  *
  */
 
-use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferProcessDto};
+use crate::entities::transfer_process::{
+    EditTransferProcessDto, NewTransferProcessDto, TransferProcessDto,
+};
 use crate::grpc::api::transfer_messages::TransferMessageResponse;
 use crate::grpc::api::transfer_processes::{
     BatchProcessRequest, CreateProcessRequest, TransferProcessResponse, UpdateProcessRequest,
@@ -42,20 +44,23 @@ impl TryFrom<CreateProcessRequest> for NewTransferProcessDto {
             .map_err(|e| Status::invalid_argument(format!("Invalid Agreement URN: {}", e)))?;
 
         let id_urn = if let Some(id) = proto.id {
-            Some(Urn::from_str(&id).map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?)
+            Some(
+                Urn::from_str(&id)
+                    .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?,
+            )
         } else {
             None
         };
 
         // 2. JSON Properties
-        let properties = if let Some(json_str) = proto.properties_json {
-            Some(
-                serde_json::from_str(&json_str)
-                    .map_err(|e| Status::invalid_argument(format!("Invalid properties JSON: {}", e)))?,
-            )
-        } else {
-            None
-        };
+        let properties =
+            if let Some(json_str) = proto.properties_json {
+                Some(serde_json::from_str(&json_str).map_err(|e| {
+                    Status::invalid_argument(format!("Invalid properties JSON: {}", e))
+                })?)
+            } else {
+                None
+            };
 
         // 3. Identifiers (Map<String, String> -> HashMap<String, String>)
         let identifiers = if proto.identifiers.is_empty() {
@@ -115,7 +120,8 @@ impl From<TransferProcessDto> for TransferProcessResponse {
         let model = dto.inner;
 
         let properties_json = serde_json::to_string(&model.properties).unwrap_or_default();
-        let error_details_json = model.error_details.map(|j| serde_json::to_string(&j).unwrap_or_default());
+        let error_details_json =
+            model.error_details.map(|j| serde_json::to_string(&j).unwrap_or_default());
 
         // 2. dates
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
@@ -126,7 +132,8 @@ impl From<TransferProcessDto> for TransferProcessResponse {
             .messages
             .into_iter()
             .map(|msg_model| {
-                let msg_dto = crate::entities::transfer_messages::TransferMessageDto { inner: msg_model };
+                let msg_dto =
+                    crate::entities::transfer_messages::TransferMessageDto { inner: msg_model };
                 msg_dto.into()
             })
             .collect();
@@ -157,9 +164,9 @@ impl From<TransferProcessDto> for TransferProcessResponse {
 // Helpers
 fn parse_optional_json(input: Option<String>) -> Result<Option<JsonValue>, Status> {
     match input {
-        Some(s) if !s.trim().is_empty() => {
-            serde_json::from_str(&s).map_err(|e| Status::invalid_argument(format!("Invalid JSON: {}", e))).map(Some)
-        }
+        Some(s) if !s.trim().is_empty() => serde_json::from_str(&s)
+            .map_err(|e| Status::invalid_argument(format!("Invalid JSON: {}", e)))
+            .map(Some),
         _ => Ok(None),
     }
 }

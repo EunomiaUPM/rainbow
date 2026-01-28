@@ -17,7 +17,9 @@
  *
  */
 
-use crate::data::entities::transfer_message::{self as transfer_message_model, NewTransferMessageModel};
+use crate::data::entities::transfer_message::{
+    self as transfer_message_model, NewTransferMessageModel,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 use urn::Urn;
@@ -69,11 +71,17 @@ pub trait TransferAgentMessagesTrait: Send + Sync + 'static {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferMessageDto>>;
 
-    async fn get_messages_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<TransferMessageDto>>;
+    async fn get_messages_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<TransferMessageDto>>;
 
     async fn get_transfer_message_by_id(&self, id: &Urn) -> anyhow::Result<TransferMessageDto>;
 
-    async fn create_transfer_message(&self, new_model: &NewTransferMessageDto) -> anyhow::Result<TransferMessageDto>;
+    async fn create_transfer_message(
+        &self,
+        new_model: &NewTransferMessageDto,
+    ) -> anyhow::Result<TransferMessageDto>;
 
     async fn delete_transfer_message(&self, id: &Urn) -> anyhow::Result<()>;
 }

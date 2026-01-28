@@ -33,7 +33,10 @@ pub trait DataPlaneFieldRepoTrait: Send + Sync + 'static {
         field_id: &Urn,
         edit_field: &EditDataPlaneFieldModel,
     ) -> anyhow::Result<data_plane_field::Model, DataPlaneFieldRepoErrors>;
-    async fn delete_data_plane_field(&self, field_id: &Urn) -> anyhow::Result<(), DataPlaneFieldRepoErrors>;
+    async fn delete_data_plane_field(
+        &self,
+        field_id: &Urn,
+    ) -> anyhow::Result<(), DataPlaneFieldRepoErrors>;
 }
 
 #[derive(Debug, Error)]

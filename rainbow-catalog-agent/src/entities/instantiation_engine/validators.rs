@@ -1,5 +1,7 @@
 use crate::entities::common::PolicyTemplateAllowedDefaultValues;
-use crate::entities::policy_templates::types::{ParameterDataType, SelectionAllowedValues, ValidationRestrictions};
+use crate::entities::policy_templates::types::{
+    ParameterDataType, SelectionAllowedValues, ValidationRestrictions,
+};
 use regex::Regex;
 use thiserror::Error;
 
@@ -49,7 +51,12 @@ impl ParameterValidator for StringValidator {
     ) -> Result<(), ValidationError> {
         let s = match value {
             PolicyTemplateAllowedDefaultValues::Stringable(s) => s,
-            val => return Err(ValidationError::TypeMismatch { expected: "String".into(), got: format!("{:?}", val) }),
+            val => {
+                return Err(ValidationError::TypeMismatch {
+                    expected: "String".into(),
+                    got: format!("{:?}", val),
+                })
+            }
         };
 
         if let Some(min) = restrictions.min_length {
@@ -82,7 +89,12 @@ impl ParameterValidator for NumericValidator {
     ) -> Result<(), ValidationError> {
         let val = match value {
             PolicyTemplateAllowedDefaultValues::Numerable(n) => *n as f64,
-            val => return Err(ValidationError::TypeMismatch { expected: "Numeric".into(), got: format!("{:?}", val) }),
+            val => {
+                return Err(ValidationError::TypeMismatch {
+                    expected: "Numeric".into(),
+                    got: format!("{:?}", val),
+                })
+            }
         };
 
         if let Some(min) = restrictions.min_value {

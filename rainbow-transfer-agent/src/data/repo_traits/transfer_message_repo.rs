@@ -48,7 +48,10 @@ pub trait TransferMessageRepoTrait: Send + Sync {
         new_model: &NewTransferMessageModel,
     ) -> anyhow::Result<transfer_message::Model, TransferMessageRepoErrors>;
 
-    async fn delete_transfer_message(&self, id: &Urn) -> anyhow::Result<(), TransferMessageRepoErrors>;
+    async fn delete_transfer_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), TransferMessageRepoErrors>;
 }
 
 #[derive(Debug, Error)]

@@ -74,19 +74,33 @@ impl From<EditAgreementDto> for EditAgreementModel {
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait NegotiationAgentAgreementsTrait: Send + Sync + 'static {
-    async fn get_all_agreements(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<AgreementDto>>;
+    async fn get_all_agreements(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<AgreementDto>>;
 
     async fn get_batch_agreements(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<AgreementDto>>;
 
     async fn get_agreement_by_id(&self, id: &Urn) -> anyhow::Result<Option<AgreementDto>>;
 
-    async fn get_agreement_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Option<AgreementDto>>;
+    async fn get_agreement_by_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<AgreementDto>>;
 
-    async fn get_agreement_by_negotiation_message(&self, id: &Urn) -> anyhow::Result<Option<AgreementDto>>;
+    async fn get_agreement_by_negotiation_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<AgreementDto>>;
 
     async fn create_agreement(&self, new_model: &NewAgreementDto) -> anyhow::Result<AgreementDto>;
 
-    async fn put_agreement(&self, id: &Urn, edit_model: &EditAgreementDto) -> anyhow::Result<AgreementDto>;
+    async fn put_agreement(
+        &self,
+        id: &Urn,
+        edit_model: &EditAgreementDto,
+    ) -> anyhow::Result<AgreementDto>;
 
     async fn delete_agreement(&self, id: &Urn) -> anyhow::Result<()>;
 }

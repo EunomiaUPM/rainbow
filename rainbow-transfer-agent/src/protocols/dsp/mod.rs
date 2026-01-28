@@ -47,11 +47,11 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::vault::vault_rs::VaultService;
 use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
 use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
@@ -93,17 +93,15 @@ impl ProtocolPluginTrait for TransferDSP {
             self.transfer_agent_process_entities.clone(),
         ));
         let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
-        let validator_state_machine_dsp = Arc::new(ValidatedStateTransitionServiceForDsp::new(
-            validator_helper.clone(),
-        ));
+        let validator_state_machine_dsp =
+            Arc::new(ValidatedStateTransitionServiceForDsp::new(validator_helper.clone()));
         let dsp_validator = Arc::new(ValidationDspStepsService::new(
             validator_payload.clone(),
             validator_state_machine_dsp.clone(),
             validator_helper.clone(),
         ));
-        let validator_state_machine_rcp = Arc::new(ValidatedStateTransitionServiceForRcp::new(
-            validator_helper.clone(),
-        ));
+        let validator_state_machine_rcp =
+            Arc::new(ValidatedStateTransitionServiceForRcp::new(validator_helper.clone()));
         let rcp_validator = Arc::new(ValidationRpcStepsService::new(
             validator_payload.clone(),
             validator_state_machine_rcp.clone(),
@@ -122,8 +120,10 @@ impl ProtocolPluginTrait for TransferDSP {
 
         // dataplane
         let dataplane = DataplaneSetup::new();
-        let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone(), self.vault.clone()).await;
-        let dataplane_strategy_factory = Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
+        let dataplane_controller =
+            dataplane.get_data_plane_controller(self.config.clone(), self.vault.clone()).await;
+        let dataplane_strategy_factory =
+            Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
         let dataplane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
             dataplane_strategy_factory.clone(),
             self.transfer_agent_process_entities.clone(),

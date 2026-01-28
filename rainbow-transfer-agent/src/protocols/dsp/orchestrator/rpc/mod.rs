@@ -21,8 +21,8 @@ pub(crate) mod rpc;
 pub(crate) mod types;
 
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
-    RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
+    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto,
+    RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 
 #[async_trait::async_trait]

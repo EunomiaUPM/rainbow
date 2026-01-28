@@ -1,8 +1,9 @@
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateEntityTrait};
 use crate::grpc::api::catalog_agent::policy_template_entity_service_server::PolicyTemplateEntityService;
 use crate::grpc::api::catalog_agent::{
-    CreatePolicyTemplateRequest, DeleteByIdRequest, DeleteByVersionRequest, GetAllRequest, GetBatchRequest,
-    GetByIdRequest, GetByVersionRequest, PolicyTemplate, PolicyTemplateListResponse, PolicyTemplateResponse,
+    CreatePolicyTemplateRequest, DeleteByIdRequest, DeleteByVersionRequest, GetAllRequest,
+    GetBatchRequest, GetByIdRequest, GetByVersionRequest, PolicyTemplate,
+    PolicyTemplateListResponse, PolicyTemplateResponse,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -46,8 +47,11 @@ impl PolicyTemplateEntityService for PolicyTemplateEntityGrpc {
         let req = request.into_inner();
         let urns = req.ids;
 
-        let templates =
-            self.service.get_batch_policy_templates(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let templates = self
+            .service
+            .get_batch_policy_templates(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_templates: Vec<PolicyTemplate> = templates.into_iter().map(Into::into).collect();
 
@@ -102,11 +106,10 @@ impl PolicyTemplateEntityService for PolicyTemplateEntityGrpc {
         let req = request.into_inner();
         let new_template_dto: NewPolicyTemplateDto = req.try_into()?;
 
-        let created_dto = self
-            .service
-            .create_policy_template(&new_template_dto)
-            .await
-            .map_err(|e| Status::internal(format!("Failed to create Policy Template: {}", e)))?;
+        let created_dto =
+            self.service.create_policy_template(&new_template_dto).await.map_err(|e| {
+                Status::internal(format!("Failed to create Policy Template: {}", e))
+            })?;
 
         Ok(Response::new(PolicyTemplateResponse {
             policy_template: Some(created_dto.into()),

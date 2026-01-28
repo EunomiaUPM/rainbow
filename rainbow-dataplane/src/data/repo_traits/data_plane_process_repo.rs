@@ -1,5 +1,7 @@
 use crate::data::entities::data_plane_process;
-use crate::data::entities::data_plane_process::{EditDataPlaneProcessModel, NewDataPlaneProcessModel};
+use crate::data::entities::data_plane_process::{
+    EditDataPlaneProcessModel, NewDataPlaneProcessModel,
+};
 use anyhow::Error;
 use thiserror::Error;
 use urn::Urn;
@@ -28,7 +30,10 @@ pub trait DataPlaneProcessRepoTrait: Send + Sync + 'static {
         process_id: &Urn,
         new_data_plane_process: &EditDataPlaneProcessModel,
     ) -> anyhow::Result<data_plane_process::Model, DataPlaneProcessRepoErrors>;
-    async fn delete_data_plane_processes(&self, process_id: &Urn) -> anyhow::Result<(), DataPlaneProcessRepoErrors>;
+    async fn delete_data_plane_processes(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<(), DataPlaneProcessRepoErrors>;
 }
 
 #[derive(Debug, Error)]

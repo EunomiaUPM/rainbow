@@ -17,7 +17,9 @@
  *
  */
 
-use crate::data::entities::negotiation_message::{self as negotiation_message_model, NewNegotiationMessageModel};
+use crate::data::entities::negotiation_message::{
+    self as negotiation_message_model, NewNegotiationMessageModel,
+};
 use crate::data::factory_trait::NegotiationAgentRepoTrait;
 use crate::data::repo_traits::negotiation_message_repo::NegotiationMessageRepoErrors;
 use crate::entities::negotiation_message::{
@@ -39,7 +41,10 @@ impl NegotiationAgentMessagesService {
     }
 
     /// Helper privado para enriquecer el mensaje con sus ofertas y acuerdos asociados
-    async fn enrich_message(&self, message: negotiation_message_model::Model) -> anyhow::Result<NegotiationMessageDto> {
+    async fn enrich_message(
+        &self,
+        message: negotiation_message_model::Model,
+    ) -> anyhow::Result<NegotiationMessageDto> {
         let message_urn = Urn::from_str(&message.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
                 "Invalid URN found in database for message {}. Error: {}",
@@ -50,14 +55,16 @@ impl NegotiationAgentMessagesService {
         })?;
 
         // 1. Buscar Oferta asociada
-        let offer =
-            self.negotiation_repo.get_offer_repo().get_offer_by_negotiation_message(&message_urn).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("Error fetching linked offer: {}", err.log());
-                    err
-                },
-            )?;
+        let offer = self
+            .negotiation_repo
+            .get_offer_repo()
+            .get_offer_by_negotiation_message(&message_urn)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("Error fetching linked offer: {}", err.log());
+                err
+            })?;
 
         // 2. Buscar Acuerdo asociado
         let agreement = self
@@ -102,15 +109,20 @@ impl NegotiationAgentMessagesTrait for NegotiationAgentMessagesService {
         Ok(dtos)
     }
 
-    async fn get_messages_by_process_id(&self, process_id: &Urn) -> anyhow::Result<Vec<NegotiationMessageDto>> {
-        let messages =
-            self.negotiation_repo.get_negotiation_message_repo().get_messages_by_process_id(process_id).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+    async fn get_messages_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<NegotiationMessageDto>> {
+        let messages = self
+            .negotiation_repo
+            .get_negotiation_message_repo()
+            .get_messages_by_process_id(process_id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let mut dtos = Vec::with_capacity(messages.len());
         for msg in messages {
@@ -121,15 +133,20 @@ impl NegotiationAgentMessagesTrait for NegotiationAgentMessagesService {
         Ok(dtos)
     }
 
-    async fn get_negotiation_message_by_id(&self, id: &Urn) -> anyhow::Result<Option<NegotiationMessageDto>> {
-        let message_opt =
-            self.negotiation_repo.get_negotiation_message_repo().get_negotiation_message_by_id(id).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+    async fn get_negotiation_message_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationMessageDto>> {
+        let message_opt = self
+            .negotiation_repo
+            .get_negotiation_message_repo()
+            .get_negotiation_message_by_id(id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         match message_opt {
             Some(message) => Ok(Some(self.enrich_message(message).await?)),
@@ -143,37 +160,41 @@ impl NegotiationAgentMessagesTrait for NegotiationAgentMessagesService {
     ) -> anyhow::Result<NegotiationMessageDto> {
         let new_model: NewNegotiationMessageModel = new_model_dto.clone().into();
 
-        let created =
-            self.negotiation_repo.get_negotiation_message_repo().create_negotiation_message(&new_model).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let created = self
+            .negotiation_repo
+            .get_negotiation_message_repo()
+            .create_negotiation_message(&new_model)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         // Un mensaje recién creado no tiene ofertas ni acuerdos vinculados todavía
         Ok(NegotiationMessageDto { inner: created, offer: None, agreement: None })
     }
 
     async fn delete_negotiation_message(&self, id: &Urn) -> anyhow::Result<()> {
-        self.negotiation_repo.get_negotiation_message_repo().delete_negotiation_message(id).await.map_err(
-            |e| match e {
-                NegotiationMessageRepoErrors::NegotiationMessageNotFound => {
-                    let err = CommonErrors::missing_resource_new(
-                        &id.to_string(),
-                        "Negotiation Message not found for deletion",
-                    );
-                    error!("{}", err.log());
-                    err
-                }
-                _ => {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                }
-            },
-        )?;
+        self.negotiation_repo
+            .get_negotiation_message_repo()
+            .delete_negotiation_message(id)
+            .await
+            .map_err(|e| match e {
+            NegotiationMessageRepoErrors::NegotiationMessageNotFound => {
+                let err = CommonErrors::missing_resource_new(
+                    &id.to_string(),
+                    "Negotiation Message not found for deletion",
+                );
+                error!("{}", err.log());
+                err
+            }
+            _ => {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            }
+        })?;
         Ok(())
     }
 }

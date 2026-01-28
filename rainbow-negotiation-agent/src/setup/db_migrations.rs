@@ -18,10 +18,11 @@
  */
 use crate::data::migrations::get_negotiation_agent_migrations;
 use rainbow_common::config::services::ContractsConfig;
-use rainbow_common::vault::VaultTrait;
-use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::config::traits::CommonConfigTrait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use std::sync::Arc;
+use ymir::services::vault::VaultTrait;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct NegotiationAgentMigration;
 
@@ -38,7 +39,7 @@ impl MigratorTrait for NegotiationAgentMigration {
 impl NegotiationAgentMigration {
     pub async fn run(config: &ContractsConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         // db_connection
-        let db_connection = vault.get_db_connection(config.clone()).await;
+        let db_connection = vault.get_db_connection(config.common()).await;
         // run migration
         Self::refresh(&db_connection).await?;
         Ok(())

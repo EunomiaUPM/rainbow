@@ -33,9 +33,7 @@ use crate::grpc::negotiation_message::NegotiationAgentMessagesGrpc;
 use crate::grpc::negotiation_process::NegotiationAgentProcessesGrpc;
 use crate::grpc::offer::NegotiationAgentOfferGrpc;
 use rainbow_common::config::services::ContractsConfig;
-use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
-use rainbow_common::vault::VaultTrait;
-use rainbow_common::vault::vault_rs::VaultService;
+use rainbow_common::config::traits::CommonConfigTrait;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -43,6 +41,10 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tonic::codegen::tokio_stream::wrappers::TcpListenerStream;
 use tonic::transport::Server;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::services::vault::VaultTrait;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct NegotiationGrpcWorker {}
 
@@ -53,8 +55,8 @@ impl NegotiationGrpcWorker {
         token: &CancellationToken,
     ) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config, vault.clone()).await?;
-        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_weird_port();
+        let host = if config.common().is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.common().get_weird_port(HostType::Grpc);
         let grpc_port = format!("{}{}", port, "1");
         let addr = format!("{}:{}", host, grpc_port);
 
@@ -80,26 +82,26 @@ impl NegotiationGrpcWorker {
         config: &ContractsConfig,
         vault: Arc<VaultService>,
     ) -> anyhow::Result<tonic::transport::server::Router> {
-        let db_connection = vault.get_db_connection(config.clone()).await;
+        let db_connection = vault.get_db_connection(config.common()).await;
         let config = Arc::new(config.clone());
-        let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
-            db_connection.clone(),
-        ));
+        let negotiation_repo =
+            Arc::new(NegotiationAgentRepoForSql::create_repo(db_connection.clone()));
 
-        let messages_controller_service = Arc::new(NegotiationAgentMessagesService::new(
-            negotiation_repo.clone(),
-        ));
-        let message_controller = NegotiationAgentMessagesGrpc::new(messages_controller_service.clone());
-        let processes_controller_service = Arc::new(NegotiationAgentProcessesService::new(
-            negotiation_repo.clone(),
-        ));
-        let processes_controller = NegotiationAgentProcessesGrpc::new(processes_controller_service.clone());
-        let offer_controller_service = Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
+        let messages_controller_service =
+            Arc::new(NegotiationAgentMessagesService::new(negotiation_repo.clone()));
+        let message_controller =
+            NegotiationAgentMessagesGrpc::new(messages_controller_service.clone());
+        let processes_controller_service =
+            Arc::new(NegotiationAgentProcessesService::new(negotiation_repo.clone()));
+        let processes_controller =
+            NegotiationAgentProcessesGrpc::new(processes_controller_service.clone());
+        let offer_controller_service =
+            Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
         let offer_controller = NegotiationAgentOfferGrpc::new(offer_controller_service.clone());
-        let agreement_controller_service = Arc::new(NegotiationAgentAgreementsService::new(
-            negotiation_repo.clone(),
-        ));
-        let agreement_controller = NegotiationAgentAgreementGrpc::new(agreement_controller_service.clone());
+        let agreement_controller_service =
+            Arc::new(NegotiationAgentAgreementsService::new(negotiation_repo.clone()));
+        let agreement_controller =
+            NegotiationAgentAgreementGrpc::new(agreement_controller_service.clone());
 
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
@@ -107,16 +109,10 @@ impl NegotiationGrpcWorker {
 
         let router = Server::builder()
             .add_service(reflection_service)
-            .add_service(NegotiationAgentProcessesServiceServer::new(
-                processes_controller,
-            ))
-            .add_service(NegotiationAgentMessagesServiceServer::new(
-                message_controller,
-            ))
+            .add_service(NegotiationAgentProcessesServiceServer::new(processes_controller))
+            .add_service(NegotiationAgentMessagesServiceServer::new(message_controller))
             .add_service(NegotiationAgentOffersServiceServer::new(offer_controller))
-            .add_service(NegotiationAgentAgreementsServiceServer::new(
-                agreement_controller,
-            ));
+            .add_service(NegotiationAgentAgreementsServiceServer::new(agreement_controller));
 
         Ok(router)
     }

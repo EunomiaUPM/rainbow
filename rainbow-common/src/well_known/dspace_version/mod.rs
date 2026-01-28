@@ -1,5 +1,6 @@
 use crate::dsp_common::well_known_types::{
-    Auth, AuthProtocolTypes, DSPBindings, DSPIdentifierTypes, DSPProtocolVersions, Version, VersionResponse,
+    Auth, AuthProtocolTypes, DSPBindings, DSPIdentifierTypes, DSPProtocolVersions, Version,
+    VersionResponse,
 };
 use axum::routing::get;
 use axum::{Json, Router};
@@ -28,7 +29,11 @@ pub trait WellKnownDSpaceVersionTrait: Send + Sync + 'static {
                 binding: DSPBindings::HTTPS,
                 path: self.dspace_path(),
                 version: DSPProtocolVersions::V2025_1,
-                auth: Some(Auth { protocol: AuthProtocolTypes::Gnap, version: "1".to_string(), profile: None }),
+                auth: Some(Auth {
+                    protocol: AuthProtocolTypes::Gnap,
+                    version: "1".to_string(),
+                    profile: None,
+                }),
                 identifier_type: Some(DSPIdentifierTypes::DidJWK),
                 service_id: Option::from(self.dspace_service_id()),
             }],

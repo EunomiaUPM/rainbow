@@ -43,8 +43,8 @@ impl OnboarderRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/provider", post(Self::onboard))
-            .route("/callback/:id", get(Self::get_callback))
-            .route("/callback/:id", post(Self::post_callback))
+            .route("/callback/{id}", get(Self::get_callback))
+            .route("/callback/{id}", post(Self::post_callback))
             .with_state(self.onboarder)
     }
 

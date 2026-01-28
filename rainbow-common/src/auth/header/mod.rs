@@ -28,7 +28,10 @@ pub struct RequestInfo {
     pub token: String,
 }
 
-pub async fn extract_request_info(mut request: Request, next: Next) -> Result<Response, StatusCode> {
+pub async fn extract_request_info(
+    mut request: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
     let headers = request.headers();
     let token = headers
         .get("Authorization")

@@ -25,14 +25,18 @@ use crate::entities::negotiation_process::{
 use crate::entities::offer::{NewOfferDto, OfferDto};
 
 use crate::grpc::api::negotiation_agent::{
-    Agreement as ProtoAgreement, NegotiationMessage as ProtoMessage, NegotiationProcess as ProtoProcess,
-    Offer as ProtoOffer,
+    Agreement as ProtoAgreement, NegotiationMessage as ProtoMessage,
+    NegotiationProcess as ProtoProcess, Offer as ProtoOffer,
 };
-use crate::grpc::api::negotiation_agent::{AgreementResponse, CreateAgreementRequest, PutAgreementRequest};
-use crate::grpc::api::negotiation_agent::{CreateNegotiationMessageRequest, NegotiationMessageResponse};
 use crate::grpc::api::negotiation_agent::{
-    CreateNegotiationProcessRequest, GetBatchNegotiationProcessesRequest, NegotiationProcessResponse,
-    PutNegotiationProcessRequest,
+    AgreementResponse, CreateAgreementRequest, PutAgreementRequest,
+};
+use crate::grpc::api::negotiation_agent::{
+    CreateNegotiationMessageRequest, NegotiationMessageResponse,
+};
+use crate::grpc::api::negotiation_agent::{
+    CreateNegotiationProcessRequest, GetBatchNegotiationProcessesRequest,
+    NegotiationProcessResponse, PutNegotiationProcessRequest,
 };
 use crate::grpc::api::negotiation_agent::{CreateOfferRequest, OfferResponse};
 
@@ -54,12 +58,19 @@ impl TryFrom<CreateNegotiationProcessRequest> for NewNegotiationProcessDto {
 
     fn try_from(proto: CreateNegotiationProcessRequest) -> Result<Self, Self::Error> {
         let id_urn = if let Some(id) = proto.id {
-            Some(Urn::from_str(&id).map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?)
+            Some(
+                Urn::from_str(&id)
+                    .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?,
+            )
         } else {
             None
         };
 
-        let properties = if let Some(props) = proto.properties { Some(prost_struct_to_serde(props)) } else { None };
+        let properties = if let Some(props) = proto.properties {
+            Some(prost_struct_to_serde(props))
+        } else {
+            None
+        };
 
         let identifiers = if proto.identifiers.is_empty() { None } else { Some(proto.identifiers) };
 
@@ -113,9 +124,11 @@ impl From<NegotiationProcessDto> for NegotiationProcessResponse {
         let inner = dto.inner;
 
         // Convertir Sub-entidades a Proto
-        let messages: Vec<ProtoMessage> = dto.messages.into_iter().map(model_message_to_proto).collect();
+        let messages: Vec<ProtoMessage> =
+            dto.messages.into_iter().map(model_message_to_proto).collect();
         let offers: Vec<ProtoOffer> = dto.offers.into_iter().map(model_offer_to_proto).collect();
-        let agreements: Vec<ProtoAgreement> = dto.agreement.into_iter().map(model_agreement_to_proto).collect();
+        let agreements: Vec<ProtoAgreement> =
+            dto.agreement.into_iter().map(model_agreement_to_proto).collect();
 
         let properties = serde_to_prost_struct(inner.properties);
         let error_details = inner.error_details.map(serde_to_prost_struct);
@@ -151,7 +164,10 @@ impl TryFrom<CreateNegotiationMessageRequest> for NewNegotiationMessageDto {
 
     fn try_from(proto: CreateNegotiationMessageRequest) -> Result<Self, Self::Error> {
         let id_urn = if let Some(id) = proto.id {
-            Some(Urn::from_str(&id).map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?)
+            Some(
+                Urn::from_str(&id)
+                    .map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?,
+            )
         } else {
             None
         };
@@ -159,7 +175,11 @@ impl TryFrom<CreateNegotiationMessageRequest> for NewNegotiationMessageDto {
         let process_urn = Urn::from_str(&proto.negotiation_agent_process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?;
 
-        let payload = if let Some(p) = proto.payload { prost_struct_to_serde(p) } else { serde_json::json!({}) };
+        let payload = if let Some(p) = proto.payload {
+            prost_struct_to_serde(p)
+        } else {
+            serde_json::json!({})
+        };
 
         Ok(NewNegotiationMessageDto {
             id: id_urn,
@@ -209,7 +229,10 @@ impl TryFrom<CreateOfferRequest> for NewOfferDto {
 
     fn try_from(proto: CreateOfferRequest) -> Result<Self, Self::Error> {
         let id_urn = if let Some(id) = proto.id {
-            Some(Urn::from_str(&id).map_err(|e| Status::invalid_argument(format!("Invalid Offer URN: {}", e)))?)
+            Some(
+                Urn::from_str(&id)
+                    .map_err(|e| Status::invalid_argument(format!("Invalid Offer URN: {}", e)))?,
+            )
         } else {
             None
         };
@@ -219,7 +242,11 @@ impl TryFrom<CreateOfferRequest> for NewOfferDto {
         let message_urn = Urn::from_str(&proto.negotiation_agent_message_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?;
 
-        let content = if let Some(c) = proto.offer_content { prost_struct_to_serde(c) } else { serde_json::json!({}) };
+        let content = if let Some(c) = proto.offer_content {
+            prost_struct_to_serde(c)
+        } else {
+            serde_json::json!({})
+        };
 
         Ok(NewOfferDto {
             id: id_urn,
@@ -245,21 +272,27 @@ impl TryFrom<CreateAgreementRequest> for NewAgreementDto {
     type Error = Status;
 
     fn try_from(proto: CreateAgreementRequest) -> Result<Self, Self::Error> {
-        let id_urn = if let Some(id) = proto.id {
-            Some(Urn::from_str(&id).map_err(|e| Status::invalid_argument(format!("Invalid Agreement URN: {}", e)))?)
-        } else {
-            None
-        };
+        let id_urn =
+            if let Some(id) = proto.id {
+                Some(Urn::from_str(&id).map_err(|e| {
+                    Status::invalid_argument(format!("Invalid Agreement URN: {}", e))
+                })?)
+            } else {
+                None
+            };
 
         let process_urn = Urn::from_str(&proto.negotiation_agent_process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?;
         let message_urn = Urn::from_str(&proto.negotiation_agent_message_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?;
-        let target_urn =
-            Urn::from_str(&proto.target).map_err(|e| Status::invalid_argument(format!("Invalid Target URN: {}", e)))?;
+        let target_urn = Urn::from_str(&proto.target)
+            .map_err(|e| Status::invalid_argument(format!("Invalid Target URN: {}", e)))?;
 
-        let content =
-            if let Some(c) = proto.agreement_content { prost_struct_to_serde(c) } else { serde_json::json!({}) };
+        let content = if let Some(c) = proto.agreement_content {
+            prost_struct_to_serde(c)
+        } else {
+            serde_json::json!({})
+        };
 
         Ok(NewAgreementDto {
             id: id_urn,
@@ -362,10 +395,12 @@ fn serde_to_prost_value(json: JsonValue) -> ProstValue {
         JsonValue::Bool(v) => Kind::BoolValue(v),
         JsonValue::Number(n) => Kind::NumberValue(n.as_f64().unwrap_or(0.0)),
         JsonValue::String(s) => Kind::StringValue(s),
-        JsonValue::Array(v) => Kind::ListValue(ListValue { values: v.into_iter().map(serde_to_prost_value).collect() }),
-        JsonValue::Object(v) => {
-            Kind::StructValue(Struct { fields: v.into_iter().map(|(k, v)| (k, serde_to_prost_value(v))).collect() })
+        JsonValue::Array(v) => {
+            Kind::ListValue(ListValue { values: v.into_iter().map(serde_to_prost_value).collect() })
         }
+        JsonValue::Object(v) => Kind::StructValue(Struct {
+            fields: v.into_iter().map(|(k, v)| (k, serde_to_prost_value(v))).collect(),
+        }),
     };
     ProstValue { kind: Some(kind) }
 }
@@ -380,7 +415,9 @@ fn prost_value_to_serde(prost: ProstValue) -> JsonValue {
             serde_json::Number::from_f64(n).map(JsonValue::Number).unwrap_or(JsonValue::Null)
         }
         Some(Kind::StringValue(s)) => JsonValue::String(s),
-        Some(Kind::ListValue(l)) => JsonValue::Array(l.values.into_iter().map(prost_value_to_serde).collect()),
+        Some(Kind::ListValue(l)) => {
+            JsonValue::Array(l.values.into_iter().map(prost_value_to_serde).collect())
+        }
         Some(Kind::StructValue(s)) => {
             let map = s.fields.into_iter().map(|(k, v)| (k, prost_value_to_serde(v))).collect();
             JsonValue::Object(map)

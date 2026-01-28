@@ -35,7 +35,9 @@ impl MigrationTrait for Migration {
                     .table(PolicyTemplates::Table)
                     .col(ColumnDef::new(PolicyTemplates::Id).string().not_null())
                     .col(ColumnDef::new(PolicyTemplates::Version).string().not_null())
-                    .col(ColumnDef::new(PolicyTemplates::Date).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(PolicyTemplates::Date).timestamp_with_time_zone().not_null(),
+                    )
                     .col(ColumnDef::new(PolicyTemplates::Author).string().not_null())
                     .col(ColumnDef::new(PolicyTemplates::Title).json_binary())
                     .col(ColumnDef::new(PolicyTemplates::Description).json_binary())

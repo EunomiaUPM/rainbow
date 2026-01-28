@@ -18,7 +18,8 @@
  */
 
 use crate::gateway::http::business_router_types::{
-    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
+    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest,
+    RainbowBusinessTerminationRequest,
 };
 use async_trait::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
@@ -34,39 +35,70 @@ pub mod business;
 #[async_trait]
 pub trait BusinessCatalogTrait: Send + Sync + 'static {
     async fn get_catalogs(&self, token: String) -> anyhow::Result<Vec<DatahubDomain>>;
-    async fn get_datasets_by_catalog(&self, catalog_id: Urn, token: String) -> anyhow::Result<Vec<DatahubDataset>>;
+    async fn get_datasets_by_catalog(
+        &self,
+        catalog_id: Urn,
+        token: String,
+    ) -> anyhow::Result<Vec<DatahubDataset>>;
     async fn get_dataset(&self, dataset_id: Urn, token: String) -> anyhow::Result<DatahubDataset>;
-    async fn get_policy_templates(&self, token: String) -> anyhow::Result<Vec<policy_templates::Model>>;
+    async fn get_policy_templates(
+        &self,
+        token: String,
+    ) -> anyhow::Result<Vec<policy_templates::Model>>;
     async fn get_policy_template_by_id(
         &self,
         template_id: String,
         token: String,
     ) -> anyhow::Result<policy_templates::Model>;
-    async fn get_policy_offers_by_dataset(&self, dataset_id: Urn, token: String) -> anyhow::Result<Vec<OdrlOffer>>;
+    async fn get_policy_offers_by_dataset(
+        &self,
+        dataset_id: Urn,
+        token: String,
+    ) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_policy_offer(
         &self,
         dataset_id: Urn,
         odrl_offer: OdrlPolicyInfo,
         token: String,
     ) -> anyhow::Result<OdrlOffer>;
-    async fn delete_policy_offer(&self, dataset_id: Urn, policy_id: Urn, token: String) -> anyhow::Result<()>;
+    async fn delete_policy_offer(
+        &self,
+        dataset_id: Urn,
+        policy_id: Urn,
+        token: String,
+    ) -> anyhow::Result<()>;
     async fn get_business_negotiation_requests(&self, token: String) -> anyhow::Result<Value>;
     async fn get_business_negotiation_request_by_id(
         &self,
         request_id: Urn,
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;
-    async fn get_consumer_negotiation_requests(&self, participant_id: String, token: String) -> anyhow::Result<Value>;
+    async fn get_consumer_negotiation_requests(
+        &self,
+        participant_id: String,
+        token: String,
+    ) -> anyhow::Result<Value>;
     async fn get_consumer_negotiation_request_by_id(
         &self,
         participant_id: String,
         request_id: Urn,
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;
-    async fn accept_request(&self, input: RainbowBusinessAcceptanceRequest, token: String) -> anyhow::Result<Value>;
-    async fn terminate_request(&self, input: RainbowBusinessTerminationRequest, token: String)
-        -> anyhow::Result<Value>;
-    async fn create_request(&self, input: RainbowBusinessNegotiationRequest, token: String) -> anyhow::Result<Value>;
+    async fn accept_request(
+        &self,
+        input: RainbowBusinessAcceptanceRequest,
+        token: String,
+    ) -> anyhow::Result<Value>;
+    async fn terminate_request(
+        &self,
+        input: RainbowBusinessTerminationRequest,
+        token: String,
+    ) -> anyhow::Result<Value>;
+    async fn create_request(
+        &self,
+        input: RainbowBusinessNegotiationRequest,
+        token: String,
+    ) -> anyhow::Result<Value>;
     async fn login(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String>;
     async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<Value>;
 }

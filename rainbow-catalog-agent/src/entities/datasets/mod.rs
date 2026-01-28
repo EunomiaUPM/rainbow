@@ -67,9 +67,14 @@ impl From<dataset::Model> for DatasetDto {
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait DatasetEntityTrait: Send + Sync {
-    async fn get_all_datasets(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<DatasetDto>>;
+    async fn get_all_datasets(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<DatasetDto>>;
     async fn get_batch_datasets(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DatasetDto>>;
-    async fn get_datasets_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DatasetDto>>;
+    async fn get_datasets_by_catalog_id(&self, catalog_id: &Urn)
+        -> anyhow::Result<Vec<DatasetDto>>;
     async fn get_dataset_by_id(&self, dataset_id: &Urn) -> anyhow::Result<Option<DatasetDto>>;
 
     async fn put_dataset_by_id(
@@ -77,7 +82,8 @@ pub trait DatasetEntityTrait: Send + Sync {
         dataset_id: &Urn,
         edit_dataset_model: &EditDatasetDto,
     ) -> anyhow::Result<DatasetDto>;
-    async fn create_dataset(&self, new_dataset_model: &NewDatasetDto) -> anyhow::Result<DatasetDto>;
+    async fn create_dataset(&self, new_dataset_model: &NewDatasetDto)
+        -> anyhow::Result<DatasetDto>;
 
     async fn delete_dataset_by_id(&self, dataset_id: &Urn) -> anyhow::Result<()>;
 }

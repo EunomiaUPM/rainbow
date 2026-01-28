@@ -18,12 +18,16 @@
  */
 
 use crate::data::entities::negotiation_process;
-use crate::data::entities::negotiation_process::{EditNegotiationProcessModel, Model, NewNegotiationProcessModel};
+use crate::data::entities::negotiation_process::{
+    EditNegotiationProcessModel, Model, NewNegotiationProcessModel,
+};
 use crate::data::entities::negotiation_process_identifier;
-use crate::data::repo_traits::negotiation_process_repo::{NegotiationProcessRepoErrors, NegotiationProcessRepoTrait};
+use crate::data::repo_traits::negotiation_process_repo::{
+    NegotiationProcessRepoErrors, NegotiationProcessRepoTrait,
+};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect,
-    RelationTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType,
+    QueryFilter, QuerySelect, RelationTrait,
 };
 use urn::Urn;
 
@@ -51,7 +55,9 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
             .await;
         match processes {
             Ok(processes) => Ok(processes),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -66,7 +72,9 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
             .await;
         match negotiation_process {
             Ok(negotiation_process) => Ok(negotiation_process),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -75,10 +83,13 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
         id: &Urn,
     ) -> anyhow::Result<Option<Model>, NegotiationProcessRepoErrors> {
         let pid = id.to_string();
-        let negotiation_process = negotiation_process::Entity::find_by_id(pid).one(&self.db_connection).await;
+        let negotiation_process =
+            negotiation_process::Entity::find_by_id(pid).one(&self.db_connection).await;
         match negotiation_process {
             Ok(negotiation_process) => Ok(negotiation_process),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -89,17 +100,16 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
     ) -> anyhow::Result<Option<Model>, NegotiationProcessRepoErrors> {
         let id = id.to_string();
         let negotiation_process = negotiation_process::Entity::find()
-            .join(
-                JoinType::InnerJoin,
-                negotiation_process::Relation::Identifiers.def(),
-            )
+            .join(JoinType::InnerJoin, negotiation_process::Relation::Identifiers.def())
             .filter(negotiation_process_identifier::Column::IdKey.eq(key_id))
             .filter(negotiation_process_identifier::Column::IdValue.eq(id))
             .one(&self.db_connection)
             .await;
         match negotiation_process {
             Ok(negotiation_process) => Ok(negotiation_process),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -109,16 +119,15 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
     ) -> anyhow::Result<Option<Model>, NegotiationProcessRepoErrors> {
         let id = id.to_string();
         let negotiation_process = negotiation_process::Entity::find()
-            .join(
-                JoinType::InnerJoin,
-                negotiation_process::Relation::Identifiers.def(),
-            )
+            .join(JoinType::InnerJoin, negotiation_process::Relation::Identifiers.def())
             .filter(negotiation_process_identifier::Column::IdValue.eq(id))
             .one(&self.db_connection)
             .await;
         match negotiation_process {
             Ok(negotiation_process) => Ok(negotiation_process),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -127,11 +136,14 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
         new_model: &NewNegotiationProcessModel,
     ) -> anyhow::Result<Model, NegotiationProcessRepoErrors> {
         let model: negotiation_process::ActiveModel = new_model.clone().into();
-        let negotiation_process =
-            negotiation_process::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let negotiation_process = negotiation_process::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
         match negotiation_process {
             Ok(negotiation_process) => Ok(negotiation_process),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorCreatingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorCreatingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
@@ -147,7 +159,11 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
                 Some(old_model) => old_model,
                 None => return Err(NegotiationProcessRepoErrors::NegotiationProcessNotFound),
             },
-            Err(e) => return Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(e.into())),
+            Err(e) => {
+                return Err(NegotiationProcessRepoErrors::ErrorFetchingNegotiationProcess(
+                    e.into(),
+                ));
+            }
         };
         let mut old_active_model: negotiation_process::ActiveModel = old_model.into();
         if let Some(state) = &edit_model.state {
@@ -166,19 +182,27 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorUpdatingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorUpdatingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 
-    async fn delete_negotiation_process(&self, id: &Urn) -> anyhow::Result<(), NegotiationProcessRepoErrors> {
+    async fn delete_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationProcessRepoErrors> {
         let id = id.to_string();
-        let negotiation_process = negotiation_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
+        let negotiation_process =
+            negotiation_process::Entity::delete_by_id(id).exec(&self.db_connection).await;
         match negotiation_process {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(NegotiationProcessRepoErrors::NegotiationProcessNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(NegotiationProcessRepoErrors::ErrorDeletingNegotiationProcess(e.into())),
+            Err(e) => Err(NegotiationProcessRepoErrors::ErrorDeletingNegotiationProcess(
+                e.into(),
+            )),
         }
     }
 }

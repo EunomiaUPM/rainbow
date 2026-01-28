@@ -33,14 +33,35 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(NegotiationAgentMessages::Table)
-                    .col(ColumnDef::new(NegotiationAgentMessages::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(NegotiationAgentMessages::NegotiationAgentProcessId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentMessages::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentMessages::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentMessages::NegotiationAgentProcessId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentMessages::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentMessages::Direction).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentMessages::Protocol).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentMessages::MessageType).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentMessages::StateTransitionFrom).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentMessages::StateTransitionTo).string().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentMessages::StateTransitionFrom)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentMessages::StateTransitionTo)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentMessages::Payload).json_binary().not_null())
                     .foreign_key(
                         ForeignKey::create()

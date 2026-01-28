@@ -33,7 +33,10 @@ impl ValidatePayloadService {
 }
 #[async_trait::async_trait]
 impl ValidatePayload for ValidatePayloadService {
-    async fn validate_with_json_schema(&self, payload: &dyn CatalogMessageTrait) -> anyhow::Result<()> {
+    async fn validate_with_json_schema(
+        &self,
+        payload: &dyn CatalogMessageTrait,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 
@@ -41,7 +44,10 @@ impl ValidatePayload for ValidatePayloadService {
         todo!()
     }
 
-    async fn validate_identifiers_as_urn(&self, payload: &dyn CatalogMessageTrait) -> anyhow::Result<()> {
+    async fn validate_identifiers_as_urn(
+        &self,
+        payload: &dyn CatalogMessageTrait,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 

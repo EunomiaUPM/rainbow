@@ -71,21 +71,30 @@ pub trait DistributionEntityTrait: Send + Sync {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<DistributionDto>>;
-    async fn get_batch_distributions(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DistributionDto>>;
+    async fn get_batch_distributions(&self, ids: &Vec<Urn>)
+        -> anyhow::Result<Vec<DistributionDto>>;
 
-    async fn get_distributions_by_dataset_id(&self, dataset_id: &Urn) -> anyhow::Result<Vec<DistributionDto>>;
+    async fn get_distributions_by_dataset_id(
+        &self,
+        dataset_id: &Urn,
+    ) -> anyhow::Result<Vec<DistributionDto>>;
     async fn get_distribution_by_dataset_id_and_dct_format(
         &self,
         dataset_id: &Urn,
         dct_formats: &DctFormats,
     ) -> anyhow::Result<DistributionDto>;
-    async fn get_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<Option<DistributionDto>>;
+    async fn get_distribution_by_id(
+        &self,
+        distribution_id: &Urn,
+    ) -> anyhow::Result<Option<DistributionDto>>;
     async fn put_distribution_by_id(
         &self,
         distribution_id: &Urn,
         edit_distribution_model: &EditDistributionDto,
     ) -> anyhow::Result<DistributionDto>;
-    async fn create_distribution(&self, new_distribution_model: &NewDistributionDto)
-        -> anyhow::Result<DistributionDto>;
+    async fn create_distribution(
+        &self,
+        new_distribution_model: &NewDistributionDto,
+    ) -> anyhow::Result<DistributionDto>;
     async fn delete_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<()>;
 }

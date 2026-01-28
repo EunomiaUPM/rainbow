@@ -8,5 +8,8 @@ pub(crate) mod well_known_rpc_facade;
 #[async_trait::async_trait]
 #[allow(unused)]
 pub trait WellKnownRPCFacadeTrait: Send + Sync {
-    async fn resolve_dataspace_current_path(&self, input: &WellKnownRPCRequest) -> anyhow::Result<String>;
+    async fn resolve_dataspace_current_path(
+        &self,
+        input: &WellKnownRPCRequest,
+    ) -> anyhow::Result<String>;
 }

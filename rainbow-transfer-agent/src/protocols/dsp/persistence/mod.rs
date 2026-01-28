@@ -29,8 +29,12 @@ use urn::Urn;
 #[async_trait::async_trait]
 #[allow(unused)]
 pub trait TransferPersistenceTrait: Send + Sync {
-    async fn get_transfer_process_service(&self) -> anyhow::Result<Arc<dyn TransferAgentProcessesTrait>>;
-    async fn get_transfer_message_service(&self) -> anyhow::Result<Arc<dyn TransferAgentMessagesTrait>>;
+    async fn get_transfer_process_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn TransferAgentProcessesTrait>>;
+    async fn get_transfer_message_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn TransferAgentMessagesTrait>>;
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto>;
     async fn create_process(
         &self,

@@ -18,7 +18,9 @@
  */
 
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
+};
 use axum::{
     extract::{rejection::JsonRejection, FromRef, Path, State},
     response::IntoResponse,
@@ -48,7 +50,7 @@ impl DspRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/request", post(Self::handle_catalog_request))
-            .route("/datasets/:id", get(Self::handle_dataset_request))
+            .route("/datasets/{id}", get(Self::handle_dataset_request))
             .with_state(self)
     }
 

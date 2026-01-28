@@ -46,7 +46,10 @@ pub trait NegotiationMessageRepoTrait: Send + Sync {
         new_model: &NewNegotiationMessageModel,
     ) -> anyhow::Result<negotiation_message::Model, NegotiationMessageRepoErrors>;
 
-    async fn delete_negotiation_message(&self, id: &Urn) -> anyhow::Result<(), NegotiationMessageRepoErrors>;
+    async fn delete_negotiation_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationMessageRepoErrors>;
 }
 
 #[derive(Debug, Error)]

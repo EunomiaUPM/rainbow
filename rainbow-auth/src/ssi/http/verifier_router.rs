@@ -38,8 +38,8 @@ impl VerifierRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/pd/:state", get(Self::vp_definition))
-            .route("/verify/:state", post(Self::verify))
+            .route("/pd/{state}", get(Self::vp_definition))
+            .route("/verify/{state}", post(Self::verify))
             .with_state(self.verifier)
     }
 

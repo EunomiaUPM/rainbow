@@ -4,6 +4,7 @@ services:
   # ====================================================================
   # PROVIDER Persistence layer =========================================
   # ====================================================================
+  # DB for provider
   ds_core_provider:
     # platform: linux/amd64
     container_name: "ds_core_provider"
@@ -16,6 +17,7 @@ services:
     ports:
       - "1400:5432"
 
+  # Cache for provider
   ds_core_provider_redis:
     image: redis:alpine
     container_name: ds_core_provider_redis
@@ -27,6 +29,7 @@ services:
       --requirepass ds_core_provider_redis
       --user admin on >ds_core_provider_redis ~* +@all
 
+  # Vault for provider
   provider_vault:
     image: hashicorp/vault:1.21
     container_name: vault-provider
@@ -38,20 +41,34 @@ services:
       - ../vault/provider/config:/vault/config
       - ../vault/provider/data:/vault/file
     environment:
-      VAULT_CACERT: /vault/config/root-ca.pem
+#      VAULT_CACERT: /vault/config/root-ca.pem
+#      VAULT_LOCAL_CONFIG: >
+#        {
+#          "storage": { "file": { "path": "/vault/file" } },
+#          "listener": [{
+#            "tcp": {
+#              "address": "0.0.0.0:8200",
+#              "tls_cert_file": "/vault/config/vault-cert.pem",
+#              "tls_key_file": "/vault/config/vault-key.pem",
+#              "tls_client_ca_file": "/vault/config/vault-ca.pem"
+#            }
+#          }],
+#          "ui": true,
+#          "api_addr": "https://127.0.0.1:8200",
+#          "default_lease_ttl": "168h",
+#          "max_lease_ttl": "720h"
+#        }
       VAULT_LOCAL_CONFIG: >
         {
           "storage": { "file": { "path": "/vault/file" } },
           "listener": [{
             "tcp": {
               "address": "0.0.0.0:8200",
-              "tls_cert_file": "/vault/config/vault-cert.pem",
-              "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_client_ca_file": "/vault/config/vault-ca.pem"
+              "tls_disable": 1
             }
           }],
           "ui": true,
-          "api_addr": "https://127.0.0.1:8200",
+          "api_addr": "http://127.0.0.1:8200",
           "default_lease_ttl": "168h",
           "max_lease_ttl": "720h"
         }
@@ -60,6 +77,7 @@ services:
   # ====================================================================
   # CONSUMER Persistence layer =========================================
   # ====================================================================
+  # DB for consumer
   ds_core_consumer:
     # platform: linux/amd64
     container_name: "ds_core_consumer"
@@ -71,6 +89,20 @@ services:
       POSTGRES_DB: ds_consumer
     ports:
       - "1300:5432"
+
+  # Cache for consumer
+  ds_core_consumer_redis:
+    image: redis:alpine
+    container_name: ds_core_consumer_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server 
+      --requirepass ds_core_consumer_redis
+      --user admin on >ds_core_consumer_redis ~* +@all
+
+  # Vault for consumer
   consumer_vault:
     image: hashicorp/vault:1.21
     container_name: vault-consumer
@@ -82,50 +114,39 @@ services:
       - ../vault/consumer/config:/vault/config
       - ../vault/consumer/data:/vault/file
     environment:
-      VAULT_CACERT: /vault/config/root-ca.pem
-      VAULT_LOCAL_CONFIG: >
-        {
-          "storage": { "file": { "path": "/vault/file" } },
-          "listener": [{
-            "tcp": {
-              "address": "0.0.0.0:8200",
-              "tls_cert_file": "/vault/config/vault-cert.pem",
-              "tls_key_file": "/vault/config/vault-key.pem",
-              "tls_client_ca_file": "/vault/config/vault-ca.pem"
-            }
-          }],
-          "ui": true,
-          "api_addr": "https://127.0.0.1:8200",
-          "default_lease_ttl": "168h",
-          "max_lease_ttl": "720h"
-        }
+#      VAULT_CACERT: /vault/config/root-ca.pem
 #      VAULT_LOCAL_CONFIG: >
 #        {
 #          "storage": { "file": { "path": "/vault/file" } },
 #          "listener": [{
 #            "tcp": {
 #              "address": "0.0.0.0:8200",
-#              "tls_disable": 1
-#
-#
+#              "tls_cert_file": "/vault/config/vault-cert.pem",
+#              "tls_key_file": "/vault/config/vault-key.pem",
+#              "tls_client_ca_file": "/vault/config/vault-ca.pem"
 #            }
 #          }],
 #          "ui": true,
-#          "api_addr": "http://127.0.0.1:8200",
+#          "api_addr": "https://127.0.0.1:8200",
 #          "default_lease_ttl": "168h",
 #          "max_lease_ttl": "720h"
 #        }
+      VAULT_LOCAL_CONFIG: >
+        {
+          "storage": { "file": { "path": "/vault/file" } },
+          "listener": [{
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_disable": 1
+            }
+          }],
+          "ui": true,
+          "api_addr": "http://127.0.0.1:8200",
+          "default_lease_ttl": "168h",
+          "max_lease_ttl": "720h"
+        }
     command: server
-  ds_core_consumer_redis:
-    image: redis:alpine
-    container_name: ds_core_consumer_redis
-    restart: always
-    ports:
-      - "6380:6379"
-    command: >
-      redis-server 
-      --requirepass ds_core_consumer_redis
-      --user admin on >ds_core_consumer_redis ~* +@all
+
 
   # ====================================================================
   # IDM ================================================================
@@ -143,4 +164,46 @@ services:
     command:
       - "start-dev"
 
+  # ====================================================================
+  # AUTHORITY ==========================================================
+  # Authority with start and setup services, along with its database
+  # ====================================================================
+  ds_authority:
+    container_name: ds_authority
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    restart: on-failure
+    depends_on:
+      - ds_authority_db
+    ports:
+      - "1500:1500"
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+      - ./../static/certificates:/app/certificates
+      - ./../static/specs:/app/specs
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "start", "--env-file", "/app/.env.authority" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
+  ds_authority_setup:
+    container_name: ds_authority_setup
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    depends_on:
+      - ds_authority_db
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "setup", "--env-file", "/app/.env.authority" ]
+
+  ds_authority_db:
+    container_name: ds_authority_db
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_authority
+      POSTGRES_USER: ds_authority
+      POSTGRES_DB: ds_authority
+    ports:
+      - "1450:5432"

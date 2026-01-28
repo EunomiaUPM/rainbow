@@ -6,7 +6,10 @@ use rainbow_common::errors::CommonErrors;
 use tracing::error;
 
 impl NewPolicyInstantiationDto {
-    pub(crate) fn validate_instantiation_request(&self, policy_template: &PolicyTemplateDto) -> anyhow::Result<()> {
+    pub(crate) fn validate_instantiation_request(
+        &self,
+        policy_template: &PolicyTemplateDto,
+    ) -> anyhow::Result<()> {
         for req_key in self.parameters.keys() {
             if !policy_template.parameters.contains_key(req_key) {
                 let err = CommonErrors::parse_new(&format!(
@@ -37,7 +40,10 @@ impl NewPolicyInstantiationDto {
 
             let validator = ValidatorFactory::get_validator(param_def.data_type);
             validator.validate(value_to_validate, &param_def.restrictions).map_err(|e| {
-                let err = CommonErrors::parse_new(&format!("Validation Error for '{}': {:?}", param_key, e));
+                let err = CommonErrors::parse_new(&format!(
+                    "Validation Error for '{}': {:?}",
+                    param_key, e
+                ));
                 error!("{:?}", err);
                 anyhow!(err)
             })?;

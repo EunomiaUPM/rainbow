@@ -89,9 +89,6 @@ mod test_dataservice {
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].inner.id, ds_id.to_string());
 
-        println!(
-            "Test finished. Inspect in Redis: ZRANGE {} 0 -1",
-            lookup_key
-        );
+        println!("Test finished. Inspect in Redis: ZRANGE {} 0 -1", lookup_key);
     }
 }

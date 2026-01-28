@@ -45,10 +45,19 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
         message_type: &NegotiationProcessMessageType,
     ) -> anyhow::Result<()> {
         match (role, message_type) {
-            (RoleConfig::Provider, NegotiationProcessMessageType::NegotiationRequestMessage) => Ok(()),
-            (RoleConfig::Provider, NegotiationProcessMessageType::NegotiationAgreementVerificationMessage) => Ok(()),
-            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationOfferMessage) => Ok(()),
-            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationAgreementMessage) => Ok(()),
+            (RoleConfig::Provider, NegotiationProcessMessageType::NegotiationRequestMessage) => {
+                Ok(())
+            }
+            (
+                RoleConfig::Provider,
+                NegotiationProcessMessageType::NegotiationAgreementVerificationMessage,
+            ) => Ok(()),
+            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationOfferMessage) => {
+                Ok(())
+            }
+            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationAgreementMessage) => {
+                Ok(())
+            }
             (_, NegotiationProcessMessageType::NegotiationEventMessage(_)) => Ok(()),
             (_, NegotiationProcessMessageType::NegotiationTerminationMessage) => Ok(()),
             _ => {
@@ -176,27 +185,29 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
                     validate_state_transition_error_helper(&current_state, message_type)?;
                 }
             },
-            NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => match current_state {
-                NegotiationProcessState::Requested => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
+            NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => {
+                match current_state {
+                    NegotiationProcessState::Requested => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
+                    NegotiationProcessState::Offered => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
+                    NegotiationProcessState::Accepted => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
+                    NegotiationProcessState::Agreed => {}
+                    NegotiationProcessState::Verified => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
+                    NegotiationProcessState::Finalized => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
+                    NegotiationProcessState::Terminated => {
+                        validate_state_transition_error_helper(&current_state, message_type)?;
+                    }
                 }
-                NegotiationProcessState::Offered => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
-                }
-                NegotiationProcessState::Accepted => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
-                }
-                NegotiationProcessState::Agreed => {}
-                NegotiationProcessState::Verified => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
-                }
-                NegotiationProcessState::Finalized => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
-                }
-                NegotiationProcessState::Terminated => {
-                    validate_state_transition_error_helper(&current_state, message_type)?;
-                }
-            },
+            }
             NegotiationProcessMessageType::NegotiationTerminationMessage => match current_state {
                 NegotiationProcessState::Requested => {}
                 NegotiationProcessState::Offered => {}
@@ -211,13 +222,16 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
                 }
             },
             NegotiationProcessMessageType::NegotiationProcess => {
-                let err =
-                    CommonErrors::parse_new("NegotiationProcessMessageType NegotiationProcess is not allowed here");
+                let err = CommonErrors::parse_new(
+                    "NegotiationProcessMessageType NegotiationProcess is not allowed here",
+                );
                 error!("{}", err.log());
                 bail!(err)
             }
             NegotiationProcessMessageType::NegotiationError => {
-                let err = CommonErrors::parse_new("NegotiationProcessMessageType NegotiationError is not allowed here");
+                let err = CommonErrors::parse_new(
+                    "NegotiationProcessMessageType NegotiationError is not allowed here",
+                );
                 error!("{}", err.log());
                 bail!(err)
             }

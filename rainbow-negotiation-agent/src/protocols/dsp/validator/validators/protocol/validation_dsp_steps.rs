@@ -20,7 +20,8 @@
 use crate::protocols::dsp::protocol_types::{
     NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferInitMessageDto,
     NegotiationOfferMessageDto, NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
-    NegotiationRequestMessageDto, NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
+    NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
@@ -72,7 +73,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 
@@ -103,7 +106,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 
@@ -124,7 +129,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 
@@ -145,7 +152,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 
@@ -166,7 +175,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 
@@ -187,7 +198,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         Ok(())
     }
 }

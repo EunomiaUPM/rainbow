@@ -11,12 +11,17 @@ pub trait CatalogRepositoryTrait: Send + Sync {
         page: Option<u64>,
         with_main_catalog: bool,
     ) -> anyhow::Result<Vec<catalog::Model>, CatalogAgentRepoErrors>;
-    async fn get_batch_catalogs(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<catalog::Model>, CatalogAgentRepoErrors>;
+    async fn get_batch_catalogs(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<catalog::Model>, CatalogAgentRepoErrors>;
     async fn get_catalog_by_id(
         &self,
         catalog_id: &Urn,
     ) -> anyhow::Result<Option<catalog::Model>, CatalogAgentRepoErrors>;
-    async fn get_main_catalog(&self) -> anyhow::Result<Option<catalog::Model>, CatalogAgentRepoErrors>;
+    async fn get_main_catalog(
+        &self,
+    ) -> anyhow::Result<Option<catalog::Model>, CatalogAgentRepoErrors>;
 
     async fn put_catalog_by_id(
         &self,
@@ -33,5 +38,8 @@ pub trait CatalogRepositoryTrait: Send + Sync {
         new_catalog_model: &NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogAgentRepoErrors>;
 
-    async fn delete_catalog_by_id(&self, catalog_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_catalog_by_id(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
 }

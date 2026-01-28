@@ -26,7 +26,8 @@ use crate::data::entities::negotiation_process_identifier::{
 use crate::data::factory_trait::NegotiationAgentRepoTrait;
 use crate::data::repo_traits::negotiation_process_repo::NegotiationProcessRepoErrors;
 use crate::entities::negotiation_process::{
-    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto, NewNegotiationProcessDto,
+    EditNegotiationProcessDto, NegotiationAgentProcessesTrait, NegotiationProcessDto,
+    NewNegotiationProcessDto,
 };
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -45,7 +46,10 @@ impl NegotiationAgentProcessesService {
         Self { negotiation_repo }
     }
 
-    async fn enrich_process(&self, process: negotiation_process_model::Model) -> anyhow::Result<NegotiationProcessDto> {
+    async fn enrich_process(
+        &self,
+        process: negotiation_process_model::Model,
+    ) -> anyhow::Result<NegotiationProcessDto> {
         let process_urn = Urn::from_str(&process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
                 "Invalid URN found in database for process {}. Error: {}",
@@ -66,14 +70,16 @@ impl NegotiationAgentProcessesService {
                 err
             })?;
 
-        let offers =
-            self.negotiation_repo.get_offer_repo().get_offers_by_negotiation_process(&process_urn).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+        let offers = self
+            .negotiation_repo
+            .get_offer_repo()
+            .get_offers_by_negotiation_process(&process_urn)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let agreement_opt = self
             .negotiation_repo
@@ -105,7 +111,13 @@ impl NegotiationAgentProcessesService {
             })
             .collect();
 
-        Ok(NegotiationProcessDto { inner: process, identifiers: ids_map, messages, offers, agreement: agreement_opt })
+        Ok(NegotiationProcessDto {
+            inner: process,
+            identifiers: ids_map,
+            messages,
+            offers,
+            agreement: agreement_opt,
+        })
     }
 }
 
@@ -136,15 +148,20 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
         Ok(dtos)
     }
 
-    async fn get_batch_negotiation_processes(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<NegotiationProcessDto>> {
-        let processes =
-            self.negotiation_repo.get_negotiation_process_repo().get_batch_negotiation_processes(ids).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+    async fn get_batch_negotiation_processes(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<NegotiationProcessDto>> {
+        let processes = self
+            .negotiation_repo
+            .get_negotiation_process_repo()
+            .get_batch_negotiation_processes(ids)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         let mut dtos = Vec::with_capacity(processes.len());
         for p in processes {
@@ -155,15 +172,20 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
         Ok(dtos)
     }
 
-    async fn get_negotiation_process_by_id(&self, id: &Urn) -> anyhow::Result<Option<NegotiationProcessDto>> {
-        let process_opt =
-            self.negotiation_repo.get_negotiation_process_repo().get_negotiation_process_by_id(id).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
+    async fn get_negotiation_process_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationProcessDto>> {
+        let process_opt = self
+            .negotiation_repo
+            .get_negotiation_process_repo()
+            .get_negotiation_process_by_id(id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
 
         match process_opt {
             Some(process) => Ok(Some(self.enrich_process(process).await?)),
@@ -193,7 +215,10 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
         }
     }
 
-    async fn get_negotiation_process_by_key_value(&self, id: &Urn) -> anyhow::Result<Option<NegotiationProcessDto>> {
+    async fn get_negotiation_process_by_key_value(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationProcessDto>> {
         let process_opt = self
             .negotiation_repo
             .get_negotiation_process_repo()
@@ -248,7 +273,10 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
                     .create_identifier(&new_ident_model)
                     .await
                     .map_err(|e| {
-                        let err = CommonErrors::database_new(&format!("Error creating identifier {}: {}", key, e));
+                        let err = CommonErrors::database_new(&format!(
+                            "Error creating identifier {}: {}",
+                            key, e
+                        ));
                         error!("{}", err.log());
                         err
                     })?;
@@ -272,8 +300,10 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
             .await
             .map_err(|e| match e {
                 NegotiationProcessRepoErrors::NegotiationProcessNotFound => {
-                    let err =
-                        CommonErrors::missing_resource_new(&id.to_string(), "Negotiation process not found for update");
+                    let err = CommonErrors::missing_resource_new(
+                        &id.to_string(),
+                        "Negotiation process not found for update",
+                    );
                     error!("{}", err.log());
                     err
                 }
@@ -319,24 +349,33 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
                         })
                         .await
                         .map_err(|e| {
-                            let err =
-                                CommonErrors::database_new(&format!("Error creating new identifier {}: {}", key, e));
+                            let err = CommonErrors::database_new(&format!(
+                                "Error creating new identifier {}: {}",
+                                key, e
+                            ));
                             error!("{}", err.log());
                             err
                         })?;
                 } else {
-                    let id_urn_ident = Urn::from_str(identifier_model.unwrap().id.as_str()).map_err(|e| {
-                        let err = CommonErrors::parse_new(&format!("Identifier URN malformed: {}", e));
-                        error!("{}", err.log());
-                        err
-                    })?;
+                    let id_urn_ident = Urn::from_str(identifier_model.unwrap().id.as_str())
+                        .map_err(|e| {
+                            let err = CommonErrors::parse_new(&format!(
+                                "Identifier URN malformed: {}",
+                                e
+                            ));
+                            error!("{}", err.log());
+                            err
+                        })?;
 
                     self.negotiation_repo
                         .get_negotiation_process_identifiers_repo()
                         .put_identifier(&id_urn_ident, &new_ident_model)
                         .await
                         .map_err(|e| {
-                            let err = CommonErrors::database_new(&format!("Error updating identifier {}: {}", key, e));
+                            let err = CommonErrors::database_new(&format!(
+                                "Error updating identifier {}: {}",
+                                key, e
+                            ));
                             error!("{}", err.log());
                             err
                         })?;
@@ -348,23 +387,25 @@ impl NegotiationAgentProcessesTrait for NegotiationAgentProcessesService {
     }
 
     async fn delete_negotiation_process(&self, id: &Urn) -> anyhow::Result<()> {
-        self.negotiation_repo.get_negotiation_process_repo().delete_negotiation_process(id).await.map_err(
-            |e| match e {
-                NegotiationProcessRepoErrors::NegotiationProcessNotFound => {
-                    let err = CommonErrors::missing_resource_new(
-                        &id.to_string(),
-                        "Negotiation process not found for deletion",
-                    );
-                    error!("{}", err.log());
-                    err
-                }
-                _ => {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                }
-            },
-        )?;
+        self.negotiation_repo
+            .get_negotiation_process_repo()
+            .delete_negotiation_process(id)
+            .await
+            .map_err(|e| match e {
+            NegotiationProcessRepoErrors::NegotiationProcessNotFound => {
+                let err = CommonErrors::missing_resource_new(
+                    &id.to_string(),
+                    "Negotiation process not found for deletion",
+                );
+                error!("{}", err.log());
+                err
+            }
+            _ => {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            }
+        })?;
         Ok(())
     }
 }

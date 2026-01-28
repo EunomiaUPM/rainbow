@@ -33,12 +33,33 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(NegotiationAgentOffers::Table)
-                    .col(ColumnDef::new(NegotiationAgentOffers::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationAgentProcessId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationAgentMessageId).string().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentOffers::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentOffers::NegotiationAgentProcessId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentOffers::NegotiationAgentMessageId)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(NegotiationAgentOffers::OfferId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentOffers::OfferContent).json_binary().not_null())
-                    .col(ColumnDef::new(NegotiationAgentOffers::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(NegotiationAgentOffers::OfferContent)
+                            .json_binary()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(NegotiationAgentOffers::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-negotiation_offer-process_id")
@@ -56,10 +77,7 @@ impl MigrationTrait for Migration {
                                 NegotiationAgentOffers::Table,
                                 NegotiationAgentOffers::NegotiationAgentMessageId,
                             )
-                            .to(
-                                NegotiationAgentMessages::Table,
-                                NegotiationAgentMessages::Id,
-                            )
+                            .to(NegotiationAgentMessages::Table, NegotiationAgentMessages::Id)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),

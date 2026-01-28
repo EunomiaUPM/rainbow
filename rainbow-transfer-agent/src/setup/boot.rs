@@ -21,20 +21,21 @@ use crate::setup::http_worker::TransferHttpWorker;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
-use rainbow_common::vault::vault_rs::VaultService;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::Sender;
 use tokio_util::sync::CancellationToken;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct TransferBoot;
 
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for TransferBoot {
     type Config = TransferConfig;
-    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config> {
+    async fn load_config(env_file: String) -> anyhow::Result<Self::Config> {
         let config = Self::Config::load(env_file);
-        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        let table =
+            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         tracing::info!("Current Transfer Agent Config:\n{}", table);
         Ok(config)
     }
@@ -51,7 +52,10 @@ impl BootstrapServiceTrait for TransferBoot {
         false
     }
 
-    async fn start_services_background(config: &Self::Config, vault: Arc<VaultService>) -> anyhow::Result<Sender<()>> {
+    async fn start_services_background(
+        config: &Self::Config,
+        vault: Arc<VaultService>,
+    ) -> anyhow::Result<Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();

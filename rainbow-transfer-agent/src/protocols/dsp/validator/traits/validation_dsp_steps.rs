@@ -18,8 +18,8 @@
  */
 
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto,
-    TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 
 #[async_trait::async_trait]

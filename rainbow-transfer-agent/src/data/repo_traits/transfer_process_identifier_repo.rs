@@ -18,7 +18,9 @@
  */
 
 use crate::data::entities::transfer_process_identifier;
-use crate::data::entities::transfer_process_identifier::{EditTransferIdentifierModel, NewTransferIdentifierModel};
+use crate::data::entities::transfer_process_identifier::{
+    EditTransferIdentifierModel, NewTransferIdentifierModel,
+};
 use anyhow::Error;
 use thiserror::Error;
 use urn::Urn;
@@ -60,7 +62,8 @@ pub trait TransferIdentifierRepoTrait: Send + Sync {
         edit_model: &EditTransferIdentifierModel,
     ) -> anyhow::Result<transfer_process_identifier::Model, TransferIdentifierRepoErrors>;
 
-    async fn delete_identifier(&self, id: &Urn) -> anyhow::Result<(), TransferIdentifierRepoErrors>;
+    async fn delete_identifier(&self, id: &Urn)
+        -> anyhow::Result<(), TransferIdentifierRepoErrors>;
 }
 
 #[derive(Debug, Error)]

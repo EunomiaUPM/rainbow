@@ -19,7 +19,9 @@
 
 use crate::data::entities::negotiation_message;
 use crate::data::entities::negotiation_message::{Model, NewNegotiationMessageModel};
-use crate::data::repo_traits::negotiation_message_repo::{NegotiationMessageRepoErrors, NegotiationMessageRepoTrait};
+use crate::data::repo_traits::negotiation_message_repo::{
+    NegotiationMessageRepoErrors, NegotiationMessageRepoTrait,
+};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use urn::Urn;
 
@@ -49,7 +51,9 @@ impl NegotiationMessageRepoTrait for NegotiationMessageRepoForSql {
 
         match messages {
             Ok(messages) => Ok(messages),
-            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(e.into())),
+            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(
+                e.into(),
+            )),
         }
     }
 
@@ -66,7 +70,9 @@ impl NegotiationMessageRepoTrait for NegotiationMessageRepoForSql {
 
         match messages {
             Ok(messages) => Ok(messages),
-            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(e.into())),
+            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(
+                e.into(),
+            )),
         }
     }
 
@@ -78,7 +84,9 @@ impl NegotiationMessageRepoTrait for NegotiationMessageRepoForSql {
         let message = negotiation_message::Entity::find_by_id(mid).one(&self.db_connection).await;
         match message {
             Ok(message) => Ok(message),
-            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(e.into())),
+            Err(e) => Err(NegotiationMessageRepoErrors::ErrorFetchingNegotiationMessage(
+                e.into(),
+            )),
         }
     }
 
@@ -87,14 +95,21 @@ impl NegotiationMessageRepoTrait for NegotiationMessageRepoForSql {
         new_model: &NewNegotiationMessageModel,
     ) -> anyhow::Result<Model, NegotiationMessageRepoErrors> {
         let model: negotiation_message::ActiveModel = new_model.clone().into();
-        let result = negotiation_message::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let result = negotiation_message::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await;
         match result {
             Ok(message) => Ok(message),
-            Err(e) => Err(NegotiationMessageRepoErrors::ErrorCreatingNegotiationMessage(e.into())),
+            Err(e) => Err(NegotiationMessageRepoErrors::ErrorCreatingNegotiationMessage(
+                e.into(),
+            )),
         }
     }
 
-    async fn delete_negotiation_message(&self, id: &Urn) -> anyhow::Result<(), NegotiationMessageRepoErrors> {
+    async fn delete_negotiation_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), NegotiationMessageRepoErrors> {
         let mid = id.to_string();
         let result = negotiation_message::Entity::delete_by_id(mid).exec(&self.db_connection).await;
 
@@ -103,7 +118,9 @@ impl NegotiationMessageRepoTrait for NegotiationMessageRepoForSql {
                 0 => Err(NegotiationMessageRepoErrors::NegotiationMessageNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(NegotiationMessageRepoErrors::ErrorDeletingNegotiationMessage(e.into())),
+            Err(e) => Err(NegotiationMessageRepoErrors::ErrorDeletingNegotiationMessage(
+                e.into(),
+            )),
         }
     }
 }

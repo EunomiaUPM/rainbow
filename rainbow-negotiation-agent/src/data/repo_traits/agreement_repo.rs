@@ -30,8 +30,14 @@ pub trait AgreementRepoTrait: Send + Sync {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<agreement::Model>, AgreementRepoErrors>;
-    async fn get_batch_agreements(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<agreement::Model>, AgreementRepoErrors>;
-    async fn get_agreement_by_id(&self, id: &Urn) -> anyhow::Result<Option<agreement::Model>, AgreementRepoErrors>;
+    async fn get_batch_agreements(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<agreement::Model>, AgreementRepoErrors>;
+    async fn get_agreement_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<agreement::Model>, AgreementRepoErrors>;
     async fn get_agreement_by_negotiation_process(
         &self,
         id: &Urn,

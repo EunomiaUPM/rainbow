@@ -19,7 +19,8 @@
 
 use crate::gateway::core::business::BusinessCatalogTrait;
 use crate::gateway::http::business_router_types::{
-    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
+    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest,
+    RainbowBusinessTerminationRequest,
 };
 use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
@@ -67,10 +68,7 @@ where
 
         let mut router = Router::new()
             // Common
-            .route(
-                "/gateway/api/catalogs",
-                get(Self::handle_business_get_catalogs),
-            )
+            .route("/gateway/api/catalogs", get(Self::handle_business_get_catalogs))
             .route(
                 "/gateway/api/catalogs/:catalog_id/datasets",
                 get(Self::handle_business_get_datasets_by_catalog),
@@ -180,11 +178,9 @@ where
 
         match service.get_catalogs(token.to_string()).await {
             Ok(catalogs) => (StatusCode::OK, Json(catalogs)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_get_datasets_by_catalog(
@@ -207,11 +203,9 @@ where
 
         match service.get_datasets_by_catalog(catalog_id, token.to_string()).await {
             Ok(datasets) => (StatusCode::OK, Json(datasets)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_get_dataset(
@@ -233,11 +227,9 @@ where
         };
         match service.get_dataset(dataset_id, token.to_string()).await {
             Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_get_policy_templates(
@@ -249,11 +241,9 @@ where
 
         match service.get_policy_templates(token.to_string()).await {
             Ok(policy_templates) => (StatusCode::OK, Json(policy_templates)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_get_policy_template_by_id(
@@ -266,11 +256,9 @@ where
 
         match service.get_policy_template_by_id(pt_id, token.to_string()).await {
             Ok(policy_template) => (StatusCode::OK, Json(policy_template)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_get_policy_offers_by_dataset(
@@ -296,11 +284,9 @@ where
 
         match service.get_policy_offers_by_dataset(dataset_id, token.to_string()).await {
             Ok(offers) => (StatusCode::OK, Json(offers)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_post_policy_offer(
@@ -327,20 +313,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.to_string()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.to_string()})))
                     .into_response()
             }
         };
         match service.post_policy_offer(dataset_id, input, token.to_string()).await {
             Ok(policy) => (StatusCode::OK, Json(policy)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_business_delete_policy_offer(
@@ -375,11 +356,9 @@ where
         };
         match service.delete_policy_offer(dataset_id, policy_id, token.to_string()).await {
             Ok(_) => (StatusCode::OK).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_get_business_negotiation_requests(
@@ -390,11 +369,9 @@ where
         let token = &info.token;
         match service.get_business_negotiation_requests(token.to_string()).await {
             Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_get_business_negotiation_request_by_id(
@@ -416,11 +393,9 @@ where
         };
         match service.get_business_negotiation_request_by_id(request_id, token.to_string()).await {
             Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_get_customer_negotiation_requests(
@@ -428,18 +403,13 @@ where
         Extension(info): Extension<Arc<RequestInfo>>,
         Path(participant_id): Path<String>,
     ) -> impl IntoResponse {
-        info!(
-            "GET /gateway/api/negotiation/consumer/{}/requests",
-            participant_id
-        );
+        info!("GET /gateway/api/negotiation/consumer/{}/requests", participant_id);
         let token = &info.token;
         match service.get_consumer_negotiation_requests(participant_id, token.to_string()).await {
             Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_get_consumer_negotiation_request_by_id(
@@ -462,13 +432,14 @@ where
                     .into_response()
             }
         };
-        match service.get_consumer_negotiation_request_by_id(participant_id, request_id, token.to_string()).await {
+        match service
+            .get_consumer_negotiation_request_by_id(participant_id, request_id, token.to_string())
+            .await
+        {
             Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_accept_request(
@@ -481,20 +452,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.body_text()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()})))
                     .into_response()
             }
         };
         match service.accept_request(input, token.to_string()).await {
             Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_terminate_request(
@@ -507,20 +473,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.body_text()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()})))
                     .into_response()
             }
         };
         match service.terminate_request(input, token.to_string()).await {
             Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_create_request(
@@ -533,20 +494,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.body_text()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()})))
                     .into_response()
             }
         };
         match service.create_request(input, token.to_string()).await {
             Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
     async fn handle_login(
@@ -557,20 +513,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.body_text()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()})))
                     .into_response()
             }
         };
         match service.login(input).await {
             Ok(uri) => (StatusCode::ACCEPTED, uri).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
 
@@ -582,20 +533,15 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({"error": err.body_text()})),
-                )
+                return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()})))
                     .into_response()
             }
         };
         match service.login_poll(input).await {
             Ok(uri) => (StatusCode::ACCEPTED, Json(uri)).into_response(),
-            Err(e) => (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": e.to_string()})),
-            )
-                .into_response(),
+            Err(e) => {
+                (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+            }
         }
     }
 }

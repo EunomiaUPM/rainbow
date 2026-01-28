@@ -19,7 +19,9 @@ pub trait DataServiceRepositoryTrait: Send + Sync {
         &self,
         catalog_id: &Urn,
     ) -> anyhow::Result<Vec<dataservice::Model>, CatalogAgentRepoErrors>;
-    async fn get_main_data_service(&self) -> anyhow::Result<Option<dataservice::Model>, CatalogAgentRepoErrors>;
+    async fn get_main_data_service(
+        &self,
+    ) -> anyhow::Result<Option<dataservice::Model>, CatalogAgentRepoErrors>;
 
     async fn get_data_service_by_id(
         &self,
@@ -39,5 +41,8 @@ pub trait DataServiceRepositoryTrait: Send + Sync {
         &self,
         new_data_service_model: &NewDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogAgentRepoErrors>;
-    async fn delete_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors>;
+    async fn delete_data_service_by_id(
+        &self,
+        data_service_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors>;
 }

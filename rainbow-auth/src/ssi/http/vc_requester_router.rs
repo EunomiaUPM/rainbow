@@ -46,9 +46,9 @@ impl VcRequesterRouter {
             .route("/beg/cross-user", post(Self::beg_cross_user))
             .route("/beg/oidc", post(Self::beg_oidc))
             .route("/all", get(Self::get_all))
-            .route("/:id", get(Self::get_one))
-            .route("/callback/:id", get(Self::get_callback))
-            .route("/callback/:id", post(Self::post_callback))
+            .route("/{id}", get(Self::get_one))
+            .route("/callback/{id}", get(Self::get_callback))
+            .route("/callback/{id}", post(Self::post_callback))
             .with_state(self.requester)
     }
 

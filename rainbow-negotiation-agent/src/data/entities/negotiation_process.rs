@@ -19,8 +19,8 @@
 
 use sea_orm::prelude::{DateTimeWithTimeZone, Json};
 use sea_orm::{
-    ActiveModelBehavior, ActiveValue, DeriveEntityModel, DerivePrimaryKey, DeriveRelation, EntityTrait, EnumIter,
-    PrimaryKeyTrait, Related, RelationDef, RelationTrait,
+    ActiveModelBehavior, ActiveValue, DeriveEntityModel, DerivePrimaryKey, DeriveRelation,
+    EntityTrait, EnumIter, PrimaryKeyTrait, Related, RelationDef, RelationTrait,
 };
 use serde::{Deserialize, Serialize};
 use urn::{Urn, UrnBuilder};
@@ -112,12 +112,10 @@ impl Default for NewNegotiationProcessModel {
 
 impl From<NewNegotiationProcessModel> for ActiveModel {
     fn from(value: NewNegotiationProcessModel) -> Self {
-        let new_urn = UrnBuilder::new(
-            "negotiation-process",
-            uuid::Uuid::new_v4().to_string().as_str(),
-        )
-        .build()
-        .expect("UrnBuilder failed");
+        let new_urn =
+            UrnBuilder::new("negotiation-process", uuid::Uuid::new_v4().to_string().as_str())
+                .build()
+                .expect("UrnBuilder failed");
 
         Self {
             id: ActiveValue::Set(value.id.unwrap_or(new_urn).to_string()),

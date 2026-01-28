@@ -100,17 +100,15 @@ impl ProtocolPluginTrait for NegotiationDSP {
             self.negotiation_agent_process_entities.clone(),
         ));
         let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
-        let validator_state_machine_dsp = Arc::new(ValidatedStateTransitionServiceForDsp::new(
-            validator_helper.clone(),
-        ));
+        let validator_state_machine_dsp =
+            Arc::new(ValidatedStateTransitionServiceForDsp::new(validator_helper.clone()));
         let dsp_validator = Arc::new(ValidationDspStepsService::new(
             validator_payload.clone(),
             validator_state_machine_dsp.clone(),
             validator_helper.clone(),
         ));
-        let validator_state_machine_rpc = Arc::new(ValidatedStateTransitionServiceForRcp::new(
-            validator_helper.clone(),
-        ));
+        let validator_state_machine_rpc =
+            Arc::new(ValidatedStateTransitionServiceForRcp::new(validator_helper.clone()));
         let rpc_validator = Arc::new(ValidationRpcStepsService::new(
             validator_payload.clone(),
             validator_state_machine_rpc.clone(),

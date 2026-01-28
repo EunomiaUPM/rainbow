@@ -1,4 +1,6 @@
-use crate::entities::data_services::{DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
+use crate::entities::data_services::{
+    DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto,
+};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
@@ -46,17 +48,14 @@ impl DataServiceEntityRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(Self::handle_get_all_data_services))
-            .route(
-                "/catalog/:id",
-                get(Self::handle_get_data_services_by_catalog_id),
-            )
+            .route("/catalog/{id}", get(Self::handle_get_data_services_by_catalog_id))
             .route("/", post(Self::handle_create_data_service))
             .route("/batch", post(Self::handle_get_batch_data_services))
             .route("/main", get(Self::handle_get_main_data_service))
             .route("/main", post(Self::handle_create_main_data_service))
-            .route("/:id", get(Self::handle_get_data_service_by_id))
-            .route("/:id", put(Self::handle_put_data_service_by_id))
-            .route("/:id", delete(Self::handle_delete_data_service_by_id))
+            .route("/{id}", get(Self::handle_get_data_service_by_id))
+            .route("/{id}", put(Self::handle_put_data_service_by_id))
+            .route("/{id}", delete(Self::handle_delete_data_service_by_id))
             .with_state(self)
     }
 
@@ -117,7 +116,9 @@ impl DataServiceEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_data_service_by_id(&id_urn).await {
-            Ok(Some(data_service)) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
+            Ok(Some(data_service)) => {
+                (StatusCode::OK, Json(ToCamelCase(data_service))).into_response()
+            }
             Ok(None) => {
                 let err = CommonErrors::missing_resource_new(id.as_str(), "Data service not found");
                 err.into_response()
@@ -126,9 +127,13 @@ impl DataServiceEntityRouter {
         }
     }
 
-    async fn handle_get_main_data_service(State(state): State<DataServiceEntityRouter>) -> impl IntoResponse {
+    async fn handle_get_main_data_service(
+        State(state): State<DataServiceEntityRouter>,
+    ) -> impl IntoResponse {
         match state.service.get_main_data_service().await {
-            Ok(Some(data_service)) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
+            Ok(Some(data_service)) => {
+                (StatusCode::OK, Json(ToCamelCase(data_service))).into_response()
+            }
             Ok(None) => {
                 let err = CommonErrors::missing_resource_new("", "Main Data service not found");
                 err.into_response()

@@ -121,7 +121,10 @@ impl HttpClient {
 
         let status = response.status();
         if status.is_client_error() || status.is_server_error() {
-            return Err(HttpClientError::HttpError { status, message: response.text().await.unwrap_or_default() });
+            return Err(HttpClientError::HttpError {
+                status,
+                message: response.text().await.unwrap_or_default(),
+            });
         }
 
         Ok(response)
@@ -174,7 +177,8 @@ impl HttpClient {
         body: Option<Bytes>,
         content_type: Option<&str>,
     ) -> Result<reqwest::Response, HttpClientError> {
-        let _permit = self.limiter.acquire().await.map_err(|_| HttpClientError::ConcurrencyError)?;
+        let _permit =
+            self.limiter.acquire().await.map_err(|_| HttpClientError::ConcurrencyError)?;
         self.execute_with_retries(method, url, body, content_type).await
     }
 
@@ -186,7 +190,11 @@ impl HttpClient {
         Self::deserialize_internal(response).await
     }
 
-    pub async fn get_json_with_payload<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
+    pub async fn get_json_with_payload<T, R>(
+        &self,
+        url: &str,
+        payload: &T,
+    ) -> anyhow::Result<R, HttpClientError>
     where
         T: Serialize,
         R: DeserializeOwned,
@@ -194,18 +202,16 @@ impl HttpClient {
         let bytes = serde_json::to_vec(payload)?;
         let body = Bytes::from(bytes);
 
-        let response = self
-            .dispatch(
-                reqwest::Method::GET,
-                url,
-                Some(body),
-                Some("application/json"),
-            )
-            .await?;
+        let response =
+            self.dispatch(reqwest::Method::GET, url, Some(body), Some("application/json")).await?;
         Self::deserialize_internal(response).await
     }
 
-    pub async fn post_json<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
+    pub async fn post_json<T, R>(
+        &self,
+        url: &str,
+        payload: &T,
+    ) -> anyhow::Result<R, HttpClientError>
     where
         T: Serialize,
         R: DeserializeOwned,
@@ -213,14 +219,8 @@ impl HttpClient {
         let bytes = serde_json::to_vec(payload)?;
         let body = Bytes::from(bytes);
 
-        let response = self
-            .dispatch(
-                reqwest::Method::POST,
-                url,
-                Some(body),
-                Some("application/json"),
-            )
-            .await?;
+        let response =
+            self.dispatch(reqwest::Method::POST, url, Some(body), Some("application/json")).await?;
         Self::deserialize_internal(response).await
     }
 
@@ -240,14 +240,8 @@ impl HttpClient {
     {
         let bytes = serde_json::to_vec(payload)?;
         let body = Bytes::from(bytes);
-        let response = self
-            .dispatch(
-                reqwest::Method::PUT,
-                url,
-                Some(body),
-                Some("application/json"),
-            )
-            .await?;
+        let response =
+            self.dispatch(reqwest::Method::PUT, url, Some(body), Some("application/json")).await?;
         Self::deserialize_internal(response).await
     }
 
@@ -259,7 +253,11 @@ impl HttpClient {
         R::from_response(response).await
     }
 
-    pub async fn post_form<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
+    pub async fn post_form<T, R>(
+        &self,
+        url: &str,
+        payload: &T,
+    ) -> anyhow::Result<R, HttpClientError>
     where
         T: Serialize,
         R: ApiResponse,
@@ -282,6 +280,7 @@ impl HttpClient {
         R: DeserializeOwned,
     {
         let raw_text = response.text().await.map_err(HttpClientError::BodyReadError)?;
-        serde_json::from_str::<R>(&raw_text).map_err(|source| HttpClientError::DeserializeError { source, raw_text })
+        serde_json::from_str::<R>(&raw_text)
+            .map_err(|source| HttpClientError::DeserializeError { source, raw_text })
     }
 }

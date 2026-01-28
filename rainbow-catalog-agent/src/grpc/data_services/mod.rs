@@ -1,8 +1,11 @@
-use crate::entities::data_services::{DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
+use crate::entities::data_services::{
+    DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto,
+};
 use crate::grpc::api::catalog_agent::data_service_entity_service_server::DataServiceEntityService;
 use crate::grpc::api::catalog_agent::{
-    CreateDataServiceRequest, DataService, DataServiceListResponse, DataServiceResponse, DeleteByIdRequest,
-    GetAllRequest, GetBatchRequest, GetByIdRequest, GetByParentIdRequest, PutDataServiceRequest,
+    CreateDataServiceRequest, DataService, DataServiceListResponse, DataServiceResponse,
+    DeleteByIdRequest, GetAllRequest, GetBatchRequest, GetByIdRequest, GetByParentIdRequest,
+    PutDataServiceRequest,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -52,8 +55,11 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Status::invalid_argument("One or more IDs are invalid URNs"))?;
 
-        let data_services =
-            self.service.get_batch_data_services(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let data_services = self
+            .service
+            .get_batch_data_services(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_services: Vec<DataService> = data_services.into_iter().map(Into::into).collect();
 
@@ -67,7 +73,8 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         request: Request<GetByParentIdRequest>,
     ) -> Result<Response<DataServiceListResponse>, Status> {
         let req = request.into_inner();
-        let catalog_urn = Urn::from_str(&req.parent_id).map_err(|_| Status::invalid_argument("Invalid Catalog URN"))?;
+        let catalog_urn = Urn::from_str(&req.parent_id)
+            .map_err(|_| Status::invalid_argument("Invalid Catalog URN"))?;
 
         let data_services = self
             .service
@@ -89,27 +96,32 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 
-        let data_service_opt =
-            self.service.get_data_service_by_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let data_service_opt = self
+            .service
+            .get_data_service_by_id(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         match data_service_opt {
-            Some(dto) => Ok(Response::new(DataServiceResponse {
-                data_service: Some(dto.into()),
-            })),
+            Some(dto) => Ok(Response::new(DataServiceResponse { data_service: Some(dto.into()) })),
             None => Err(Status::not_found("DataService not found")),
         }
     }
 
-    async fn get_main_data_service(&self, request: Request<()>) -> Result<Response<DataServiceResponse>, Status> {
+    async fn get_main_data_service(
+        &self,
+        request: Request<()>,
+    ) -> Result<Response<DataServiceResponse>, Status> {
         let _req = request.into_inner();
 
-        let data_service_opt =
-            self.service.get_main_data_service().await.map_err(|e| Status::internal(e.to_string()))?;
+        let data_service_opt = self
+            .service
+            .get_main_data_service()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         match data_service_opt {
-            Some(dto) => Ok(Response::new(DataServiceResponse {
-                data_service: Some(dto.into()),
-            })),
+            Some(dto) => Ok(Response::new(DataServiceResponse { data_service: Some(dto.into()) })),
             None => Err(Status::not_found("DataService not found")),
         }
     }
@@ -169,7 +181,10 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         }))
     }
 
-    async fn delete_data_service_by_id(&self, request: Request<DeleteByIdRequest>) -> Result<Response<()>, Status> {
+    async fn delete_data_service_by_id(
+        &self,
+        request: Request<DeleteByIdRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 

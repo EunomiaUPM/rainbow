@@ -20,7 +20,9 @@
 use crate::data::entities::agreement as agreement_model;
 use crate::data::entities::negotiation_message as negotiation_message_model;
 use crate::data::entities::negotiation_process as negotiation_process_model;
-use crate::data::entities::negotiation_process::{EditNegotiationProcessModel, NewNegotiationProcessModel};
+use crate::data::entities::negotiation_process::{
+    EditNegotiationProcessModel, NewNegotiationProcessModel,
+};
 use crate::data::entities::offer as offer_model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -101,9 +103,15 @@ pub trait NegotiationAgentProcessesTrait: Send + Sync + 'static {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<NegotiationProcessDto>>;
 
-    async fn get_batch_negotiation_processes(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<NegotiationProcessDto>>;
+    async fn get_batch_negotiation_processes(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<NegotiationProcessDto>>;
 
-    async fn get_negotiation_process_by_id(&self, id: &Urn) -> anyhow::Result<Option<NegotiationProcessDto>>;
+    async fn get_negotiation_process_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationProcessDto>>;
 
     async fn get_negotiation_process_by_key_id(
         &self,
@@ -111,7 +119,10 @@ pub trait NegotiationAgentProcessesTrait: Send + Sync + 'static {
         id: &Urn,
     ) -> anyhow::Result<Option<NegotiationProcessDto>>;
 
-    async fn get_negotiation_process_by_key_value(&self, id: &Urn) -> anyhow::Result<Option<NegotiationProcessDto>>;
+    async fn get_negotiation_process_by_key_value(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<NegotiationProcessDto>>;
 
     async fn create_negotiation_process(
         &self,

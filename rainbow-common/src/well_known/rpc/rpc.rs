@@ -44,7 +44,10 @@ impl WellKnownRPCTrait for WellKnownRPCService {
         Ok((response, base_url))
     }
 
-    async fn fetch_dataspace_current_path(&self, input: &WellKnownRPCRequest) -> anyhow::Result<VersionPath> {
+    async fn fetch_dataspace_current_path(
+        &self,
+        input: &WellKnownRPCRequest,
+    ) -> anyhow::Result<VersionPath> {
         let (wk, base_url) = self.fetch_dataspace_well_known(input).await?;
 
         let current = wk.protocol_versions.iter().find(|p| p.version == DSP_CURRENT_VERSION);

@@ -20,7 +20,9 @@
 pub(crate) mod persistence;
 pub(crate) mod protocol;
 
-use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
+};
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
 
@@ -30,6 +32,8 @@ pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
         &self,
         input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
     ) -> anyhow::Result<Catalog>;
-    async fn on_dataset_request(&self, input: &CatalogMessageWrapper<DatasetRequestMessage>)
-        -> anyhow::Result<Dataset>;
+    async fn on_dataset_request(
+        &self,
+        input: &CatalogMessageWrapper<DatasetRequestMessage>,
+    ) -> anyhow::Result<Dataset>;
 }

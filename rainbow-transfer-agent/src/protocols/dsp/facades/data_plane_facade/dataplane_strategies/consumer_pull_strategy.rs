@@ -5,7 +5,9 @@ use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
-use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion};
+use rainbow_common::adv_protocol::interplane::{
+    DataPlaneControllerMessages, DataPlaneControllerVersion,
+};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use serde_json::error::Category::Data;

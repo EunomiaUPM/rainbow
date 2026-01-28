@@ -11,5 +11,6 @@ pub(crate) mod api {
         tonic::include_proto!("catalog.v1");
     }
 
-    pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("catalog_descriptor");
+    pub const FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("catalog_descriptor");
 }

@@ -19,15 +19,12 @@
 use crate::setup::grpc_worker::CatalogGrpcWorker;
 use crate::setup::http_worker::CatalogHttpWorker;
 use crate::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
-use rainbow_auth::ssi::data::entities::mates;
 use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::{CatalogConfig, ContractsConfig, TransferConfig};
-use rainbow_common::config::traits::{ApiConfigTrait, ConfigLoader, HostConfigTrait};
+use rainbow_common::config::traits::{CommonConfigTrait, ConfigLoader};
 use rainbow_common::config::types::roles::RoleConfig;
-use rainbow_common::config::types::HostType;
 use rainbow_common::http_client::{HttpClient, HttpClientError};
-use rainbow_common::vault::vault_rs::VaultService;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -35,15 +32,20 @@ use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use urn::Urn;
+use ymir::config::traits::{ApiConfigTrait, HostsConfigTrait};
+use ymir::config::types::HostType;
+use ymir::data::entities::mates;
+use ymir::services::vault::vault_rs::VaultService;
 
 pub struct CatalogAgentBoot;
 
 #[async_trait::async_trait]
 impl BootstrapServiceTrait for CatalogAgentBoot {
     type Config = CatalogConfig;
-    async fn load_config(env_file: Option<String>) -> anyhow::Result<Self::Config> {
+    async fn load_config(env_file: String) -> anyhow::Result<Self::Config> {
         let config = Self::Config::load(env_file);
-        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        let table =
+            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         tracing::info!("Current Catalog Agent Config:\n{}", table);
         Ok(config)
     }
@@ -79,28 +81,36 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
         }
     }
 
-    async fn load_catalog(participant_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_catalog(
+        participant_id: &Option<String>,
+        config: &Self::Config,
+    ) -> anyhow::Result<String> {
         let participant_id = participant_id.clone().unwrap_or_default();
         let client = HttpClient::new(1, 3);
-        let base_url = config.get_host(HostType::Http);
-        let api = config.get_api_version();
+        let base_url = config.common().get_host(HostType::Http);
+        let api = config.common().get_api_version();
         let url = format!("{}{}/catalog-agent/catalogs/main", base_url, api);
         let catalog = client
             .post_json::<NewCatalogDto, CatalogDto>(
                 url.as_str(),
-                &NewCatalogDto { dspace_participant_id: Some(participant_id), ..NewCatalogDto::default() },
+                &NewCatalogDto {
+                    dspace_participant_id: Some(participant_id),
+                    ..NewCatalogDto::default()
+                },
             )
             .await?;
         Ok(catalog.inner.id)
     }
 
-    async fn load_dataservice(catalog_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_dataservice(
+        catalog_id: &Option<String>,
+        config: &Self::Config,
+    ) -> anyhow::Result<String> {
         let catalog_id = catalog_id.clone().unwrap_or_default();
         let client = HttpClient::new(1, 3);
-        let base_url = config.get_host(HostType::Http);
+        let base_url = config.common().get_host(HostType::Http);
         let negotiation_url = config.contracts().get_host(HostType::Http);
-
-        let api = config.get_api_version();
+        let api = config.common().get_api_version();
         let url = format!("{}{}/catalog-agent/data-services/main", base_url, api);
         let catalog = client
             .post_json::<NewDataServiceDto, DataServiceDto>(
@@ -117,8 +127,8 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
 
     async fn load_policy_templates(config: &Self::Config) -> anyhow::Result<()> {
         let client = HttpClient::new(1, 3);
-        let base_url = config.get_host(HostType::Http);
-        let api = config.get_api_version();
+        let base_url = config.common().get_host(HostType::Http);
+        let api = config.common().get_api_version();
         let url = format!("{}{}/catalog-agent/policy-templates", base_url, api);
         // load files
         let policies_folder = config.get_policy_templates_folder();
@@ -146,14 +156,16 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
                         continue;
                     }
                 };
-                let _ =
-                    match client.post_json::<serde_json::Value, serde_json::Value>(url.as_str(), &json_payload).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            error!("Invalid request {:?}: {}", path, e);
-                            continue;
-                        }
-                    };
+                let _ = match client
+                    .post_json::<serde_json::Value, serde_json::Value>(url.as_str(), &json_payload)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        error!("Invalid request {:?}: {}", path, e);
+                        continue;
+                    }
+                };
             }
         }
         Ok(())

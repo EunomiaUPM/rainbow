@@ -23,6 +23,7 @@ use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use std::str::FromStr;
 use tracing::error;
 use urn::Urn;
 use uuid::Uuid;
@@ -74,4 +75,15 @@ pub fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Re
             Err(e.into_response())
         }
     }
+}
+
+pub fn parse_urn(id: &str) -> Result<Urn, Response> {
+    Urn::from_str(id).map_err(|err| {
+        let e = CommonErrors::format_new(
+            BadFormat::Received,
+            &format!("Urn malformed: {}. Error: {}", id, err),
+        );
+        error!("{}", e.log());
+        e.into_response()
+    })
 }

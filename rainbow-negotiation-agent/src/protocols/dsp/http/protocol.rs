@@ -34,8 +34,9 @@ use std::sync::Arc;
 use crate::protocols::dsp::protocol_types::{
     NegotiationAgreementMessageDto, NegotiationErrorMessageDto, NegotiationEventMessageDto,
     NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageType,
-    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
-    NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
+    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
+    NegotiationVerificationMessageDto,
 };
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::CommonErrors;
@@ -95,10 +96,7 @@ impl DspRouter {
             // Both allow POST /events. The logic inside must discriminate based on state/role.
             .route("/:id/events", post(Self::handle_negotiation_events))
             // 8.2.6 (Provider Endpoint) & 8.3.7 (Consumer Endpoint) -> Termination
-            .route(
-                "/:id/termination",
-                post(Self::handle_negotiation_termination),
-            )
+            .route("/:id/termination", post(Self::handle_negotiation_termination))
             .with_state(self)
     }
 
@@ -118,14 +116,18 @@ impl DspRouter {
         let payload = match extract_payload_error(input) {
             Ok(v) => v,
             Err(e) => {
-                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> = e.into();
+                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> =
+                    e.into();
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
         Self::map_service_result(action(payload).await, success_code).into_response()
     }
 
-    fn map_service_result<R>(result: anyhow::Result<R>, success_code: StatusCode) -> impl IntoResponse
+    fn map_service_result<R>(
+        result: anyhow::Result<R>,
+        success_code: StatusCode,
+    ) -> impl IntoResponse
     where
         R: Serialize,
     {
@@ -138,7 +140,8 @@ impl DspRouter {
     fn map_service_error(err: anyhow::Error) -> impl IntoResponse {
         match err.downcast::<CommonErrors>() {
             Ok(common_errors) => {
-                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> = common_errors.into();
+                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> =
+                    common_errors.into();
                 (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
             }
             Err(original_err) => {
@@ -160,7 +163,10 @@ impl DspRouter {
     // --- Handlers ---
 
     // 1. GET (Unified)
-    async fn handle_get_negotiation(State(state): State<DspRouter>, Path(id): Path<String>) -> impl IntoResponse {
+    async fn handle_get_negotiation(
+        State(state): State<DspRouter>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
         Self::map_service_result(
             state.orchestrator.get_protocol_service().on_get_negotiation(&id).await,
             StatusCode::OK,
@@ -171,17 +177,22 @@ impl DspRouter {
 
     async fn handle_initial_request(
         State(state): State<DspRouter>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         let payload = match extract_payload_error(input) {
             Ok(v) => v,
             Err(e) => {
-                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> = e.into();
+                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> =
+                    e.into();
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
 
-        let result = state.orchestrator.get_protocol_service().on_initial_contract_request(&payload).await;
+        let result =
+            state.orchestrator.get_protocol_service().on_initial_contract_request(&payload).await;
         match result {
             Ok((data, exists)) => {
                 let status = if exists { StatusCode::OK } else { StatusCode::CREATED };
@@ -194,7 +205,10 @@ impl DspRouter {
     async fn handle_consumer_request(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_consumer_request(&id, &data).await
@@ -205,7 +219,10 @@ impl DspRouter {
     async fn handle_agreement_verification(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_agreement_verification(&id, &data).await
@@ -217,17 +234,22 @@ impl DspRouter {
 
     async fn handle_initial_offer(
         State(state): State<DspRouter>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         let payload = match extract_payload_error(input) {
             Ok(v) => v,
             Err(e) => {
-                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> = e.into();
+                let error_dto: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto> =
+                    e.into();
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
 
-        let result = state.orchestrator.get_protocol_service().on_initial_provider_offer(&payload).await;
+        let result =
+            state.orchestrator.get_protocol_service().on_initial_provider_offer(&payload).await;
         match result {
             Ok((data, exists)) => {
                 let status = if exists { StatusCode::OK } else { StatusCode::CREATED };
@@ -240,7 +262,10 @@ impl DspRouter {
     async fn handle_provider_offer(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_provider_offer(&id, &data).await
@@ -251,7 +276,10 @@ impl DspRouter {
     async fn handle_agreement_reception(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_agreement_reception(&id, &data).await
@@ -264,7 +292,10 @@ impl DspRouter {
     async fn handle_negotiation_events(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_negotiation_event(&id, &data).await
@@ -275,7 +306,10 @@ impl DspRouter {
     async fn handle_negotiation_termination(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
-        input: Result<Json<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>>, JsonRejection>,
+        input: Result<
+            Json<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>>,
+            JsonRejection,
+        >,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::OK, |data| async move {
             state.orchestrator.get_protocol_service().on_negotiation_termination(&id, &data).await

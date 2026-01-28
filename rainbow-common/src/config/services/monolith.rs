@@ -37,4 +37,3 @@ impl CommonConfigTrait for MonolithConfig {
         &self.common
     }
 }
-

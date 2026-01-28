@@ -1,9 +1,11 @@
-use crate::entities::distributions::{DistributionEntityTrait, EditDistributionDto, NewDistributionDto};
+use crate::entities::distributions::{
+    DistributionEntityTrait, EditDistributionDto, NewDistributionDto,
+};
 use crate::grpc::api::catalog_agent::distribution_entity_service_server::DistributionEntityService;
 use crate::grpc::api::catalog_agent::{
-    CreateDistributionRequest, DeleteByIdRequest, Distribution, DistributionListResponse, DistributionResponse,
-    GetAllRequest, GetBatchRequest, GetByIdRequest, GetByParentIdRequest, GetDistributionByFormatRequest,
-    PutDistributionRequest,
+    CreateDistributionRequest, DeleteByIdRequest, Distribution, DistributionListResponse,
+    DistributionResponse, GetAllRequest, GetBatchRequest, GetByIdRequest, GetByParentIdRequest,
+    GetDistributionByFormatRequest, PutDistributionRequest,
 };
 use rainbow_common::dcat_formats::DctFormats;
 use std::str::FromStr;
@@ -34,7 +36,8 @@ impl DistributionEntityService for DistributionEntityGrpc {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let proto_distributions: Vec<Distribution> = distributions.into_iter().map(Into::into).collect();
+        let proto_distributions: Vec<Distribution> =
+            distributions.into_iter().map(Into::into).collect();
 
         Ok(Response::new(DistributionListResponse {
             distributions: proto_distributions,
@@ -54,10 +57,14 @@ impl DistributionEntityService for DistributionEntityGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Status::invalid_argument("One or more IDs are invalid URNs"))?;
 
-        let distributions =
-            self.service.get_batch_distributions(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let distributions = self
+            .service
+            .get_batch_distributions(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        let proto_distributions: Vec<Distribution> = distributions.into_iter().map(Into::into).collect();
+        let proto_distributions: Vec<Distribution> =
+            distributions.into_iter().map(Into::into).collect();
 
         Ok(Response::new(DistributionListResponse {
             distributions: proto_distributions,
@@ -69,7 +76,8 @@ impl DistributionEntityService for DistributionEntityGrpc {
         request: Request<GetByParentIdRequest>,
     ) -> Result<Response<DistributionListResponse>, Status> {
         let req = request.into_inner();
-        let dataset_urn = Urn::from_str(&req.parent_id).map_err(|_| Status::invalid_argument("Invalid Dataset URN"))?;
+        let dataset_urn = Urn::from_str(&req.parent_id)
+            .map_err(|_| Status::invalid_argument("Invalid Dataset URN"))?;
 
         let distributions = self
             .service
@@ -77,7 +85,8 @@ impl DistributionEntityService for DistributionEntityGrpc {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let proto_distributions: Vec<Distribution> = distributions.into_iter().map(Into::into).collect();
+        let proto_distributions: Vec<Distribution> =
+            distributions.into_iter().map(Into::into).collect();
 
         Ok(Response::new(DistributionListResponse {
             distributions: proto_distributions,
@@ -89,14 +98,15 @@ impl DistributionEntityService for DistributionEntityGrpc {
         request: Request<GetDistributionByFormatRequest>,
     ) -> Result<Response<DistributionResponse>, Status> {
         let req = request.into_inner();
-        let dataset_urn =
-            Urn::from_str(&req.dataset_id).map_err(|_| Status::invalid_argument("Invalid Dataset URN"))?;
+        let dataset_urn = Urn::from_str(&req.dataset_id)
+            .map_err(|_| Status::invalid_argument("Invalid Dataset URN"))?;
 
         let json_val = serde_json::to_value(req.dct_formats)
             .map_err(|e| Status::invalid_argument(format!("Invalid JSON in dct_formats: {}", e)))?;
 
-        let dct_formats: DctFormats = serde_json::from_value(json_val)
-            .map_err(|e| Status::invalid_argument(format!("Invalid DctFormats structure: {}", e)))?;
+        let dct_formats: DctFormats = serde_json::from_value(json_val).map_err(|e| {
+            Status::invalid_argument(format!("Invalid DctFormats structure: {}", e))
+        })?;
 
         let distribution_dto = self
             .service
@@ -116,13 +126,14 @@ impl DistributionEntityService for DistributionEntityGrpc {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 
-        let distribution_opt =
-            self.service.get_distribution_by_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let distribution_opt = self
+            .service
+            .get_distribution_by_id(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         match distribution_opt {
-            Some(dto) => Ok(Response::new(DistributionResponse {
-                distribution: Some(dto.into()),
-            })),
+            Some(dto) => Ok(Response::new(DistributionResponse { distribution: Some(dto.into()) })),
             None => Err(Status::not_found("Distribution not found")),
         }
     }
@@ -164,7 +175,10 @@ impl DistributionEntityService for DistributionEntityGrpc {
         }))
     }
 
-    async fn delete_distribution_by_id(&self, request: Request<DeleteByIdRequest>) -> Result<Response<()>, Status> {
+    async fn delete_distribution_by_id(
+        &self,
+        request: Request<DeleteByIdRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 

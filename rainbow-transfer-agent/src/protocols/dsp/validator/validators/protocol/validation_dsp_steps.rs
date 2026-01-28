@@ -18,8 +18,8 @@
  */
 
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto,
-    TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
@@ -73,7 +73,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_auth(&input.dto).await?;
         self.payload_validator.validate_data_address_in_start(&input.dto, &dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         self.step_transition_validator
             .validate_state_attribute_transition(
                 &current_state,
@@ -102,7 +104,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         self.step_transition_validator
             .validate_state_attribute_transition(
                 &current_state,
@@ -131,7 +135,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         self.step_transition_validator
             .validate_state_attribute_transition(
                 &current_state,
@@ -160,7 +166,9 @@ impl ValidationDspSteps for ValidationDspStepsService {
         self.payload_validator.validate_correlation(&input.dto, &dto).await?;
         self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
-        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        self.step_transition_validator
+            .validate_state_transition(&current_state, &message_type)
+            .await?;
         self.step_transition_validator
             .validate_state_attribute_transition(
                 &current_state,

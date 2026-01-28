@@ -1,6 +1,8 @@
 use crate::data::entities::policy_template::NewPolicyTemplateModel;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateDto, PolicyTemplateEntityTrait};
+use crate::entities::policy_templates::{
+    NewPolicyTemplateDto, PolicyTemplateDto, PolicyTemplateEntityTrait,
+};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::sync::Arc;
 use tracing::error;
@@ -23,8 +25,12 @@ impl PolicyTemplateEntityTrait for PolicyTemplateEntities {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<PolicyTemplateDto>> {
-        let policy_templates =
-            self.repo.get_policy_template_repo().get_all_policy_templates(limit, page).await.map_err(|e| {
+        let policy_templates = self
+            .repo
+            .get_policy_template_repo()
+            .get_all_policy_templates(limit, page)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -37,13 +43,18 @@ impl PolicyTemplateEntityTrait for PolicyTemplateEntities {
         Ok(dtos)
     }
 
-    async fn get_batch_policy_templates(&self, ids: &Vec<String>) -> anyhow::Result<Vec<PolicyTemplateDto>> {
+    async fn get_batch_policy_templates(
+        &self,
+        ids: &Vec<String>,
+    ) -> anyhow::Result<Vec<PolicyTemplateDto>> {
         let policy_templates =
-            self.repo.get_policy_template_repo().get_batch_policy_templates(ids).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
+            self.repo.get_policy_template_repo().get_batch_policy_templates(ids).await.map_err(
+                |e| {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
         let mut dtos = Vec::with_capacity(policy_templates.len());
         for c in policy_templates {
             let dto: PolicyTemplateDto = PolicyTemplateDto::try_from(c)?;
@@ -52,9 +63,16 @@ impl PolicyTemplateEntityTrait for PolicyTemplateEntities {
         Ok(dtos)
     }
 
-    async fn get_policies_template_by_id(&self, template_id: &String) -> anyhow::Result<Vec<PolicyTemplateDto>> {
-        let policy_templates =
-            self.repo.get_policy_template_repo().get_policy_templates_by_id(template_id).await.map_err(|e| {
+    async fn get_policies_template_by_id(
+        &self,
+        template_id: &String,
+    ) -> anyhow::Result<Vec<PolicyTemplateDto>> {
+        let policy_templates = self
+            .repo
+            .get_policy_template_repo()
+            .get_policy_templates_by_id(template_id)
+            .await
+            .map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err
@@ -97,11 +115,13 @@ impl PolicyTemplateEntityTrait for PolicyTemplateEntities {
         })?;
         let new_model: NewPolicyTemplateModel = new_policy_template.clone().try_into()?;
         let policy_template =
-            self.repo.get_policy_template_repo().create_policy_template(&new_model).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
+            self.repo.get_policy_template_repo().create_policy_template(&new_model).await.map_err(
+                |e| {
+                    let err = CommonErrors::database_new(&e.to_string());
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
         let dto: PolicyTemplateDto = PolicyTemplateDto::try_from(policy_template)?;
         Ok(dto)
     }

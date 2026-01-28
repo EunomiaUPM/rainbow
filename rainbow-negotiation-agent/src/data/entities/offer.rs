@@ -19,8 +19,8 @@
 
 use sea_orm::prelude::{DateTimeWithTimeZone, Json};
 use sea_orm::{
-    ActiveModelBehavior, ActiveValue, DeriveEntityModel, DerivePrimaryKey, DeriveRelation, EntityTrait, EnumIter,
-    PrimaryKeyTrait, Related, RelationDef, RelationTrait,
+    ActiveModelBehavior, ActiveValue, DeriveEntityModel, DerivePrimaryKey, DeriveRelation,
+    EntityTrait, EnumIter, PrimaryKeyTrait, Related, RelationDef, RelationTrait,
 };
 use serde::{Deserialize, Serialize};
 use urn::{Urn, UrnBuilder};
@@ -81,16 +81,18 @@ pub struct NewOfferModel {
 
 impl From<NewOfferModel> for ActiveModel {
     fn from(value: NewOfferModel) -> Self {
-        let new_urn = UrnBuilder::new(
-            "negotiation-offer",
-            uuid::Uuid::new_v4().to_string().as_str(),
-        )
-        .build()
-        .expect("UrnBuilder failed");
+        let new_urn =
+            UrnBuilder::new("negotiation-offer", uuid::Uuid::new_v4().to_string().as_str())
+                .build()
+                .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(value.id.unwrap_or(new_urn).to_string()),
-            negotiation_agent_process_id: ActiveValue::Set(value.negotiation_agent_process_id.to_string()),
-            negotiation_agent_message_id: ActiveValue::Set(value.negotiation_agent_message_id.to_string()),
+            negotiation_agent_process_id: ActiveValue::Set(
+                value.negotiation_agent_process_id.to_string(),
+            ),
+            negotiation_agent_message_id: ActiveValue::Set(
+                value.negotiation_agent_message_id.to_string(),
+            ),
             offer_id: ActiveValue::Set(value.offer_id),
             offer_content: ActiveValue::Set(value.offer_content),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),

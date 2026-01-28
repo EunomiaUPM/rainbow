@@ -19,7 +19,9 @@
 
 use crate::data::entities::transfer_message;
 use crate::data::entities::transfer_message::NewTransferMessageModel;
-use crate::data::repo_traits::transfer_message_repo::{TransferMessageRepoErrors, TransferMessageRepoTrait};
+use crate::data::repo_traits::transfer_message_repo::{
+    TransferMessageRepoErrors, TransferMessageRepoTrait,
+};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use urn::Urn;
 
@@ -49,9 +51,7 @@ impl TransferMessageRepoTrait for TransferMessageRepoForSql {
 
         match messages {
             Ok(messages) => Ok(messages),
-            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(
-                e.into(),
-            )),
+            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(e.into())),
         }
     }
 
@@ -68,9 +68,7 @@ impl TransferMessageRepoTrait for TransferMessageRepoForSql {
 
         match messages {
             Ok(messages) => Ok(messages),
-            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(
-                e.into(),
-            )),
+            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(e.into())),
         }
     }
 
@@ -82,9 +80,7 @@ impl TransferMessageRepoTrait for TransferMessageRepoForSql {
         let message = transfer_message::Entity::find_by_id(mid).one(&self.db_connection).await;
         match message {
             Ok(message) => Ok(message),
-            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(
-                e.into(),
-            )),
+            Err(e) => Err(TransferMessageRepoErrors::ErrorFetchingTransferMessage(e.into())),
         }
     }
 
@@ -93,16 +89,18 @@ impl TransferMessageRepoTrait for TransferMessageRepoForSql {
         new_model: &NewTransferMessageModel,
     ) -> anyhow::Result<transfer_message::Model, TransferMessageRepoErrors> {
         let model: transfer_message::ActiveModel = new_model.clone().into();
-        let result = transfer_message::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let result =
+            transfer_message::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match result {
             Ok(message) => Ok(message),
-            Err(e) => Err(TransferMessageRepoErrors::ErrorCreatingTransferMessage(
-                e.into(),
-            )),
+            Err(e) => Err(TransferMessageRepoErrors::ErrorCreatingTransferMessage(e.into())),
         }
     }
 
-    async fn delete_transfer_message(&self, id: &Urn) -> anyhow::Result<(), TransferMessageRepoErrors> {
+    async fn delete_transfer_message(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), TransferMessageRepoErrors> {
         let mid = id.to_string();
         let result = transfer_message::Entity::delete_by_id(mid).exec(&self.db_connection).await;
 
@@ -111,9 +109,7 @@ impl TransferMessageRepoTrait for TransferMessageRepoForSql {
                 0 => Err(TransferMessageRepoErrors::TransferMessageNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(TransferMessageRepoErrors::ErrorDeletingTransferMessage(
-                e.into(),
-            )),
+            Err(e) => Err(TransferMessageRepoErrors::ErrorDeletingTransferMessage(e.into())),
         }
     }
 }

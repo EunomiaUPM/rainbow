@@ -17,7 +17,9 @@
  *
  */
 
-use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
+use crate::protocols::dsp::orchestrator::rpc::types::{
+    RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto,
+};
 use crate::protocols::dsp::protocol_types::CatalogMessageWrapper;
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
@@ -30,7 +32,10 @@ pub struct ValidationRpcStepsService {
     helpers: Arc<dyn ValidationHelpers>,
 }
 impl ValidationRpcStepsService {
-    pub fn new(payload_validator: Arc<dyn ValidatePayload>, helpers: Arc<dyn ValidationHelpers>) -> Self {
+    pub fn new(
+        payload_validator: Arc<dyn ValidatePayload>,
+        helpers: Arc<dyn ValidationHelpers>,
+    ) -> Self {
         Self { payload_validator, helpers }
     }
 }

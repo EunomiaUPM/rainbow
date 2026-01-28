@@ -26,11 +26,13 @@ pub trait UtilsCacheTrait: Send + Sync {
 
     /// Key for relational lookups: rainbow_catalogs:child_entity:parent_entity:parent_id
     /// Example: rainbow_catalogs:dataset:catalog:urn:catalog:123
-    fn format_key_name_lookup(&self, child_entity: &str, parent_entity: &str, parent_id: &Urn) -> String {
-        format!(
-            "rainbow_catalogs:{}:{}:{}",
-            child_entity, parent_entity, parent_id
-        )
+    fn format_key_name_lookup(
+        &self,
+        child_entity: &str,
+        parent_entity: &str,
+        parent_id: &Urn,
+    ) -> String {
+        format!("rainbow_catalogs:{}:{}:{}", child_entity, parent_entity, parent_id)
     }
 
     /// Removes the prefix from a key to recover the raw ID/URN
@@ -78,7 +80,8 @@ pub trait UtilsCacheTrait: Send + Sync {
         mut connection: redis::aio::MultiplexedConnection,
         key: String,
     ) -> anyhow::Result<Option<Self::Dto>> {
-        let data: Option<String> = redis::cmd("JSON.GET").arg(&key).arg("$").query_async(&mut connection).await?;
+        let data: Option<String> =
+            redis::cmd("JSON.GET").arg(&key).arg("$").query_async(&mut connection).await?;
 
         if let Some(json_str) = data {
             let mut models: Vec<Self::Dto> = serde_json::from_str(&json_str)?;

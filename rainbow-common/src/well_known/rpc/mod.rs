@@ -15,5 +15,8 @@ pub trait WellKnownRPCTrait: Send + Sync {
         &self,
         input: &WellKnownRPCRequest,
     ) -> anyhow::Result<(VersionResponse, String)>;
-    async fn fetch_dataspace_current_path(&self, input: &WellKnownRPCRequest) -> anyhow::Result<VersionPath>;
+    async fn fetch_dataspace_current_path(
+        &self,
+        input: &WellKnownRPCRequest,
+    ) -> anyhow::Result<VersionPath>;
 }

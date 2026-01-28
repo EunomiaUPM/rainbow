@@ -4,7 +4,10 @@ use crate::data::repo_traits::catalog_db_errors::{
     CatalogAgentRepoErrors, CatalogRepoErrors, DatasetRepoErrors, DistributionRepoErrors,
 };
 use crate::data::repo_traits::dataset_repo::DatasetRepositoryTrait;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::Urn;
 
 pub struct DatasetRepositoryForSql {
@@ -27,8 +30,11 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
         let page_limit = limit.unwrap_or(25);
         let page_number = page.unwrap_or(1);
         let calculated_offset = (page_number.max(1) - 1) * page_limit;
-        let datasets =
-            dataset::Entity::find().limit(page_limit).offset(calculated_offset).all(&self.db_connection).await;
+        let datasets = dataset::Entity::find()
+            .limit(page_limit)
+            .offset(calculated_offset)
+            .all(&self.db_connection)
+            .await;
         match datasets {
             Ok(datasets) => Ok(datasets),
             Err(err) => Err(CatalogAgentRepoErrors::DatasetRepoErrors(
@@ -37,10 +43,15 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
         }
     }
 
-    async fn get_batch_datasets(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors> {
+    async fn get_batch_datasets(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors> {
         let dataset_ids = ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
-        let dataset_process =
-            dataset::Entity::find().filter(dataset::Column::Id.is_in(dataset_ids)).all(&self.db_connection).await;
+        let dataset_process = dataset::Entity::find()
+            .filter(dataset::Column::Id.is_in(dataset_ids))
+            .all(&self.db_connection)
+            .await;
         match dataset_process {
             Ok(dataset_process) => Ok(dataset_process),
             Err(err) => Err(CatalogAgentRepoErrors::DatasetRepoErrors(
@@ -55,9 +66,13 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogAgentRepoErrors> {
         let catalog_id = catalog_id.to_string();
 
-        let catalog =
-            catalog::Entity::find_by_id(catalog_id.clone()).one(&self.db_connection).await.map_err(|err| {
-                CatalogAgentRepoErrors::DatasetRepoErrors(DatasetRepoErrors::ErrorFetchingDataset(err.into()))
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DatasetRepoErrors(DatasetRepoErrors::ErrorFetchingDataset(
+                    err.into(),
+                ))
             })?;
         if catalog.is_none() {
             return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
@@ -65,8 +80,10 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
             ));
         }
 
-        let datasets =
-            dataset::Entity::find().filter(dataset::Column::CatalogId.eq(catalog_id)).all(&self.db_connection).await;
+        let datasets = dataset::Entity::find()
+            .filter(dataset::Column::CatalogId.eq(catalog_id))
+            .all(&self.db_connection)
+            .await;
         match datasets {
             Ok(datasets) => Ok(datasets),
             Err(err) => Err(CatalogAgentRepoErrors::DatasetRepoErrors(
@@ -145,9 +162,9 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
             .one(&self.db_connection)
             .await
             .map_err(|err| {
-                CatalogAgentRepoErrors::DistributionRepoErrors(DistributionRepoErrors::ErrorFetchingDistribution(
-                    err.into(),
-                ))
+                CatalogAgentRepoErrors::DistributionRepoErrors(
+                    DistributionRepoErrors::ErrorFetchingDistribution(err.into()),
+                )
             })?;
         if catalog.is_none() {
             return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
@@ -165,7 +182,10 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
         }
     }
 
-    async fn delete_dataset_by_id(&self, dataset_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors> {
+    async fn delete_dataset_by_id(
+        &self,
+        dataset_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors> {
         let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::delete_by_id(dataset_id).exec(&self.db_connection).await;
         match dataset {

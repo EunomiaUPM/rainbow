@@ -32,7 +32,7 @@ impl PeerCatalogEntityRouter {
     }
 
     pub fn router(self) -> Router {
-        Router::new().route("/:peer_id", get(Self::handle_get_catalog_by_peer_id)).with_state(self)
+        Router::new().route("/{peer_id}", get(Self::handle_get_catalog_by_peer_id)).with_state(self)
     }
 
     async fn handle_get_catalog_by_peer_id(
@@ -42,7 +42,8 @@ impl PeerCatalogEntityRouter {
         match state.service.get_peer_catalog(&peer_id).await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(catalog)).into_response(),
             Ok(None) => {
-                let err = CommonErrors::missing_resource_new("peer catalog", "Peer Catalog not found");
+                let err =
+                    CommonErrors::missing_resource_new("peer catalog", "Peer Catalog not found");
                 err.into_response()
             }
             Err(err) => match err.downcast::<CommonErrors>() {

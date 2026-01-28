@@ -18,11 +18,12 @@
  */
 use crate::data::migrations::get_transfer_agent_migrations;
 use rainbow_common::config::services::TransferConfig;
-use rainbow_common::vault::vault_rs::VaultService;
-use rainbow_common::vault::VaultTrait;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_dataplane::get_dataplane_migrations;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use std::sync::Arc;
+use ymir::services::vault::vault_rs::VaultService;
+use ymir::services::vault::VaultTrait;
 
 pub struct TransferAgentMigration;
 
@@ -41,7 +42,7 @@ impl MigratorTrait for TransferAgentMigration {
 impl TransferAgentMigration {
     pub async fn run(config: &TransferConfig, vault: Arc<VaultService>) -> anyhow::Result<()> {
         // db_connection
-        let db_connection = vault.get_db_connection(config.clone()).await;
+        let db_connection = vault.get_db_connection(config.common()).await;
         // run migration
         Self::refresh(&db_connection).await?;
         Ok(())

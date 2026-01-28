@@ -39,12 +39,22 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogDataServices::DctCreator).string())
                     .col(ColumnDef::new(CatalogDataServices::DctIdentifier).string())
-                    .col(ColumnDef::new(CatalogDataServices::DctIssued).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(CatalogDataServices::DctModified).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(CatalogDataServices::DctIssued)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CatalogDataServices::DctModified).timestamp_with_time_zone(),
+                    )
                     .col(ColumnDef::new(CatalogDataServices::DctTitle).string())
                     .col(ColumnDef::new(CatalogDataServices::DctDescription).string())
                     .col(ColumnDef::new(CatalogDataServices::CatalogId).string().not_null())
-                    .col(ColumnDef::new(CatalogDataServices::DspaceMainDataService).boolean().not_null())
+                    .col(
+                        ColumnDef::new(CatalogDataServices::DspaceMainDataService)
+                            .boolean()
+                            .not_null(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataservice_catalog")

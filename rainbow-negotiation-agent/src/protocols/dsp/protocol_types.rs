@@ -673,10 +673,18 @@ pub enum NegotiationProcessMessageType {
 impl Display for NegotiationProcessMessageType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            NegotiationProcessMessageType::NegotiationRequestMessage => "ContractRequestMessage".to_string(),
-            NegotiationProcessMessageType::NegotiationOfferMessage => "ContractOfferMessage".to_string(),
-            NegotiationProcessMessageType::NegotiationEventMessage(_) => "ContractNegotiationEventMessage".to_string(),
-            NegotiationProcessMessageType::NegotiationAgreementMessage => "ContractAgreementMessage".to_string(),
+            NegotiationProcessMessageType::NegotiationRequestMessage => {
+                "ContractRequestMessage".to_string()
+            }
+            NegotiationProcessMessageType::NegotiationOfferMessage => {
+                "ContractOfferMessage".to_string()
+            }
+            NegotiationProcessMessageType::NegotiationEventMessage(_) => {
+                "ContractNegotiationEventMessage".to_string()
+            }
+            NegotiationProcessMessageType::NegotiationAgreementMessage => {
+                "ContractAgreementMessage".to_string()
+            }
             NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => {
                 "ContractAgreementVerificationMessage".to_string()
             }
@@ -684,7 +692,9 @@ impl Display for NegotiationProcessMessageType {
                 "ContractNegotiationTerminationMessage".to_string()
             }
             NegotiationProcessMessageType::NegotiationProcess => "ContractNegotiation".to_string(),
-            NegotiationProcessMessageType::NegotiationError => "ContractNegotiationError".to_string(),
+            NegotiationProcessMessageType::NegotiationError => {
+                "ContractNegotiationError".to_string()
+            }
         };
         write!(f, "{}", str)
     }
@@ -695,16 +705,24 @@ impl FromStr for NegotiationProcessMessageType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "ContractRequestMessage" => Ok(NegotiationProcessMessageType::NegotiationRequestMessage),
+            "ContractRequestMessage" => {
+                Ok(NegotiationProcessMessageType::NegotiationRequestMessage)
+            }
             "ContractOfferMessage" => Ok(NegotiationProcessMessageType::NegotiationOfferMessage),
-            "ContractNegotiationEventMessage" => Ok(NegotiationProcessMessageType::NegotiationEventMessage(
-                NegotiationEventType::ACCEPTED,
-            )),
-            "ContractAgreementMessage" => Ok(NegotiationProcessMessageType::NegotiationAgreementMessage),
+            "ContractNegotiationEventMessage" => {
+                Ok(NegotiationProcessMessageType::NegotiationEventMessage(
+                    NegotiationEventType::ACCEPTED,
+                ))
+            }
+            "ContractAgreementMessage" => {
+                Ok(NegotiationProcessMessageType::NegotiationAgreementMessage)
+            }
             "ContractAgreementVerificationMessage" => {
                 Ok(NegotiationProcessMessageType::NegotiationAgreementVerificationMessage)
             }
-            "ContractNegotiationTerminationMessage" => Ok(NegotiationProcessMessageType::NegotiationTerminationMessage),
+            "ContractNegotiationTerminationMessage" => {
+                Ok(NegotiationProcessMessageType::NegotiationTerminationMessage)
+            }
             "ContractNegotiation" => Ok(NegotiationProcessMessageType::NegotiationProcess),
             "ContractNegotiationError" => Ok(NegotiationProcessMessageType::NegotiationError),
             _ => Err(anyhow::Error::msg("Invalid negotiation message")),
@@ -715,16 +733,28 @@ impl FromStr for NegotiationProcessMessageType {
 impl From<NegotiationProcessMessageType> for NegotiationProcessState {
     fn from(value: NegotiationProcessMessageType) -> Self {
         match value {
-            NegotiationProcessMessageType::NegotiationRequestMessage => NegotiationProcessState::Requested,
-            NegotiationProcessMessageType::NegotiationOfferMessage => NegotiationProcessState::Offered,
+            NegotiationProcessMessageType::NegotiationRequestMessage => {
+                NegotiationProcessState::Requested
+            }
+            NegotiationProcessMessageType::NegotiationOfferMessage => {
+                NegotiationProcessState::Offered
+            }
             NegotiationProcessMessageType::NegotiationEventMessage(ev) => match ev {
                 NegotiationEventType::ACCEPTED => NegotiationProcessState::Accepted,
                 NegotiationEventType::FINALIZED => NegotiationProcessState::Finalized,
             },
-            NegotiationProcessMessageType::NegotiationAgreementMessage => NegotiationProcessState::Agreed,
-            NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => NegotiationProcessState::Verified,
-            NegotiationProcessMessageType::NegotiationTerminationMessage => NegotiationProcessState::Terminated,
-            NegotiationProcessMessageType::NegotiationProcess => NegotiationProcessState::Terminated,
+            NegotiationProcessMessageType::NegotiationAgreementMessage => {
+                NegotiationProcessState::Agreed
+            }
+            NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => {
+                NegotiationProcessState::Verified
+            }
+            NegotiationProcessMessageType::NegotiationTerminationMessage => {
+                NegotiationProcessState::Terminated
+            }
+            NegotiationProcessMessageType::NegotiationProcess => {
+                NegotiationProcessState::Terminated
+            }
             NegotiationProcessMessageType::NegotiationError => NegotiationProcessState::Terminated,
         }
     }
@@ -737,7 +767,9 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
         let consumer_str = match value.identifiers.get("consumerPid") {
             Some(val) => val,
             None => {
-                let err = CommonErrors::parse_new("Missing 'consumerPid' in NegotiationProcessDto identifiers map");
+                let err = CommonErrors::parse_new(
+                    "Missing 'consumerPid' in NegotiationProcessDto identifiers map",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -757,7 +789,9 @@ impl TryFrom<NegotiationProcessDto> for NegotiationProcessMessageWrapper<Negotia
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
             None => {
-                let err = CommonErrors::parse_new("Missing 'providerPid' in NegotiationProcessDto identifiers map");
+                let err = CommonErrors::parse_new(
+                    "Missing 'providerPid' in NegotiationProcessDto identifiers map",
+                );
                 error!("{}", err.log());
                 bail!(err);
             }

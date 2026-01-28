@@ -19,11 +19,14 @@
 
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
 use crate::entities::transfer_process::TransferProcessDto;
-use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
+use crate::entities::transfer_process::{
+    EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait,
+};
 use crate::http::common::parse_urn;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
+    TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState,
+    TransferStateAttribute,
 };
 use crate::protocols::dsp::transfer_types::TransferState;
 use anyhow::bail;
@@ -52,21 +55,30 @@ impl TransferPersistenceForRpcService {
 
 #[async_trait::async_trait]
 impl TransferPersistenceTrait for TransferPersistenceForRpcService {
-    async fn get_transfer_process_service(&self) -> anyhow::Result<Arc<dyn TransferAgentProcessesTrait>> {
+    async fn get_transfer_process_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn TransferAgentProcessesTrait>> {
         Ok(self.transfer_process_service.clone())
     }
-    async fn get_transfer_message_service(&self) -> anyhow::Result<Arc<dyn TransferAgentMessagesTrait>> {
+    async fn get_transfer_message_service(
+        &self,
+    ) -> anyhow::Result<Arc<dyn TransferAgentMessagesTrait>> {
         Ok(self.transfer_message_service.clone())
     }
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
         let urn = parse_urn(id).unwrap();
         // get by any transfer id (or provider o consumer)
         let transfer_process =
-            self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|_e| {
-                let err = CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process service not found");
-                error!("{}", err.log());
-                err
-            })?;
+            self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(
+                |_e| {
+                    let err = CommonErrors::missing_resource_new(
+                        urn.to_string().as_str(),
+                        "Process service not found",
+                    );
+                    error!("{}", err.log());
+                    err
+                },
+            )?;
         Ok(transfer_process)
     }
 
@@ -95,9 +107,11 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
         }
         identifiers.insert("consumerPid".to_string(), consumer_pid.to_string());
         // create callback address
-        let callback_address = provider_address.unwrap_or(payload_dto.get_callback_address().unwrap());
+        let callback_address =
+            provider_address.unwrap_or(payload_dto.get_callback_address().unwrap());
         // create id
-        let transfer_process_id = Urn::from_str(format!("urn:transfer-process:{}", uuid::Uuid::new_v4()).as_str())?;
+        let transfer_process_id =
+            Urn::from_str(format!("urn:transfer-process:{}", uuid::Uuid::new_v4()).as_str())?;
         // create entities
         let mut transfer_process = self
             .transfer_process_service
@@ -143,7 +157,8 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
         // current state
-        let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
+        let transfer_process =
+            self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
         // role
         let role = transfer_process.inner.role.parse::<RoleConfig>()?;
         let state_attribute = transfer_process

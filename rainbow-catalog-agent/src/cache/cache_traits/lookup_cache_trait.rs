@@ -19,7 +19,12 @@ pub trait LookupCacheTrait<D>: Send + Sync {
         child_id: &Urn,
         score: f64,
     ) -> anyhow::Result<()>;
-    async fn remove_from_relation(&self, parent_name: &str, parent_id: &Urn, child_id: &Urn) -> anyhow::Result<()>;
+    async fn remove_from_relation(
+        &self,
+        parent_name: &str,
+        parent_id: &Urn,
+        child_id: &Urn,
+    ) -> anyhow::Result<()>;
 }
 
 #[async_trait::async_trait]
@@ -36,11 +41,16 @@ where
         page: Option<u64>,
     ) -> anyhow::Result<Vec<D>> {
         tracing::debug!("cache: get by relation");
-        let lookup_key = self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
+        let lookup_key =
+            self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
         let (start, stop) = self.compute_pagination_range(limit, page);
 
-        let keys: Vec<String> =
-            redis::cmd("ZREVRANGE").arg(&lookup_key).arg(start).arg(stop).query_async(&mut self.get_conn()).await?;
+        let keys: Vec<String> = redis::cmd("ZREVRANGE")
+            .arg(&lookup_key)
+            .arg(start)
+            .arg(stop)
+            .query_async(&mut self.get_conn())
+            .await?;
 
         Self::hydrate_from_multiple_keys(self.get_conn(), keys).await
     }
@@ -53,20 +63,35 @@ where
         score: f64,
     ) -> anyhow::Result<()> {
         tracing::debug!("cache: add to relation");
-        let lookup_key = self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
+        let lookup_key =
+            self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
         let child_key = self.format_key_name_with_id(self.get_entity_name(), child_id);
 
-        let _: () =
-            redis::cmd("ZADD").arg(lookup_key).arg(score).arg(child_key).query_async(&mut self.get_conn()).await?;
+        let _: () = redis::cmd("ZADD")
+            .arg(lookup_key)
+            .arg(score)
+            .arg(child_key)
+            .query_async(&mut self.get_conn())
+            .await?;
         Ok(())
     }
 
-    async fn remove_from_relation(&self, parent_name: &str, parent_id: &Urn, child_id: &Urn) -> anyhow::Result<()> {
+    async fn remove_from_relation(
+        &self,
+        parent_name: &str,
+        parent_id: &Urn,
+        child_id: &Urn,
+    ) -> anyhow::Result<()> {
         tracing::debug!("cache: remove from relation");
-        let lookup_key = self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
+        let lookup_key =
+            self.format_key_name_lookup(self.get_entity_name(), parent_name, parent_id);
         let child_key = self.format_key_name_with_id(self.get_entity_name(), child_id);
 
-        let _: () = redis::cmd("ZREM").arg(lookup_key).arg(child_key).query_async(&mut self.get_conn()).await?;
+        let _: () = redis::cmd("ZREM")
+            .arg(lookup_key)
+            .arg(child_key)
+            .query_async(&mut self.get_conn())
+            .await?;
         Ok(())
     }
 }

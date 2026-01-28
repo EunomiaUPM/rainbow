@@ -29,7 +29,7 @@ pub use catalog::CatalogConfig;
 pub use common::CommonConfig;
 pub use contracts::ContractsConfig;
 pub use gateway::GatewayConfig;
+pub use min_known_config::MinKnownConfig;
 pub use monolith::MonolithConfig;
 pub use ssi_auth::SsiAuthConfig;
 pub use transfer::TransferConfig;
-pub use min_known_config::MinKnownConfig;

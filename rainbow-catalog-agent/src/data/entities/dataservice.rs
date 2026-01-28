@@ -42,7 +42,11 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(belongs_to = "super::catalog::Entity", from = "Column::CatalogId", to = "super::catalog::Column::Id")]
+    #[sea_orm(
+        belongs_to = "super::catalog::Entity",
+        from = "Column::CatalogId",
+        to = "super::catalog::Column::Id"
+    )]
     Catalog,
     #[sea_orm(has_many = "super::odrl_offer::Entity")]
     OdrlOffer,
@@ -86,7 +90,9 @@ impl From<NewDataServiceModel> for ActiveModel {
             dcat_endpoint_url: ActiveValue::Set(dto.dcat_endpoint_url),
             dct_conforms_to: ActiveValue::Set(dto.dct_conforms_to),
             dct_creator: ActiveValue::Set(dto.dct_creator),
-            dct_identifier: ActiveValue::Set(Some(dto.id.clone().unwrap_or(new_urn.clone()).to_string())),
+            dct_identifier: ActiveValue::Set(Some(
+                dto.id.clone().unwrap_or(new_urn.clone()).to_string(),
+            )),
             dct_issued: ActiveValue::Set(chrono::Utc::now().into()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(dto.dct_title),

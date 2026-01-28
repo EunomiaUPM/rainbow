@@ -19,6 +19,7 @@
 
 use rainbow_auth::ssi::data::migrator::get_auth_migrations;
 use rainbow_catalog_agent::get_catalog_migrations;
+use rainbow_connector::get_connector_migrations;
 use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_events::data::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
@@ -31,6 +32,7 @@ impl MigratorTrait for CoreProviderMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
+        let mut connector_migrations = get_connector_migrations();
         //let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_migrations();
@@ -38,6 +40,7 @@ impl MigratorTrait for CoreProviderMigration {
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
 
         migrations.append(&mut catalog_migrations);
+        migrations.append(&mut connector_migrations);
         //migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
@@ -48,8 +51,8 @@ impl MigratorTrait for CoreProviderMigration {
 }
 
 impl CoreProviderMigration {
-    pub async fn run(db_connection: DatabaseConnection) -> anyhow::Result<()> {
-        Self::refresh(&db_connection).await?;
+    pub async fn run(db_connection: &DatabaseConnection) -> anyhow::Result<()> {
+        Self::refresh(db_connection).await?;
         Ok(())
     }
 }

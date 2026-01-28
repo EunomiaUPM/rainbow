@@ -46,9 +46,15 @@ pub trait DataPlaneProcessEntitiesTrait: Send + Sync + 'static {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<DataPlaneProcessDto>>;
 
-    async fn get_batch_data_plane_processes(&self, ids: Vec<Urn>) -> anyhow::Result<Vec<DataPlaneProcessDto>>;
+    async fn get_batch_data_plane_processes(
+        &self,
+        ids: Vec<Urn>,
+    ) -> anyhow::Result<Vec<DataPlaneProcessDto>>;
 
-    async fn get_data_plane_process_by_id(&self, id: &Urn) -> anyhow::Result<Option<DataPlaneProcessDto>>;
+    async fn get_data_plane_process_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<DataPlaneProcessDto>>;
 
     async fn create_data_plane_process(
         &self,

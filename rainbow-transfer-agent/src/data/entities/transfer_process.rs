@@ -90,7 +90,8 @@ impl Default for NewTransferProcessModel {
             associated_agent_peer: "".to_owned(),
             protocol: "dsp".to_owned(), // TODO display enum
             transfer_direction: "push".to_owned(),
-            agreement_id: Urn::from_str(format!("urn:uuid:{}", uuid::Uuid::default()).as_str()).unwrap(),
+            agreement_id: Urn::from_str(format!("urn:uuid:{}", uuid::Uuid::default()).as_str())
+                .unwrap(),
             callback_address: None,
             role: "".to_string(),
             properties: serde_json::json!({}),
@@ -101,12 +102,10 @@ impl Default for NewTransferProcessModel {
 
 impl From<NewTransferProcessModel> for ActiveModel {
     fn from(dto: NewTransferProcessModel) -> Self {
-        let new_urn = UrnBuilder::new(
-            "transfer-process",
-            uuid::Uuid::new_v4().to_string().as_str(),
-        )
-        .build()
-        .expect("UrnBuilder failed");
+        let new_urn =
+            UrnBuilder::new("transfer-process", uuid::Uuid::new_v4().to_string().as_str())
+                .build()
+                .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.unwrap_or(new_urn).to_string()),
             state: ActiveValue::Set(dto.state),

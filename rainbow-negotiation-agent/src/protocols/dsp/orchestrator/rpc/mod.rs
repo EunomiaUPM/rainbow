@@ -17,10 +17,11 @@
  *
  */
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
-    RpcNegotiationMessageDto, RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
-    RpcNegotiationRequestInitMessageDto, RpcNegotiationRequestMessageDto, RpcNegotiationTerminationMessageDto,
-    RpcNegotiationVerificationMessageDto,
+    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto,
+    RpcNegotiationEventFinalizedMessageDto, RpcNegotiationMessageDto,
+    RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto,
+    RpcNegotiationRequestInitMessageDto, RpcNegotiationRequestMessageDto,
+    RpcNegotiationTerminationMessageDto, RpcNegotiationVerificationMessageDto,
 };
 
 pub(crate) mod persistence;

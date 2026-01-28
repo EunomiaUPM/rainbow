@@ -25,4 +25,4 @@ sea-orm-migration = { workspace = true }
 hyper = { version = "1.5.0", features = ["full"] }
 async-trait = {workspace = true}
 uuid = "1.18.1"
-
+ymir = {workspace = true}

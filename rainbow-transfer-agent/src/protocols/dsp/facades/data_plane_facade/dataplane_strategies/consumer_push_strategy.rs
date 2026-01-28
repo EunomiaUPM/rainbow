@@ -52,7 +52,8 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
         data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
-        let DataAddressDto { endpoint, endpoint_type, endpoint_properties } = data_address.as_ref().unwrap();
+        let DataAddressDto { endpoint, endpoint_type, endpoint_properties } =
+            data_address.as_ref().unwrap();
         let endpoint = endpoint.as_ref().unwrap();
         let endpoint_url = Url::parse(endpoint.as_str())?;
         let endpoint_scheme = endpoint_url.scheme().to_string();

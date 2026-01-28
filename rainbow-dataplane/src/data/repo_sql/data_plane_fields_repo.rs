@@ -1,7 +1,12 @@
 use crate::data::entities::data_plane_field;
 use crate::data::entities::data_plane_field::{EditDataPlaneFieldModel, NewDataPlaneFieldModel};
-use crate::data::repo_traits::data_plane_fields_repo::{DataPlaneFieldRepoErrors, DataPlaneFieldRepoTrait};
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use crate::data::repo_traits::data_plane_fields_repo::{
+    DataPlaneFieldRepoErrors, DataPlaneFieldRepoTrait,
+};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::{Urn, UrnBuilder};
 
 pub struct DataPlaneFieldRepoForSql {
@@ -27,9 +32,7 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
             .await;
         match fields {
             Ok(fields) => Ok(fields),
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         }
     }
 
@@ -44,9 +47,7 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
             .await;
         match fields {
             Ok(fields) => Ok(fields),
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         }
     }
 
@@ -62,9 +63,7 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
 
         match fields {
             Ok(fields) => Ok(fields),
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         }
     }
 
@@ -76,9 +75,7 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
         let field = data_plane_field::Entity::find_by_id(pid).one(&self.db_connection).await;
         match field {
             Ok(field) => Ok(field),
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         }
     }
 
@@ -98,14 +95,11 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
             data_plane_process_id: ActiveValue::Set(process_id.to_string()),
         };
 
-        let transfer_proces = data_plane_field::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let transfer_proces =
+            data_plane_field::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match transfer_proces {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(e) => {
-                return Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                    e.into(),
-                ))
-            }
+            Err(e) => return Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         }
     }
 
@@ -120,24 +114,21 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
                 Some(old_model) => old_model,
                 None => return Err(DataPlaneFieldRepoErrors::DataplaneFieldNotFound),
             },
-            Err(e) => {
-                return Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(
-                    e.into(),
-                ))
-            }
+            Err(e) => return Err(DataPlaneFieldRepoErrors::ErrorFetchingDataplaneField(e.into())),
         };
         let mut old_active_model: data_plane_field::ActiveModel = old_model.into();
         old_active_model.value = ActiveValue::Set(edit_field.value.clone());
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorUpdatingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorUpdatingDataplaneField(e.into())),
         }
     }
 
-    async fn delete_data_plane_field(&self, field_id: &Urn) -> anyhow::Result<(), DataPlaneFieldRepoErrors> {
+    async fn delete_data_plane_field(
+        &self,
+        field_id: &Urn,
+    ) -> anyhow::Result<(), DataPlaneFieldRepoErrors> {
         let id = field_id.to_string();
         let field = data_plane_field::Entity::delete_by_id(id).exec(&self.db_connection).await;
         match field {
@@ -145,9 +136,7 @@ impl DataPlaneFieldRepoTrait for DataPlaneFieldRepoForSql {
                 0 => Err(DataPlaneFieldRepoErrors::DataplaneFieldNotFound),
                 _ => Ok(()),
             },
-            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorDeletingDataplaneField(
-                e.into(),
-            )),
+            Err(e) => Err(DataPlaneFieldRepoErrors::ErrorDeletingDataplaneField(e.into())),
         }
     }
 }

@@ -1,8 +1,8 @@
 use crate::entities::datasets::{DatasetEntityTrait, EditDatasetDto, NewDatasetDto};
 use crate::grpc::api::catalog_agent::dataset_entity_service_server::DatasetEntityService;
 use crate::grpc::api::catalog_agent::{
-    CreateDatasetRequest, Dataset, DatasetListResponse, DatasetResponse, DeleteByIdRequest, GetAllRequest,
-    GetBatchRequest, GetByIdRequest, GetByParentIdRequest, PutDatasetRequest,
+    CreateDatasetRequest, Dataset, DatasetListResponse, DatasetResponse, DeleteByIdRequest,
+    GetAllRequest, GetBatchRequest, GetByIdRequest, GetByParentIdRequest, PutDatasetRequest,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -21,16 +21,20 @@ impl DatasetEntityGrpc {
 
 #[tonic::async_trait]
 impl DatasetEntityService for DatasetEntityGrpc {
-    async fn get_all_datasets(&self, request: Request<GetAllRequest>) -> Result<Response<DatasetListResponse>, Status> {
+    async fn get_all_datasets(
+        &self,
+        request: Request<GetAllRequest>,
+    ) -> Result<Response<DatasetListResponse>, Status> {
         let req = request.into_inner();
-        let datasets =
-            self.service.get_all_datasets(req.limit, req.page).await.map_err(|e| Status::internal(e.to_string()))?;
+        let datasets = self
+            .service
+            .get_all_datasets(req.limit, req.page)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_datasets: Vec<Dataset> = datasets.into_iter().map(Into::into).collect();
 
-        Ok(Response::new(DatasetListResponse {
-            datasets: proto_datasets,
-        }))
+        Ok(Response::new(DatasetListResponse { datasets: proto_datasets }))
     }
 
     async fn get_batch_datasets(
@@ -46,13 +50,15 @@ impl DatasetEntityService for DatasetEntityGrpc {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Status::invalid_argument("One or more IDs are invalid URNs"))?;
 
-        let datasets = self.service.get_batch_datasets(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
+        let datasets = self
+            .service
+            .get_batch_datasets(&urns)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_datasets: Vec<Dataset> = datasets.into_iter().map(Into::into).collect();
 
-        Ok(Response::new(DatasetListResponse {
-            datasets: proto_datasets,
-        }))
+        Ok(Response::new(DatasetListResponse { datasets: proto_datasets }))
     }
 
     async fn get_datasets_by_catalog_id(
@@ -60,23 +66,32 @@ impl DatasetEntityService for DatasetEntityGrpc {
         request: Request<GetByParentIdRequest>,
     ) -> Result<Response<DatasetListResponse>, Status> {
         let req = request.into_inner();
-        let catalog_urn = Urn::from_str(&req.parent_id).map_err(|_| Status::invalid_argument("Invalid Catalog URN"))?;
+        let catalog_urn = Urn::from_str(&req.parent_id)
+            .map_err(|_| Status::invalid_argument("Invalid Catalog URN"))?;
 
-        let datasets =
-            self.service.get_datasets_by_catalog_id(&catalog_urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let datasets = self
+            .service
+            .get_datasets_by_catalog_id(&catalog_urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         let proto_datasets: Vec<Dataset> = datasets.into_iter().map(Into::into).collect();
 
-        Ok(Response::new(DatasetListResponse {
-            datasets: proto_datasets,
-        }))
+        Ok(Response::new(DatasetListResponse { datasets: proto_datasets }))
     }
 
-    async fn get_dataset_by_id(&self, request: Request<GetByIdRequest>) -> Result<Response<DatasetResponse>, Status> {
+    async fn get_dataset_by_id(
+        &self,
+        request: Request<GetByIdRequest>,
+    ) -> Result<Response<DatasetResponse>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 
-        let dataset_opt = self.service.get_dataset_by_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
+        let dataset_opt = self
+            .service
+            .get_dataset_by_id(&urn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         match dataset_opt {
             Some(dto) => Ok(Response::new(DatasetResponse { dataset: Some(dto.into()) })),
@@ -97,9 +112,7 @@ impl DatasetEntityService for DatasetEntityGrpc {
             .await
             .map_err(|e| Status::internal(format!("Failed to create dataset: {}", e)))?;
 
-        Ok(Response::new(DatasetResponse {
-            dataset: Some(created_dto.into()),
-        }))
+        Ok(Response::new(DatasetResponse { dataset: Some(created_dto.into()) }))
     }
 
     async fn put_dataset_by_id(
@@ -116,12 +129,13 @@ impl DatasetEntityService for DatasetEntityGrpc {
             .await
             .map_err(|e| Status::internal(format!("Failed to update dataset: {}", e)))?;
 
-        Ok(Response::new(DatasetResponse {
-            dataset: Some(updated_dto.into()),
-        }))
+        Ok(Response::new(DatasetResponse { dataset: Some(updated_dto.into()) }))
     }
 
-    async fn delete_dataset_by_id(&self, request: Request<DeleteByIdRequest>) -> Result<Response<()>, Status> {
+    async fn delete_dataset_by_id(
+        &self,
+        request: Request<DeleteByIdRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
 

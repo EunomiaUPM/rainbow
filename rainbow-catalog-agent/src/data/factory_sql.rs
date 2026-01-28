@@ -50,7 +50,9 @@ impl CatalogAgentRepoForSql {
             dataset_repo: Arc::new(DatasetRepositoryForSql::new(db_connection.clone())),
             distribution_repo: Arc::new(DistributionRepositoryForSql::new(db_connection.clone())),
             odrl_offer_repo: Arc::new(OdrlOfferRepositoryForSql::new(db_connection.clone())),
-            policy_template_repo: Arc::new(PolicyTemplatesRepositoryForSql::new(db_connection.clone())),
+            policy_template_repo: Arc::new(PolicyTemplatesRepositoryForSql::new(
+                db_connection.clone(),
+            )),
         }
     }
 }

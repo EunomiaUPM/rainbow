@@ -1,6 +1,8 @@
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::extract_payload;
-use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
+use crate::protocols::dsp::orchestrator::rpc::types::{
+    RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto,
+};
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, State};
@@ -27,14 +29,8 @@ impl RpcRouter {
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/rpc/setup-catalog-request",
-                post(Self::handle_rpc_catalog_request),
-            )
-            .route(
-                "/rpc/setup-dataset-request",
-                post(Self::handle_rpc_dataset_request),
-            )
+            .route("/rpc/setup-catalog-request", post(Self::handle_rpc_catalog_request))
+            .route("/rpc/setup-dataset-request", post(Self::handle_rpc_dataset_request))
             .with_state(self)
     }
 

@@ -50,7 +50,11 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
             }
         }
     }
-    fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: RoleConfig) -> anyhow::Result<Urn> {
+    fn get_pid_by_role(
+        &self,
+        dto: &NegotiationProcessDto,
+        role: RoleConfig,
+    ) -> anyhow::Result<Urn> {
         let role_as_identifier = self.parse_role_into_identifier(&role)?;
         let pid = dto.identifiers.get(role_as_identifier).ok_or_else(|| {
             let err = CommonErrors::parse_new("There is no such a identifier, role is mandatory.");
@@ -61,15 +65,19 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         Ok(urn)
     }
     fn create_entity_urn(&self, entity: &str) -> anyhow::Result<Urn> {
-        let urn = Urn::from_str(format!("urn:{}:{}", entity, uuid::Uuid::new_v4()).as_str()).map_err(|err| {
-            let err = CommonErrors::parse_new("Not able to create Urn");
-            error!("{}", err.log());
-            anyhow!(err)
-        })?;
+        let urn = Urn::from_str(format!("urn:{}:{}", entity, uuid::Uuid::new_v4()).as_str())
+            .map_err(|err| {
+                let err = CommonErrors::parse_new("Not able to create Urn");
+                error!("{}", err.log());
+                anyhow!(err)
+            })?;
         Ok(urn)
     }
 
-    fn get_rpc_consumer_pid_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<Urn> {
+    fn get_rpc_consumer_pid_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Urn> {
         let field = rpc.get_consumer_pid().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract consumer_pid from rpc message");
             error!("{}", err.log());
@@ -77,7 +85,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_rpc_provider_pid_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<Urn> {
+    fn get_rpc_provider_pid_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Urn> {
         let field = rpc.get_provider_pid().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract provider_pid from rpc message");
             error!("{}", err.log());
@@ -90,7 +101,9 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         rpc: &dyn RpcNegotiationProcessMessageTrait,
     ) -> anyhow::Result<String> {
         let field = rpc.get_associated_agent_peer().ok_or_else(|| {
-            let err = CommonErrors::parse_new("Not able to extract associated_agent_peer from rpc message");
+            let err = CommonErrors::parse_new(
+                "Not able to extract associated_agent_peer from rpc message",
+            );
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -107,7 +120,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_rpc_agreement_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<OdrlAgreement> {
+    fn get_rpc_agreement_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<OdrlAgreement> {
         let field = rpc.get_agreement().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract agreement from rpc message");
             error!("{}", err.log());
@@ -115,17 +131,25 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_rpc_provider_address_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<String> {
+    fn get_rpc_provider_address_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<String> {
         let field = rpc.get_provider_address().ok_or_else(|| {
-            let err = CommonErrors::parse_new("Not able to extract provider_address from rpc message");
+            let err =
+                CommonErrors::parse_new("Not able to extract provider_address from rpc message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
         Ok(field)
     }
-    fn get_rpc_callback_address_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<String> {
+    fn get_rpc_callback_address_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<String> {
         let field = rpc.get_callback_address().ok_or_else(|| {
-            let err = CommonErrors::parse_new("Not able to extract callback_address from rpc message");
+            let err =
+                CommonErrors::parse_new("Not able to extract callback_address from rpc message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -142,7 +166,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_rpc_error_code_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<String> {
+    fn get_rpc_error_code_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<String> {
         let field = rpc.get_error_code().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract error_code from rpc message");
             error!("{}", err.log());
@@ -150,7 +177,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_rpc_error_reason_safely(&self, rpc: &dyn RpcNegotiationProcessMessageTrait) -> anyhow::Result<Vec<String>> {
+    fn get_rpc_error_reason_safely(
+        &self,
+        rpc: &dyn RpcNegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Vec<String>> {
         let field = rpc.get_error_reason().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract error_reason from rpc message");
             error!("{}", err.log());
@@ -165,17 +195,25 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         let field = rpc.get_message();
         Ok(field)
     }
-    fn get_dsp_consumer_pid_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<Urn> {
+    fn get_dsp_consumer_pid_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Urn> {
         let field = payload.get_consumer_pid().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract consumer_pid from payload message");
+            let err =
+                CommonErrors::parse_new("not able to extract consumer_pid from payload message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
         Ok(field)
     }
-    fn get_dsp_provider_pid_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<Urn> {
+    fn get_dsp_provider_pid_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Urn> {
         let field = payload.get_provider_pid().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract provider_pid from payload message");
+            let err =
+                CommonErrors::parse_new("not able to extract provider_pid from payload message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
@@ -192,7 +230,10 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         })?;
         Ok(field)
     }
-    fn get_dsp_agreement_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<OdrlAgreement> {
+    fn get_dsp_agreement_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<OdrlAgreement> {
         let field = payload.get_agreement().ok_or_else(|| {
             let err = CommonErrors::parse_new("not able to extract agreement from payload message");
             error!("{}", err.log());
@@ -205,31 +246,45 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
         payload: &dyn NegotiationProcessMessageTrait,
     ) -> anyhow::Result<NegotiationEventType> {
         let field = payload.get_event_type().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract event_type from payload message");
+            let err =
+                CommonErrors::parse_new("not able to extract event_type from payload message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
         Ok(field)
     }
-    fn get_dsp_callback_address_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<String> {
+    fn get_dsp_callback_address_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<String> {
         let field = payload.get_callback_address().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract callback_address from payload message");
+            let err = CommonErrors::parse_new(
+                "not able to extract callback_address from payload message",
+            );
             error!("{}", err.log());
             anyhow!(err)
         })?;
         Ok(field)
     }
-    fn get_dsp_error_code_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<String> {
+    fn get_dsp_error_code_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<String> {
         let field = payload.get_error_code().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract error_code from payload message");
+            let err =
+                CommonErrors::parse_new("not able to extract error_code from payload message");
             error!("{}", err.log());
             anyhow!(err)
         })?;
         Ok(field)
     }
-    fn get_dsp_error_reason_safely(&self, payload: &dyn NegotiationProcessMessageTrait) -> anyhow::Result<Vec<String>> {
+    fn get_dsp_error_reason_safely(
+        &self,
+        payload: &dyn NegotiationProcessMessageTrait,
+    ) -> anyhow::Result<Vec<String>> {
         let field = payload.get_error_reason().ok_or_else(|| {
-            let err = CommonErrors::parse_new("not able to extract error_reason from payload message");
+            let err =
+                CommonErrors::parse_new("not able to extract error_reason from payload message");
             error!("{}", err.log());
             anyhow!(err)
         })?;

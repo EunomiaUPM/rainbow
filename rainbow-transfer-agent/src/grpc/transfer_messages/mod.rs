@@ -22,8 +22,8 @@ mod mappers;
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::grpc::api::transfer_messages::transfer_agent_messages_server::TransferAgentMessages;
 use crate::grpc::api::transfer_messages::{
-    CreateMessageRequest, PaginationRequestMessages, ResourceIdRequestMessages, TransferMessageListResponse,
-    TransferMessageResponse,
+    CreateMessageRequest, PaginationRequestMessages, ResourceIdRequestMessages,
+    TransferMessageListResponse, TransferMessageResponse,
 };
 use crate::http::transfer_messages::PaginationParams;
 use std::sync::Arc;
@@ -75,7 +75,10 @@ impl TransferAgentMessages for TransferAgentMessagesGrpc {
         todo!()
     }
 
-    async fn delete_message(&self, _request: Request<ResourceIdRequestMessages>) -> Result<Response<()>, Status> {
+    async fn delete_message(
+        &self,
+        _request: Request<ResourceIdRequestMessages>,
+    ) -> Result<Response<()>, Status> {
         todo!()
     }
 

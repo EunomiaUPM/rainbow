@@ -2,7 +2,10 @@ use crate::data::entities::catalog;
 use crate::data::entities::catalog::{EditCatalogModel, NewCatalogModel};
 use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, CatalogRepoErrors};
 use crate::data::repo_traits::catalog_repo::CatalogRepositoryTrait;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use urn::Urn;
 
 pub struct CatalogRepositoryForSql {
@@ -35,7 +38,13 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
                     .all(&self.db_connection)
                     .await
             }
-            true => catalog::Entity::find().limit(page_limit).offset(calculated_offset).all(&self.db_connection).await,
+            true => {
+                catalog::Entity::find()
+                    .limit(page_limit)
+                    .offset(calculated_offset)
+                    .all(&self.db_connection)
+                    .await
+            }
         };
 
         match catalogs {
@@ -46,10 +55,15 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         }
     }
 
-    async fn get_batch_catalogs(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<catalog::Model>, CatalogAgentRepoErrors> {
+    async fn get_batch_catalogs(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<catalog::Model>, CatalogAgentRepoErrors> {
         let catalog_ids = ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
-        let catalog_process =
-            catalog::Entity::find().filter(catalog::Column::Id.is_in(catalog_ids)).all(&self.db_connection).await;
+        let catalog_process = catalog::Entity::find()
+            .filter(catalog::Column::Id.is_in(catalog_ids))
+            .all(&self.db_connection)
+            .await;
         match catalog_process {
             Ok(catalog_process) => Ok(catalog_process),
             Err(err) => Err(CatalogAgentRepoErrors::CatalogRepoErrors(
@@ -72,13 +86,17 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         }
     }
 
-    async fn get_main_catalog(&self) -> anyhow::Result<Option<catalog::Model>, CatalogAgentRepoErrors> {
+    async fn get_main_catalog(
+        &self,
+    ) -> anyhow::Result<Option<catalog::Model>, CatalogAgentRepoErrors> {
         let catalog = catalog::Entity::find()
             .filter(catalog::Column::DspaceMainCatalog.eq(true))
             .one(&self.db_connection)
             .await
             .map_err(|err| {
-                CatalogAgentRepoErrors::CatalogRepoErrors(CatalogRepoErrors::ErrorFetchingCatalog(err.into()))
+                CatalogAgentRepoErrors::CatalogRepoErrors(CatalogRepoErrors::ErrorFetchingCatalog(
+                    err.into(),
+                ))
             })?;
         Ok(catalog)
     }
@@ -137,7 +155,9 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         let main_catalog = self.get_main_catalog().await?;
         if main_catalog.is_none() {
             return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
-                CatalogRepoErrors::ErrorCreatingCatalog(anyhow::anyhow!("Main Catalog must be created first")),
+                CatalogRepoErrors::ErrorCreatingCatalog(anyhow::anyhow!(
+                    "Main Catalog must be created first"
+                )),
             ));
         }
         let model: catalog::ActiveModel = new_catalog_model.clone().into();
@@ -170,7 +190,10 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         }
     }
 
-    async fn delete_catalog_by_id(&self, catalog_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors> {
+    async fn delete_catalog_by_id(
+        &self,
+        catalog_id: &Urn,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors> {
         let catalog_id = catalog_id.to_string();
         let catalog = catalog::Entity::delete_by_id(catalog_id).exec(&self.db_connection).await;
         match catalog {

@@ -17,7 +17,9 @@
  *
  */
 
-use crate::entities::negotiation_message::{NegotiationAgentMessagesTrait, NewNegotiationMessageDto};
+use crate::entities::negotiation_message::{
+    NegotiationAgentMessagesTrait, NewNegotiationMessageDto,
+};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::{
@@ -56,7 +58,10 @@ impl FromRef<NegotiationAgentMessagesRouter> for Arc<ContractsConfig> {
 }
 
 impl NegotiationAgentMessagesRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentMessagesTrait>, config: Arc<ContractsConfig>) -> Self {
+    pub fn new(
+        service: Arc<dyn NegotiationAgentMessagesTrait>,
+        config: Arc<ContractsConfig>,
+    ) -> Self {
         Self { service, config }
     }
 
@@ -70,10 +75,7 @@ impl NegotiationAgentMessagesRouter {
                 "/:id",
                 get(Self::handle_get_message_by_id).delete(Self::handle_delete_message),
             )
-            .route(
-                "/process/:process_id",
-                get(Self::handle_get_messages_by_process_id),
-            )
+            .route("/process/:process_id", get(Self::handle_get_messages_by_process_id))
             .with_state(self)
     }
 

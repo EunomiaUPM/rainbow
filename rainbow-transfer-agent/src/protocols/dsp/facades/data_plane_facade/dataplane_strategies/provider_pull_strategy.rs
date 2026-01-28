@@ -6,7 +6,9 @@ use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlanePro
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatusRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
-use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion};
+use rainbow_common::adv_protocol::interplane::{
+    DataPlaneControllerMessages, DataPlaneControllerVersion,
+};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;

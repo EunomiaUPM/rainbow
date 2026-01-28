@@ -68,8 +68,12 @@ impl Display for RainbowEventsNotificationMessageTypes {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             RainbowEventsNotificationMessageTypes::RPCMessage => Ok(f.write_str("RPCMessage")?),
-            RainbowEventsNotificationMessageTypes::DSProtocolMessage => Ok(f.write_str("DSProtocolMessage")?),
-            RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage => Ok(f.write_str("RainbowEntitiesMessage")?),
+            RainbowEventsNotificationMessageTypes::DSProtocolMessage => {
+                Ok(f.write_str("DSProtocolMessage")?)
+            }
+            RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage => {
+                Ok(f.write_str("RainbowEntitiesMessage")?)
+            }
         }
     }
 }
@@ -85,9 +89,13 @@ pub enum RainbowEventsNotificationMessageCategory {
 impl Display for RainbowEventsNotificationMessageCategory {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            RainbowEventsNotificationMessageCategory::TransferProcess => Ok(f.write_str("TransferProcess")?),
+            RainbowEventsNotificationMessageCategory::TransferProcess => {
+                Ok(f.write_str("TransferProcess")?)
+            }
             RainbowEventsNotificationMessageCategory::Catalog => Ok(f.write_str("Catalog")?),
-            RainbowEventsNotificationMessageCategory::ContractNegotiation => Ok(f.write_str("ContractNegotiation")?),
+            RainbowEventsNotificationMessageCategory::ContractNegotiation => {
+                Ok(f.write_str("ContractNegotiation")?)
+            }
             RainbowEventsNotificationMessageCategory::DataPlane => Ok(f.write_str("DataPlane")?),
         }
     }
@@ -108,8 +116,12 @@ impl Display for RainbowEventsNotificationMessageOperation {
             RainbowEventsNotificationMessageOperation::Creation => Ok(f.write_str("Creation")?),
             RainbowEventsNotificationMessageOperation::Update => Ok(f.write_str("Update")?),
             RainbowEventsNotificationMessageOperation::Deletion => Ok(f.write_str("Deletion")?),
-            RainbowEventsNotificationMessageOperation::IncomingMessage => Ok(f.write_str("IncomingMessage")?),
-            RainbowEventsNotificationMessageOperation::OutgoingMessage => Ok(f.write_str("OutgoingMessage")?),
+            RainbowEventsNotificationMessageOperation::IncomingMessage => {
+                Ok(f.write_str("IncomingMessage")?)
+            }
+            RainbowEventsNotificationMessageOperation::OutgoingMessage => {
+                Ok(f.write_str("OutgoingMessage")?)
+            }
         }
     }
 }

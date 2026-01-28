@@ -90,8 +90,14 @@ pub trait PolicyTemplateEntityTrait: Sync + Send {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<PolicyTemplateDto>>;
-    async fn get_batch_policy_templates(&self, ids: &Vec<String>) -> anyhow::Result<Vec<PolicyTemplateDto>>;
-    async fn get_policies_template_by_id(&self, template_id: &String) -> anyhow::Result<Vec<PolicyTemplateDto>>;
+    async fn get_batch_policy_templates(
+        &self,
+        ids: &Vec<String>,
+    ) -> anyhow::Result<Vec<PolicyTemplateDto>>;
+    async fn get_policies_template_by_id(
+        &self,
+        template_id: &String,
+    ) -> anyhow::Result<Vec<PolicyTemplateDto>>;
     async fn get_policies_template_by_version_and_id(
         &self,
         template_id: &String,

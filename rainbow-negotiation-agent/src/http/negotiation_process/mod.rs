@@ -58,7 +58,10 @@ impl FromRef<NegotiationAgentProcessesRouter> for Arc<ContractsConfig> {
 }
 
 impl NegotiationAgentProcessesRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentProcessesTrait>, config: Arc<ContractsConfig>) -> Self {
+    pub fn new(
+        service: Arc<dyn NegotiationAgentProcessesTrait>,
+        config: Arc<ContractsConfig>,
+    ) -> Self {
         Self { service, config }
     }
 
@@ -71,7 +74,9 @@ impl NegotiationAgentProcessesRouter {
             .route("/batch", post(Self::handle_get_batch_processes))
             .route(
                 "/:id",
-                get(Self::handle_get_process_by_id).put(Self::handle_put_process).delete(Self::handle_delete_process),
+                get(Self::handle_get_process_by_id)
+                    .put(Self::handle_put_process)
+                    .delete(Self::handle_delete_process),
             )
             .route("/:id/key/:key_id", get(Self::handle_get_process_by_key_id))
             .with_state(self)

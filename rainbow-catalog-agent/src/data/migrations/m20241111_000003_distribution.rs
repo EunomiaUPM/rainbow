@@ -34,12 +34,21 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(CatalogDistributions::Table)
                     .col(ColumnDef::new(CatalogDistributions::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(CatalogDistributions::DctIssued).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(CatalogDistributions::DctModified).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(CatalogDistributions::DctIssued)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CatalogDistributions::DctModified)
+                            .timestamp_with_time_zone(),
+                    )
                     .col(ColumnDef::new(CatalogDistributions::DctTitle).string())
                     .col(ColumnDef::new(CatalogDistributions::DctDescription).string())
                     .col(ColumnDef::new(CatalogDistributions::DctFormat).string())
-                    .col(ColumnDef::new(CatalogDistributions::DcatAccessService).string().not_null())
+                    .col(
+                        ColumnDef::new(CatalogDistributions::DcatAccessService).string().not_null(),
+                    )
                     .col(ColumnDef::new(CatalogDistributions::DatasetId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()

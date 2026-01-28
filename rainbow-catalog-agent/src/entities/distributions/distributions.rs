@@ -16,7 +16,10 @@ pub struct DistributionEntities {
 }
 
 impl DistributionEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+    pub fn new(
+        repo: Arc<dyn CatalogAgentRepoTrait>,
+        cache: Arc<dyn CatalogAgentCacheTrait>,
+    ) -> Self {
         Self { repo, cache }
     }
 }
@@ -57,7 +60,10 @@ impl DistributionEntityTrait for DistributionEntities {
         Ok(dtos)
     }
 
-    async fn get_batch_distributions(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DistributionDto>> {
+    async fn get_batch_distributions(
+        &self,
+        ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<DistributionDto>> {
         // cache
         if let Ok(dtos) = self.cache.get_distribution_cache().get_batch(ids).await {
             if !dtos.is_empty() {
@@ -86,9 +92,16 @@ impl DistributionEntityTrait for DistributionEntities {
         Ok(dtos)
     }
 
-    async fn get_distributions_by_dataset_id(&self, dataset_id: &Urn) -> anyhow::Result<Vec<DistributionDto>> {
+    async fn get_distributions_by_dataset_id(
+        &self,
+        dataset_id: &Urn,
+    ) -> anyhow::Result<Vec<DistributionDto>> {
         // cache
-        if let Ok(dtos) = self.cache.get_distribution_cache().get_by_relation("datasets", dataset_id, None, None).await
+        if let Ok(dtos) = self
+            .cache
+            .get_distribution_cache()
+            .get_by_relation("datasets", dataset_id, None, None)
+            .await
         {
             if !dtos.is_empty() {
                 return Ok(dtos);
@@ -140,9 +153,13 @@ impl DistributionEntityTrait for DistributionEntities {
         Ok(dto)
     }
 
-    async fn get_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<Option<DistributionDto>> {
+    async fn get_distribution_by_id(
+        &self,
+        distribution_id: &Urn,
+    ) -> anyhow::Result<Option<DistributionDto>> {
         // Cache
-        if let Ok(Some(dto)) = self.cache.get_distribution_cache().get_single(distribution_id).await {
+        if let Ok(Some(dto)) = self.cache.get_distribution_cache().get_single(distribution_id).await
+        {
             return Ok(Some(dto));
         }
 
@@ -160,7 +177,9 @@ impl DistributionEntityTrait for DistributionEntities {
         if let Some(dto) = &dto {
             let cache = self.cache.get_distribution_cache();
             let _ = cache.set_single(distribution_id, dto).await;
-            let _ = cache.add_to_collection(distribution_id, dto.inner.dct_issued.timestamp() as f64).await;
+            let _ = cache
+                .add_to_collection(distribution_id, dto.inner.dct_issued.timestamp() as f64)
+                .await;
         }
         Ok(dto)
     }

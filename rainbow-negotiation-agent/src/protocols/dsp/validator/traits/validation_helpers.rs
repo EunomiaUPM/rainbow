@@ -19,7 +19,9 @@
 
 #![allow(unused)]
 use crate::entities::negotiation_process::NegotiationProcessDto;
-use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageTrait, NegotiationProcessState};
+use crate::protocols::dsp::protocol_types::{
+    NegotiationProcessMessageTrait, NegotiationProcessState,
+};
 use rainbow_common::config::types::roles::RoleConfig;
 use urn::Urn;
 
@@ -32,8 +34,18 @@ pub trait ValidationHelpers: Send + Sync + 'static {
         &self,
         payload: &dyn NegotiationProcessMessageTrait,
     ) -> anyhow::Result<NegotiationProcessDto>;
-    async fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: &RoleConfig) -> anyhow::Result<Urn>;
+    async fn get_pid_by_role(
+        &self,
+        dto: &NegotiationProcessDto,
+        role: &RoleConfig,
+    ) -> anyhow::Result<Urn>;
     async fn get_role_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<RoleConfig>;
-    async fn get_state_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<NegotiationProcessState>;
-    async fn get_state_attribute_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<String>;
+    async fn get_state_from_dto(
+        &self,
+        dto: &NegotiationProcessDto,
+    ) -> anyhow::Result<NegotiationProcessState>;
+    async fn get_state_attribute_from_dto(
+        &self,
+        dto: &NegotiationProcessDto,
+    ) -> anyhow::Result<String>;
 }

@@ -23,7 +23,10 @@ pub mod m20241123_0000001_subscriptions;
 pub mod m20241123_0000002_notifications;
 
 pub fn get_events_migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![Box::new(m20241123_0000001_subscriptions::Migration), Box::new(m20241123_0000002_notifications::Migration)]
+    vec![
+        Box::new(m20241123_0000001_subscriptions::Migration),
+        Box::new(m20241123_0000002_notifications::Migration),
+    ]
 }
 
 pub struct Migrator;

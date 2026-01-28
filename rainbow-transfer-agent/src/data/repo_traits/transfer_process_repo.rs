@@ -57,7 +57,10 @@ pub trait TransferProcessRepoTrait: Send + Sync {
         id: &Urn,
         edit_model: &EditTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model, TransferProcessRepoErrors>;
-    async fn delete_transfer_process(&self, id: &Urn) -> anyhow::Result<(), TransferProcessRepoErrors>;
+    async fn delete_transfer_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<(), TransferProcessRepoErrors>;
 }
 
 #[derive(Debug, Error)]

@@ -42,11 +42,15 @@ pub struct NegotiationAgentRepoForSql {
 impl NegotiationAgentRepoForSql {
     pub fn create_repo(db_connection: DatabaseConnection) -> Self {
         Self {
-            negotiation_process_repo: Arc::new(NegotiationProcessRepoForSql::new(db_connection.clone())),
-            negotiation_process_identifier_repo: Arc::new(NegotiationProcessIdentifierRepoForSql::new(
+            negotiation_process_repo: Arc::new(NegotiationProcessRepoForSql::new(
                 db_connection.clone(),
             )),
-            negotiation_message_repo: Arc::new(NegotiationMessageRepoForSql::new(db_connection.clone())),
+            negotiation_process_identifier_repo: Arc::new(
+                NegotiationProcessIdentifierRepoForSql::new(db_connection.clone()),
+            ),
+            negotiation_message_repo: Arc::new(NegotiationMessageRepoForSql::new(
+                db_connection.clone(),
+            )),
             offer_repo: Arc::new(OfferRepoForSql::new(db_connection.clone())),
             agreement_repo: Arc::new(AgreementRepoForSql::new(db_connection.clone())),
         }
