@@ -1,3 +1,7 @@
+# ====================================================================
+# DEV Purposes with monolith config (do not touch please) ============
+# ====================================================================
+
 version: "3.5"
 services:
 
@@ -74,6 +78,23 @@ services:
         }
     command: server
 
+  # Vault setup for provider
+  provider_vault_setup:
+    image: dwdraju/alpine-curl-jq #
+    container_name: provider_vault_setup
+    depends_on:
+      - provider_vault
+    environment:
+      VAULT_ADDR: 'http://provider_vault:8200'
+      VAULT_FILE: '/vault/file'
+    volumes:
+      - ../vault/provider/config:/vault/config
+      - ../vault/provider/data:/vault/file
+      - ./vault/vault-setup.sh:/vault-setup.sh
+      - ./vault/vault-init.sh:/vault-init.sh
+    entrypoint: ["/bin/sh", "/vault-setup.sh"]
+
+
   # ====================================================================
   # CONSUMER Persistence layer =========================================
   # ====================================================================
@@ -146,6 +167,27 @@ services:
           "max_lease_ttl": "720h"
         }
     command: server
+
+  # Vault setup for consumer
+  consumer_vault_setup:
+    image: dwdraju/alpine-curl-jq #
+    container_name: consumer_vault_setup
+    depends_on:
+      - consumer_vault
+    environment:
+      VAULT_ADDR: 'http://consumer_vault:8200'
+    volumes:
+      - ./vault_data:/vault/file # Compartimos el volumen para leer/escribir keys.json
+      - ./vault-init.sh:/vault-init.sh
+    # Instalamos el cliente de vault antes de correr el script
+    entrypoint: >
+      sh -c "apk add --no-cache libcap && 
+      wget https://releases.hashicorp.com/vault/1.13.3/vault_1.13.3_linux_amd64.zip && 
+      unzip vault_1.13.3_linux_amd64.zip && 
+      mv vault /usr/bin/vault && 
+      chmod +x /vault-init.sh && 
+      /vault-init.sh"
+
 
 
   # ====================================================================
