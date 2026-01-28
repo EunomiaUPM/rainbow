@@ -7,7 +7,7 @@ CMD=${2:-setup}
 
 # Paths (Relative to project root)
 CONFIG_FILE="../static/environment/config/core.${ROLE}.yaml"
-ENV_FILE="../vault/${ROLE}/data/vault.env"
+ENV_FILE="../static/vault/${ROLE}/data/vault.env"
 
 # Validations
 if [[ ! "$ROLE" =~ ^(provider|consumer)$ ]]; then

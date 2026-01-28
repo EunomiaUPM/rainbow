@@ -50,7 +50,6 @@ x-vault-setup-base: &vault-setup-base
 # SERVICES
 # ====================================================================
 services:
-
   # ------------------------------------------------------------------
   # PROVIDER STACK
   # ------------------------------------------------------------------
@@ -80,8 +79,16 @@ services:
     ports:
       - "8201:8200"
     volumes:
-      - ../vault/provider/config:/vault/config
-      - ../vault/provider/data:/vault/file
+      - ../static/vault/provider/config:/vault/config
+      - ../static/vault/provider/data:/vault/file
+
+  provider_secrets_setup:
+    image: alpine:latest
+    container_name: provider_secrets_setup
+    volumes:
+      - ../static/vault/provider/secrets:/secrets
+      - ./vault/secrets-gen.sh:/secrets-gen.sh
+    command: sh -c "apk add --no-cache openssl && /secrets-gen.sh /secrets provider"
 
   provider_vault_setup:
     <<: *vault-setup-base
@@ -89,14 +96,14 @@ services:
     depends_on:
       - provider_vault
     environment:
-      VAULT_ADDR: 'http://provider_vault:8200'
-      VAULT_FILE: '/vault/file'
-      VAULT_HOST_ADDR: 'http://127.0.0.1:8201'
+      VAULT_ADDR: "http://provider_vault:8200"
+      VAULT_FILE: "/vault/file"
+      VAULT_HOST_ADDR: "http://127.0.0.1:8201"
       # Dynamic Absolute Path for Host
-      VAULT_HOST_PATH: '${PWD}/../vault/provider'
+      VAULT_HOST_PATH: "${PWD}/../static/vault/provider"
     volumes:
-      - ../vault/provider/config:/vault/config
-      - ../vault/provider/data:/vault/file
+      - ../static/vault/provider/config:/vault/config
+      - ../static/vault/provider/data:/vault/file
       - ./vault/vault-setup.sh:/vault-setup.sh
       - ./vault/vault-init.sh:/vault-init.sh
 
@@ -129,8 +136,16 @@ services:
     ports:
       - "8202:8200"
     volumes:
-      - ../vault/consumer/config:/vault/config
-      - ../vault/consumer/data:/vault/file
+      - ../static/vault/consumer/config:/vault/config
+      - ../static/vault/consumer/data:/vault/file
+
+  consumer_secrets_setup:
+    image: alpine:latest
+    container_name: consumer_secrets_setup
+    volumes:
+      - ../static/vault/consumer/secrets:/secrets
+      - ./vault/secrets-gen.sh:/secrets-gen.sh
+    command: sh -c "apk add --no-cache openssl && /secrets-gen.sh /secrets consumer"
 
   consumer_vault_setup:
     <<: *vault-setup-base
@@ -138,14 +153,14 @@ services:
     depends_on:
       - consumer_vault
     environment:
-      VAULT_ADDR: 'http://consumer_vault:8200'
-      VAULT_FILE: '/vault/file'
-      VAULT_HOST_ADDR: 'http://127.0.0.1:8202'
+      VAULT_ADDR: "http://consumer_vault:8200"
+      VAULT_FILE: "/vault/file"
+      VAULT_HOST_ADDR: "http://127.0.0.1:8202"
       # Dynamic Absolute Path for Host
-      VAULT_HOST_PATH: '${PWD}/../vault/consumer'
+      VAULT_HOST_PATH: "${PWD}/../static/vault/consumer"
     volumes:
-      - ../vault/consumer/config:/vault/config
-      - ../vault/consumer/data:/vault/file
+      - ../static/vault/consumer/config:/vault/config
+      - ../static/vault/consumer/data:/vault/file
       - ./vault/vault-setup.sh:/vault-setup.sh
       - ./vault/vault-init.sh:/vault-init.sh
 
@@ -176,8 +191,8 @@ services:
       - ./../static/config/.env.authority:/app/.env.authority
       - ./../static/certificates:/app/certificates
       - ./../static/specs:/app/specs
-    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
-    command: [ "start", "--env-file", "/app/.env.authority" ]
+    entrypoint: ["/usr/local/bin/rainbow_authority"]
+    command: ["start", "--env-file", "/app/.env.authority"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -189,8 +204,8 @@ services:
       - ds_authority_db
     volumes:
       - ./../static/config/.env.authority:/app/.env.authority
-    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
-    command: [ "setup", "--env-file", "/app/.env.authority" ]
+    entrypoint: ["/usr/local/bin/rainbow_authority"]
+    command: ["setup", "--env-file", "/app/.env.authority"]
 
   ds_authority_db:
     <<: *postgres-base
