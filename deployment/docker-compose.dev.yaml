@@ -86,7 +86,9 @@ services:
       - provider_vault
     environment:
       VAULT_ADDR: 'http://provider_vault:8200'
+      VAULT_HOST_ADDR: 'http://127.0.0.1:8201'
       VAULT_FILE: '/vault/file'
+      VAULT_HOST_PATH: '../vault/provider'
     volumes:
       - ../vault/provider/config:/vault/config
       - ../vault/provider/data:/vault/file
