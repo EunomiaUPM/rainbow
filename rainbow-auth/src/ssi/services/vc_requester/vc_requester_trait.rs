@@ -18,12 +18,17 @@
 use async_trait::async_trait;
 use reqwest::Response;
 
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use ymir::data::entities::{mates, req_interaction, req_vc, req_verification};
+use ymir::types::gnap::grant_request::InteractStart;
 
 #[async_trait]
 pub trait VcRequesterTrait: Send + Sync + 'static {
-    fn start(&self, payload: ReachAuthority) -> (req_vc::NewModel, req_interaction::NewModel);
+    fn start(
+        &self,
+        payload: ReachAuthority,
+        reach_method: InteractStart,
+    ) -> (req_vc::NewModel, req_interaction::NewModel);
     async fn send_req(
         &self,
         vc_model: &mut req_vc::Model,
@@ -35,4 +40,5 @@ pub trait VcRequesterTrait: Send + Sync + 'static {
         vc_req_model: &mut req_vc::Model,
         res: Response,
     ) -> anyhow::Result<mates::NewModel>;
+    async fn manage_rejection(&self, vc_req_model: &mut req_vc::Model) -> anyhow::Result<()>;
 }

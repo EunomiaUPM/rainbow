@@ -20,6 +20,7 @@ use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::CommonConfigTrait;
 use ymir::config::traits::ApiConfigTrait;
 use ymir::config::types::CommonHostsConfig;
+use ymir::types::dids::did_config::DidConfig;
 use ymir::types::vcs::W3cDataModelVersion;
 
 pub struct GaiaSelfIssuerConfig {
@@ -27,6 +28,7 @@ pub struct GaiaSelfIssuerConfig {
     is_local: bool,
     api_path: String,
     vc_data_model: W3cDataModelVersion,
+    did_config: DidConfig,
 }
 
 impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
@@ -37,6 +39,7 @@ impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
             is_local: value.common().is_local(),
             api_path,
             vc_data_model: W3cDataModelVersion::V1,
+            did_config: value.did().clone(),
         }
     }
 }
@@ -53,5 +56,8 @@ impl GaiaGaiaSelfIssuerConfigTrait for GaiaSelfIssuerConfig {
     }
     fn get_data_model_version(&self) -> W3cDataModelVersion {
         self.vc_data_model.clone()
+    }
+    fn get_did(&self) -> String {
+        self.did_config.did.clone()
     }
 }

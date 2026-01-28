@@ -131,6 +131,10 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         uri
     }
 
+    fn get_did(&self) -> String {
+        self.config.get_did()
+    }
+
     async fn issue_cred(&self, did: &str) -> anyhow::Result<Value> {
         info!("Issuing cred");
 

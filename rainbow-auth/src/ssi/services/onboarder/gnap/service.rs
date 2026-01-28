@@ -37,7 +37,7 @@ use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::client::ClientTrait;
 use ymir::services::vault::vault_rs::VaultService;
 use ymir::services::vault::VaultTrait;
-use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::grant_request::{GrantRequest, InteractStart};
 use ymir::types::gnap::grant_response::GrantResponse;
 use ymir::types::gnap::{AccessToken, GRUse};
 use ymir::types::http::Body;
@@ -87,9 +87,10 @@ impl OnboarderTrait for GnapOnboarderService {
             grant_endpoint: payload.url.clone(),
         };
 
+
         let int_model = req_interaction::NewModel {
             id: id.clone(),
-            start: vec!["oidc4vp".to_string()],
+            start: vec![InteractStart::Oidc4VP.to_string()],
             method: "push".to_string(),
             uri: callback_uri.clone(),
             hash_method: Some("sha-256".to_string()),
@@ -123,7 +124,7 @@ impl OnboarderTrait for GnapOnboarderService {
         let cert: StringHelper = self.vault.read(None, &cert).await?;
         let client = self.config.get_pretty_client_config(&cert.data())?;
 
-        let grant_request = GrantRequest::new(GRUse::Talk, client, &int_model);
+        let grant_request = GrantRequest::new(GRUse::Talk, client, None, &int_model);
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);

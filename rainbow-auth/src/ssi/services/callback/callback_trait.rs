@@ -19,14 +19,14 @@ use async_trait::async_trait;
 use reqwest::Response;
 
 use ymir::data::entities::req_interaction;
-use ymir::types::gnap::CallbackBody;
+use ymir::types::gnap::ApprovedCallbackBody;
 
 #[async_trait]
 pub trait CallbackTrait: Send + Sync + 'static {
     fn check_callback(
         &self,
         int_model: &mut req_interaction::Model,
-        payload: &CallbackBody,
+        payload: &ApprovedCallbackBody,
     ) -> anyhow::Result<()>;
     async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<Response>;
 }

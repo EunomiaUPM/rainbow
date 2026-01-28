@@ -20,12 +20,12 @@ mod tests {
     use mockall::predicate::*;
 <<<<<<< HEAD
     use rainbow_auth::ssi_auth::common::types::entities::{
-        ReachAuthority, ReachMethod, WhatEntity
+        ReachAuthority, InteractStart, WhatEntity
     };
     use rainbow_auth::ssi_auth::consumer::core::traits::consumer_trait::{
         MockRainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerManagerTrait
 =======
-    use rainbow_auth::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
+    use rainbow_auth::ssi_auth::common::types::entities::{ReachAuthority, InteractStart, WhatEntity};
     use rainbow_auth::ssi_auth::consumer::core::traits::consumer_trait::{
         MockRainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerManagerTrait,
 >>>>>>> origin/main
@@ -852,7 +852,7 @@ mod tests {
             vc_type: "VerifiableCredential".to_string()
         };
 
-        let method = ReachMethod::Oidc;
+        let method = InteractStart::Oidc;
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
         mock_authority_repo.expect_create().returning(|model| {
@@ -971,7 +971,7 @@ mod tests {
             vc_type: "VerifiableCredential".to_string()
         };
 
-        let method = ReachMethod::Oidc;
+        let method = InteractStart::Oidc;
 
         let mut mock_authority_repo = MockAuthorityRepo::new();
 <<<<<<< HEAD

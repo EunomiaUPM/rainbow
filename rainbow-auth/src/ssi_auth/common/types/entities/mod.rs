@@ -65,22 +65,22 @@ impl fmt::Debug for WhatEntity {
 }
 
 #[derive(Clone)]
-pub enum ReachMethod {
+pub enum InteractStart {
     Oidc,
     CrossUser,
 }
 
-impl fmt::Debug for ReachMethod {
+impl fmt::Debug for InteractStart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ReachMethod::Oidc => write!(f, "Oidc"),
-            ReachMethod::CrossUser => write!(f, "CrossUser"),
+            InteractStart::Oidc => write!(f, "Oidc"),
+            InteractStart::CrossUser => write!(f, "CrossUser"),
         }
     }
 }
 
-impl PartialEq for ReachMethod {
+impl PartialEq for InteractStart {
     fn eq(&self, other: &Self) -> bool {
-        matches!((self, other), (ReachMethod::Oidc, ReachMethod::Oidc) | (ReachMethod::CrossUser, ReachMethod::CrossUser))
+        matches!((self, other), (InteractStart::Oidc, InteractStart::Oidc) | (InteractStart::CrossUser, InteractStart::CrossUser))
     }
 }

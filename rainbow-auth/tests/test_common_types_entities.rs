@@ -5,9 +5,9 @@
 mod tests {
     use rainbow_auth::ssi_auth::common::types::entities::{
 <<<<<<< HEAD
-        ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity
+        ReachAuthority, InteractStart, ReachProvider, Url2RequestVC, WhatEntity
 =======
-        ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity,
+        ReachAuthority, InteractStart, ReachProvider, Url2RequestVC, WhatEntity,
 >>>>>>> origin/main
     };
     use serde_json;
@@ -81,11 +81,11 @@ mod tests {
     }
 
     #[test]
-    fn test_reachmethod_partial_eq_and_clone() {
-        let oidc = ReachMethod::Oidc;
-        let cross = ReachMethod::CrossUser;
-        assert_eq!(oidc, ReachMethod::Oidc);
-        assert_eq!(cross, ReachMethod::CrossUser);
+    fn test_InteractStart_partial_eq_and_clone() {
+        let oidc = InteractStart::Oidc;
+        let cross = InteractStart::CrossUser;
+        assert_eq!(oidc, InteractStart::Oidc);
+        assert_eq!(cross, InteractStart::CrossUser);
         assert_ne!(oidc, cross);
 
         let cloned = oidc.clone();
@@ -93,9 +93,9 @@ mod tests {
     }
 
     #[test]
-    fn test_reachmethod_debug() {
-        let oidc_str = format!("{:?}", ReachMethod::Oidc);
-        let cross_str = format!("{:?}", ReachMethod::CrossUser);
+    fn test_InteractStart_debug() {
+        let oidc_str = format!("{:?}", InteractStart::Oidc);
+        let cross_str = format!("{:?}", InteractStart::CrossUser);
         assert_eq!(oidc_str, "Oidc");
         assert_eq!(cross_str, "CrossUser");
     }

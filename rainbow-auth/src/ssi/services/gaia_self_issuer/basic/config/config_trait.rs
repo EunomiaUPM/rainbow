@@ -23,4 +23,5 @@ pub trait GaiaGaiaSelfIssuerConfigTrait {
     fn is_local(&self) -> bool;
     fn get_api_path(&self) -> String;
     fn get_data_model_version(&self) -> W3cDataModelVersion;
+    fn get_did(&self) -> String;
 }

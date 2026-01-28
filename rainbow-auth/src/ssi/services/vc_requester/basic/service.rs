@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+use std::str::FromStr;
 use std::sync::Arc;
 
 use super::super::VcRequesterTrait;
 use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use anyhow::bail;
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
@@ -28,16 +28,18 @@ use tracing::{error, info};
 use url::Url;
 use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
+use ymir::data::entities::req_vc::Model;
 use ymir::data::entities::{mates, req_interaction, req_vc, req_verification};
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::client::ClientTrait;
 use ymir::services::vault::vault_rs::VaultService;
 use ymir::services::vault::VaultTrait;
-use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::grant_request::{GrantRequest, InteractStart};
 use ymir::types::gnap::grant_response::GrantResponse;
 use ymir::types::gnap::GRUse;
 use ymir::types::http::Body;
 use ymir::types::secrets::StringHelper;
+use ymir::types::vcs::VcType;
 use ymir::utils::{expect_from_env, get_from_opt, get_query_param, trim_4_base};
 
 pub struct VCReqService {
@@ -58,7 +60,11 @@ impl VCReqService {
 
 #[async_trait]
 impl VcRequesterTrait for VCReqService {
-    fn start(&self, payload: ReachAuthority) -> (req_vc::NewModel, req_interaction::NewModel) {
+    fn start(
+        &self,
+        payload: ReachAuthority,
+        reach_method: InteractStart,
+    ) -> (req_vc::NewModel, req_interaction::NewModel) {
         info!("Begging for a credential");
 
         let id = uuid::Uuid::new_v4().to_string();
@@ -79,7 +85,7 @@ impl VcRequesterTrait for VCReqService {
 
         let int_model = req_interaction::NewModel {
             id,
-            start: vec!["await".to_string()],
+            start: vec![reach_method.to_string()],
             method: "push".to_string(),
             uri: callback_uri,
             hash_method: None,
@@ -101,7 +107,9 @@ impl VcRequesterTrait for VCReqService {
         let cert: StringHelper = self.vault.read(None, &cert).await?;
         let client = self.config.get_pretty_client_config(&cert.data())?;
 
-        let grant_request = GrantRequest::new(GRUse::VcReq, client, int_model);
+        let vc_type = VcType::from_str(&vc_model.vc_type)?;
+
+        let grant_request = GrantRequest::new(GRUse::VcReq, client, Some(vc_type), int_model);
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -216,5 +224,11 @@ impl VcRequesterTrait for VCReqService {
         };
 
         Ok(mate)
+    }
+
+    async fn manage_rejection(&self, vc_req_model: &mut Model) -> anyhow::Result<()> {
+        vc_req_model.status = "Rejected".to_string();
+        vc_req_model.ended_at = Some(chrono::Utc::now().naive_utc());
+        Ok(())
     }
 }
