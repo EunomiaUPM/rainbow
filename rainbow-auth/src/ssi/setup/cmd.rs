@@ -75,7 +75,11 @@ impl AuthCommands {
                     .collapse()
                     .to_string();
                 info!("Current Auth Config:\n{}", table);
-                vault.write_all_secrets(None).await?;
+                if config.common().is_local {
+                    vault.write_local_secrets(None).await?;
+                } else {
+                    vault.write_all_secrets(None).await?;
+                }
 
                 let connection = vault.get_db_connection(config.common()).await;
                 AuthMigrator::run(&connection).await?;

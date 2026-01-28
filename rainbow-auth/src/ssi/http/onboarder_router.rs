@@ -29,7 +29,7 @@ use axum::{Json, Router};
 use tracing::error;
 use ymir::errors::{CustomToResponse, ErrorLogTrait, Errors};
 use ymir::types::errors::BadFormat;
-use ymir::types::gnap::CallbackBody;
+use ymir::types::gnap::ApprovedCallbackBody;
 
 pub struct OnboarderRouter {
     onboarder: Arc<dyn CoreOnboarderTrait>,
@@ -87,7 +87,7 @@ impl OnboarderRouter {
             }
         };
 
-        let payload = CallbackBody { interact_ref, hash };
+        let payload = ApprovedCallbackBody { interact_ref, hash };
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
@@ -97,7 +97,7 @@ impl OnboarderRouter {
     async fn post_callback(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
-        payload: Result<Json<CallbackBody>, JsonRejection>,
+        payload: Result<Json<ApprovedCallbackBody>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,

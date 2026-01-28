@@ -26,5 +26,6 @@ pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
     fn get_oauth_server_data(&self) -> AuthServerMetadata;
     fn get_token(&self) -> IssuingToken;
     fn generate_issuing_uri(&self, id: &str) -> String;
+    fn get_did(&self) -> String;
     async fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
 }

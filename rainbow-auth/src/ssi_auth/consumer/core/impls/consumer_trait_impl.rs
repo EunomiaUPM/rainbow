@@ -17,7 +17,7 @@
  *
  */
 use crate::ssi_auth::common::errors::AuthErrors;
-use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
+use crate::ssi_auth::common::types::entities::{ReachAuthority, InteractStart, WhatEntity};
 use crate::ssi_auth::common::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
 use crate::ssi_auth::common::utils::format::trim_4_base;
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
@@ -627,7 +627,7 @@ where
         Ok(verification_model.uri.clone())
     }
 
-    async fn beg_credential(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
+    async fn beg_credential(&self, payload: ReachAuthority, method: InteractStart) -> anyhow::Result<Option<String>> {
         let authority_id = payload.id;
         let authority_slug = payload.slug;
         let url = payload.url;
@@ -643,13 +643,13 @@ where
         );
 
         let mut grant_request = match method {
-            ReachMethod::Oidc => GrantRequest::vc_oidc(
+            InteractStart::Oidc => GrantRequest::vc_oidc(
                 client,
                 "redirect".to_string(),
                 Some(callback_uri.clone()),
                 vc_type.clone(),
             ),
-            ReachMethod::CrossUser => GrantRequest::vc_cross_user(client, Some(callback_uri.clone()), vc_type.clone()),
+            InteractStart::CrossUser => GrantRequest::vc_cross_user(client, Some(callback_uri.clone()), vc_type.clone()),
         };
 
         let new_authority_request_model = authority_request::NewModel {
@@ -786,8 +786,8 @@ where
         };
 
         match method {
-            ReachMethod::CrossUser => Ok(None),
-            ReachMethod::Oidc => {
+            InteractStart::CrossUser => Ok(None),
+            InteractStart::Oidc => {
                 let uri = self.complete_ver_proccess(res_interact.oidc4vp, url, id).await?;
                 Ok(Some(uri))
             }

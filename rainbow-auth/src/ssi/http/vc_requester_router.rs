@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::ssi::core::traits::CoreVcRequesterTrait;
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -29,7 +29,8 @@ use axum::{Json, Router};
 use tracing::error;
 use ymir::errors::{CustomToResponse, ErrorLogTrait, Errors};
 use ymir::types::errors::BadFormat;
-use ymir::types::gnap::CallbackBody;
+use ymir::types::gnap::grant_request::InteractStart;
+use ymir::types::gnap::{ApprovedCallbackBody, CallbackBody};
 
 pub struct VcRequesterRouter {
     requester: Arc<dyn CoreVcRequesterTrait>,
@@ -63,7 +64,7 @@ impl VcRequesterRouter {
             }
         };
 
-        match requester.beg_vc(payload, ReachMethod::CrossUser).await {
+        match requester.beg_vc(payload, InteractStart::CrossUser).await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
@@ -81,7 +82,7 @@ impl VcRequesterRouter {
             }
         };
 
-        match requester.beg_vc(payload, ReachMethod::Oidc).await {
+        match requester.beg_vc(payload, InteractStart::Oidc4VP).await {
             Ok(Some(data)) => data.into_response(),
             Ok(None) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
@@ -133,7 +134,7 @@ impl VcRequesterRouter {
             }
         };
 
-        let payload = CallbackBody { interact_ref, hash };
+        let payload = ApprovedCallbackBody { interact_ref, hash };
         match requester.continue_req(id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
@@ -150,9 +151,15 @@ impl VcRequesterRouter {
             Err(e) => return e.into_response(),
         };
 
-        match requester.continue_req(id, payload).await {
-            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response(),
+        match payload {
+            CallbackBody::TypeA(data) => match requester.continue_req(id, data).await {
+                Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+                Err(e) => e.to_response(),
+            },
+            CallbackBody::TypeB(_) => match requester.manage_rejection(id).await {
+                Ok(_) => (StatusCode::OK,).into_response(),
+                Err(e) => e.to_response(),
+            },
         }
     }
 }

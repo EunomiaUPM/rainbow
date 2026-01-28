@@ -26,9 +26,9 @@ use ymir::data::entities::{
 };
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::types::errors::BadFormat;
-use ymir::types::gnap::grant_request::GrantRequest;
+use ymir::types::gnap::grant_request::{GrantRequest, InteractStart};
 use ymir::types::gnap::grant_response::GrantResponse;
-use ymir::types::gnap::{AccessToken, GRMethod, RefBody};
+use ymir::types::gnap::{AccessToken, RefBody};
 use ymir::utils::get_from_opt;
 use ymir::utils::{create_opaque_token, trim_4_base};
 
@@ -121,7 +121,7 @@ impl GateKeeperTrait for GnapGateKeeperService {
 
     fn respond_req(&self, int_model: &recv_interaction::Model, uri: &str) -> GrantResponse {
         info!("Generating Grant Response");
-        GrantResponse::new(GRMethod::Oidc, int_model, Some(uri.to_string()))
+        GrantResponse::new(InteractStart::Oidc4VP, int_model, Some(uri.to_string()))
     }
 
     fn validate_cont_req(

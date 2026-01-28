@@ -20,7 +20,7 @@ pub mod openapi;
 
 use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
-use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, ReachProvider};
+use crate::ssi_auth::common::types::entities::{ReachAuthority, InteractStart, ReachProvider};
 use crate::ssi_auth::common::types::gnap::CallbackBody;
 use crate::ssi_auth::common::types::oidc::OidcUri;
 use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
@@ -301,7 +301,7 @@ where
         Json(payload): Json<ReachAuthority>,
     ) -> impl IntoResponse {
         info!("POST /beg/credential");
-        match manager.beg_credential(payload, ReachMethod::CrossUser).await {
+        match manager.beg_credential(payload, InteractStart::CrossUser).await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
@@ -313,7 +313,7 @@ where
         Json(payload): Json<ReachAuthority>,
     ) -> impl IntoResponse {
         info!("POST /beg/credential");
-        match manager.beg_credential(payload, ReachMethod::Oidc).await {
+        match manager.beg_credential(payload, InteractStart::Oidc).await {
             Ok(Some(data)) => data.into_response(),
             Ok(None) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),

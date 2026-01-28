@@ -28,14 +28,21 @@ use ymir::types::wallet::OidcUri;
 #[async_trait]
 pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait>;
-    fn wallet(&self) -> Arc<dyn WalletTrait>;
-    async fn generate_gaia_vcs(&self) -> anyhow::Result<()> {
+    fn wallet(&self) -> Option<Arc<dyn WalletTrait>>;
+    async fn generate_gaia_vcs(&self) -> anyhow::Result<Option<OidcUri>> {
         let id = uuid::Uuid::new_v4().to_string();
         let uri = self.self_issuer().generate_issuing_uri(&id);
-        let payload = OidcUri { uri };
-        let cred_offer = self.wallet().resolve_credential_offer(&payload).await?;
-        let _issuer_metadata = self.wallet().resolve_credential_issuer(&cred_offer).await?;
-        self.wallet().use_offer_req(&payload, &cred_offer).await
+
+        match self.wallet() {
+            Some(wallet) => {
+                let payload = OidcUri { uri };
+                let cred_offer = wallet.resolve_credential_offer(&payload).await?;
+                let _issuer_metadata = wallet.resolve_credential_issuer(&cred_offer).await?;
+                wallet.use_offer_req(&payload, &cred_offer).await?;
+                Ok(None)
+            }
+            None => Ok(Some(OidcUri { uri })),
+        }
     }
     fn get_cred_offer_data(&self) -> VCCredOffer {
         self.self_issuer().get_cred_offer_data()
@@ -50,7 +57,11 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
         self.self_issuer().get_token()
     }
     async fn issue_cred(&self) -> anyhow::Result<Value> {
-        let did = self.wallet().get_did().await?;
+        let did = match self.wallet() {
+            Some(wallet) => wallet.get_did().await?,
+            None => self.self_issuer().get_did(),
+        };
+
         self.self_issuer().issue_cred(&did).await
     }
 }

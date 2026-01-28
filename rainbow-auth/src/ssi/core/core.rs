@@ -133,13 +133,8 @@ impl CoreGaiaSelfIssuerTrait for AuthCore {
         self_issuer.expect("Self issuer module not activated")
     }
 
-    fn wallet(&self) -> Arc<dyn WalletTrait> {
-        let wallet = self.wallet.clone().or_else(|| {
-            let error = Errors::module_new("Wallet");
-            error!("{}", error.log());
-            None
-        });
-        wallet.expect("Wallet module activated")
+    fn wallet(&self) -> Option<Arc<dyn WalletTrait>> {
+        self.wallet.clone()
     }
 }
 

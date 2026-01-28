@@ -22,9 +22,10 @@ use async_trait::async_trait;
 use crate::ssi::services::callback::CallbackTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use crate::ssi::services::vc_requester::VcRequesterTrait;
-use crate::ssi::types::entities::{ReachAuthority, ReachMethod};
+use crate::ssi::types::entities::ReachAuthority;
 use ymir::data::entities::{mates, req_vc};
-use ymir::types::gnap::CallbackBody;
+use ymir::types::gnap::grant_request::InteractStart;
+use ymir::types::gnap::ApprovedCallbackBody;
 
 #[async_trait]
 pub trait CoreVcRequesterTrait: Send + Sync + 'static {
@@ -34,9 +35,9 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     async fn beg_vc(
         &self,
         payload: ReachAuthority,
-        _method: ReachMethod,
+        method: InteractStart,
     ) -> anyhow::Result<Option<String>> {
-        let (vc_model, int_model) = self.vc_req().start(payload);
+        let (vc_model, int_model) = self.vc_req().start(payload, method);
         let mut vc_model = self.repo().vc_req().create(vc_model).await?;
         let mut int_model = self.repo().interaction_req().create(int_model).await?;
         let uri = self.vc_req().send_req(&mut vc_model, &mut int_model).await?;
@@ -62,7 +63,7 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     async fn continue_req(
         &self,
         id: String,
-        payload: CallbackBody,
+        payload: ApprovedCallbackBody,
     ) -> anyhow::Result<mates::Model> {
         let mut int_model = self.repo().interaction_req().get_by_id(&id).await?;
         let result = self.callback().check_callback(&mut int_model, &payload);
@@ -74,5 +75,11 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
         self.repo().vc_req().update(vc_req_model).await?;
         let mate = self.repo().mates().force_create(mate).await?;
         Ok(mate)
+    }
+    async fn manage_rejection(&self, id: String) -> anyhow::Result<()> {
+        let mut vc_req_model = self.repo().vc_req().get_by_id(&id).await?;
+        self.vc_req().manage_rejection(&mut vc_req_model).await?;
+        self.repo().vc_req().update(vc_req_model).await?;
+        Ok(())
     }
 }

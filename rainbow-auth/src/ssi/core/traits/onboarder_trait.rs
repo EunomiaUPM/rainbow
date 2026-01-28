@@ -24,7 +24,7 @@ use crate::ssi::services::onboarder::OnboarderTrait;
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use crate::ssi::types::entities::ReachProvider;
 use ymir::data::entities::mates;
-use ymir::types::gnap::CallbackBody;
+use ymir::types::gnap::ApprovedCallbackBody;
 
 #[async_trait]
 pub trait CoreOnboarderTrait: Send + Sync + 'static {
@@ -45,7 +45,7 @@ pub trait CoreOnboarderTrait: Send + Sync + 'static {
         Ok(ver_model.uri)
     }
 
-    async fn continue_req(&self, id: &str, payload: CallbackBody) -> anyhow::Result<mates::Model> {
+    async fn continue_req(&self, id: &str, payload: ApprovedCallbackBody) -> anyhow::Result<mates::Model> {
         let mut int_model = self.repo().interaction_req().get_by_id(id).await?;
         let result = self.callback().check_callback(&mut int_model, &payload);
         let int_model = self.repo().interaction_req().update(int_model).await?;

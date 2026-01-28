@@ -30,7 +30,7 @@ use super::super::CallbackTrait;
 use ymir::data::entities::req_interaction;
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::client::ClientTrait;
-use ymir::types::gnap::{CallbackBody, RefBody};
+use ymir::types::gnap::{ApprovedCallbackBody, RefBody};
 use ymir::types::http::Body;
 use ymir::utils::get_from_opt;
 
@@ -49,7 +49,7 @@ impl CallbackTrait for BasicCallbackService {
     fn check_callback(
         &self,
         int_model: &mut req_interaction::Model,
-        payload: &CallbackBody,
+        payload: &ApprovedCallbackBody,
     ) -> anyhow::Result<()> {
         info!("Checking callback");
 

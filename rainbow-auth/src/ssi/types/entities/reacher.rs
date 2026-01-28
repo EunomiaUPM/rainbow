@@ -16,17 +16,13 @@
  */
 
 use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReachAuthority {
     pub id: String,
     pub slug: String,
     pub url: String,
     pub vc_type: String,
-}
-
-pub enum ReachMethod {
-    Oidc,
-    CrossUser,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
