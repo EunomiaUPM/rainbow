@@ -50,16 +50,16 @@ impl DistributionEntityRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(Self::handle_get_all_distributions))
-            .route("/dataset/:id", get(Self::handle_get_distributions_by_dataset_id))
+            .route("/dataset/{id}", get(Self::handle_get_distributions_by_dataset_id))
             .route(
-                "/dataset/:id/format/:format",
+                "/dataset/{id}/format/{format}",
                 get(Self::handle_get_distribution_by_dataset_id_and_dct_format),
             )
             .route("/", post(Self::handle_create_distribution))
             .route("/batch", post(Self::handle_get_batch_distributions))
-            .route("/:id", get(Self::handle_get_distribution_by_id))
-            .route("/:id", put(Self::handle_put_distribution_by_id))
-            .route("/:id", delete(Self::handle_delete_distribution_by_id))
+            .route("/{id}", get(Self::handle_get_distribution_by_id))
+            .route("/{id}", put(Self::handle_put_distribution_by_id))
+            .route("/{id}", delete(Self::handle_delete_distribution_by_id))
             .with_state(self)
     }
 

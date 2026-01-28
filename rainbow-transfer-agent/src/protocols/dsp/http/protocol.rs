@@ -57,11 +57,11 @@ impl DspRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/request", post(Self::handle_transfer_request))
-            .route("/:id", get(Self::handle_get_transfer_process))
-            .route("/:id/start", post(Self::handle_transfer_start))
-            .route("/:id/completion", post(Self::handle_transfer_completion))
-            .route("/:id/termination", post(Self::handle_transfer_termination))
-            .route("/:id/suspension", post(Self::handle_transfer_suspension))
+            .route("/{id}", get(Self::handle_get_transfer_process))
+            .route("/{id}/start", post(Self::handle_transfer_start))
+            .route("/{id}/completion", post(Self::handle_transfer_completion))
+            .route("/{id}/termination", post(Self::handle_transfer_termination))
+            .route("/{id}/suspension", post(Self::handle_transfer_suspension))
             .with_state(self)
     }
 

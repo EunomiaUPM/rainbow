@@ -46,13 +46,13 @@ impl OdrlOfferEntityRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(Self::handle_get_all_odrl_offers))
-            .route("/entity/:entity_id", get(Self::handle_get_all_odrl_offers_by_entity))
+            .route("/entity/{entity_id}", get(Self::handle_get_all_odrl_offers_by_entity))
             .route("/", post(Self::handle_create_odrl_offer))
             .route("/batch", post(Self::handle_get_batch_odrl_offers))
-            .route("/:id", get(Self::handle_get_odrl_offer_by_id))
-            .route("/:id", delete(Self::handle_delete_odrl_offer_by_id))
+            .route("/{id}", get(Self::handle_get_odrl_offer_by_id))
+            .route("/{id}", delete(Self::handle_delete_odrl_offer_by_id))
             .route(
-                "/entity/:entity_id",
+                "/entity/{entity_id}",
                 delete(Self::handle_delete_odrl_offers_by_entity),
             )
             .with_state(self)

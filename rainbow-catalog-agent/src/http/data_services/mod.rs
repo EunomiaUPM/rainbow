@@ -48,14 +48,14 @@ impl DataServiceEntityRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", get(Self::handle_get_all_data_services))
-            .route("/catalog/:id", get(Self::handle_get_data_services_by_catalog_id))
+            .route("/catalog/{id}", get(Self::handle_get_data_services_by_catalog_id))
             .route("/", post(Self::handle_create_data_service))
             .route("/batch", post(Self::handle_get_batch_data_services))
             .route("/main", get(Self::handle_get_main_data_service))
             .route("/main", post(Self::handle_create_main_data_service))
-            .route("/:id", get(Self::handle_get_data_service_by_id))
-            .route("/:id", put(Self::handle_put_data_service_by_id))
-            .route("/:id", delete(Self::handle_delete_data_service_by_id))
+            .route("/{id}", get(Self::handle_get_data_service_by_id))
+            .route("/{id}", put(Self::handle_put_data_service_by_id))
+            .route("/{id}", delete(Self::handle_delete_data_service_by_id))
             .with_state(self)
     }
 

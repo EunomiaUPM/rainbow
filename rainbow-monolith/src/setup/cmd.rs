@@ -76,7 +76,12 @@ impl CoreCommands {
             CoreCliCommands::Setup(args) => {
                 let config = ApplicationConfig::load(args.env_file)?;
                 let vault = Arc::new(VaultService::new());
-                vault.write_all_secrets(None).await?;
+
+                if config.monolith().common().is_local {
+                    vault.write_local_secrets(None).await?;
+                } else {
+                    vault.write_all_secrets(None).await?;
+                }
 
                 let db_connection = vault.get_db_connection(config.monolith().common()).await;
                 let table =

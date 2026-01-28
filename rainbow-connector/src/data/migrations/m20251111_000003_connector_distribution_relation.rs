@@ -3,7 +3,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20251111_000002_connector_instance"
+        "m20251111_000003_connector_distribution_relation"
     }
 }
 
@@ -38,29 +38,10 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
-            .await?;
-
-        manager
-            .create_index(
-                Index::create()
-                    .name("idx_unique_distribution_connector")
-                    .table(ConnectorDistroRelations::Table)
-                    .col(ConnectorDistroRelations::DistributionId)
-                    .unique()
-                    .to_owned(),
-            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .drop_index(
-                Index::drop()
-                    .name("idx_unique_distribution_connector")
-                    .table(ConnectorDistroRelations::Table)
-                    .to_owned(),
-            )
-            .await?;
         manager.drop_table(Table::drop().table(ConnectorDistroRelations::Table).to_owned()).await
     }
 }

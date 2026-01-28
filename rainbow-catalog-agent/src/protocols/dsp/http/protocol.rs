@@ -50,7 +50,7 @@ impl DspRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/request", post(Self::handle_catalog_request))
-            .route("/datasets/:id", get(Self::handle_dataset_request))
+            .route("/datasets/{id}", get(Self::handle_dataset_request))
             .with_state(self)
     }
 

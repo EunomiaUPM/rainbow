@@ -65,13 +65,13 @@ impl PolicyTemplateEntityRouter {
             .route("/", get(Self::handle_get_all_policy_templates))
             .route("/", post(Self::handle_create_policy_template))
             .route("/batch", post(Self::handle_get_batch_policy_templates))
-            .route("/:id", get(Self::handle_get_policy_template_by_id))
+            .route("/{id}", get(Self::handle_get_policy_template_by_id))
             .route(
-                "/:id/:version",
+                "/{id}/{version}",
                 get(Self::handle_get_policy_template_by_id_and_version),
             )
             .route(
-                "/:id/:version",
+                "/{id}/{version}",
                 delete(Self::handle_delete_policy_template_by_id_and_version),
             )
             .route("/instantiate-odrl-offer", post(Self::handle_instantiate_offer))

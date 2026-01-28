@@ -28,9 +28,9 @@ impl ConnectorInstanceRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/", post(Self::handle_upsert_instance))
-            .route("/:id", get(Self::handle_get_instance_by_id))
-            .route("/distribution/:did", get(Self::get_instance_by_distribution))
-            .route("/:id", delete(Self::handle_delete_instance_by_id))
+            .route("/{id}", get(Self::handle_get_instance_by_id))
+            .route("/distribution/{did}", get(Self::get_instance_by_distribution))
+            .route("/{id}", delete(Self::handle_delete_instance_by_id))
             .with_state(self)
     }
 
