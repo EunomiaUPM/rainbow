@@ -15,7 +15,7 @@ use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
 use std::sync::Arc;
-use urn::Urn;
+use urn::{Urn, UrnBuilder};
 
 pub struct ConnectorInstanceEntitiesService {
     repo: Arc<dyn ConnectorRepoTrait>,
@@ -192,6 +192,17 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
         let params_json = template_spec.parameters.clone();
         let authentication = template_spec.authentication.clone();
         let interaction = template_spec.interaction.clone();
+
+        // dry run
+        if instance_dto.dry_run {
+            return Ok(ConnectorInstanceDto {
+                id: Urn::from_str("urn:conector-instance:dry-run")?,
+                metadata: metadata_json,
+                authentication_config: authentication,
+                interaction,
+                distribution_id: instance_dto.distribution_id.clone(),
+            });
+        }
 
         // persist instance
         let new_instance = connector_instances::NewConnectorInstanceModel {
