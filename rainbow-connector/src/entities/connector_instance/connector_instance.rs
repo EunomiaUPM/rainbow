@@ -2,12 +2,15 @@ use crate::data::entities::connector_distro_relation::Model;
 use crate::data::entities::connector_instances;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::auth_config::AuthenticationConfig;
+use crate::entities::common::parameters::ParameterDefinition;
+use crate::entities::connector_instance::parameter_validator::InstanceParameterValidator;
 use crate::entities::connector_instance::{
-    ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto,
+    ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto, InstanceMetadataDto,
 };
-use crate::entities::connector_template::ConnectorMetadata;
+use crate::entities::connector_template::{ConnectorMetadata, ConnectorTemplateDto};
 use crate::entities::interaction::InteractionConfig;
 use crate::facades::distribution_resolver_facade::DistributionFacadeTrait;
+use anyhow::bail;
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
@@ -60,11 +63,15 @@ impl ConnectorInstanceEntitiesService {
             err
         })?;
 
+        let instance_meta: InstanceMetadataDto = serde_json::from_value(model.metadata.clone())
+            .unwrap_or(InstanceMetadataDto { description: None, owner_id: None });
+
         Ok(ConnectorInstanceDto {
             id: urn,
             metadata: ConnectorMetadata {
                 name: Some(model.template_name),
-                author: None,                          // Not available in instance model
+                author: instance_meta.owner_id, // Not available in instance model
+                description: instance_meta.description,
                 version: Some(model.template_version), // available in instance model
                 created_at: Some(model.created_at),
             },
@@ -163,6 +170,18 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
                 },
             )?;
 
+        // validate parameters
+        let template_spec: ConnectorTemplateDto =
+            serde_json::from_value(template_model.spec.clone())?;
+        let template_parameters = &template_spec.parameters;
+        let validation_errors =
+            InstanceParameterValidator::validate(template_parameters, &instance_dto.parameters);
+        if !validation_errors.is_empty() {
+            let err = CommonErrors::parse_new(&format!("{}", validation_errors.join(", ")));
+            error!("{}", err.log());
+            bail!(err);
+        }
+
         // prepare data
         let metadata_json = serde_json::to_value(&instance_dto.metadata).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Error serializing metadata: {}", e));
@@ -213,7 +232,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
                     .create_relation(&distribution_id, &saved_model.id)
                     .await?
             }
-            Some(relation) => {
+            Some(_) => {
                 self.repo
                     .get_distro_relation_repo()
                     .update_relation(&distribution_id, &saved_model.id)

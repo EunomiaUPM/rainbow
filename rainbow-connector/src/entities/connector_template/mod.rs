@@ -11,9 +11,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ConnectorMetadata {
     pub name: Option<String>,
     pub author: Option<String>,
+    pub description: Option<String>,
     pub version: Option<String>,
     pub created_at: Option<DateTimeWithTimeZone>,
 }
