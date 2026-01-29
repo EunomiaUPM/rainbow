@@ -83,7 +83,6 @@ impl InstanceParameterValidator {
             ParameterType::MapStringString => {
                 val.as_object().map_or(false, |obj| obj.values().all(|v| v.is_string()))
             }
-            _ => true,
         }
     }
 }

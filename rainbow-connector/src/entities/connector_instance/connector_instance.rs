@@ -1,9 +1,9 @@
-use crate::data::entities::connector_distro_relation::Model;
 use crate::data::entities::connector_instances;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::auth_config::AuthenticationConfig;
-use crate::entities::common::parameters::ParameterDefinition;
+use crate::entities::common::parameters::TemplateMutable;
 use crate::entities::connector_instance::parameter_validator::InstanceParameterValidator;
+use crate::entities::connector_instance::resolver::TemplateResolver;
 use crate::entities::connector_instance::{
     ConnectorInstanceDto, ConnectorInstanceTrait, ConnectorInstantiationDto, InstanceMetadataDto,
 };
@@ -171,7 +171,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             )?;
 
         // validate parameters
-        let template_spec: ConnectorTemplateDto =
+        let mut template_spec: ConnectorTemplateDto =
             serde_json::from_value(template_model.spec.clone())?;
         let template_parameters = &template_spec.parameters;
         let validation_errors =
@@ -182,19 +182,16 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             bail!(err);
         }
 
+        // interpolate values
+        let mut resolver = TemplateResolver::new(&instance_dto.parameters);
+        template_spec.interaction.accept_mutator(&mut resolver)?;
+        template_spec.authentication.accept_mutator(&mut resolver)?;
+
         // prepare data
-        let metadata_json = serde_json::to_value(&instance_dto.metadata).map_err(|e| {
-            let err = CommonErrors::parse_new(&format!("Error serializing metadata: {}", e));
-            error!("{}", err.log());
-            err
-        })?;
-        let params_json = serde_json::to_value(&instance_dto.parameters).map_err(|e| {
-            let err = CommonErrors::parse_new(&format!("Error serializing parameters: {}", e));
-            error!("{}", err.log());
-            err
-        })?;
-        let auth_json = template_model.spec["authentication"].clone();
-        let inter_json = template_model.spec["interaction"].clone();
+        let metadata_json = template_spec.metadata.clone();
+        let params_json = template_spec.parameters.clone();
+        let authentication = template_spec.authentication.clone();
+        let interaction = template_spec.interaction.clone();
 
         // persist instance
         let new_instance = connector_instances::NewConnectorInstanceModel {
@@ -202,10 +199,10 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             template_name: instance_dto.template_name.clone(),
             template_version: instance_dto.template_version.clone(),
             distribution_id: distribution_id.clone(),
-            metadata: metadata_json,
-            configuration_parameters: params_json,
-            authentication: auth_json,
-            interaction: inter_json,
+            metadata: serde_json::to_value(metadata_json)?,
+            configuration_parameters: serde_json::to_value(params_json)?,
+            authentication: serde_json::to_value(authentication)?,
+            interaction: serde_json::to_value(interaction)?,
         };
         let saved_model =
             self.repo.get_instances_repo().create_instance(&new_instance).await.map_err(|e| {
