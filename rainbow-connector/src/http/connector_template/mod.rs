@@ -43,7 +43,10 @@ impl ConnectorTemplateRouter {
             .route("/", get(Self::handle_get_all_templates))
             .route("/", post(Self::handle_create_template))
             .route("/{id}", get(Self::handle_get_templates_by_id))
-            .route("/{name}/{version}", get(Self::handle_get_template_by_name_and_version))
+            .route(
+                "/{name}/{version}",
+                get(Self::handle_get_template_by_name_and_version),
+            )
             .route(
                 "/{name}/{version}",
                 delete(Self::handle_delete_template_by_name_and_version),

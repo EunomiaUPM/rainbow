@@ -1,3 +1,4 @@
+use crate::data::entities::connector_distro_relation::Model;
 use crate::data::entities::connector_instances;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::auth_config::AuthenticationConfig;
@@ -118,7 +119,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
         &self,
         instance_dto: &mut ConnectorInstantiationDto,
     ) -> anyhow::Result<ConnectorInstanceDto> {
-        // fetch template
+        // fetch template or error
         let template = self
             .repo
             .get_templates_repo()
@@ -148,7 +149,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             }
         };
 
-        // fetch distribution
+        // fetch distribution or error
         let distribution_id = instance_dto.distribution_id.to_string();
         let _ =
             self.distribution_facade.resolve_distribution_by_id(&distribution_id).await.map_err(
@@ -162,33 +163,17 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
                 },
             )?;
 
-        // edit or create
-        let _ = self
-            .repo
-            .get_instances_repo()
-            .get_instances_by_distribution(&distribution_id)
-            .await
-            .map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-
-        // meter relation
-
         // prepare data
         let metadata_json = serde_json::to_value(&instance_dto.metadata).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Error serializing metadata: {}", e));
             error!("{}", err.log());
             err
         })?;
-
         let params_json = serde_json::to_value(&instance_dto.parameters).map_err(|e| {
             let err = CommonErrors::parse_new(&format!("Error serializing parameters: {}", e));
             error!("{}", err.log());
             err
         })?;
-
         let auth_json = template_model.spec["authentication"].clone();
         let inter_json = template_model.spec["interaction"].clone();
 
@@ -197,7 +182,7 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             id: None,
             template_name: instance_dto.template_name.clone(),
             template_version: instance_dto.template_version.clone(),
-            distribution_id: distribution_id,
+            distribution_id: distribution_id.clone(),
             metadata: metadata_json,
             configuration_parameters: params_json,
             authentication: auth_json,
@@ -210,9 +195,32 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
                 err
             })?;
 
-        // persist relation
+        // create or edit relation
+        let instance_distro_relation = self
+            .repo
+            .get_distro_relation_repo()
+            .get_relation_by_distribution(&distribution_id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::parse_new(&format!("Db error on getting relation: {}", e));
+                error!("{}", err.log());
+                err
+            })?;
+        match instance_distro_relation {
+            None => {
+                self.repo
+                    .get_distro_relation_repo()
+                    .create_relation(&distribution_id, &saved_model.id)
+                    .await?
+            }
+            Some(relation) => {
+                self.repo
+                    .get_distro_relation_repo()
+                    .update_relation(&distribution_id, &saved_model.id)
+                    .await?
+            }
+        };
 
-        // 5. Return DTO
         Self::map_model_to_dto(saved_model)
     }
 
