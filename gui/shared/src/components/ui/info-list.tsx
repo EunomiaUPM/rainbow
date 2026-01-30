@@ -1,0 +1,87 @@
+import React from "react";
+import { List, ListItem, ListItemKey } from "./list";
+import { Badge, BadgeState, BadgeRole } from "./badge";
+import dayjs from "dayjs";
+import { cn } from "shared/src/lib/utils";
+import { formatUrn } from "shared/src/lib/utils";
+
+export type InfoItemValue = 
+  | string 
+  | undefined 
+  | null 
+  | { type: "date"; value: string | Date }
+  | { type: "status"; value: string }
+  | { type: "role"; value: string }
+  | { type: "urn"; value: string | undefined }
+  | { type: "custom"; content: React.ReactNode };
+
+export interface InfoItemProps {
+  label: string;
+  value: InfoItemValue;
+  className?: string; // class for the container
+  keyClassName?: string; // class for the key
+}
+
+export const InfoList = ({
+  items,
+  className,
+}: {
+  items: InfoItemProps[];
+  className?: string;
+}) => {
+  return (
+    <List className={cn("min-w-full px-2", className)}>
+      {items.map((item, index) => (
+        <InfoListItem key={index} {...item} />
+      ))}
+    </List>
+  );
+};
+
+const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) => {
+  // If value is undefined or null, we might want to skip or show placeholder. 
+  // Current pattern often checks `process.associated_consumer && ...` before rendering ListItem.
+  // So if value is explicitly null/undefined passed here, we probably just render nothing or empty?
+  // But usually this component is controlled by the caller constructing the items array.
+
+  if (value === undefined || value === null) return null;
+
+  const renderValue = () => {
+    if (typeof value === "string") {
+      return <Badge variant="info">{value}</Badge>;
+    }
+    
+    if (typeof value === "object") {
+      if ("content" in value) return value.content;
+      
+      switch (value.type) {
+        case "date":
+          return <p>{dayjs(value.value).format("DD/MM/YY HH:mm")}</p>;
+        case "status":
+          return (
+            <Badge variant="status" state={value.value as BadgeState}>
+              {value.value}
+            </Badge>
+          );
+        case "role":
+          return (
+             <Badge variant="role" role={value.value as BadgeRole}>
+              {value.value}
+            </Badge>
+          );
+        case "urn":
+          return <Badge variant="info">{formatUrn(value.value)}</Badge>;
+        default:
+          return null;
+      }
+    }
+    return null;
+  };
+
+  return (
+    <ListItem className={className}>
+      <ListItemKey className={keyClassName}>{label}</ListItemKey>
+      {renderValue()}
+    </ListItem>
+  );
+};

@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
 import { Button } from "shared/src/components/ui/button";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions";
+import { TransferProcessActions } from "shared/src/components/actions/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({

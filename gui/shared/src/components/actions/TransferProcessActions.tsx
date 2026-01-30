@@ -3,10 +3,10 @@ import { cva } from "class-variance-authority";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { TransferProcessStartDialog } from "shared/src/components/TransferProcessStartDialog";
 import { TransferProcessTerminationDialog } from "shared/src/components/TransferProcessTerminationDialog";
-import NoFurtherActions from "./ui/noFurtherActions";
+import NoFurtherActions from "../ui/noFurtherActions";
 import { TransferProcessSuspensionDialog } from "shared/src/components/TransferProcessSuspensionDialog";
 import { TransferProcessCompletionDialog } from "shared/src/components/TransferProcessCompletionDialog";
-import { ProcessActionDialog } from "./common/ProcessActionDialog";
+import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
 export const TransferProcessActions: FC<{
   process: TransferProcess;

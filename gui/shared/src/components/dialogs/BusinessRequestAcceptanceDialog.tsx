@@ -10,7 +10,7 @@ import { formatUrn } from "shared/src/lib/utils";
 import {Button} from "shared/src/components/ui/button";
 import React, {useContext} from "react";
 import {Form} from "shared/src/components/ui/form";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import {Badge, BadgeState} from "shared/src/components/ui/badge";
 import {useForm} from "react-hook-form";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
@@ -51,46 +51,16 @@ export const BusinessRequestAcceptanceDialog = ({process}: { process: CNProcess 
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-full px-2">
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
-          <Badge variant={"info"}>{formatUrn(process.provider_id)}</Badge>
-        </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
-          <Badge variant={"info"}>{formatUrn(process.consumer_id)}</Badge>
-        </ListItem>
-        {process.associated_consumer && (
-          // Provider GUI
-          <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
-            <Badge variant={"info"}>{formatUrn(process.associated_consumer)}</Badge>
-          </ListItem>
-        )}
-        {process.associated_provider && (
-          // Consumer GUI
-          <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Associated Provider:</ListItemKey>
-            <Badge variant={"info"}>{formatUrn(process.associated_provider)}</Badge>
-          </ListItem>
-        )}
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-          <Badge variant={"status"} state={process.state as BadgeState}>
-            {process.state}
-          </Badge>
-        </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
-        </ListItem>
-        {process.updated_at && (
-          <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
-          </ListItem>
-        )}
-      </List>
+      {/* List */}
+      <InfoList items={[
+        { label: "Provider id", value: { type: "urn", value: process.provider_id } },
+        { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
+        { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
+        { label: "Associated Provider", value: { type: "urn", value: process.associated_provider } },
+        { label: "State", value: { type: "status", value: process.state } },
+        { label: "Created at", value: { type: "date", value: process.created_at } },
+        process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : undefined
+      ].filter(item => item !== undefined) as any} />
       {/* / List content */}
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

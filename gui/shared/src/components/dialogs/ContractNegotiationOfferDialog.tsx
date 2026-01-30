@@ -5,19 +5,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import {Button} from "./ui/button";
-import {Badge, BadgeState} from "./../components/ui/badge";
-import {List, ListItem, ListItemKey} from "./ui/list";
+} from "../ui/dialog";
+import {Button} from "../ui/button";
+import { InfoList } from "../ui/info-list";
 
 import React, {useContext, useRef} from "react";
-import {Form} from "./ui/form";
+import {Form} from "../ui/form";
 import {useForm} from "react-hook-form";
-import {usePostContractNegotiationRPCOffer} from "./../data/contract-mutations";
+import {usePostContractNegotiationRPCOffer} from "../../data/contract-mutations";
 import {useGetLastContractNegotiationOfferByCNMessageId} from "shared/src/data/contract-queries";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
-import dayjs from "dayjs";
-import {PolicyEditorHandle, PolicyWrapperEdit} from "./PolicyWrapperEdit";
+import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
+import {PolicyEditorHandle, PolicyWrapperEdit} from "../PolicyWrapperEdit";
 
 export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }) => {
   const policyWrapperRef = useRef<PolicyEditorHandle>(null);
@@ -67,45 +65,16 @@ export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }
               {/* <p>{JSON.stringify(process)}</p> */}
             </DialogDescription>
           </DialogHeader>
-          {/* List */}
-          <div className=" overflow-y-scroll px-6">
-            <List className="w-full  px-2">
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
-                <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
-                <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
-                <Badge
-                  variant={"info"}>{process.associated_consumer?.slice(9, 40) + "[...]"}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-                <Badge variant={"status"} state={process.state as BadgeState}>
-                  {process.state}
-                </Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Iniciated by:</ListItemKey>
-                <Badge variant={"role"} role={process.initiated_by}>
-                  {process.initiated_by}
-                </Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-                {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
-              </ListItem>
-              {process.updated_at && (
-                <ListItem>
-                  <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-                  {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
-                </ListItem>
-              )}
-            </List>
+            <div className=" overflow-y-scroll px-6">
+              <InfoList items={[
+                { label: "Provider id", value: { type: "urn", value: process.provider_id } },
+                { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
+                { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
+                { label: "State", value: { type: "status", value: process.state } },
+                { label: "Iniciated by", value: { type: "role", value: process.initiated_by } },
+                { label: "Created at", value: { type: "date", value: process.created_at } },
+                process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : { label: "Updated at", value: undefined }
+              ].filter(item => item.value !== undefined) as any} />
 
             {/* / List content */}
             <div className="h-6"></div>

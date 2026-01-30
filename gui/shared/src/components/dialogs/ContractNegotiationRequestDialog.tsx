@@ -13,7 +13,7 @@ import {useForm} from "react-hook-form";
 import {usePostContractNegotiationRPCRequest} from "shared/src/data/contract-mutations";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 import {Badge, BadgeState} from "shared/src/components/ui/badge";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import dayjs from "dayjs";
 import {useGetLastContractNegotiationOfferByCNMessageId} from "shared/src/data/contract-queries";
 import {PolicyEditorHandle, PolicyWrapperEdit} from "shared/src/components/PolicyWrapperEdit";
@@ -67,60 +67,16 @@ export const ContractNegotiationRequestDialog = ({process}: { process: CNProcess
             </DialogDescription>
           </DialogHeader>
           <div className=" overflow-y-scroll px-6">
-            <List className="w-fit  px-2">
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
-                <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
-                <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
-              </ListItem>
-              {process.associated_consumer && (
-                // Provider GUI
-                <ListItem>
-                  <ListItemKey className={scopedListItemKeyClasses}>
-                    Associated Consumer:
-                  </ListItemKey>
-                  <Badge variant={"info"}>{process.associated_consumer.slice(9, -1)}</Badge>
-                </ListItem>
-              )}
-              {process.associated_provider && (
-                // Consumer GUI
-                <ListItem>
-                  <ListItemKey className={scopedListItemKeyClasses}>
-                    Associated Provider:
-                  </ListItemKey>
-                  <Badge variant={"info"}>
-                    {process.associated_provider.slice(9, 44) + "[...]"}
-                  </Badge>
-                </ListItem>
-              )}
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-                <Badge variant={"status"} state={process.state as BadgeState}>
-                  {process.state}
-                </Badge>
-              </ListItem>
-              {process.initiated_by && (
-                <ListItem>
-                  <ListItemKey className={scopedListItemKeyClasses}>Iniciated by:</ListItemKey>
-                  <Badge variant={"role"} role={process.initiated_by}>
-                    {process.initiated_by}
-                  </Badge>
-                </ListItem>
-              )}
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-                {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
-              </ListItem>
-              {process.updated_at && (
-                <ListItem>
-                  <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-                  {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
-                </ListItem>
-              )}
-            </List>
+            <InfoList items={[
+              { label: "Provider id", value: { type: "urn", value: process.provider_id } },
+              { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
+              { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
+              { label: "Associated Provider", value: { type: "urn", value: process.associated_provider } },
+              { label: "State", value: { type: "status", value: process.state } },
+              { label: "Iniciated by", value: { type: "role", value: process.initiated_by } },
+              { label: "Created at", value: { type: "date", value: process.created_at } },
+              process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : undefined
+            ].filter(item => item !== undefined) as any} />
             {/* / List content */}
             <div className="h-6"></div>
 

@@ -1,4 +1,5 @@
 import {createFileRoute, Link} from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import {
   Table,
@@ -12,7 +13,7 @@ import {Button} from "shared/src/components/ui/button.tsx";
 import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
-import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
+import {ContractNegotiationActions} from "shared/src/components/actions/ContractNegotiationActions";
 import {useMemo} from "react";
 import {ArrowRight} from "lucide-react";
 
@@ -45,12 +46,12 @@ const RouteComponent = () => {
         </TableHeader>
         <TableBody>
           {cnProcessesSorted.map((cnProcess) => (
-            <TableRow key={cnProcess.provider_id.slice(0, 20)}>
+            <TableRow key={formatUrn(cnProcess.provider_id)}>
               <TableCell>
-                <Badge variant={"info"}>{cnProcess.provider_id?.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(cnProcess.provider_id)}</Badge>
               </TableCell>
               <TableCell>
-                <Badge variant={"info"}>{cnProcess.consumer_id?.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(cnProcess.consumer_id)}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant={"status"} state={cnProcess.state as BadgeState}>

@@ -5,15 +5,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import {Button} from "./ui/button";
+} from "../ui/dialog";
+import {Button} from "../ui/button";
 import {Badge, BadgeState} from "shared/src/components/ui/badge";
-import {List, ListItem, ListItemKey} from "./ui/list";
+import { InfoList } from "../ui/info-list";
 
 import React, {useContext} from "react";
-import {Form} from "./ui/form";
+import {Form} from "../ui/form";
 import {useForm} from "react-hook-form";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
 import {usePostTransferRPCTermination} from "shared/src/data/transfer-mutations";
 import dayjs from "dayjs";
 
@@ -62,54 +62,16 @@ export const TransferProcessTerminationDialog = ({process}: { process: TransferP
       </DialogHeader>
 
       {/* List */}
-      <List className="min-w-full  px-2">
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Provider Participant id:</ListItemKey>
-          <Badge variant={"info"}>{process.provider_pid.slice(9, -1)}</Badge>
-        </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Consumer Participant id:</ListItemKey>
-          <Badge variant={"info"}>{process.consumer_pid.slice(9, -1)}</Badge>
-        </ListItem>
-        <ListItem>
-          {dsrole == "provider" && (
-            <>
-              <ListItemKey className={scopedListItemKeyClasses}>Associated consumer:</ListItemKey>
-              <Badge variant={"info"}>{process.associated_consumer?.slice(9, 40) + "[...]"}</Badge>
-            </>
-          )}
-          {dsrole == "consumer" && (
-            <>
-              <ListItemKey className={scopedListItemKeyClasses}>Associated provider:</ListItemKey>
-              <Badge variant={"info"}>{process.associated_provider?.slice(9, 40) + "[...]"}</Badge>
-            </>
-          )}
-        </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Current state:</ListItemKey>
-          <Badge variant={"status"} state={process.state as BadgeState}>
-            {process.state}
-          </Badge>
-        </ListItem>
-        {process.state_attribute && (
-          <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>State attribute:</ListItemKey>
-            <Badge variant={"status"} state={process.state_attribute as BadgeState}>
-              {process.state_attribute}
-            </Badge>
-          </ListItem>
-        )}
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
-        </ListItem>
-        {process.updated_at && (
-          <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
-          </ListItem>
-        )}
-      </List>
+      <InfoList items={[
+        { label: "Provider Participant id", value: { type: "urn", value: (process as any).provider_pid } },
+        { label: "Consumer Participant id", value: { type: "urn", value: (process as any).consumer_pid } },
+        dsrole === "provider" ? { label: "Associated consumer", value: { type: "urn", value: (process as any).associated_consumer } } : undefined,
+        dsrole === "consumer" ? { label: "Associated provider", value: { type: "urn", value: (process as any).associated_provider } } : undefined,
+        { label: "Current state", value: { type: "status", value: process.state } },
+        (process as any).state_attribute ? { label: "State attribute", value: { type: "status", value: (process as any).state_attribute } } : undefined,
+        { label: "Created at", value: { type: "date", value: (process as any).created_at } },
+        (process as any).updated_at ? { label: "Updated at", value: { type: "date", value: (process as any).updated_at } } : undefined
+      ].filter(item => item !== undefined) as any} />
       {/* / List content */}
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
