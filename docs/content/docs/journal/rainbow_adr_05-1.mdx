@@ -1,0 +1,142 @@
+---
+title: "ADR-005-1: Unified Data Access Configuration & Blueprinting"
+description: "ADR-005-1: Unified Data Access Configuration & Blueprinting"
+---
+
+**Date:** January 30, 2026
+**Status:** Accepted
+**Context:** Core Architecture / Data Plane Configuration
+**Related:** ADR-004 (Discovery)
+
+## Context and Problem Statement
+
+The current implementation of the `DataService` entity within our dataspace is overly simplistic and tightly coupled to the DCAT standard. While sufficient for basic open data scenarios, it fails to address complex enterprise integration requirements:
+
+1. **Limited Semantics:** It primarily defines simple connection URLs (PULL), lacking native support for **PUSH** architectures (Pub/Sub) or event-driven patterns.
+2. **Security Risks:** Connection details, tokens, and internal endpoints are currently exposed in public Data Transfer Objects (DTOs).
+3. **Lack of Polymorphism:** There is no structural way to define diverse authentication mechanisms (e.g., OAuth2 vs. API Key) or transport protocols (Kafka vs. HTTP) under a unified interface.
+4. **No Provisioning Logic:** The system lacks a "Provisioning Manifest"—a strictly defined sequence of operations (Auth -> Subscribe -> Access) required to initialize a data plane.
+
+## Decision
+
+We will implement a **Data Access Configuration** subsystem. This private, internal configuration layer will act as the "Driver" for the Data Plane, maintaining a 1:1 relationship with a Catalog `Distribution`.
+
+We introduce two core entities:
+
+1. **ConnectorTemplate (Blueprint):** An immutable, versioned definition of a driver. It defines the *mechanism* of interaction (e.g., "Kafka Consumer Driver v1") and declares which parameters it requires.
+2. **ConnectorInstance:** The runtime instantiation of a blueprint, bound to a specific distribution and populated with specific configuration values (secrets, hostnames).
+
+This architecture supports **Polymorphism** via `enum` variants for Authentication and Interaction protocols.
+
+## Detailed Design
+
+### 1. Domain Model
+
+The `ConnectorTemplate` serves as the root aggregate. It contains:
+
+* **Metadata:** Author, Version, Name.
+* **Authentication:** A polymorphic configuration defining how to obtain a token.
+* **Interaction:** Defines the lifecycle mode (`PULL` or `PUSH`).
+* **Parameters:** A strict definition of variables required to instantiate this driver.
+
+### 2. Code Specification (Rust)
+
+#### Authentication & Protocol Polymorphism
+
+We utilize strict typing and Serde tagging to enforce schema validation at compile time.
+
+```rust
+use serde::{Deserialize, Serialize};
+
+// --- Authentication Polymorphism ---
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum AuthenticationConfig {
+    #[serde(rename = "NO_AUTH")]
+    NoAuth,
+
+    #[serde(rename = "BASIC_AUTH")]
+    BasicAuth {
+        username: String,
+        password: SecretString, // Abstracted secret container
+    },
+
+    #[serde(rename = "OAUTH_20")]
+    OAuth2 {
+        grant_type: OAuthGrantType,
+        token_url: String,
+        client_id: String,
+        client_secret: SecretString,
+        scopes: Vec<String>,
+    },
+    // ... API_KEY, JWT, BEARER_TOKEN
+}
+
+// --- Interaction Lifecycle Polymorphism ---
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "mode")]
+pub enum InteractionConfig {
+    #[serde(rename = "PULL")]
+    Pull(PullLifecycle),
+
+    #[serde(rename = "PUSH")]
+    Push(PushLifecycle),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PullLifecycle {
+    pub data_access: ProtocolSpec, // e.g., HTTP GET, FTP RETR
+    pub scheduler: SchedulerConfig, // e.g., Cron or Interval
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PushLifecycle {
+    pub subscribe: ProtocolSpec,   // e.g., HTTP POST to /subs
+    pub unsubscribe: Option<ProtocolSpec>, // e.g., HTTP DELETE
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "protocol")]
+pub enum ProtocolSpec {
+    Http(HttpSpec),
+    Kafka(KafkaSpec),
+    Ftp(FtpSpec),
+}
+
+```
+
+### 3. Database Schema (SeaORM Migration)
+
+The template is immutable. We store the complex polymorphic structure as a `JSONB` column to allow flexibility while maintaining query capability on core fields.
+
+```rust
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.create_table(
+            Table::create()
+                .table(ConnectorTemplates::Table)
+                .col(ColumnDef::new(ConnectorTemplates::Id).string().not_null().primary_key())
+                .col(ColumnDef::new(ConnectorTemplates::Name).string().not_null())
+                .col(ColumnDef::new(ConnectorTemplates::Version).string().not_null())
+                .col(ColumnDef::new(ConnectorTemplates::Author).string().not_null())
+                .col(ColumnDef::new(ConnectorTemplates::CreatedAt).timestamp_with_time_zone().not_null())
+                // Stores the full Auth + Interaction + Parameters JSON
+                .col(ColumnDef::new(ConnectorTemplates::Definition).json_binary().not_null())
+                .to_owned(),
+        ).await?;
+
+        // Enforce uniqueness on Name + Version
+        manager.create_index(
+            Index::create()
+                .name("idx_connector_template_name_version")
+                .table(ConnectorTemplates::Table)
+                .col(ConnectorTemplates::Name)
+                .col(ConnectorTemplates::Version)
+                .unique()
+                .to_owned(),
+        ).await
+    }
+}
+
+```
