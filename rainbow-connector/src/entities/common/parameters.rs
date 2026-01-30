@@ -186,7 +186,7 @@ impl TemplateVisitable for TemplateVecString {
 impl TemplateMutable for TemplateVecString {
     fn accept_mutator<V: TemplateMutator>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
-            // CASO A: Reemplazo total del array (ej: "{{__tags__}}")
+            // CASE A: replace array (ej: "{{__tags__}}")
             TemplateVecString::Template(tmpl) => {
                 if let Some(val) = visitor.resolve(tmpl) {
                     // Simplificación masiva: El validador ya aseguró que es Vec<String>
@@ -201,7 +201,7 @@ impl TemplateMutable for TemplateVecString {
                     *self = TemplateVecString::Value(list);
                 }
             }
-            // CASO B: Interpolación parcial dentro de items estáticos (ej: ["prod", "{{__region__}}"])
+            // CASE B: interpolate within array (ex: ["prod", "{{__region__}}"])
             TemplateVecString::Value(list) => {
                 for (idx, item) in list.iter_mut().enumerate() {
                     visitor.enter_scope(&idx.to_string());
@@ -235,17 +235,17 @@ impl TemplateVisitable for TemplateMapString {
 impl TemplateMutable for TemplateMapString {
     fn accept_mutator<V: TemplateMutator>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
         match self {
-            // CASO A: Reemplazo total del mapa (ej: "{{__env_vars__}}")
+            // CASE A: replace map (ex: "{{__env_vars__}}")
             TemplateMapString::Template(tmpl) => {
                 if let Some(val) = visitor.resolve(tmpl) {
-                    // Simplificación masiva: El validador ya aseguró que es Map<String, String>
+                    // Simplification: The validator already ensured it's Map<String, String>
                     let map: HashMap<String, String> = serde_json::from_value(val)
                         .map_err(|e| anyhow!("Failed to convert resolved value to Map<String, String> for '{}': {}", tmpl, e))?;
 
                     *self = TemplateMapString::Value(map);
                 }
             }
-            // CASO B: Interpolación de valores en un mapa existente
+            // CASE B: interpolate within map (ex: ["prod", "{{__region__}}"])
             TemplateMapString::Value(map) => {
                 for (key, value) in map.iter_mut() {
                     visitor.enter_scope(key);

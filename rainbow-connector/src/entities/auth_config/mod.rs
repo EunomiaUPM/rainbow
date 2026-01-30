@@ -44,5 +44,5 @@ pub enum ApiKeyLocation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OAuthGrantType {
     ClientCredentials,
-    AuthorizationCode, /* ... */
+    AuthorizationCode,
 }

@@ -1,0 +1,35 @@
+{
+  "authentication": {
+    "type": "NO_AUTH"
+  },
+  "interaction": {
+    "mode": "PULL",
+    "dataAccess": {
+      "protocol": "HTTP",
+      "urlTemplate": "{{__ACCESS_URL__}}",
+      "method": "{{__ALLOWED_METHODS__}}",
+      "headers": "{{__ALLOWED_HEADERS__}}",
+      "bodyTemplate": ""
+    }
+  },
+  "parameters": [
+    {
+      "paramType": "STRING",
+      "name": "ACCESS_URL",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "VEC<STRING>",
+      "name": "ALLOWED_METHODS",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "MAP<STRING,STRING>",
+      "name": "ALLOWED_HEADERS",
+      "title": "bla",
+      "required": true
+    }
+  ]
+}

@@ -4,7 +4,6 @@ use crate::entities::common::parameters::TemplateVisitable;
 
 impl TemplateVisitable for AuthenticationConfig {
     fn accept<V: ParameterVisitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
-        //
         match self {
             AuthenticationConfig::NoAuth => Ok(()),
             AuthenticationConfig::BasicAuth(config) => {

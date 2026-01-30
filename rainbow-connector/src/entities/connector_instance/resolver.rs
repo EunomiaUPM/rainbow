@@ -10,14 +10,13 @@ fn template_regex() -> &'static Regex {
 }
 
 pub struct TemplateResolver<'a> {
-    pub errors: Vec<String>,
     values: &'a HashMap<String, Value>,
     context_stack: Vec<String>,
 }
 
 impl<'a> TemplateResolver<'a> {
     pub fn new(values: &'a HashMap<String, Value>) -> Self {
-        Self { errors: vec![], values, context_stack: vec![] }
+        Self { values, context_stack: vec![] }
     }
 
     fn try_exact_replacement(&self, re: &Regex, raw: &str) -> Option<Value> {
