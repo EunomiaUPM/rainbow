@@ -34,7 +34,7 @@ use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
 use ymir::config::types::HostType;
 
-pub struct RainbowProviderGateway {
+pub struct GatewayRouter {
     config: GatewayConfig,
     client: Client,
     notification_tx: broadcast::Sender<String>,
@@ -44,7 +44,7 @@ pub struct RainbowProviderGateway {
 #[folder = "src/static/admin/dist"]
 pub struct RainbowProviderReactApp;
 
-impl RainbowProviderGateway {
+impl GatewayRouter {
     pub fn new(config: GatewayConfig) -> Self {
         let client = Client::builder()
             .timeout(Duration::from_secs(10))
@@ -142,14 +142,13 @@ impl RainbowProviderGateway {
     ) -> impl IntoResponse {
         let microservice_base_url = match service_prefix.as_str() {
             "dataplane" => config.transfer().get_host(HostType::Http),
+            "connector" => config.catalog().get_host(HostType::Http),
             "catalogs" => config.catalog().get_host(HostType::Http),
             "datasets" => config.catalog().get_host(HostType::Http),
-            // TODO Carlos
-            "subscriptions" => config.transfer().get_host(HostType::Http),
             "notifications" => config.transfer().get_host(HostType::Http),
             "data-services" => config.transfer().get_host(HostType::Http),
             "distributions" => config.transfer().get_host(HostType::Http),
-
+            "odrl-policies" => config.transfer().get_host(HostType::Http),
             "datahub" => config.catalog().get_host(HostType::Http),
             "contract-negotiation" => config.contracts().get_host(HostType::Http),
             "mates" => config.ssi_auth().get_host(HostType::Http),
@@ -158,6 +157,8 @@ impl RainbowProviderGateway {
             "auth" => config.ssi_auth().get_host(HostType::Http),
             "wallet" => config.ssi_auth().get_host(HostType::Http),
             "ssi-auth" => config.ssi_auth().get_host(HostType::Http),
+            // TODO Carlos
+            "subscriptions" => config.transfer().get_host(HostType::Http),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 

@@ -1,4 +1,4 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useGetAgreementsByParticipantId,
   useGetParticipantById,
@@ -21,20 +21,20 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {Badge, BadgeRole} from "shared/src/components/ui/badge.tsx";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { Badge, BadgeRole } from "shared/src/components/ui/badge.tsx";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 // Icons
-import {ArrowRight} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/participants/$participantId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const {participantId} = Route.useParams();
-  const {data: participant} = useGetParticipantById(participantId);
-  const {data: agreements} = useGetAgreementsByParticipantId(participantId);
+  const { participantId } = Route.useParams();
+  const { data: participant } = useGetParticipantById(participantId);
+  //const {data: agreements} = useGetAgreementsByParticipantId(participantId);
 
   const scopedListItemKeyClasses = "basis-[28%]";
 
@@ -48,7 +48,7 @@ function RouteComponent() {
         </Badge>
       </Heading>
       {/* Page content */}
-      <div className="gridColsLayout bg-blue-500/0">
+      <div className="bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
           <Heading level="h6" className="text-foreground h-[36px] place-content-center">
@@ -79,14 +79,10 @@ function RouteComponent() {
         </div>
 
         {/* Div Participant Tabs */}
-        {agreements && agreements.length > 0 && (
-          // Lo de arriba: evita que pete si no hay agreements que mostrar,
-          // si se añaden otros tabs habría que añadirlos
+        {/* {agreements && agreements.length > 0 && (
           <Tabs defaultValue="participant-agreements">
             <TabsList>
               <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
-              {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
-              {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
             </TabsList>
             <TabsContent value="participant-agreements">
               <div className=" bg-pink-500/0">
@@ -111,20 +107,7 @@ function RouteComponent() {
                             {agreement.agreement_id.slice(9, 20) + "..."}{" "}
                           </Badge>
                         </TableCell>
-                        {/* <TableCell>
-                  {agreement.cn_message_id?.slice(0, 20) + "..."}
-                </TableCell className="hidden"> */}
-                        {/* <TableCell>
-                  <Badge variant={"info"}>
-                    {agreement.consumer_participant_id?.slice(9, 20) + "..."}
-                  </Badge>
-                </TableCell> */}
-                        {/* <TableCell className="hidden">
-                          <Badge variant={"info"}>
-                            {agreement.provider_participant_id?.slice(9, 20) +
-                              "..."}
-                          </Badge>
-                        </TableCell> */}
+
                         <TableCell>
                           <Badge variant={"status"} state={agreement.active ? "STARTED" : "PAUSE"}>
                             {agreement.active ? "ACTIVE" : "INACTIVE"}
@@ -136,11 +119,11 @@ function RouteComponent() {
                         <TableCell>
                           <Link
                             to="/agreements/$agreementId"
-                            params={{agreementId: agreement.agreement_id}}
+                            params={{ agreementId: agreement.agreement_id }}
                           >
                             <Button variant="link">
                               See agreement
-                              <ArrowRight/>
+                              <ArrowRight />
                             </Button>
                           </Link>
                         </TableCell>
@@ -151,7 +134,10 @@ function RouteComponent() {
               </div>
             </TabsContent>
           </Tabs>
-        )}
+        )} */}
+        <div>
+          <Heading level="h5">Agreements to be done...</Heading>
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ export interface GlobalInfoContextType {
 
 type ConfigInfo = {
   config_role: string;
-}
+};
 
 export const GlobalInfoContext = createContext<GlobalInfoContextType | null>(null);
 
@@ -22,11 +22,11 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   // PLEASE CHANGE THIS FOR PRODUCTION OR DEV
-  const isProduction = true;
+  const isProduction = false;
   const localConfig = {
     config_role: "Agent",
     gateway_host: "http://127.0.0.1",
-    gateway_port: "1207"
+    gateway_port: "1200",
   };
   useEffect(() => {
     const initConfig = async () => {
@@ -55,13 +55,7 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     };
 
     initConfig();
-    console.log(
-        apiGatewayBase,
-      configRole,
-      catalogType,
-      isConfigLoaded,
-      isProduction,
-    )
+    console.log(apiGatewayBase, configRole, catalogType, isConfigLoaded, isProduction);
   }, []);
 
   const contextValue = useMemo<GlobalInfoContextType>(() => {
@@ -79,9 +73,5 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     return <div>Cargando...</div>;
   }
 
-  return (
-      <GlobalInfoContext.Provider value={contextValue}>
-        {children}
-      </GlobalInfoContext.Provider>
-  );
+  return <GlobalInfoContext.Provider value={contextValue}>{children}</GlobalInfoContext.Provider>;
 };

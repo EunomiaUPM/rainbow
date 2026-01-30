@@ -9,7 +9,7 @@ import {
   TableRow,
   TableCell,
 } from "shared/src/components/ui/table";
-import { useGetCatalogs } from "shared/src/data/catalog-queries.ts";
+import { useGetCatalogs, useGetMainCatalogs } from "shared/src/data/catalog-queries.ts";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
@@ -17,13 +17,14 @@ import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
 
 const RouteComponent = () => {
-  const { data: catalogs } = useGetCatalogs();
+  const { data: mainCatalog } = useGetMainCatalogs();
+  const { data: catalogs } = useGetCatalogs(false);
   return (
     <div className="space-y-4 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id
         <Badge variant="info" size="lg">
-          {catalogs["@id"].slice(9, 29) + "[...]"}{" "}
+          {mainCatalog.id.slice(0, 20) + "[...]"}{" "}
         </Badge>
       </Heading>
       <div>
@@ -32,19 +33,24 @@ const RouteComponent = () => {
           <List className="text-sm">
             <ListItem>
               <ListItemKey>Catalog title</ListItemKey>
-              <p>{catalogs.title}</p>
+              <p>{mainCatalog?.dctTitle}</p>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant id</ListItemKey>
-              <Badge variant="info"> {catalogs.participantId.slice(9, 29) + "[...]"} </Badge>
+              <Badge variant="info">
+                {" "}
+                {mainCatalog.dspaceParticipantId.slice(0, 20) + "[...]"}{" "}
+              </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
-              <p>{catalogs.homepage}</p>
+              <p>{mainCatalog.foafHomePage}</p>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+              <ListItemDate>
+                {dayjs(mainCatalog.dctIssued).format("DD/MM/YYYY - HH:mm")}
+              </ListItemDate>
             </ListItem>
           </List>
           <div className="filler"></div>
@@ -67,24 +73,26 @@ const RouteComponent = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {catalogs?.catalog?.map((catalogItem) => (
+            {catalogs?.map((catalogItem) => (
               <TableRow key="urn:uuid:c4d4449d-a">
                 <TableCell>
-                  <p className="text-18">{catalogItem.title}</p>
+                  <p className="text-18">{catalogItem.dctTitle}</p>
                 </TableCell>
                 <TableCell>
                   <ListItemDate> 23/6/25 16:34 </ListItemDate>
                 </TableCell>
                 <TableCell>
                   {" "}
-                  <Badge variant="info">{catalogItem["@id"].slice(9, 29) + "[...]"} </Badge>
+                  <Badge variant="info">{catalogItem.id.slice(0, 20) + "[...]"} </Badge>
                 </TableCell>
                 <TableCell>
                   {" "}
-                  <Badge variant="info">{catalogItem.participantId.slice(9, 29) + "[...]"}</Badge>
+                  <Badge variant="info">
+                    {catalogItem.dspaceParticipantId.slice(0, 20) + "[...]"}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  <Link to="/catalog/$catalogId" params={{ catalogId: catalogItem["@id"] }}>
+                  <Link to="/catalog/$catalogId" params={{ catalogId: catalogItem.id }}>
                     <Button variant={"link"}>
                       See catalog
                       <ArrowRight />
