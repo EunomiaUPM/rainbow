@@ -1,4 +1,5 @@
 import React from "react";
+import { formatUrn } from "shared/src/lib/utils";
 import {
   MessageBody,
   MessageContent,
@@ -38,8 +39,8 @@ const MessageComponent: React.FC<MessageComponentProps> = ({message}) => {
         </MessageTitle>
         <MessageTimestamp created_at={message.created_at.toString()}/>
         <MessageMetaContainer>
-          <MessageMeta label="Contract Message Id" value={message.cn_message_id.slice(9, 60)}/>
-          <MessageMeta label="Contract Process Id" value={message.cn_process_id.slice(9, 60)}/>
+          <MessageMeta label="Contract Message Id" value={formatUrn(message.cn_message_id, false)}/>
+          <MessageMeta label="Contract Process Id" value={formatUrn(message.cn_process_id, false)}/>
         </MessageMetaContainer>
         <MessageContent content={JSON.stringify(message.content, null, 8)}/>
       </MessageBody>

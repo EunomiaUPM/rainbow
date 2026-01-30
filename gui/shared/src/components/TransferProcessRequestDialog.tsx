@@ -1,11 +1,13 @@
 import {
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "shared/src/components/ui/dialog";
+} from "./ui/dialog";
+import { formatUrn } from "shared/src/lib/utils";
 import {Badge} from "shared/src/components/ui/badge";
 import {
   Select,
@@ -64,8 +66,8 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
             <DialogTitle>Transfer request dialog</DialogTitle>
             <DialogDescription className="max-w-full flex flex-wrap break-all">
               <span className="max-w-full flex flex-wrap">
-                Select the transference's parameters for
-                <Badge variant="info">{agreement.agreement_id.slice(9, 30) + "[...]"}</Badge>
+                Start transfer process for Agreement{" "}
+              <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
               </span>
             </DialogDescription>
           </DialogHeader>

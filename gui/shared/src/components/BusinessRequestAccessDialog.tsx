@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { formatUrn } from "shared/src/lib/utils";
 import {Button} from "shared/src/components/ui/button";
 import {Badge} from "shared/src/components/ui/badge";
 import React, {useContext, useRef} from "react";
@@ -65,11 +66,11 @@ export const BusinessRequestAccessDialog = ({
               </Badge>
               in catalog{" "}
               <Badge variant="infoLighter" className="mx-1 mt-1">
-                {catalogId.slice(14)}
+                {formatUrn(catalogId)}
               </Badge>
               under policy with ID{" "}
               <Badge variant="infoLighter" className="mx-1 mt-1">
-                {policy["@id"].slice(9, 27) + "[...]"}
+                {formatUrn(policy["@id"])}
               </Badge>
             </span>
           </span>
