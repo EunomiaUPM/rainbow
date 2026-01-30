@@ -35,9 +35,9 @@ impl TemplateVisitable for PushLifecycle {
         self.subscribe.accept(visitor)?;
         visitor.exit_scope();
 
-        if let Some(unsubscribe) = &self.unsubscribe {
+        if let Some(unsubscribe) = &mut self.unsubscribe {
             visitor.enter_scope("unsubscribe");
-            unsubscribe.clone().accept(visitor)?;
+            unsubscribe.accept(visitor)?;
             visitor.exit_scope();
         }
 

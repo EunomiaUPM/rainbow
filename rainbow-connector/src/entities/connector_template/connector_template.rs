@@ -49,6 +49,7 @@ impl ConnectorTemplateEntitiesService {
             metadata: ConnectorMetadata {
                 name: Option::from(model.name),
                 author: Option::from(model.author),
+                description: None,
                 version: Option::from(model.version),
                 created_at: Some(model.created_at),
             },
