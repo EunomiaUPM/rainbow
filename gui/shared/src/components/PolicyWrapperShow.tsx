@@ -32,7 +32,7 @@ export const PolicyWrapperShow = ({
           <Heading level="h5" className="flex gap-3">
             <div>Policy with ID</div>
             <Badge variant="info" className="h-6">
-              {policy["@id"].slice(9, 24) + "[...]"}
+              {policy.id.slice(9, 24) + "[...]"}
             </Badge>
           </Heading>
           {!routerState.location.pathname.includes("datahub-catalog") ? (
@@ -59,22 +59,18 @@ export const PolicyWrapperShow = ({
 
         <ListItem>
           <ListItemKey>Policy Target</ListItemKey>
-          <p>{policy["@type"]}</p>
-        </ListItem>
-        <ListItem>
-          <ListItemKey> Profile</ListItemKey>
-          <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
+          <p>{policy.entityType}</p>
         </ListItem>
         <ListItem>
           <ListItemKey> Target</ListItemKey>
-          <p> {policy.target.slice(9)}</p>
+          <p> {policy.entity.slice(9)}</p>
         </ListItem>
         <div className="h-5"></div>
         <Heading level="h6"> ODRL CONTENT</Heading>
         <div className="flex flex-col gap-2 w-full">
-          <PolicyComponent policyItem={policy.permission} variant="permission" />
-          <PolicyComponent policyItem={policy.prohibition} variant="prohibition" />
-          <PolicyComponent policyItem={policy.obligation} variant="obligation" />
+          <PolicyComponent policyItem={policy.odrlOffer.permission} variant="permission" />
+          <PolicyComponent policyItem={policy.odrlOffer.prohibition} variant="prohibition" />
+          <PolicyComponent policyItem={policy.odrlOffer.obligation} variant="obligation" />
         </div>
         <div className="h-4"></div>
 

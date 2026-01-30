@@ -1,5 +1,5 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
-import {useGetTransferProcesses} from "shared/src/data/transfer-queries.ts";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useGetTransferProcesses } from "shared/src/data/transfer-queries.ts";
 import {
   Table,
   TableBody,
@@ -9,24 +9,24 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
-import {Input} from "shared/src/components/ui/input.tsx";
-import {TransferProcessActions} from "shared/src/components/TransferProcessActions.tsx";
-import {ArrowRight} from "lucide-react";
-import {useMemo} from "react";
-import {mergeStateAndAttribute} from "shared/src/lib/utils.ts";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
+import { Input } from "shared/src/components/ui/input.tsx";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
+import { ArrowRight } from "lucide-react";
+import { useMemo } from "react";
+import { mergeStateAndAttribute } from "shared/src/lib/utils.ts";
 
 export const Route = createFileRoute("/transfer-process/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const {data: transferProcesses} = useGetTransferProcesses();
+  const { data: transferProcesses } = useGetTransferProcesses();
   const transferProcessesSorted = useMemo(() => {
     if (!transferProcesses) return [];
     return [...transferProcesses].sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [transferProcesses]);
 
@@ -48,28 +48,32 @@ function RouteComponent() {
         </TableHeader>
         <TableBody>
           {transferProcessesSorted.map((transferProcess) => (
-            <TableRow key={transferProcess.provider_pid.slice(0, 20)}>
+            <TableRow key={transferProcess.id.slice(0, 20)}>
               <TableCell>
-                <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{transferProcess.id.slice(0, 40) + "..."}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant={"status"} state={transferProcess.state as BadgeState}>
-                  {mergeStateAndAttribute(transferProcess.state, transferProcess.state_attribute)}
+                  {mergeStateAndAttribute(transferProcess.state, transferProcess.stateAttribute)}
                 </Badge>
               </TableCell>
-              <TableCell>{dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</TableCell>
-              <TableCell>{dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</TableCell>
+              <TableCell>{dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</TableCell>
               <TableCell>
-                <TransferProcessActions process={transferProcess} tiny={true}/>
+                {transferProcess.updatedAt
+                  ? dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")
+                  : "-"}
+              </TableCell>
+              <TableCell>
+                <TransferProcessActions process={transferProcess} tiny={true} />
               </TableCell>
               <TableCell>
                 <Link
                   to="/transfer-process/$transferProcessId"
-                  params={{transferProcessId: transferProcess.provider_pid}}
+                  params={{ transferProcessId: transferProcess.id }}
                 >
                   <Button variant="link">
                     See details
-                    <ArrowRight/>
+                    <ArrowRight />
                   </Button>
                 </Link>
               </TableCell>

@@ -31,13 +31,14 @@ declare global {
   }
 
   export interface OdrlOffer {
-    "@id": UUID;
-    "@type": string;
-    obligation: OdrlPermission[] | null;
-    permission: OdrlPermission[] | null;
-    prohibition: OdrlPermission[] | null;
-    target: UUID;
-    profile: string;
+    createdAt: Date;
+    entity: string;
+    entityType: string;
+    id: string;
+    instantiationParameters: JSON;
+    odrlOffer: OdrlInfo;
+    sourceTemplateId: JSON;
+    sourceTemplateVersion: JSON;
   }
 
   export interface OdrlInfo {
@@ -57,8 +58,7 @@ declare global {
     rightOperand: string;
   }
 
-  export interface Content {
-  }
+  export interface Content {}
 
   export interface CNError {
     error: {
@@ -69,77 +69,54 @@ declare global {
   }
 
   export interface Catalog {
-    "@context": string[];
-    "@type": string;
-    "@id": UUID;
-    homepage: string;
-    theme: string;
-    keyword: string;
-    conformsTo: null;
-    creator: null;
-    identifier: string;
-    issued: Date;
-    modified: null;
-    title: null | string;
-    description: any[];
-    participantId: string;
-    extraFields: null;
-    catalog: Catalog[];
-    dataset: Dataset[];
-    service: DataService[];
+    dctConformsTo: string;
+    dctCreator: string;
+    dctIdentifier: string;
+    dctIssued: Date;
+    dctModified: string;
+    dctTitle: string;
+    dspaceMainCatalog: boolean;
+    dspaceParticipantId: string;
+    foafHomePage: string;
+    id: string;
   }
 
   export interface Dataset {
-    "@context": string[];
-    "@type": Type;
-    "@id": UUID;
-    theme: string;
-    keyword: string;
-    conformsTo: null;
-    creator: null;
-    identifier: UUID;
-    issued: Date;
-    modified: null;
-    title: null | string;
-    description: any[];
-    hasPolicy: OdrlOffer[];
-    extraFields: null;
-    distribution?: Distribution[];
-    endpointDescription?: string;
-    endpointURL?: string;
+    catalogId: string;
+    dctConformsTo: string;
+    dctCreator: string;
+    dctDescription: string;
+    dctIdentifier: string;
+    dctIssued: Date;
+    dctModified: string;
+    dctTitle: string;
+    id: string;
   }
 
   export interface DataService {
-    "@context": string[];
-    "@type": string;
-    "@id": UUID;
-    theme: string;
-    keyword: string;
-    endpointDescription: string;
-    endpointURL: string;
-    conformsTo: null;
-    creator: null;
-    identifier: UUID;
-    issued: Date;
-    modified: null;
-    title: null;
-    description: any[];
-    hasPolicy: any[];
-    extraFields: null;
+    catalogId: string;
+    dcatEndpointDescription: string;
+    dcatEndpointUrl: string;
+    dctConformsTo: string;
+    dctCreator: string;
+    dctDescription: string;
+    dctIdentifier: string;
+    dctIssued: Date;
+    dctModified: string;
+    dctTitle: string;
+    dspaceMainDataService: boolean;
+    id: string;
   }
 
   export interface Distribution {
-    "@context": string[];
-    "@type": string;
-    "@id": UUID;
-    accessService: DataService;
-    identifier: UUID;
-    issued: Date;
-    modified?: Date;
-    title: string;
-    description: any[];
-    hasPolicy: OdrlOffer[];
-    extraFields: null;
+    datasetId: string;
+    dcatAccessService: string;
+    dctDescription: string;
+    dctFormat: string;
+    dctIssued: Date;
+    dctModified: string;
+    dctTitle: string;
+    id: string;
   }
 
   export interface Agreement {
@@ -172,27 +149,33 @@ declare global {
   }
 
   export interface TransferProcess {
-    id?: UUID;
-    provider_pid: UUID;
-    consumer_pid: UUID;
-    agreement_id: UUID;
-    data_plane_id: UUID;
+    id: UUID;
     state: string;
-    state_attribute: string;
-    associated_consumer: UUID;
-    associated_provider: UUID;
-    created_at: Date;
-    updated_at: Date;
+    stateAttribute: string;
+    associatedAgentPeer: string;
+    protocol: string;
+    transferDirection: string;
+    agreementId: string;
+    callbackAddress: string;
+    role: string;
+    properties: JSON;
+    errorDetails: JSON;
+    createdAt: Date;
+    updatedAt: Date;
+    identifiers: JSON;
+    messages: TransferMessage[];
   }
 
   export interface TransferMessage {
     id: UUID;
-    transfer_process_id: UUID;
-    created_at: Date;
-    message_type: string;
-    from: string;
-    to: string;
-    content: any;
+    transferAgentProcessId: UUID;
+    createdAt: Date;
+    direction: string;
+    protocol: string;
+    messageType: string;
+    stateTransitionFrom: string;
+    stateTransitionTo: string;
+    payload?: JSON;
   }
 
   export interface Participant {
@@ -295,6 +278,89 @@ declare global {
         }>;
       };
     };
+  }
+
+  /**
+   * Tipos generados para Rainbow Catalog Agent API
+   * Basado en la especificación OpenAPI
+   */
+
+// --- Metadata Base ---
+
+  export interface ConnectorMetadata {
+    name?: string;
+    author?: string;
+    description?: string;
+    version?: string;
+    createdAt?: Date;
+  }
+
+// --- Authentication Configurations ---
+
+  export type AuthenticationConfig =
+      | NoAuth
+      | BasicAuthConfig
+      | BearerToken
+      | ApiKey
+      | OAuth2;
+
+  export interface NoAuth {
+    type: 'NO_AUTH';
+  }
+
+  export interface BasicAuthConfig {
+    type: 'BASIC_AUTH';
+    username?: string;
+    password?: string;
+  }
+
+  export interface BearerToken {
+    type: 'BEARER_TOKEN';
+    token?: string;
+  }
+
+  export interface ApiKey {
+    type: 'API_KEY';
+    key?: string;
+    value?: string;
+    location?: 'HEADER' | 'QUERY';
+  }
+
+  export interface OAuth2 {
+    type: 'OAUTH_2';
+    grantType?: 'ClientCredentials' | 'AuthorizationCode';
+    tokenUrl?: string;
+    clientId?: string;
+    clientSecret?: string;
+    scopes?: string[] | string;
+  }
+
+  export type InteractionConfig =
+      | PullLifecycle
+      | PushLifecycle;
+
+  export interface ProtocolSpec {
+    protocol?: string;
+    accessUrl?: string;
+    [key: string]: unknown; // Permite propiedades extra si el placeholder cambia
+  }
+
+  export interface PullLifecycle {
+    mode: 'PULL';
+    dataAccess?: ProtocolSpec;
+  }
+
+  export interface PushLifecycle {
+    mode: 'PUSH';
+    subscribe?: Record<string, unknown>;
+    unsubscribe?: Record<string, unknown>;
+  }
+
+  export interface ConnectorInstanceDto extends ConnectorMetadata {
+    id: string;
+    authenticationConfig: AuthenticationConfig;
+    interaction: InteractionConfig;
+    distributionId: string;
   }
 }
 

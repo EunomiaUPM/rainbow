@@ -1,5 +1,5 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
-import {useGetParticipants} from "shared/src/data/participant-queries.ts";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useGetParticipants } from "shared/src/data/participant-queries.ts";
 import {
   Table,
   TableBody,
@@ -18,30 +18,32 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {useContext, useMemo} from "react";
-import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {Input} from "shared/src/components/ui/input.tsx";
-import {Badge} from "shared/src/components/ui/badge";
+import { useContext, useMemo } from "react";
+import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { Input } from "shared/src/components/ui/input.tsx";
+import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 
 // Icons
-import {ArrowRight, Plus} from "lucide-react";
-import {useWalletOnboard} from "../../../../shared/src/data/wallet-mutations.ts";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import { ArrowRight, Plus } from "lucide-react";
+import { useWalletOnboard } from "../../../../shared/src/data/wallet-mutations.ts";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 
 export const Route = createFileRoute("/participants/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const {data: participants} = useGetParticipants();
-  const {lastHighLightedNotification} = useContext(PubSubContext)!;
-  const {mutateAsync: onboardAsync} = useWalletOnboard();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data: participants } = useGetParticipants();
+  //const {lastHighLightedNotification} = useContext(PubSubContext)!;
+  const { mutateAsync: onboardAsync } = useWalletOnboard();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   const hasProvider = useMemo(() => {
-    return participants.find((p) => p.participant_type == "Provider");
+    return (
+      participants.find((p) => p.is_me == true && p.participant_type === "Agent") !== undefined
+    );
   }, [participants]);
 
   const onboardHandler = async () => {
@@ -54,11 +56,10 @@ function RouteComponent() {
     <div>
       {/* NO WALLET */}
       {!hasProvider && (
-        <div
-          className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
+        <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
           <Heading level="h3">Missing wallet...</Heading>
           <Heading level="h5">
-            Your wallet is not yet connected as Provider. <br/> Please complete the onboarding
+            Your wallet is not yet connected as Provider. <br /> Please complete the onboarding
             process to get started.
           </Heading>
           <Button size={"lg"} className="w-full mt-4" onClick={() => onboardHandler()}>
@@ -84,7 +85,7 @@ function RouteComponent() {
               <DrawerTrigger className="hidden">
                 <Button>
                   Add participant
-                  <Plus className="mb-1"/>
+                  <Plus className="mb-1" />
                 </Button>
               </DrawerTrigger>
               <DrawerContent>
@@ -125,14 +126,7 @@ function RouteComponent() {
             </TableHeader>
             <TableBody>
               {participants.map((participant) => (
-                <TableRow
-                  key={participant.participant_id.slice(0, 20)}
-                  className={
-                    participant.participant_id === lastHighLightedNotification
-                      ? "bg-primary-200"
-                      : ""
-                  }
-                >
+                <TableRow key={participant.participant_id.slice(0, 20)}>
                   <TableCell>
                     <Badge variant={"info"}>
                       {participant.participant_id.slice(9, 20) + "..."}
@@ -153,11 +147,11 @@ function RouteComponent() {
                   <TableCell>
                     <Link
                       to="/participants/$participantId"
-                      params={{participantId: participant.participant_id}}
+                      params={{ participantId: participant.participant_id }}
                     >
                       <Button variant="link">
                         See details
-                        <ArrowRight/>
+                        <ArrowRight />
                       </Button>
                     </Link>
                   </TableCell>

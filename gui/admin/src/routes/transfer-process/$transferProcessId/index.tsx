@@ -1,14 +1,10 @@
-import {createFileRoute} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  useGetDataplaneProcessById,
-  useGetTransferMessagesByProviderPid,
-  useGetTransferProcessByProviderPid,
-} from "shared/src/data/transfer-queries.ts";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
+import { useGetTransferProcessById } from "shared/src/data/transfer-queries.ts";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
-import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
-import {Tabs, TabsContent, TabsList, TabsTrigger,} from "shared/src/components/ui/tabs";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "shared/src/components/ui/tabs";
 import {
   Drawer,
   DrawerBody,
@@ -19,36 +15,33 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {Button} from "shared/src/components/ui/button";
-import {TransferProcessActions} from "shared/src/components/TransferProcessActions";
+import { Button } from "shared/src/components/ui/button";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
-import TransferProcessDataPlaneComponent
-  from "shared/src/components/TransferProcessDataPlaneComponent";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const {transferProcessId} = Route.useParams();
-  const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId);
-  const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId);
-  const {data: dataPlane} = useGetDataplaneProcessById(transferProcessId);
+  const { transferProcessId } = Route.useParams();
+  const { data: transferProcess } = useGetTransferProcessById(transferProcessId);
+  // const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
 
   return (
     <div className="space-y-4 pb-4">
       <Tabs defaultValue="data-control" className="w-full">
         <TabsList>
-          <TabsTrigger value="data-control">Data Control</TabsTrigger>
-          <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
+          <TabsTrigger value="data-control">Control Plane</TabsTrigger>
+          {/* <TabsTrigger value="data-plane">Data Plane</TabsTrigger> */}
         </TabsList>
-        <TabsContent value="data-plane" className="gridColsLayout">
+        {/* <TabsContent value="data-plane" className="gridColsLayout">
           {dataPlane && (
             <div>
-              <TransferProcessDataPlaneComponent dataPlane={dataPlane}/>
+              <TransferProcessDataPlaneComponent dataPlane={dataPlane} />
             </div>
           )}
-        </TabsContent>
+        </TabsContent> */}
         <TabsContent value="data-control">
           {" "}
           <Heading level="h5" className="mt-3">
@@ -58,15 +51,11 @@ function RouteComponent() {
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Consumer pid</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.consumer_pid.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{transferProcess.id.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.agreement_id.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{transferProcess.agreementId.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
@@ -76,11 +65,11 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey>Created at</ListItemKey>
-                <p> {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</p>
+                <p> {dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
               <ListItem>
                 <ListItemKey>Updated at</ListItemKey>
-                <p> {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</p>
+                <p> {dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
             </List>
           </div>
@@ -99,28 +88,10 @@ function RouteComponent() {
               </DrawerHeader>
               {/* Messages */}
               <DrawerBody>
-                {transferMessages.map((message) => {
-                  return (
-                    <TransferProcessMessageComponent key={message.id} message={message}/>
-                  );
+                {transferProcess.messages.map((message) => {
+                  return <TransferProcessMessageComponent key={message.id} message={message} />;
                 })}
               </DrawerBody>
-              {/* esto por si hace falta en algn momento dividir lo que pone en el
-          content, pero por ahora no hace falta!!
-          <div className="flex ">
-            <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
-            <p> {transferMessage.content["@context"]} </p>
-          </div>
-          <div> {transferMessage.content["@type"]} </div>
-          <div> {transferMessage.content.agreementId} </div>
-          <div className="flex ">
-            <p className="font-bold min-w-[9.4rem] "> Agreement ID </p>
-            <Badge variant="info">
-              {" "}
-              {transferMessage.content["@context"]}{" "}
-            </Badge>
-          </div> */}
-
               <DrawerFooter>
                 <DrawerClose>
                   <Button variant="ghost">Hide Messages</Button>
@@ -130,97 +101,7 @@ function RouteComponent() {
           </Drawer>
         </TabsContent>
       </Tabs>
-
-      <div>
-        {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
-        {/* <Table className="text-sm">
-           <TableHeader>
-                    <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Value</TableHead>
-                    </TableRow>
-                </TableHeader>
-          <TableBody> */}
-        {/* <TableRow>
-                        <TableCell>Transfer Process Provider pid</TableCell>
-                        <TableCell>{transferProcess.provider_pid.slice(0, 20) + "..."}</TableCell>
-                    </TableRow> */}
-        {/* <TableRow>
-                        <TableCell>Transfer Consumer Provider pid</TableCell>
-                        <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Agreement id</TableCell>
-                        <TableCell>{transferProcess.agreement_id.slice(0, 20) + "..."}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>State</TableCell>
-                        <TableCell>{transferProcess.state}</TableCell>
-                    </TableRow> */}
-        {/* <TableRow>
-              <TableCell>Created At</TableCell>
-              <TableCell>
-                {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Updated At</TableCell>
-              <TableCell>
-                {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow> */}
-        {/* </TableBody>
-        </Table> */}
-      </div>
-
-      <div>
-        {/* MENSAJES */}
-        {/* <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Transfer Message Id</TableHead>
-              <TableHead>Transfer Process id</TableHead>
-              <TableHead>Message type</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>From</TableHead>
-              <TableHead>To</TableHead>
-              <TableHead>Content</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transferMessages.map((transferMessage) => (
-              <TableRow key={transferMessage.id.slice(0, 20)}>
-                <TableCell>
-                  <Link
-                    to="/transfer-process/$transferProcessId/transfer-message/$transferMessageId"
-                    params={{
-                      transferProcessId: transferProcessId,
-                      transferMessageId: transferMessage.id,
-                    }}
-                  >
-                    {transferMessage.id.slice(0, 20) + "..."}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {transferMessage.transfer_process_id?.slice(0, 20) + "..."}
-                </TableCell>
-                <TableCell>{transferMessage.message_type}</TableCell>
-                <TableCell>
-                  {dayjs(transferMessage.created_at).format(
-                    "DD/MM/YYYY - HH:mm"
-                  )}
-                </TableCell>
-                <TableCell>{transferMessage.from}</TableCell>
-                <TableCell>{transferMessage.to}</TableCell>
-                <TableCell>{JSON.stringify(transferMessage.content)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table> */}
-      </div>
-
-      {/* ACTIONS */}
-      <TransferProcessActions process={transferProcess} tiny={false}/>
+      <TransferProcessActions process={transferProcess} tiny={false} />
     </div>
   );
 }

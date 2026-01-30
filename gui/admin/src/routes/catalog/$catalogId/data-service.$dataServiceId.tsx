@@ -1,39 +1,39 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
+import { createFileRoute } from "@tanstack/react-router";
+import { useGetDataServiceById } from "shared/src/data/catalog-queries.ts";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import {Badge} from "shared/src/components/ui/badge";
-import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
+import { Badge } from "shared/src/components/ui/badge";
+import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 
 function RouteComponent() {
-  const {dataServiceId} = Route.useParams();
-  const {data: dataService} = useGetDataServiceById(dataServiceId);
+  const { dataServiceId } = Route.useParams();
+  const { data: dataService } = useGetDataServiceById(dataServiceId);
   return (
     <div className="space-y-4 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">
         Data service info with id
         <Badge variant="info" size="lg">
           {" "}
-          {dataService["@id"].slice(9, 29) + "[...]"}
+          {dataService.id.slice(9, 29) + "[...]"}
         </Badge>{" "}
       </Heading>
       <div className="gridColsLayout">
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Data service title</ListItemKey>
-            <p>{dataService.title}</p>
+            <p>{dataService.dctTitle}</p>
           </ListItem>
           <ListItem>
             <ListItemKey>Data service creation date</ListItemKey>
-            <ListItemDate>{dayjs(dataService.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            <ListItemDate>{dayjs(dataService.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
           </ListItem>
           <ListItem>
             <ListItemKey>Data service endpoint URL</ListItemKey>
-            <p>{dataService.endpointURL}</p>
+            <p>{dataService.dcatEndpointUrl}</p>
           </ListItem>
           <ListItem>
             <ListItemKey>Data service description</ListItemKey>
-            <p>{dataService.endpointDescription}</p>
+            <p>{dataService.dcatEndpointDescription}</p>
           </ListItem>
         </List>
       </div>

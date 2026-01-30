@@ -1,8 +1,8 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {Badge} from "shared/src/components/ui/badge";
+import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import {RouteComponent as OfferForm} from "@/routes/contract-negotiation/offer";
+import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
 
 import {
   Drawer,
@@ -14,7 +14,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer";
-import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import {
   Table,
   TableBody,
@@ -28,15 +28,15 @@ import {
   useGetDataServicesByCatalogId,
   useGetDatasetsByCatalogId,
 } from "shared/src/data/catalog-queries.ts";
-import {Button} from "shared/src/components/ui/button";
+import { Button } from "shared/src/components/ui/button";
 // Icons
-import {ArrowRight, Plus} from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 
 const RouteComponent = () => {
-  const {catalogId} = Route.useParams();
-  const {data: catalog} = useGetCatalogsById(catalogId);
-  const {data: datasets} = useGetDatasetsByCatalogId(catalogId);
-  const {data: dataservices} = useGetDataServicesByCatalogId(catalogId);
+  const { catalogId } = Route.useParams();
+  const { data: catalog } = useGetCatalogsById(catalogId);
+  const { data: datasets } = useGetDatasetsByCatalogId(catalogId);
+  const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
 
   return (
     <div className="space-y-4 pb-4">
@@ -46,19 +46,19 @@ const RouteComponent = () => {
           <List>
             <ListItem>
               <ListItemKey>Catalog title</ListItemKey>
-              <p>{catalog.title}</p>
+              <p>{catalog.dctTitle}</p>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant ID</ListItemKey>
-              <Badge variant="info">{catalog.participantId.slice(9, 29) + "[...]"}</Badge>
+              <Badge variant="info">{catalog.dspaceParticipantId.slice(0, 20) + "[...]"} </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
-              <p>{catalog.homepage}</p>
+              <p>{catalog.foafHomePage}</p>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+              <ListItemDate>{dayjs(catalog.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
           <div className="filler"></div>
@@ -81,22 +81,26 @@ const RouteComponent = () => {
           </TableHeader>
           <TableBody>
             {datasets.map((dataset) => (
-              <TableRow key={dataset["@id"].slice(9, 29)}>
+              <TableRow key={dataset.id.slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info"> {dataset["@id"].slice(9, 29) + "..."}</Badge>
+                  <Badge variant="info"> {dataset.id.slice(9, 29) + "..."}</Badge>
                 </TableCell>
-                <TableCell>{dataset.title}</TableCell>
+                <TableCell>{dataset.dctTitle}</TableCell>
                 <TableCell>
-                  <Badge variant="info">{catalog.participantId.slice(9, 29) + "..."}</Badge>
+                  <Badge variant="info">
+                    {catalog.dspaceParticipantId.slice(0, 20) + "[...]"}{" "}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+                  <ListItemDate>
+                    {dayjs(dataset.dctIssued).format("DD/MM/YYYY - HH:mm")}
+                  </ListItemDate>
                 </TableCell>
                 <TableCell>
                   <Drawer direction={"right"}>
                     <DrawerTrigger>
                       <Button variant="outline" size="sm">
-                        <Plus/>
+                        <Plus />
                         Offer dataset
                       </Button>
                     </DrawerTrigger>
@@ -109,9 +113,7 @@ const RouteComponent = () => {
                         </DrawerTitle>
                       </DrawerHeader>
                       <DrawerBody>
-                        {/* {console.log("datasetto", dataset)} */}
-
-                        <OfferForm catalog={catalog} dataset={dataset}/>
+                        <OfferForm catalog={catalog} dataset={dataset} />
                       </DrawerBody>
                       <DrawerFooter>
                         <DrawerClose className="flex justify-start gap-4">
@@ -127,13 +129,13 @@ const RouteComponent = () => {
                   <Link
                     to="/catalog/$catalogId/dataset/$datasetId"
                     params={{
-                      catalogId: catalog["@id"],
-                      datasetId: dataset["@id"],
+                      catalogId: catalog.id,
+                      datasetId: dataset.id,
                     }}
                   >
                     <Button variant="link">
                       See dataset
-                      <ArrowRight/>
+                      <ArrowRight />
                     </Button>
                   </Link>
                 </TableCell>
@@ -148,37 +150,34 @@ const RouteComponent = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Dataservice Id</TableHead>
-              <TableHead>Endpoint</TableHead>
-              <TableHead>Endpoint Description</TableHead>
               <TableHead>Created at</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {dataservices.map((dataservice) => (
-              <TableRow key={dataservice["@id"].slice(9, 29)}>
+              <TableRow key={dataservice.id.slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info">{dataservice["@id"].slice(9, 29) + "..."}</Badge>
+                  <Badge variant="info">{dataservice.id.slice(9, 29) + "..."}</Badge>
                 </TableCell>
-                <TableCell>{dataservice.endpointURL}</TableCell>
-                <TableCell>{dataservice.endpointDescription}</TableCell>
+
                 <TableCell>
                   <ListItemDate>
                     {" "}
-                    {dayjs(dataservice.issued).format("DD/MM/YYYY - HH:mm")}
+                    {dayjs(dataservice.dctIssued).format("DD/MM/YYYY - HH:mm")}
                   </ListItemDate>
                 </TableCell>
                 <TableCell>
                   <Link
                     to="/catalog/$catalogId/data-service/$dataserviceId"
                     params={{
-                      catalogId: catalog["@id"],
-                      dataserviceId: dataservice["@id"],
+                      catalogId: catalog.id,
+                      dataserviceId: dataservice.id,
                     }}
                   >
                     <Button variant="link">
                       See dataservice
-                      <ArrowRight/>
+                      <ArrowRight />
                     </Button>
                   </Link>
                 </TableCell>

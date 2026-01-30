@@ -1,4 +1,4 @@
-use crate::gateway::gateway::RainbowProviderGateway;
+use crate::gateway::gateway::GatewayRouter;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
@@ -76,6 +76,6 @@ impl GatewayHttpWorker {
 }
 
 pub async fn create_gateway_http_router(config: &GatewayConfig) -> Router {
-    let gateway_router = RainbowProviderGateway::new(config.clone()).router();
+    let gateway_router = GatewayRouter::new(config.clone()).router();
     Router::new().nest("/admin", gateway_router)
 }
