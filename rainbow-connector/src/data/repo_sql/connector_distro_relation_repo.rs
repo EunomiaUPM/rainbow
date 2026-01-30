@@ -44,14 +44,14 @@ impl ConnectorDistroRelationRepoTrait for ConnectorDistroRelationRepoForSql {
         distro: &String,
         instance: &String,
     ) -> anyhow::Result<connector_distro_relation::Model, ConnectorAgentRepoErrors> {
-        let relation = self.get_relation_by_instance(instance).await?;
+        let relation = self.get_relation_by_distribution(distro).await?;
         if relation.is_none() {
             return Err(ConnectorAgentRepoErrors::ConnectorDistroRelationRepoErrors(
                 ConnectorDistroRelationRepoErrors::RelationNotFound,
             ));
         }
         let mut old_relation: connector_distro_relation::ActiveModel = relation.unwrap().into();
-        old_relation.distribution_id = ActiveValue::Set(distro.clone());
+        old_relation.connector_instance_id = ActiveValue::Set(instance.clone());
         let model = old_relation.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),

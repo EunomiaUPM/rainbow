@@ -1,4 +1,5 @@
 pub(crate) mod parameter_validation;
+pub(crate) mod resolver;
 
 use crate::entities::common::parameters::{TemplateString, TemplateVecString};
 use crate::entities::common::secret_management::SecretString;
@@ -43,5 +44,5 @@ pub enum ApiKeyLocation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OAuthGrantType {
     ClientCredentials,
-    AuthorizationCode, /* ... */
+    AuthorizationCode,
 }

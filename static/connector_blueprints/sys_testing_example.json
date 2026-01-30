@@ -1,0 +1,51 @@
+{
+  "authentication": {
+    "type": "BASIC_AUTH",
+    "username": "user",
+    "password": {
+      "type": "VAULT_REF",
+      "content": {
+        "path": "/users",
+        "key": "user"
+      }
+    }
+  },
+  "interaction": {
+    "mode": "PUSH",
+    "subscribe": {
+      "protocol": "HTTP",
+      "urlTemplate": "http://cb.com:1254/subscribe",
+      "method": "POST",
+      "headers": {},
+      "bodyTemplate": "{\"attr\": \"{{__ATTR__}}\"}"
+    },
+    "unsubscribe": {
+      "protocol": "HTTP",
+      "urlTemplate": "http://cb.com:1254/subscribe/{{__SYS_BLA__}}",
+      "method": "DELETE",
+      "headers": "{{__HEADERS__}}"
+    }
+  },
+  "parameters": [
+    {
+      "paramType": "STRING",
+      "name": "ATTR",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "MAP<STRING,STRING>",
+      "name": "HEADERS",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "STRING",
+      "name": "SYS_BLA",
+      "title": "sys bla",
+      "required": true,
+      "autoFilled": true,
+      "autoFilledType": "SYS_URN"
+    }
+  ]
+}

@@ -39,6 +39,14 @@
         {
             "name": "Peer Catalogs",
             "description": "Access remote peer catalogs"
+        },
+        {
+            "name": "Connector Templates",
+            "description": "Manage connector templates"
+        },
+        {
+            "name": "Connector Instances",
+            "description": "Manage connector instances"
         }
     ],
     "security": [
@@ -1651,6 +1659,281 @@
                     }
                 }
             }
+        },
+        "/templates": {
+            "get": {
+                "tags": [
+                    "Connector Templates"
+                ],
+                "summary": "Get all connector templates",
+                "operationId": "getAllconnectorTemplates",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of connector templates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ConnectorTemplateDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Connector Templates"
+                ],
+                "summary": "Create a new connector template",
+                "operationId": "createConnectorTemplate",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConnectorTemplateDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connector template created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectorTemplateDto"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/templates/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Connector Templates"
+                ],
+                "summary": "Get connector template by ID",
+                "operationId": "getConnectorTemplateById",
+                "responses": {
+                    "200": {
+                        "description": "Connector template found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ConnectorTemplateDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/templates/{name}/{version}": {
+            "parameters": [
+                {
+                    "name": "name",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "version",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Connector Templates"
+                ],
+                "summary": "Get connector template by name and version",
+                "operationId": "getConnectorTemplateByNameAndVersion",
+                "responses": {
+                    "200": {
+                        "description": "Connector template found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectorTemplateDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Connector Templates"
+                ],
+                "summary": "Delete connector template by name and version",
+                "operationId": "deleteConnectorTemplateByNameAndVersion",
+                "responses": {
+                    "202": {
+                        "description": "Connector template deleted (Accepted)"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/instances": {
+            "post": {
+                "tags": [
+                    "Connector Instances"
+                ],
+                "summary": "Upsert connector instance",
+                "operationId": "upsertConnectorInstance",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConnectorInstantiationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connector instance upserted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectorInstanceDto"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/instances/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/IdPath"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Connector Instances"
+                ],
+                "summary": "Get connector instance by ID",
+                "operationId": "getConnectorInstanceById",
+                "responses": {
+                    "200": {
+                        "description": "Connector instance found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectorInstanceDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Connector Instances"
+                ],
+                "summary": "Delete connector instance by ID",
+                "operationId": "deleteConnectorInstanceById",
+                "responses": {
+                    "202": {
+                        "description": "Connector instance deleted (Accepted)"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/instances/distribution/{did}": {
+            "parameters": [
+                {
+                    "name": "did",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Connector Instances"
+                ],
+                "summary": "Get connector instance by distribution ID",
+                "operationId": "getConnectorInstanceByDistributionId",
+                "responses": {
+                    "200": {
+                        "description": "Connector instance found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectorInstanceDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2683,10 +2966,6 @@
                     "type": "string"
                 }
             },
-            "ParameterDefinition": {
-                "type": "object",
-                "properties": {}
-            },
             "PolicyTemplateAllowedDefaultValues": {
                 "oneOf": [
                     {
@@ -3009,6 +3288,373 @@
                         "items": {
                             "$ref": "#/components/schemas/OdrlObligation"
                         }
+                    }
+                }
+            },
+            "ConnectorInstantiationDto": {
+                "type": "object",
+                "required": [
+                    "templateName",
+                    "templateVersion",
+                    "distributionId",
+                    "parameters"
+                ],
+                "properties": {
+                    "templateName": {
+                        "type": "string"
+                    },
+                    "templateVersion": {
+                        "type": "string"
+                    },
+                    "distributionId": {
+                        "type": "string",
+                        "format": "urn"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "metadata": {
+                        "$ref": "#/components/schemas/InstanceMetadataDto"
+                    },
+                    "dryRun": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "InstanceMetadataDto": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "ownerId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ConnectorInstanceDto": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "authenticationConfig",
+                    "interaction",
+                    "distributionId"
+                ],
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ConnectorMetadata"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "urn"
+                            },
+                            "authenticationConfig": {
+                                "$ref": "#/components/schemas/AuthenticationConfig"
+                            },
+                            "interaction": {
+                                "$ref": "#/components/schemas/InteractionConfig"
+                            },
+                            "distributionId": {
+                                "type": "string",
+                                "format": "urn"
+                            }
+                        }
+                    }
+                ]
+            },
+            "ConnectorTemplateDto": {
+                "type": "object",
+                "required": [
+                    "authentication",
+                    "interaction",
+                    "parameters"
+                ],
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ConnectorMetadata"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "authentication": {
+                                "$ref": "#/components/schemas/AuthenticationConfig"
+                            },
+                            "interaction": {
+                                "$ref": "#/components/schemas/InteractionConfig"
+                            },
+                            "parameters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ParameterDefinition"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "ConnectorMetadata": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "author": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "AuthenticationConfig": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoAuth"
+                    },
+                    {
+                        "$ref": "#/components/schemas/BasicAuthConfig"
+                    },
+                    {
+                        "$ref": "#/components/schemas/BearerToken"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ApiKey"
+                    },
+                    {
+                        "$ref": "#/components/schemas/OAuth2"
+                    }
+                ],
+                "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                        "NO_AUTH": "#/components/schemas/NoAuth",
+                        "BASIC_AUTH": "#/components/schemas/BasicAuthConfig",
+                        "BEARER_TOKEN": "#/components/schemas/BearerToken",
+                        "API_KEY": "#/components/schemas/ApiKey",
+                        "OAUTH_2": "#/components/schemas/OAuth2"
+                    }
+                }
+            },
+            "NoAuth": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "NO_AUTH"
+                        ]
+                    }
+                }
+            },
+            "BasicAuthConfig": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "BASIC_AUTH"
+                        ]
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BearerToken": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "BEARER_TOKEN"
+                        ]
+                    },
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiKey": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "API_KEY"
+                        ]
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string",
+                        "enum": [
+                            "HEADER",
+                            "QUERY"
+                        ]
+                    }
+                }
+            },
+            "OAuth2": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "OAUTH_2"
+                        ]
+                    },
+                    "grantType": {
+                        "type": "string",
+                        "enum": [
+                            "ClientCredentials",
+                            "AuthorizationCode"
+                        ]
+                    },
+                    "tokenUrl": {
+                        "type": "string"
+                    },
+                    "clientId": {
+                        "type": "string"
+                    },
+                    "clientSecret": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    }
+                }
+            },
+            "InteractionConfig": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/PullLifecycle"
+                    },
+                    {
+                        "$ref": "#/components/schemas/PushLifecycle"
+                    }
+                ],
+                "discriminator": {
+                    "propertyName": "mode",
+                    "mapping": {
+                        "PULL": "#/components/schemas/PullLifecycle",
+                        "PUSH": "#/components/schemas/PushLifecycle"
+                    }
+                }
+            },
+            "PullLifecycle": {
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "PULL"
+                        ]
+                    },
+                    "dataAccess": {
+                        "type": "object",
+                        "properties": {
+                            "protocol": {
+                                "type": "string"
+                            },
+                            "accessUrl": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "PushLifecycle": {
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "PUSH"
+                        ]
+                    },
+                    "subscribe": {
+                        "type": "object"
+                    },
+                    "unsubscribe": {
+                        "type": "object"
+                    }
+                }
+            },
+            "ParameterDefinition": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "title",
+                    "paramType",
+                    "required"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "paramType": {
+                        "type": "string",
+                        "enum": [
+                            "STRING",
+                            "INT",
+                            "BOOLEAN",
+                            "VEC<STRING>",
+                            "MAP<STRING",
+                            "STRING>"
+                        ]
+                    },
+                    "required": {
+                        "type": "boolean"
+                    },
+                    "defaultValue": {
+                        "type": "string"
+                    },
+                    "autoFilled": {
+                        "type": "boolean"
+                    },
+                    "autoFilledType": {
+                        "type": "string",
+                        "enum": [
+                            "SYS_URN",
+                            "SYS_TOKEN",
+                            "SYS_TIMESTAMP",
+                            "SYS_ISO8601"
+                        ]
                     }
                 }
             }

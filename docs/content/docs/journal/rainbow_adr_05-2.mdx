@@ -1,0 +1,123 @@
+---
+title: "ADR-005-2: Semantic Validation via Visitor Pattern"
+description: "ADR-005-2: Semantic Validation via Visitor Pattern"
+---
+
+**Date:** January 30, 2026
+**Status:** Accepted
+**Context:** Domain Integrity / Validation Engine
+**Related:** ADR-005-1
+
+## Context and Problem Statement
+
+`ConnectorTemplates` are designed to be generic. They contain placeholders like `{{TARGET_HOST}}` or `{{API_KEY}}` that must be filled during instantiation. However, allowing arbitrary string substitution is dangerous and error-prone. We need a system that ensures:
+
+1. **Type Safety:** A user cannot inject a String into a field that the driver expects to be an Integer (e.g., Port).
+2. **Completeness:** All variables used in the template (`{{VAR}}`) must be declared in the `parameters` section.
+3. **System Reservation:** Users cannot define parameters that collide with system-injected variables (e.g., `SYS_CALLBACK_URL`).
+
+## Decision
+
+We will implement a **Visitor Pattern** to traverse the `ConnectorTemplate` structure.
+
+1. **NewType Wrappers:** Fields that support templating will be wrapped in enums (e.g., `IntOrTemplate`, `VecStringOrTemplate`).
+2. **Context-Aware Validation:** The Visitor will maintain a stack of the current field context. It will check if the variable found in a specific slot (e.g., `timeout_ms`) corresponds to a Parameter Definition of a compatible type (e.g., `ParameterDataType::Int`).
+3. **Strict/Any Typing:** The Visitor will enforce strict typing for specific fields (Ports, Booleans) while allowing loose typing for generic Strings.
+
+## Detailed Design
+
+### 1. Templatable Types
+
+We replace standard types in the DTOs with these enums to enable the Visitor to "hook" into the structure.
+
+```rust
+// Wrapper for Integer fields (e.g., Ports, Timeouts)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum IntOrTemplate {
+    Value(i64),       // Static value: 8080
+    Template(String), // Dynamic: "{{TARGET_PORT}}"
+}
+
+// Wrapper for String Lists (e.g., Scopes, Brokers)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum VecStringOrTemplate {
+    Value(Vec<String>),
+    Template(String),
+}
+
+// Wrapper for Maps (e.g., Headers)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum MapStringOrTemplate {
+    Value(HashMap<String, String>),
+    Template(String),
+}
+
+```
+
+### 2. The Visitor Implementation
+
+The Validator visits every node. If it finds a template pattern (`{{...}}`), it validates the referenced parameter against the expected type for that specific node.
+
+```rust
+pub trait Visitor {
+    type Error;
+    fn enter_scope(&mut self, name: &str);
+    fn exit_scope(&mut self);
+    // Core logic: Check if 'value' (e.g. "{{PORT}}") matches 'expected' (e.g. StrictInt)
+    fn scan_template_candidate(&mut self, value: &str, expected: ExpectedType);
+}
+
+pub struct TemplateValidator<'a> {
+    param_definitions: HashMap<&'a str, ParameterDataType>,
+    pub errors: Vec<String>,
+}
+
+impl<'a> Visitor for TemplateValidator<'a> {
+    fn scan_template_candidate(&mut self, value: &str, expected: ExpectedType) {
+        let re = Regex::new(r"\{\{([\w_]+)\}\}").unwrap();
+
+        for cap in re.captures_iter(value) {
+            let param_name = &cap[1];
+
+            // Skip System Variables
+            if param_name.starts_with("SYS_") { continue; }
+
+            match self.param_definitions.get(param_name) {
+                Some(defined_type) => {
+                    // Type-State check
+                    if !self.is_compatible(*defined_type, expected) {
+                        self.errors.push(format!("Type Mismatch: Param '{}' is {:?} but field expects {:?}", param_name, defined_type, expected));
+                    }
+                },
+                None => self.errors.push(format!("Undefined Parameter: '{}'", param_name)),
+            }
+        }
+    }
+    // ... implementation of enter/exit scope
+}
+
+```
+
+### 3. Trait Implementation for Nodes
+
+Each struct in the hierarchy must implement `Visitable` to guide the visitor.
+
+```rust
+impl Visitable for ConnectorTemplateDto {
+    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+        // ... visit metadata ...
+
+        visitor.enter_scope("timeout_ms");
+        // We strictly enforce INT type for this field
+        self.timeout_ms.accept(visitor, ExpectedType::StrictInt)?;
+        visitor.exit_scope();
+
+        Ok(())
+    }
+}
+
+```
+

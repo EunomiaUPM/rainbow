@@ -1,5 +1,6 @@
+use crate::entities::common::parameter_mutator::TemplateMutator;
 use crate::entities::common::parameter_visitor::ParameterVisitor;
-use crate::entities::common::parameters::{TemplateString, TemplateVisitable};
+use crate::entities::common::parameters::{TemplateMutable, TemplateString, TemplateVisitable};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,6 +49,36 @@ impl TemplateVisitable for SecretString {
             SecretSource::EnvVar(env) => {
                 visitor.enter_scope("plain");
                 env.accept(visitor)?;
+                visitor.exit_scope();
+            }
+        }
+        visitor.exit_scope();
+        Ok(())
+    }
+}
+
+impl TemplateMutable for SecretString {
+    fn accept_mutator<V: TemplateMutator>(&mut self, visitor: &mut V) -> Result<(), V::Error> {
+        match &mut self.source {
+            SecretSource::Plain(secret) => {
+                visitor.enter_scope("plain");
+                secret.accept_mutator(visitor)?;
+                visitor.exit_scope();
+            }
+            SecretSource::Base64(secret) => {
+                visitor.enter_scope("plain");
+                secret.accept_mutator(visitor)?;
+                visitor.exit_scope();
+            }
+            SecretSource::VaultRef { path, key } => {
+                visitor.enter_scope("plain");
+                path.accept_mutator(visitor)?;
+                key.accept_mutator(visitor)?;
+                visitor.exit_scope();
+            }
+            SecretSource::EnvVar(env) => {
+                visitor.enter_scope("plain");
+                env.accept_mutator(visitor)?;
                 visitor.exit_scope();
             }
         }

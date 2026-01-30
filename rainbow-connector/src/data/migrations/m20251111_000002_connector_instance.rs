@@ -51,29 +51,10 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
-            .await?;
-
-        manager
-            .create_index(
-                Index::create()
-                    .name("idx_unique_distribution_connector")
-                    .table(ConnectorInstances::Table)
-                    .col(ConnectorInstances::DistributionId)
-                    .unique()
-                    .to_owned(),
-            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .drop_index(
-                Index::drop()
-                    .name("idx_unique_distribution_connector")
-                    .table(ConnectorInstances::Table)
-                    .to_owned(),
-            )
-            .await?;
         manager.drop_table(Table::drop().table(ConnectorInstances::Table).to_owned()).await
     }
 }

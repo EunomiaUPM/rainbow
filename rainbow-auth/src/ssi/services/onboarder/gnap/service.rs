@@ -87,7 +87,6 @@ impl OnboarderTrait for GnapOnboarderService {
             grant_endpoint: payload.url.clone(),
         };
 
-
         let int_model = req_interaction::NewModel {
             id: id.clone(),
             start: vec![InteractStart::Oidc4VP.to_string()],

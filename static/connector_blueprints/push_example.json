@@ -1,0 +1,57 @@
+{
+  "authentication": {
+    "type": "BASIC_AUTH",
+    "username": "{{__BLA__}}",
+    "password": {
+      "type": "VAULT_REF",
+      "content": {
+        "path": "asdasd",
+        "key": "asdasd"
+      }
+    }
+  },
+  "interaction": {
+    "mode": "PUSH",
+    "subscribe": {
+      "protocol": "HTTP",
+      "urlTemplate": "{{__TEMPL__}}",
+      "method": "POST",
+      "headers": {},
+      "bodyTemplate": ""
+    },
+    "unsubscribe": {
+      "protocol": "HTTP",
+      "urlTemplate": "asdas",
+      "method": "POST",
+      "headers": "{{__BLI__}}"
+    }
+  },
+  "parameters": [
+    {
+      "paramType": "STRING",
+      "name": "BLA",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "STRING",
+      "name": "TEMPL",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "MAP<STRING,STRING>",
+      "name": "BLI",
+      "title": "bla",
+      "required": true
+    },
+    {
+      "paramType": "STRING",
+      "name": "SYS_BLA",
+      "title": "sys bla",
+      "required": true,
+      "autoFilled": true,
+      "autoFilledType": "SYS_URN"
+    }
+  ]
+}
