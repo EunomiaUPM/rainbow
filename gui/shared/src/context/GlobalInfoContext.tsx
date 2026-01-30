@@ -24,7 +24,7 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   // PLEASE CHANGE THIS FOR PRODUCTION OR DEV
   const isProduction = true;
   const localConfig = {
-    config_role: "Provider",
+    config_role: "Agent",
     gateway_host: "http://127.0.0.1",
     gateway_port: "1207"
   };
@@ -33,7 +33,7 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
       try {
         if (isProduction) {
           setApiGatewayBase("/");
-          const res = await fetch("/fe-config");
+          const res = await fetch("/admin/api/fe-config");
           if (res.ok) {
             const data = await res.json();
             setConfigRole(data.config_role);
@@ -70,8 +70,8 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
       catalog_type: catalogType,
       dsrole: configRole,
       api_gateway_base: prefix,
-      api_gateway: `${prefix}/gateway/api`,
-      api_gateway_callback_address: `${prefix}/incoming-notification`,
+      api_gateway: `${prefix}/admin/api`,
+      api_gateway_callback_address: `${prefix}/admin/api/incoming-notification`,
     };
   }, [catalogType, configRole, apiGatewayBase]);
 
