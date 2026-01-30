@@ -1,7 +1,10 @@
 use crate::data::entities::connector_instances;
 use crate::data::factory_trait::ConnectorRepoTrait;
 use crate::entities::auth_config::AuthenticationConfig;
+use crate::entities::common::default_parameter::ParameterDefaultInjector;
 use crate::entities::common::parameters::TemplateMutable;
+use crate::entities::common::system_context::SystemContext;
+use crate::entities::common::system_parameter::SystemParameterInjector;
 use crate::entities::connector_instance::parameter_validator::InstanceParameterValidator;
 use crate::entities::connector_instance::resolver::TemplateResolver;
 use crate::entities::connector_instance::{
@@ -10,7 +13,7 @@ use crate::entities::connector_instance::{
 use crate::entities::connector_template::{ConnectorMetadata, ConnectorTemplateDto};
 use crate::entities::interaction::InteractionConfig;
 use crate::facades::distribution_resolver_facade::DistributionFacadeTrait;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
@@ -181,6 +184,22 @@ impl ConnectorInstanceTrait for ConnectorInstanceEntitiesService {
             error!("{}", err.log());
             bail!(err);
         }
+
+        // inject sys parameters to be interpolated
+        let context = SystemContext::new();
+        SystemParameterInjector::inject(
+            &template_spec.parameters,
+            &mut instance_dto.parameters,
+            &context,
+        );
+
+        // apply defaults
+        ParameterDefaultInjector::inject(&template_spec.parameters, &mut instance_dto.parameters)
+            .map_err(|e| {
+            let err = CommonErrors::parse_new(&format!("{}", validation_errors.join(", ")));
+            error!("{}", err.log());
+            anyhow!(err)
+        })?;
 
         // interpolate values
         let mut resolver = TemplateResolver::new(&instance_dto.parameters);
