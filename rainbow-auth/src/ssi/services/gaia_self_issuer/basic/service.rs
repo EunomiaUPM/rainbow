@@ -219,7 +219,7 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         let mut header = Header::new(Algorithm::RS256);
         header.kid = Some(did.to_string());
 
-        let key = expect_from_env("VAULT_F_PRIV_KEY");
+        let key = expect_from_env("VAULT_APP_PRIV_KEY");
         let key: StringHelper = self.vault.read(None, &key).await?;
 
         let key = match EncodingKey::from_rsa_pem(key.data().as_bytes()) {

@@ -120,7 +120,7 @@ impl OnboarderTrait for GnapOnboarderService {
     ) -> anyhow::Result<()> {
         info!("Sending onboarding request");
 
-        let cert = expect_from_env("VAULT_F_CERT");
+        let cert = expect_from_env("VAULT_APP_CERT");
         let cert: StringHelper = self.vault.read(None, &cert).await?;
         let client = self.config.get_pretty_client_config(&cert.data())?;
 
