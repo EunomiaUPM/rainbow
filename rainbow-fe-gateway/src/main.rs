@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_fe_gateway::cmd::cmd::GatewayCommands;
+use rainbow_fe_gateway::GatewayCommands;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -29,8 +29,8 @@ const INFO: &str = r"
  )   / /(__)\  _)(_  )  (  ) _ < )(_)(  )    (
 (_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
 
-Starting Rainbow Gateway Server 🌈🌈
-UPM Dataspace multistack agent
+Starting Rainbow Gateway Server and Frontend  🌈🌈
+UPM Dataspace agent
 Show some love on https://github.com/EunomiaUPM/rainbow
 ----------
 
@@ -41,7 +41,10 @@ async fn main() -> anyhow::Result<()> {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .parse("debug,sqlx::query=off")?;
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    tracing_subscriber::fmt()
+        .event_format(tracing_subscriber::fmt::format().with_line_number(true))
+        .with_env_filter(filter)
+        .init();
     info!("{}", INFO);
     GatewayCommands::init_command_line().await?;
     Ok(())

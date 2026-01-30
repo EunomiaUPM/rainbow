@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
+// @ts-ignore
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 
@@ -21,34 +22,34 @@ export function AppSidebarProvider() {
   const items = [
     {
       title: "Catalogs",
-      url: "/catalog",
+      url: "/admin/catalog",
       icon: Archive,
     },
     {
       title: "Datahub Catalogs",
-      url: "/datahub-catalog",
+      url: "/admin/datahub-catalog",
       icon: Archive,
     },
 
     {
       title: "Contract Negotiation",
-      url: "/contract-negotiation",
+      url: "/admin/contract-negotiation",
       icon: Feather,
     },
     {
       title: "Agreements",
-      url: "/agreements",
+      url: "/admin/agreements",
       icon: Handshake,
     },
     {
       title: "Transferences",
-      url: "/transfer-process",
+      url: "/admin/transfer-process",
       icon: ArrowLeftRight,
     },
 
     {
       title: "Participants",
-      url: "/participants",
+      url: "/admin/participants",
       icon: Users,
     },
   ];

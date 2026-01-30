@@ -25,8 +25,7 @@ use futures_util::TryStreamExt;
 use reqwest::Client;
 use tracing::{debug, error, info, warn};
 
-pub mod consumer_gateway;
-pub mod provider_gateway;
+pub mod gateway;
 
 pub async fn execute_proxy(
     client: Client,

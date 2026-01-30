@@ -24,6 +24,8 @@ use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
+
+use rainbow_fe_gateway::create_gateway_http_router;
 use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
@@ -43,6 +45,7 @@ pub async fn create_core_provider_router(
     let catalog_agent_router = catalog_router(&config.catalog(), vault.clone())
         .await
         .expect("Failed to create catalog router");
+    let gateway_router = create_gateway_http_router(&config.gateway()).await;
 
     Router::new()
         //.merge(cn_router)
@@ -50,6 +53,7 @@ pub async fn create_core_provider_router(
         .merge(catalog_agent_router)
         .merge(auth_router)
         .merge(transfer_agent_router)
+        .merge(gateway_router)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(

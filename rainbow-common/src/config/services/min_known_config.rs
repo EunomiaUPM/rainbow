@@ -17,7 +17,7 @@
  *
  */
 
-use crate::config::services::{CatalogConfig, ContractsConfig, SsiAuthConfig, TransferConfig};
+use crate::config::services::{CatalogConfig, ContractsConfig, GatewayConfig, SsiAuthConfig, TransferConfig};
 use crate::config::traits::CommonConfigTrait;
 use crate::config::ApplicationConfig;
 use serde::{Deserialize, Serialize};
@@ -77,6 +77,18 @@ impl From<TransferConfig> for MinKnownConfig {
 
 impl From<&TransferConfig> for MinKnownConfig {
     fn from(value: &TransferConfig) -> Self {
+        value.clone().into()
+    }
+}
+
+impl From<GatewayConfig> for MinKnownConfig {
+    fn from(value: GatewayConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), api_version: value.common().get_api_version() }
+    }
+}
+
+impl From<&GatewayConfig> for MinKnownConfig {
+    fn from(value: &GatewayConfig) -> Self {
         value.clone().into()
     }
 }
