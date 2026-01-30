@@ -1,16 +1,16 @@
-import { ButtonSizes } from "./ui/button";
+import { ButtonSizes } from "../ui/button";
 import React, { useContext } from "react";
 import { cva } from "class-variance-authority";
-import { ContractNegotiationOfferDialog } from "./ContractNegotiationOfferDialog";
-import { ContractNegotiationAgreementDialog } from "./ContractNegotiationAgreementDialog";
-import { ContractNegotiationTerminationDialog } from "./ContractNegotiationTerminationDialog";
-import { ContractNegotiationFinalizationDialog } from "./ContractNegotiationFinalizationDialog";
+import { ContractNegotiationOfferDialog } from "../dialogs/ContractNegotiationOfferDialog";
+import { ContractNegotiationAgreementDialog } from "../dialogs/ContractNegotiationAgreementDialog";
+import { ContractNegotiationTerminationDialog } from "../dialogs/ContractNegotiationTerminationDialog";
+import { ContractNegotiationFinalizationDialog } from "../dialogs/ContractNegotiationFinalizationDialog";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { ContractNegotiationRequestDialog } from "./ContractNegotiationRequestDialog";
-import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAcceptanceDialog";
-import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
-import NoFurtherActions from "./ui/noFurtherActions";
-import { ProcessActionDialog } from "./common/ProcessActionDialog";
+import { ContractNegotiationRequestDialog } from "../dialogs/ContractNegotiationRequestDialog";
+import { ContractNegotiationAcceptanceDialog } from "../dialogs/ContractNegotiationAcceptanceDialog";
+import { ContractNegotiationVerificationDialog } from "../dialogs/ContractNegotiationVerificationDialog";
+import NoFurtherActions from "../ui/noFurtherActions";
+import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
 export const ContractNegotiationActions = ({
   process,

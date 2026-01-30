@@ -5,7 +5,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "../ui/dialog";
 import {Button} from "shared/src/components/ui/button";
 import React, {useContext, useRef} from "react";
 import {Form} from "shared/src/components/ui/form";

@@ -6,12 +6,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "../ui/dialog";
 import { formatUrn } from "shared/src/lib/utils";
 import {Button} from "shared/src/components/ui/button";
 import {Badge} from "shared/src/components/ui/badge";
 import React, {useContext, useRef} from "react";
 import {Form} from "shared/src/components/ui/form";
+import { InfoList, InfoItemProps } from "shared/src/components/ui/info-list";
 import {useForm} from "react-hook-form";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 import {usePostNewBusinessRequest} from "shared/src/data/business-mutations";
@@ -77,6 +78,12 @@ export const BusinessRequestAccessDialog = ({
         </DialogDescription>
       </DialogHeader>
       <DialogBody>
+        <InfoList items={[
+            { label: "Dataset", value: datasetName },
+            { label: "Catalog ID", value: { type: "urn", value: catalogId } },
+            { label: "Policy ID", value: { type: "urn", value: policy["@id"] } }
+        ]} />
+        <div className="h-4" />
         <PolicyWrapperShow policy={policy} datasetId={undefined} catalogId={undefined}
                            participant={undefined} datasetName={""}/>
       </DialogBody>

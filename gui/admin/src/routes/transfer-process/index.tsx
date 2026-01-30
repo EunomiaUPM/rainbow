@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import { useGetTransferProcesses } from "shared/src/data/transfer-queries.ts";
 import {
   Table,
@@ -12,7 +13,7 @@ import dayjs from "dayjs";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
+import { TransferProcessActions } from "shared/src/components/actions/TransferProcessActions.tsx";
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 import { mergeStateAndAttribute } from "shared/src/lib/utils.ts";
@@ -48,9 +49,9 @@ function RouteComponent() {
         </TableHeader>
         <TableBody>
           {transferProcessesSorted.map((transferProcess) => (
-            <TableRow key={transferProcess.id.slice(0, 20)}>
+            <TableRow key={formatUrn(transferProcess.id)}>
               <TableCell>
-                <Badge variant={"info"}>{transferProcess.id.slice(0, 40) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant={"status"} state={transferProcess.state as BadgeState}>

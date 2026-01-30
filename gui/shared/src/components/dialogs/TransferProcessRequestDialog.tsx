@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "../ui/dialog";
 import { formatUrn } from "shared/src/lib/utils";
 import {Badge} from "shared/src/components/ui/badge";
 import {

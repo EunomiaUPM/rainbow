@@ -1,4 +1,5 @@
 import {createFileRoute} from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import {useGetBusinessRequests} from "shared/src/data/business-queries.ts";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {
@@ -12,7 +13,7 @@ import {
 import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
 import dayjs from "dayjs";
 import {useMemo} from "react";
-import {BusinessActions} from "../../../../shared/src/components/BusinessActions.tsx";
+import {BusinessActions} from "shared/src/components/actions/BusinessActions.tsx";
 import {renameCNTagsForBusiness} from "@/utils";
 
 export const Route = createFileRoute("/business-requests/")({
@@ -47,16 +48,16 @@ function RouteComponent() {
         </TableHeader>
         <TableBody>
           {cnProcessesSorted.map((cnProcess) => (
-            <TableRow key={cnProcess.provider_id?.slice(0, 20)}>
+            <TableRow key={formatUrn(cnProcess.provider_id)}>
               <TableCell>
-                <Badge variant={"info"}>{cnProcess.provider_id?.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(cnProcess.provider_id)}</Badge>
               </TableCell>
               <TableCell>
-                <Badge variant={"info"}>{cnProcess.consumer_id?.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(cnProcess.consumer_id)}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant={"info"}>
-                  {cnProcess.associated_consumer?.slice(9, 20) + "..."}
+                  {formatUrn(cnProcess.associated_consumer)}
                 </Badge>
               </TableCell>
               <TableCell>

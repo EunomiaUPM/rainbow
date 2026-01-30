@@ -1,4 +1,5 @@
 import React from "react";
+import { formatUrn } from "shared/src/lib/utils";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
@@ -6,9 +7,9 @@ import PolicyComponent from "shared/src/components/PolicyComponent";
 import { Trash } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouterState } from "@tanstack/react-router";
-import { BusinessRemovePolicyDialog } from "shared/src/components/BusinessRemovePolicyDialog";
+import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog";
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
-import { BusinessRequestAccessDialog } from "./BusinessRequestAccessDialog";
+import { BusinessRequestAccessDialog } from "./dialogs/BusinessRequestAccessDialog";
 
 export const PolicyWrapperShow = ({
   policy,
@@ -32,7 +33,7 @@ export const PolicyWrapperShow = ({
           <Heading level="h5" className="flex gap-3">
             <div>Policy with ID</div>
             <Badge variant="info" className="h-6">
-              {policy.id.slice(9, 24) + "[...]"}
+              {formatUrn(policy.id)}
             </Badge>
           </Heading>
           {!routerState.location.pathname.includes("datahub-catalog") ? (

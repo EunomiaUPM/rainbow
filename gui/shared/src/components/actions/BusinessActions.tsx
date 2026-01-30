@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
-import { BusinessRequestTerminationDialog } from "shared/src/components/BusinessRequestTerminationDialog";
-import { BusinessRequestAcceptanceDialog } from "shared/src/components/BusinessRequestAcceptanceDialog";
-import NoFurtherActions from "shared/src/components/ui/noFurtherActions";
-import { ProcessActionDialog } from "./common/ProcessActionDialog";
+import { BusinessRequestTerminationDialog } from "../dialogs/BusinessRequestTerminationDialog";
+import { BusinessRequestAcceptanceDialog } from "../dialogs/BusinessRequestAcceptanceDialog";
+import NoFurtherActions from "../ui/noFurtherActions";
+import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
-export const BusinessActions = ({ process }: { process: CNProcess }) => {
+export const BusinessActions = ({ process }: { process: any }) => {
   const { participant } = useContext<AuthContextType | null>(AuthContext)!;
   const role = participant?.participant_type; // "Provider" or "Consumer"
 
