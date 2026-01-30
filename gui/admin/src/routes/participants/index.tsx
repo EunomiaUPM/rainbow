@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import { useGetParticipants } from "shared/src/data/participant-queries.ts";
 import {
   Table,
@@ -126,14 +127,14 @@ function RouteComponent() {
             </TableHeader>
             <TableBody>
               {participants.map((participant) => (
-                <TableRow key={participant.participant_id.slice(0, 20)}>
+                <TableRow key={formatUrn(participant.participant_id)}>
                   <TableCell>
                     <Badge variant={"info"}>
-                      {participant.participant_id.slice(9, 20) + "..."}
+                      {formatUrn(participant.participant_id)}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={"info"}>{participant.token?.slice(0, 20) + "..."}</Badge>
+                    <Badge variant={"info"}>{formatUrn(participant.token)}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"role"} role={participant.participant_type}>

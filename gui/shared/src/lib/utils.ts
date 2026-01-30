@@ -37,3 +37,34 @@ export const mergeStateAndAttribute = (state: string, attribute: string): string
   }
   return textOut;
 };
+
+export const formatUrn = (urn: string | undefined, truncate: boolean = true): string => {
+  if (!urn || typeof urn !== 'string') return "";
+
+  if (!truncate) return urn;
+
+  if (urn.startsWith("urn:")) {
+    const parts = urn.split(":");
+    if (parts.length >= 3) {
+      const nid = parts[1];
+      // Join the rest in case NSS contains colons, though for IDs it's usually just the last part.
+      // But splitting by ':' and taking parts[2] onwards is safer.
+      // However, usually urn:nid:nss. 
+      // User asked for "uuid recortado a 8 char". 
+      // If the NSS is "a:b:c", slicing the whole string "a:b:c" to 8 chars seems correct based on "lo que sea".
+      const nss = parts.slice(2).join(":");
+      
+      const shortNid = nid.length > 7 ? nid.slice(0, 7) : nid;
+      const shortNss = nss.length > 8 ? nss.slice(0, 8) : nss;
+      
+      return `urn:${shortNid}:${shortNss}`;
+    }
+  }
+
+  // Fallback for non-URN strings (preserve old behavior or just standard truncate)
+  if (urn.length > 20) {
+    return urn.slice(0, 13) + "[...]";
+  }
+
+  return urn;
+};

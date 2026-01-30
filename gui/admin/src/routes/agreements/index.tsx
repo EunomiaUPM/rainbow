@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import { useGetAgreements } from "shared/src/data/agreement-queries";
 import {
   Table,
@@ -45,10 +46,10 @@ function RouteComponent() {
           </TableHeader>
           <TableBody>
             {agreements.map((agreement) => (
-              <TableRow key={agreement.agreement_id.slice(0, 20)}>
+              <TableRow key={formatUrn(agreement.agreement_id)}>
                 {/* Agreement Id */}
                 <TableCell>
-                  <Badge variant={"info"}>{agreement.agreement_id.slice(9, 20) + "..."}</Badge>
+                  <Badge variant={"info"}>{formatUrn(agreement.agreement_id)}</Badge>
                 </TableCell>
                 {/* Related Message */}
                 {/* <TableCell>
@@ -60,7 +61,7 @@ function RouteComponent() {
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <Badge variant={"info"}>
-                      {agreement.consumer_participant_id?.slice(9, 20) + "..."}
+                      {formatUrn(agreement.consumer_participant_id)}
                     </Badge>
                   </div>
                 </TableCell>

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import { ArrowRight } from "lucide-react";
 import {
@@ -24,7 +25,7 @@ const RouteComponent = () => {
       <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id
         <Badge variant="info" size="lg">
-          {mainCatalog.id.slice(0, 20) + "[...]"}{" "}
+          {formatUrn(mainCatalog.id)}{" "}
         </Badge>
       </Heading>
       <div>
@@ -39,7 +40,7 @@ const RouteComponent = () => {
               <ListItemKey>Catalog participant id</ListItemKey>
               <Badge variant="info">
                 {" "}
-                {mainCatalog.dspaceParticipantId.slice(0, 20) + "[...]"}{" "}
+                {formatUrn(mainCatalog.dspaceParticipantId)}{" "}
               </Badge>
             </ListItem>
             <ListItem>
@@ -83,12 +84,12 @@ const RouteComponent = () => {
                 </TableCell>
                 <TableCell>
                   {" "}
-                  <Badge variant="info">{catalogItem.id.slice(0, 20) + "[...]"} </Badge>
+                  <Badge variant="info">{formatUrn(catalogItem.id)} </Badge>
                 </TableCell>
                 <TableCell>
                   {" "}
                   <Badge variant="info">
-                    {catalogItem.dspaceParticipantId.slice(0, 20) + "[...]"}
+                    {formatUrn(catalogItem.dspaceParticipantId)}
                   </Badge>
                 </TableCell>
                 <TableCell>

@@ -1,34 +1,26 @@
-import {Button, ButtonSizes} from "./ui/button";
-import React, {useContext} from "react";
-import {cva} from "class-variance-authority";
-import {Dialog, DialogTrigger} from "./ui/dialog";
-import {ContractNegotiationOfferDialog} from "./ContractNegotiationOfferDialog";
-import {ContractNegotiationAgreementDialog} from "./ContractNegotiationAgreementDialog";
-import {ContractNegotiationTerminationDialog} from "./ContractNegotiationTerminationDialog";
-import {ContractNegotiationFinalizationDialog} from "./ContractNegotiationFinalizationDialog";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
-import {ContractNegotiationRequestDialog} from "./ContractNegotiationRequestDialog";
-import {ContractNegotiationAcceptanceDialog} from "./ContractNegotiationAcceptanceDialog";
-import {ContractNegotiationVerificationDialog} from "./ContractNegotiationVerificationDialog";
+import { ButtonSizes } from "./ui/button";
+import React, { useContext } from "react";
+import { cva } from "class-variance-authority";
+import { ContractNegotiationOfferDialog } from "./ContractNegotiationOfferDialog";
+import { ContractNegotiationAgreementDialog } from "./ContractNegotiationAgreementDialog";
+import { ContractNegotiationTerminationDialog } from "./ContractNegotiationTerminationDialog";
+import { ContractNegotiationFinalizationDialog } from "./ContractNegotiationFinalizationDialog";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+import { ContractNegotiationRequestDialog } from "./ContractNegotiationRequestDialog";
+import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAcceptanceDialog";
+import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
 import NoFurtherActions from "./ui/noFurtherActions";
+import { ProcessActionDialog } from "./common/ProcessActionDialog";
 
 export const ContractNegotiationActions = ({
-                                             process,
-                                             tiny = false,
-                                           }: {
+  process,
+  tiny = false,
+}: {
   process: CNProcess;
   tiny: boolean;
 }) => {
-  const {dsrole} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
-  const h2ClassName = cva("font-semibold mb-4", {
-    variants: {
-      tiny: {
-        true: "hidden",
-        false: null,
-      },
-    },
-  });
   const containerClassName = cva("", {
     variants: {
       tiny: {
@@ -39,173 +31,85 @@ export const ContractNegotiationActions = ({
     },
   });
 
+  const getActions = () => {
+    if (dsrole === "provider") {
+      switch (process.state) {
+        case "REQUESTED":
+          return [
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+            { label: "Counter offer", variant: "outline", Component: ContractNegotiationOfferDialog },
+            { label: "Agree", variant: "default", Component: ContractNegotiationAgreementDialog },
+          ];
+        case "OFFERED":
+          return [
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+          ];
+        case "ACCEPTED":
+          return [
+            { label: "Agree", variant: "default", Component: ContractNegotiationAgreementDialog },
+          ];
+        case "AGREED":
+          return [
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+          ];
+        case "VERIFIED":
+          return [
+            { label: "Finalize", variant: "default", Component: ContractNegotiationFinalizationDialog },
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+          ];
+        default:
+          return [];
+      }
+    } else if (dsrole === "consumer") {
+      switch (process.state) {
+        case "REQUESTED":
+          return [
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+          ];
+        case "OFFERED":
+          return [
+            { label: "Accept", variant: "default", Component: ContractNegotiationAcceptanceDialog },
+            { label: "Counter request", variant: "outline", Component: ContractNegotiationRequestDialog },
+            { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
+          ];
+        case "AGREED":
+           return [
+             { label: "Verify", variant: "default", Component: ContractNegotiationVerificationDialog },
+           ];
+        default:
+          return [];
+      }
+    }
+    return [];
+  };
+
+  const actions = getActions();
+
+  const showNoFurtherActions = () => {
+    if (process.state === "FINALIZED" || process.state === "TERMINATED") return true;
+    if (dsrole === "consumer") {
+      if (process.state === "ACCEPTED") return true;
+      if (process.state === "VERIFIED") return true;
+    }
+    return false;
+  };
+
+
   return (
-    <>
-      <div className={containerClassName({tiny})}>
-        {/* <h2 className={h2ClassName({ tiny })}></h2> */}
-        {process.state === "REQUESTED" && (
-          <div className="space-x-2 min-w-[260px]">
-            {dsrole === "provider" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Terminate
-                    </Button>
-                  </DialogTrigger>
-                  <ContractNegotiationTerminationDialog process={process}/>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Counter offer
-                    </Button>
-                  </DialogTrigger>
-                  <ContractNegotiationOfferDialog process={process}/>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size={(tiny ? "sm" : "") as ButtonSizes}>Agree</Button>
-                  </DialogTrigger>
-                  <ContractNegotiationAgreementDialog process={process}/>
-                </Dialog>
-              </>
-            )}
-            {dsrole === "consumer" && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                    Terminate
-                  </Button>
-                </DialogTrigger>
-                <ContractNegotiationTerminationDialog process={process}/>
-              </Dialog>
-            )}
-          </div>
-        )}
-        {process.state === "OFFERED" && (
-          <div className="flex justify-end flex-row-reverse gap-2">
-            {dsrole === "provider" && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                    Terminate
-                  </Button>
-                </DialogTrigger>
-                <ContractNegotiationTerminationDialog process={process}/>
-              </Dialog>
-            )}
-            {dsrole === "consumer" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size={(tiny ? "sm" : "") as ButtonSizes}>Accept</Button>
-                  </DialogTrigger>
-                  <ContractNegotiationAcceptanceDialog process={process}/>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Counter request
-                    </Button>
-                  </DialogTrigger>
-                  <ContractNegotiationRequestDialog process={process}/>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Terminate
-                    </Button>
-                  </DialogTrigger>
-                  <ContractNegotiationTerminationDialog process={process}/>
-                </Dialog>
-              </>
-            )}
-          </div>
-        )}
-
-        {process.state === "ACCEPTED" && (
-          <div className="flex justify-end flex-row-reverse gap-2">
-            {dsrole === "provider" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size={(tiny ? "sm" : "") as ButtonSizes}>Agree</Button>
-                  </DialogTrigger>
-                  <ContractNegotiationAgreementDialog process={process}/>
-                </Dialog>
-                {/*<Dialog>*/}
-                {/*    <DialogTrigger asChild>*/}
-                {/*        <Button variant="destructive">Terminate</Button>*/}
-                {/*    </DialogTrigger>*/}
-                {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
-                {/*</Dialog>*/}
-              </>
-            )}
-            {dsrole === "consumer" && (
-              <>
-                <NoFurtherActions/>
-              </>
-            )}
-          </div>
-        )}
-        {process.state === "AGREED" && (
-          <div className="flex justify-start gap-2">
-            {dsrole === "provider" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Terminate
-                    </Button>
-                  </DialogTrigger>
-                  <ContractNegotiationTerminationDialog process={process}/>
-                </Dialog>
-              </>
-            )}
-            {dsrole === "consumer" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size={(tiny ? "sm" : "") as ButtonSizes}>Verify</Button>
-                  </DialogTrigger>
-                  <ContractNegotiationVerificationDialog process={process}/>
-                </Dialog>
-              </>
-            )}
-          </div>
-        )}
-        {process.state === "VERIFIED" && (
-          <div className="flex justify-end flex-row-reverse gap-2">
-            {dsrole === "provider" && (
-              <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size={(tiny ? "sm" : "") as ButtonSizes}>Finalize</Button>
-                  </DialogTrigger>
-                  <ContractNegotiationFinalizationDialog process={process}/>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size={(tiny ? "sm" : "") as ButtonSizes}>
-                      Terminate
-                    </Button>
-                  </DialogTrigger>
-
-                  <ContractNegotiationTerminationDialog process={process}/>
-                </Dialog>
-              </>
-            )}
-            {dsrole === "consumer" && (
-              <>
-                <NoFurtherActions/>
-              </>
-            )}
-          </div>
-        )}
-        {process.state === "FINALIZED" && <NoFurtherActions/>}
-        {process.state === "TERMINATED" && <NoFurtherActions/>}
+    <div className={containerClassName({ tiny })}>
+      <div className={process.state === "OFFERED" || process.state === "ACCEPTED" || process.state === "VERIFIED" ? "flex justify-end flex-row-reverse gap-2" : (process.state === "REQUESTED" ? "space-x-2 min-w-[260px]" : "flex justify-start gap-2")}>
+        {actions.map((action, idx) => (
+          <ProcessActionDialog
+            key={idx}
+            label={action.label}
+            variant={action.variant as any}
+            tiny={tiny}
+            DialogComponent={action.Component}
+            process={process}
+          />
+        ))}
+        {showNoFurtherActions() && <NoFurtherActions />}
       </div>
-    </>
+    </div>
   );
 };

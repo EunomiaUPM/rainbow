@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "shared/src/components/ui/dialog";
+import { formatUrn } from "shared/src/lib/utils";
 import {Button} from "shared/src/components/ui/button";
 import React, {useContext} from "react";
 import {Form} from "shared/src/components/ui/form";
@@ -53,24 +54,24 @@ export const BusinessRequestAcceptanceDialog = ({process}: { process: CNProcess 
       <List className="min-w-full px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
-          <Badge variant={"info"}>{process.provider_id?.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{formatUrn(process.provider_id)}</Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
-          <Badge variant={"info"}>{process.consumer_id?.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{formatUrn(process.consumer_id)}</Badge>
         </ListItem>
         {process.associated_consumer && (
           // Provider GUI
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
-            <Badge variant={"info"}>{process.associated_consumer?.slice(9, 29) + "[...]"}</Badge>
+            <Badge variant={"info"}>{formatUrn(process.associated_consumer)}</Badge>
           </ListItem>
         )}
         {process.associated_provider && (
           // Consumer GUI
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>Associated Provider:</ListItemKey>
-            <Badge variant={"info"}>{process.associated_provider?.slice(9, -1)}</Badge>
+            <Badge variant={"info"}>{formatUrn(process.associated_provider)}</Badge>
           </ListItem>
         )}
         <ListItem>

@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 
@@ -25,7 +26,7 @@ function RouteComponent() {
           <Heading level="h3" className="flex gap-2 items-center">
             Catalog
             <Badge variant="info" size="lg">
-              {catalogId.slice(9, 29) + "[...]"}
+              {formatUrn(catalogId)}
             </Badge>
           </Heading>
         )}

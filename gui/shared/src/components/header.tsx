@@ -1,93 +1,104 @@
-import * as React from "react";
-import {useContext} from "react";
-import {Link, useRouterState} from "@tanstack/react-router";
-
+import React, { useContext, useMemo } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "shared/src/components/ui/breadcrumb";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
-import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
-import {Button} from "shared/src/components/ui/button";
-import {LogOut} from "lucide-react";
+import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
+import { Button } from "shared/src/components/ui/button";
+import { LogOut } from "lucide-react";
+import { formatUrn } from "shared/src/lib/utils";
 
-const Header = () => {
+export const Header = () => {
   const routerState = useRouterState();
-  const {isAuthenticated, unsetAuthentication} = useContext<AuthContextType | null>(AuthContext)!;
+  const { isAuthenticated, unsetAuthentication } = useContext<AuthContextType | null>(AuthContext)!;
 
-  let paths = routerState.location.pathname.split("/");
-  let formatPath = (path: string) => {
-    // si el path es un single, y va por id, quitarle las primeras litras
-    if (path.includes("urn")) {
-      return path.slice(13, 24) + "[...]";
-    } else {
-      return path.split("-").join(" ");
+  const breadcrumbs = useMemo(() => {
+    const rawPaths = routerState.location.pathname.split("/").filter((p) => p !== "");
+    
+    // Logic to determine if a path segment should be visible
+    const isVisible = (segment: string, allSegments: string[]) => {
+      if (segment === "dataset") return false;
+      if (segment === "data-service") return false;
+      // Hide 'catalog' if 'provider-catalog' is present in the path (specific legacy logic)
+      if (segment === "catalog" && allSegments.includes("provider-catalog")) return false;
+      return true;
+    };
+
+    const formatLabel = (segment: string, prevSegment: string | undefined) => {
+      if (segment.includes("urn")) {
+         return formatUrn(segment);
+      }
+      return segment.split("-").join(" ");
+    };
+
+    const items = [];
+    let currentPath = "";
+
+    for (let i = 0; i < rawPaths.length; i++) {
+      const segment = rawPaths[i];
+      const decodedSegment = decodeURIComponent(segment);
+      currentPath += `/${segment}`;
+
+      if (isVisible(decodedSegment, rawPaths)) {
+        items.push({
+          key: currentPath, // unique key based on full path
+          href: currentPath,
+          label: formatLabel(decodedSegment, rawPaths[i - 1]),
+          originalSegment: segment,
+        });
+      }
     }
-  };
-  paths.forEach((path, index) => {
-    // console.log(`Path ${index}:`, path);
-  });
-  paths.splice(0, 1); // Eliminar el primer elemento vacío
-  // console.log(formatPath(paths[0]), " formatted path");
+    return items;
+  }, [routerState.location.pathname]);
+
   return (
-    <div
-      className=" bg-background w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
+    <div className="bg-background w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
       <Breadcrumb>
         <BreadcrumbList>
-          {paths.map((path, index) => (
-            <span key={path} className="contents">
-              {/* Este condicional es importante porque sino sale un breadcrumb aislado
-            que no lleva a ninguna parte de dataset o dataservice. No pinta este breadcrumb */}
-              {/* Sólo en consumer aplica el mismo principio para catalog (Provider.-catalog solo existe
-            en consumer) Si paths contiene provider-catalog, entonces "catalog" no pinta un breadcrumb */}
-              {path === "dataset" ||
-              path === "data-service" ||
-              (paths.includes("provider-catalog") && path == "catalog") ? (
-                ""
-              ) : (
-                <>
-                  <BreadcrumbItem className="max-w-40 truncate">
-                    {/*<BreadcrumbLink*/}
-                    {/*  // coger el link del path, sumando los paths*/}
-                    {/*  href={`/${paths.slice(0, index + 1).join("/")}`}*/}
-                    {/*>*/}
-                    {/*  {path.includes("urn") &&*/}
-                    {/*    formatPath(paths.slice(index - 1, index) + " ")}*/}
-                    {/*  {formatPath(path)}*/}
-                    {/*  /!* {console.log(path, "incluye" ,path.includes("urn"), "o no?")} *!/*/}
-                    {/*</BreadcrumbLink>*/}
-                    <Link href={`/${paths.slice(0, index + 1).join("/")}`}>
-                      {path.includes("urn") && formatPath(paths.slice(index - 1, index) + " ")}
-                      {formatPath(path)}
-                    </Link>
-                  </BreadcrumbItem>
-                  {index < paths.length - 1 ? <BreadcrumbSeparator/> : ""}
-                </>
-              )}
-            </span>
-          ))}
+          {breadcrumbs.map((item, index) => {
+            const isLast = index === breadcrumbs.length - 1;
+
+            return (
+              <React.Fragment key={item.key}>
+                <BreadcrumbItem className="max-w-40 truncate">
+                  {isLast ? (
+                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link to={item.href}>
+                        {item.label}
+                      </Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {!isLast && <BreadcrumbSeparator />}
+              </React.Fragment>
+            );
+          })}
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-row gap-4">
         <Link to="/subscriptions">
-          <NotificationsIcon className="cursor-pointer"/>
+          <NotificationsIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
         </Link>
-        <Link to="">
-          <PersonIcon className="cursor-pointer"/>
+        {/* Placeholder for Profile - kept blank to='' as in original, but typically should point somewhere or be a button */}
+        <Link to=""> 
+          <PersonIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
         </Link>
         {isAuthenticated && (
           <Button variant="ghost" size="xs" onClick={() => unsetAuthentication()}>
             Logout
-            <LogOut/>
+            <LogOut className="ml-2 h-4 w-4" />
           </Button>
         )}
-        {/* <Link to="/user">User</Link> */}
       </div>
     </div>
   );
 };
-
-export {Header};

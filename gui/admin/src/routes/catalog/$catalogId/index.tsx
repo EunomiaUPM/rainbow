@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
@@ -50,7 +51,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant ID</ListItemKey>
-              <Badge variant="info">{catalog.dspaceParticipantId.slice(0, 20) + "[...]"} </Badge>
+              <Badge variant="info">{formatUrn(catalog.dspaceParticipantId)} </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
@@ -81,14 +82,14 @@ const RouteComponent = () => {
           </TableHeader>
           <TableBody>
             {datasets.map((dataset) => (
-              <TableRow key={dataset.id.slice(9, 29)}>
+              <TableRow key={formatUrn(dataset.id)}>
                 <TableCell>
-                  <Badge variant="info"> {dataset.id.slice(9, 29) + "..."}</Badge>
+                  <Badge variant="info"> {formatUrn(dataset.id)}</Badge>
                 </TableCell>
                 <TableCell>{dataset.dctTitle}</TableCell>
                 <TableCell>
                   <Badge variant="info">
-                    {catalog.dspaceParticipantId.slice(0, 20) + "[...]"}{" "}
+                    {formatUrn(catalog.dspaceParticipantId)}{" "}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -156,9 +157,9 @@ const RouteComponent = () => {
           </TableHeader>
           <TableBody>
             {dataservices.map((dataservice) => (
-              <TableRow key={dataservice.id.slice(9, 29)}>
+              <TableRow key={formatUrn(dataservice.id)}>
                 <TableCell>
-                  <Badge variant="info">{dataservice.id.slice(9, 29) + "..."}</Badge>
+                  <Badge variant="info">{formatUrn(dataservice.id)}</Badge>
                 </TableCell>
 
                 <TableCell>

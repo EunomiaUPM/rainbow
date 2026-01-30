@@ -1,4 +1,5 @@
 import {createFileRoute} from "@tanstack/react-router";
+import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import {
   useGetContractNegotiationMessagesByCNID,
@@ -42,11 +43,11 @@ const RouteComponent = () => {
         <List>
           <ListItem>
             <ListItemKey>ProviderPid</ListItemKey>
-            <Badge variant="info">{process.provider_id.slice(9, 29) + "[...]"}</Badge>
+            <Badge variant="info">{formatUrn(process.provider_id)}</Badge>
           </ListItem>
           <ListItem>
             <ListItemKey>ConsumerPid</ListItemKey>
-            <Badge variant="info">{process.consumer_id.slice(9, 29) + "[...]"}</Badge>
+            <Badge variant="info">{formatUrn(process.consumer_id)}</Badge>
           </ListItem>
           <ListItem>
             <ListItemKey>State</ListItemKey>
