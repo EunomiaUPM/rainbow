@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useGetAgreementById, getAgreementByIdOptions } from "shared/src/data/agreement-queries";
-import dayjs from "dayjs";
-import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import { formatUrn } from "shared/src/lib/utils.ts";
@@ -36,94 +35,89 @@ function RouteComponent() {
       />
       <InfoGrid>
         <PageSection title="Agreement info">
-          <List>
-            <ListItem>
-              <ListItemKey>Agreement Id</ListItemKey>
-              <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
-            </ListItem>
-            <div className={"border-b border-white/20"}>
-              <ListItem>
-                <ListItemKey>Related Message</ListItemKey>
-                <Badge variant="info">{formatUrn(agreement.cn_message_id)}</Badge>
-              </ListItem>
-            </div>
-            <ListItem>
-              <ListItemKey>Consumer Participant Id</ListItemKey>
-              <Badge variant="info">
-                {formatUrn(agreement.consumer_participant_id)}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Provider Participant Id</ListItemKey>{" "}
-              <Badge variant="info">
-                {formatUrn(agreement.provider_participant_id)}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Status</ListItemKey>
-              <Badge variant="status" state={agreement.active ? "ACTIVE" : "PAUSE"}>
-                {agreement.active ? "ACTIVE" : "INACTIVE"}{" "}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Created at</ListItemKey>
-              <ListItemDate>
-                {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
-              </ListItemDate>
-            </ListItem>
-          </List>
+          <InfoList
+            items={[
+              { label: "Agreement Id", value: { type: "urn", value: agreement.agreement_id } },
+              { label: "Related Message", value: { type: "urn", value: agreement.cn_message_id } },
+              {
+                label: "Consumer Participant Id",
+                value: { type: "urn", value: agreement.consumer_participant_id },
+              },
+              {
+                label: "Provider Participant Id",
+                value: { type: "urn", value: agreement.provider_participant_id },
+              },
+              {
+                label: "Status",
+                value: {
+                  type: "custom",
+                  content: (
+                    <Badge variant="status" state={agreement.active ? "ACTIVE" : "PAUSE"}>
+                      {agreement.active ? "ACTIVE" : "INACTIVE"}
+                    </Badge>
+                  ),
+                },
+              },
+              {
+                label: "Created at",
+                value: { type: "custom", content: <FormatDate date={agreement.created_at} /> },
+              },
+            ]}
+          />
         </PageSection>
         <PageSection title="Agreement content">
-          <List>
-            <ListItem>
-              <ListItemKey> ID </ListItemKey>
-              <Badge variant="info">
-                {formatString(
-                  JSON.stringify(formatUrn(agreement.agreement_content["@id"])),
-                )}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey> Type </ListItemKey>
-              <p>{formatString(JSON.stringify(agreement.agreement_content["@type"]))}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey> Assignee </ListItemKey>
-              <Badge variant="info">
-                {formatString(
-                  JSON.stringify(formatUrn(agreement.agreement_content.assignee)),
-                )}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey> Assigner </ListItemKey>
-              <Badge variant="info">
-                {formatString(
-                  JSON.stringify(formatUrn(agreement.agreement_content.assigner)),
-                )}
-              </Badge>
-            </ListItem>
+          <InfoList
+            items={[
+              {
+                label: "ID",
+                value: {
+                  type: "urn",
+                  value: formatString(JSON.stringify(agreement.agreement_content["@id"])),
+                },
+              },
+              {
+                label: "Type",
+                value: formatString(JSON.stringify(agreement.agreement_content["@type"])),
+              },
+              {
+                label: "Assignee",
+                value: {
+                  type: "urn",
+                  value: formatString(JSON.stringify(agreement.agreement_content.assignee)),
+                },
+              },
+              {
+                label: "Assigner",
+                value: {
+                  type: "urn",
+                  value: formatString(JSON.stringify(agreement.agreement_content.assigner)),
+                },
+              },
+              {
+                label: "Policies",
+                value: {
+                  type: "custom",
+                  content: (
+                    <div className="flex flex-col gap-2 mb-2 w-full">
+                      <PolicyComponent
+                        policyItem={agreement.agreement_content.permission}
+                        variant={"permission"}
+                      />
+                      <PolicyComponent
+                        policyItem={agreement.agreement_content.obligation}
+                        variant={"obligation"}
+                      />
 
-            <div className="gap-1 flex flex-col">
-              <ListItemKey className={" py-2 "}>Policies</ListItemKey>
-
-              <div className="flex flex-col gap-2 mb-2">
-                <PolicyComponent
-                  policyItem={agreement.agreement_content.permission}
-                  variant={"permission"}
-                />
-                <PolicyComponent
-                  policyItem={agreement.agreement_content.obligation}
-                  variant={"obligation"}
-                />
-
-                <PolicyComponent
-                  policyItem={agreement.agreement_content.prohibition}
-                  variant={"prohibition"}
-                />
-              </div>
-            </div>
-          </List>
+                      <PolicyComponent
+                        policyItem={agreement.agreement_content.prohibition}
+                        variant={"prohibition"}
+                      />
+                    </div>
+                  ),
+                },
+              },
+            ]}
+          />
         </PageSection>
       </InfoGrid>
     </PageLayout>

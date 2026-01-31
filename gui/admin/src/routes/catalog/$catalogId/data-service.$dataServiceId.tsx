@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useGetDataServiceById, getDataServiceByIdOptions } from "shared/src/data/catalog-queries.ts";
-import dayjs from "dayjs";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import { formatUrn } from "shared/src/lib/utils.ts";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
@@ -21,24 +21,20 @@ function RouteComponent() {
       />
       <InfoGrid>
         <PageSection>
-          <List className="text-sm">
-            <ListItem>
-              <ListItemKey>Data service title</ListItemKey>
-              <p>{dataService.dctTitle}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Data service creation date</ListItemKey>
-              <ListItemDate>{dayjs(dataService.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Data service endpoint URL</ListItemKey>
-              <p>{dataService.dcatEndpointUrl}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Data service description</ListItemKey>
-              <p>{dataService.dcatEndpointDescription}</p>
-            </ListItem>
-          </List>
+          <InfoList
+            items={[
+              { label: "Data service title", value: dataService.dctTitle },
+              {
+                label: "Data service creation date",
+                value: { type: "custom", content: <FormatDate date={dataService.dctIssued} /> },
+              },
+              { label: "Data service endpoint URL", value: dataService.dcatEndpointUrl },
+              {
+                label: "Data service description",
+                value: dataService.dcatEndpointDescription,
+              },
+            ]}
+          />
         </PageSection>
       </InfoGrid>
     </PageLayout>

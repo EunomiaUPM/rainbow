@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useGetTransferMessageById } from "shared/src/data/transfer-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
-import dayjs from "dayjs";
+import { InfoList } from "shared/src/components/ui/info-list";
+import { FormatDate } from "shared/src/components/ui/format-date";
 
 export const Route = createFileRoute(
   "/transfer-process/$transferProcessId/transfer-message/$transferMessageId",
@@ -24,42 +17,19 @@ function RouteComponent() {
       <div>Transfer process message with id : {transferMessage.id}</div>
       <div>
         <h2>Transfer message info: </h2>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>Transfer Message Id</TableCell>
-              <TableCell>{transferMessage.id}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Transfer Process id</TableCell>
-              <TableCell>{transferMessage.transferAgentProcessId}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Message type</TableCell>
-              <TableCell>{transferMessage.messageType}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Created at</TableCell>
-              <TableCell>
-                {dayjs(transferMessage.createdAt).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>From</TableCell>
-              <TableCell>{transferMessage.stateTransitionFrom}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>To</TableCell>
-              <TableCell>{transferMessage.stateTransitionTo}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <InfoList
+          items={[
+            { label: "Transfer Message Id", value: transferMessage.id },
+            { label: "Transfer Process id", value: transferMessage.transferAgentProcessId },
+            { label: "Message type", value: transferMessage.messageType },
+            {
+              label: "Created at",
+              value: { type: "custom", content: <FormatDate date={transferMessage.createdAt} /> },
+            },
+            { label: "From", value: transferMessage.stateTransitionFrom },
+            { label: "To", value: transferMessage.stateTransitionTo },
+          ]}
+        />
       </div>
       <pre className="whitespace-pre-wrap">{JSON.stringify(transferMessage.payload)}</pre>
     </div>

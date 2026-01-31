@@ -6,7 +6,8 @@ import {
   useGetContractNegotiationProcessesByCNID,
 } from "shared/src/data/contract-queries.ts";
 import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions.tsx";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { InfoList } from "shared/src/components/ui/info-list";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import {
@@ -38,30 +39,21 @@ const RouteComponent = () => {
     <PageLayout>
       <PageSection title="Contract negotiation info">
         <InfoGrid className="mb-4">
-          <List>
-            <ListItem>
-              <ListItemKey>ProviderPid</ListItemKey>
-              <Badge variant="info">{formatUrn(process.provider_id)}</Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>ConsumerPid</ListItemKey>
-              <Badge variant="info">{formatUrn(process.consumer_id)}</Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>State</ListItemKey>
-              <Badge variant="status" state={process.state as BadgeState}>
-                {process.state}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Client type</ListItemKey>
-              <Badge>{process.is_business ? "Business" : "Standard"}</Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Created at</ListItemKey>
-              <ListItemDate>{dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-            </ListItem>
-          </List>
+          <InfoList
+            items={[
+              { label: "ProviderPid", value: { type: "urn", value: process.provider_id } },
+              { label: "ConsumerPid", value: { type: "urn", value: process.consumer_id } },
+              { label: "State", value: { type: "status", value: process.state } },
+              {
+                label: "Client type",
+                value: { type: "custom", content: <Badge>{process.is_business ? "Business" : "Standard"}</Badge> },
+              },
+              {
+                label: "Created at",
+                value: { type: "custom", content: <FormatDate date={process.created_at} /> },
+              },
+            ]}
+          />
         </InfoGrid>
       </PageSection>
       <PageSection>

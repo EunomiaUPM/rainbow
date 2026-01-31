@@ -2,17 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import { ArrowRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableCell,
-} from "shared/src/components/ui/table";
+import { DataTable } from "shared/src/components/DataTable";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { useGetCatalogs, useGetMainCatalogs } from "shared/src/data/catalog-queries.ts";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
+import { InfoList } from "shared/src/components/ui/info-list";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
@@ -32,29 +26,20 @@ const RouteComponent = () => {
       />
       <InfoGrid>
         <PageSection title="Main Catalog info: ">
-          <List className="text-sm">
-            <ListItem>
-              <ListItemKey>Catalog title</ListItemKey>
-              <p>{mainCatalog?.dctTitle}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Catalog participant id</ListItemKey>
-              <Badge variant="info">
-                {" "}
-                {formatUrn(mainCatalog.dspaceParticipantId)}{" "}
-              </Badge>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Catalog homepage</ListItemKey>
-              <p>{mainCatalog.foafHomePage}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>
-                {dayjs(mainCatalog.dctIssued).format("DD/MM/YYYY - HH:mm")}
-              </ListItemDate>
-            </ListItem>
-          </List>
+          <InfoList
+            items={[
+              { label: "Catalog title", value: mainCatalog?.dctTitle },
+              {
+                label: "Catalog participant id",
+                value: { type: "urn", value: mainCatalog.dspaceParticipantId },
+              },
+              { label: "Catalog homepage", value: mainCatalog.foafHomePage },
+              {
+                label: "Catalog creation date",
+                value: { type: "custom", content: <FormatDate date={mainCatalog.dctIssued} /> },
+              },
+            ]}
+          />
         </PageSection>
       </InfoGrid>
 
@@ -62,49 +47,41 @@ const RouteComponent = () => {
         <div className="pb-3 w-3/5">
           <Input type="search"></Input>
         </div>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead>Catalog ID</TableHead>
-              <TableHead>Provider ID</TableHead>
-              <TableHead>Link</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {catalogs?.map((catalogItem) => (
-              <TableRow key={formatUrn(catalogItem.id)}>
-                <TableCell>
-                  <p className="text-18">{catalogItem.dctTitle}</p>
-                </TableCell>
-                <TableCell>
-                  <ListItemDate>
-                    {dayjs(catalogItem.dctIssued).format("DD/MM/YYYY - HH:mm")}
-                  </ListItemDate>
-                </TableCell>
-                <TableCell>
-                  {" "}
-                  <Badge variant="info">{formatUrn(catalogItem.id)} </Badge>
-                </TableCell>
-                <TableCell>
-                  {" "}
-                  <Badge variant="info">
-                    {formatUrn(catalogItem.dspaceParticipantId)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Link to="/catalog/$catalogId" params={{ catalogId: catalogItem.id }}>
-                    <Button variant={"link"}>
-                      See catalog
-                      <ArrowRight />
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          className="text-sm"
+          data={catalogs ?? []}
+          keyExtractor={(c) => c.id}
+          columns={[
+            {
+              header: "Title",
+              accessorKey: "dctTitle",
+              cell: (c) => <p className="text-18">{c.dctTitle}</p>,
+            },
+            {
+              header: "Created at",
+              cell: (c) => <FormatDate date={c.dctIssued} />,
+            },
+            {
+              header: "Catalog ID",
+              cell: (c) => <Badge variant="info">{formatUrn(c.id)}</Badge>,
+            },
+            {
+              header: "Provider ID",
+              cell: (c) => <Badge variant="info">{formatUrn(c.dspaceParticipantId)}</Badge>,
+            },
+            {
+              header: "Link",
+              cell: (c) => (
+                <Link to="/catalog/$catalogId" params={{ catalogId: c.id }}>
+                  <Button variant={"link"}>
+                    See catalog
+                    <ArrowRight />
+                  </Button>
+                </Link>
+              ),
+            },
+          ]}
+        />
       </PageSection>
     </PageLayout>
   );
