@@ -11,7 +11,7 @@ import { PolicyWrapperNew } from "shared/src/components/PolicyWrapperNew.tsx";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import {
   Drawer,
   DrawerContent,
@@ -56,14 +56,15 @@ function RouteComponent() {
         </Badge>
       </Heading>
 
-      <List className="text-sm w-2/3">
-        {dataset.custom_properties.map((property, i) => (
-          <ListItem key={i}>
-            <ListItemKey className="basis-[30%] text-sky-300">{property[0]}</ListItemKey>
-            <p className="text-gray-300/90">{property[1]}</p>
-          </ListItem>
-        ))}
-      </List>
+      <InfoList
+        className="text-sm w-2/3"
+        items={dataset.custom_properties.map((property) => ({
+          label: property[0],
+          value: property[1],
+          keyClassName: "text-sky-300",
+          className: "text-gray-300/90",
+        }))}
+      />
       <div className="h-2"></div>
       <div className=" flex flex-row  justify-start gap-3 items-center">
         <Heading level="h5" className="mb-0">

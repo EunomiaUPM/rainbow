@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useGetTransferProcessById } from "shared/src/data/transfer-queries.ts";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { InfoList } from "shared/src/components/ui/info-list";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "shared/src/components/ui/tabs";
 import {
   Drawer,
@@ -45,30 +45,24 @@ function RouteComponent() {
           {" "}
           <PageSection title="Transfer process info">
             <InfoGrid className="mb-4">
-              <List>
-                <ListItem>
-                  <ListItemKey>Process pid</ListItemKey>
-                  <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
-                </ListItem>
-                <ListItem>
-                  <ListItemKey>Agreement id</ListItemKey>
-                  <Badge variant={"info"}>{formatUrn(transferProcess.agreementId)}</Badge>
-                </ListItem>
-                <ListItem>
-                  <ListItemKey>Transfer Process State</ListItemKey>
-                  <Badge variant={"status"} state={transferProcess.state as BadgeState}>
-                    {transferProcess.state}
-                  </Badge>
-                </ListItem>
-                <ListItem>
-                  <ListItemKey>Created at</ListItemKey>
-                  <p> {dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</p>
-                </ListItem>
-                <ListItem>
-                  <ListItemKey>Updated at</ListItemKey>
-                  <p> {dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")}</p>
-                </ListItem>
-              </List>
+              <InfoList
+                items={[
+                  { label: "Process pid", value: { type: "urn", value: transferProcess.id } },
+                  { label: "Agreement id", value: { type: "urn", value: transferProcess.agreementId } },
+                  {
+                    label: "Transfer Process State",
+                    value: { type: "status", value: transferProcess.state },
+                  },
+                  {
+                    label: "Created at",
+                    value: { type: "custom", content: <FormatDate date={transferProcess.createdAt} /> },
+                  },
+                  {
+                    label: "Updated at",
+                    value: { type: "custom", content: <FormatDate date={transferProcess.updatedAt} /> },
+                  },
+                ]}
+              />
             </InfoGrid>
           </PageSection>
 

@@ -21,7 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import { Badge } from "shared/src/components/ui/badge";
 
 function RouteComponent() {
@@ -56,14 +56,15 @@ function RouteComponent() {
           {dataset.name}
         </Badge>
       </Heading>
-      <List className="text-sm w-2/3">
-        {dataset.custom_properties.map((property) => (
-          <ListItem key={property[0]}>
-            <ListItemKey className="basis-[30%] text-sky-300">{property[0]}</ListItemKey>
-            <p className="text-gray-300/90">{property[1]}</p>
-          </ListItem>
-        ))}
-      </List>
+      <InfoList
+        className="text-sm w-2/3"
+        items={dataset.custom_properties.map((property) => ({
+          label: property[0],
+          value: property[1],
+          keyClassName: "text-sky-300",
+          className: "text-gray-300/90",
+        }))}
+      />
 
       <div className=" flex flex-row  justify-start gap-3 items-center">
         <Heading level="h5" className="mb-0">
