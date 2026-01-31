@@ -1,15 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import { useGetAgreements } from "shared/src/data/agreement-queries";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
-import dayjs from "dayjs";
+import { DataTable } from "shared/src/components/DataTable";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
@@ -36,59 +29,51 @@ function RouteComponent() {
         <div className="pb-3 w-3/5">
           <Input type="search"></Input>
         </div>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Agreement Id</TableHead>
-              <TableHead>Consumer Participant Id</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created at</TableHead>
-
-              <TableHead>Link</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {agreements.map((agreement) => (
-              <TableRow key={formatUrn(agreement.agreement_id)}>
-                {/* Agreement Id */}
-                <TableCell>
-                  <Badge variant={"info"}>{formatUrn(agreement.agreement_id)}</Badge>
-                </TableCell>
-                {/* Related Message */}
-
-                {/* Consumer Participant Id */}
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <Badge variant={"info"}>
-                      {formatUrn(agreement.consumer_participant_id)}
-                    </Badge>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <Badge
-                    variant={"status"}
-                    state={agreement.active ? "ACTIVE" : "SUSPENDED"}
-                  >
-                    {agreement.active ? "ACTIVE" : "INACTIVE"}
-                  </Badge>
-                </TableCell>
-                <TableCell>{dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}</TableCell>
-                <TableCell>
-                  <Link
-                    to="/agreements/$agreementId"
-                    params={{ agreementId: agreement.agreement_id }}
-                  >
-                    <Button variant="link">
-                      See details
-                      <ArrowRight />
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          className="text-sm"
+          data={agreements ?? []}
+          keyExtractor={(a) => a.agreement_id}
+          columns={[
+            {
+              header: "Agreement Id",
+              cell: (a) => <Badge variant={"info"}>{formatUrn(a.agreement_id)}</Badge>,
+            },
+            {
+              header: "Consumer Participant Id",
+              cell: (a) => (
+                <div className="flex flex-col gap-1">
+                  <Badge variant={"info"}>{formatUrn(a.consumer_participant_id)}</Badge>
+                </div>
+              ),
+            },
+            {
+              header: "Status",
+              cell: (a) => (
+                <Badge variant={"status"} state={a.active ? "ACTIVE" : "PAUSE"}>
+                  {a.active ? "ACTIVE" : "INACTIVE"}
+                </Badge>
+              ),
+            },
+            {
+              header: "Created at",
+              cell: (a) => <FormatDate date={a.created_at} />,
+            },
+            {
+              header: "Link",
+              cell: (a) => (
+                <Link
+                  to="/agreements/$agreementId"
+                  params={{ agreementId: a.agreement_id }}
+                >
+                  <Button variant="link">
+                    See details
+                    <ArrowRight />
+                  </Button>
+                </Link>
+              ),
+            },
+          ]}
+        />
       </PageSection>
     </PageLayout>
   );

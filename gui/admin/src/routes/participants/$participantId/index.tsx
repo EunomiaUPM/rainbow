@@ -8,7 +8,7 @@ import { PageSection } from "shared/src/components/layout/PageSection";
 // Components
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge, BadgeRole } from "shared/src/components/ui/badge.tsx";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { InfoList } from "shared/src/components/ui/info-list";
 // Icons
 
 /**
@@ -45,26 +45,14 @@ function RouteComponent() {
         {/* Div Participant Info */}
         <PageSection title="Participant info:">
           <div className="max-w-screen-md bg-green-500/0">
-            <List className={"min-w-fit"}>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
-                <Badge variant={"info"}>{formatUrn(participant.participant_id)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Identity Token</ListItemKey>
-                <Badge variant={"info"}>{participant.token}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Participant Type</ListItemKey>
-                <Badge variant={"role"} dsrole={participant.participant_type as BadgeRole}>
-                  {participant.participant_type}
-                </Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Base URL</ListItemKey>
-                <Badge variant={"info"}>{participant.base_url}</Badge>
-              </ListItem>
-            </List>
+            <InfoList
+              items={[
+                { label: "Participant ID", value: { type: "urn", value: participant.participant_id } },
+                { label: "Identity Token", value: { type: "urn", value: participant.token } },
+                { label: "Participant Type", value: { type: "role", value: participant.participant_type } },
+                { label: "Base URL", value: { type: "urn", value: participant.base_url } },
+              ]}
+            />
           </div>
         </PageSection>
 

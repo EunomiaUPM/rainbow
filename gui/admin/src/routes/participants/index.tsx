@@ -1,14 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import { useGetParticipants } from "shared/src/data/participant-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
+import { DataTable } from "shared/src/components/DataTable";
 import {
   Drawer,
   DrawerBody,
@@ -23,7 +16,7 @@ import { useContext, useMemo } from "react";
 import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { Badge } from "shared/src/components/ui/badge";
+import { Badge, BadgeRole } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 
 // Icons
@@ -82,57 +75,48 @@ function RouteComponent() {
         <>
           <PageHeader title="Participants" />
           <PageSection>
-            {/* HEADER CONTAINER */}
-            <div className="pb-3 w-full flex justify-between items-center">
-              <div className="basis-3/5">
-                <Input type="search"></Input>
-              </div>
-            </div>
-            {/* /HEADER CONTAINER */}
-
             {/* PARTICIPANTS TABLE */}
-            <Table className="text-sm">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Participant ID</TableHead>
-                  <TableHead>Identity Token</TableHead>
-                  <TableHead>Participant Type</TableHead>
-                  <TableHead>Base URL</TableHead>
-                  <TableHead>Link</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {participants.map((participant) => (
-                  <TableRow key={formatUrn(participant.participant_id)}>
-                    <TableCell>
-                      <Badge variant={"info"}>{formatUrn(participant.participant_id)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={"info"}>{formatUrn(participant.token)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={"role"} role={participant.participant_type}>
-                        {participant.participant_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={"info"}>{participant.base_url}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        to="/participants/$participantId"
-                        params={{ participantId: participant.participant_id }}
-                      >
-                        <Button variant="link">
-                          See details
-                          <ArrowRight />
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              className="text-sm"
+              data={participants ?? []}
+              keyExtractor={(p) => p.participant_id}
+              columns={[
+                {
+                  header: "Participant ID",
+                  cell: (p) => <Badge variant={"info"}>{formatUrn(p.participant_id)}</Badge>,
+                },
+                {
+                  header: "Identity Token",
+                  cell: (p) => <Badge variant={"info"}>{formatUrn(p.token)}</Badge>,
+                },
+                {
+                  header: "Participant Type",
+                  cell: (p) => (
+                    <Badge variant={"role"} role={p.participant_type as BadgeRole}>
+                      {p.participant_type}
+                    </Badge>
+                  ),
+                },
+                {
+                  header: "Base URL",
+                  cell: (p) => <Badge variant={"info"}>{p.base_url}</Badge>,
+                },
+                {
+                  header: "Link",
+                  cell: (p) => (
+                    <Link
+                      to="/participants/$participantId"
+                      params={{ participantId: p.participant_id }}
+                    >
+                      <Button variant="link">
+                        See details
+                        <ArrowRight />
+                      </Button>
+                    </Link>
+                  ),
+                },
+              ]}
+            />
             {/* /PARTICIPANTS TABLE */}
           </PageSection>
         </>

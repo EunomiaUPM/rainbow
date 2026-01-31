@@ -5,15 +5,8 @@ import {
   getDatasetByIdOptions,
   getDistributionsByDatasetIdOptions,
 } from "shared/src/data/catalog-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
-import dayjs from "dayjs";
+import { DataTable } from "shared/src/components/DataTable";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { ArrowRight, Plus } from "lucide-react";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import { SubmitHandler } from "react-hook-form";
@@ -26,7 +19,7 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 import { PageSection } from "shared/src/components/layout/PageSection";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import { Badge } from "shared/src/components/ui/badge";
 import {
   Drawer,
@@ -74,47 +67,46 @@ function RouteComponent() {
       />
       <InfoGrid>
         <PageSection>
-          <List className="text-sm">
-            <ListItem>
-              <ListItemKey>Dataset title</ListItemKey>
-              <p>{dataset.dctTitle}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>{dayjs(dataset.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-            </ListItem>
-          </List>
+          <InfoList
+            items={[
+              { label: "Dataset title", value: dataset.dctTitle },
+              {
+                label: "Catalog creation date",
+                value: { type: "custom", content: <FormatDate date={dataset.dctIssued} /> },
+              },
+            ]}
+          />
         </PageSection>
       </InfoGrid>
 
       <PageSection title="Distributions">
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Distribution Id</TableHead>
-              <TableHead>Distribution Title</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead>Associated Data service</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {distributions.map((distribution) => (
-              <TableRow key={distribution.id}>
-                <TableCell>
-                  <Badge variant="info">{formatUrn(distribution.id)}</Badge>
-                </TableCell>
-                <TableCell>{distribution.dctTitle ? distribution.dctTitle : "undefined"}</TableCell>
-                <TableCell>
-                  <ListItemDate>
-                    {dayjs(distribution.dctIssued).format("DD/MM/YYYY - HH:mm")}
-                  </ListItemDate>
-                </TableCell>
-                <TableCell className="flex gap-2">
+        <DataTable
+          className="text-sm"
+          data={distributions}
+          keyExtractor={(d) => d.id}
+          columns={[
+            {
+              header: "Distribution Id",
+              cell: (d) => <Badge variant="info">{formatUrn(d.id)}</Badge>,
+            },
+            {
+              header: "Distribution Title",
+              accessorKey: "dctTitle",
+              cell: (d) => d.dctTitle ?? "undefined",
+            },
+            {
+              header: "Created at",
+              cell: (d) => <FormatDate date={d.dctIssued} />,
+            },
+            {
+              header: "Associated Data service",
+              cell: (d) => (
+                <div className="flex gap-2">
                   <Link
                     to="/catalog/$catalogId/distribution-connector/$distributionId"
                     params={{
                       catalogId: catalogId,
-                      distributionId: distribution.id,
+                      distributionId: d.id,
                     }}
                   >
                     <Button variant="link">
@@ -126,7 +118,7 @@ function RouteComponent() {
                     to="/catalog/$catalogId/data-service/$dataserviceId"
                     params={{
                       catalogId: catalogId,
-                      dataserviceId: distribution.dcatAccessService,
+                      dataserviceId: d.dcatAccessService,
                     }}
                   >
                     <Button variant="link">
@@ -134,11 +126,11 @@ function RouteComponent() {
                       <ArrowRight />
                     </Button>
                   </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              ),
+            },
+          ]}
+        />
       </PageSection>
 
       <div className=" flex flex-row mb-2 items-center">

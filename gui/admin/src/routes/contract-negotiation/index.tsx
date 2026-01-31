@@ -1,14 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table";
+import { DataTable } from "shared/src/components/DataTable";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
@@ -38,50 +32,51 @@ const RouteComponent = () => {
             <Input type="search"></Input>
           </div>
         </div>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>ProviderPid</TableHead>
-              <TableHead>ConsumerPid</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>CreatedAt</TableHead>
-              <TableHead>Actions</TableHead>
-              <TableHead>Link</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cnProcessesSorted.map((cnProcess) => (
-              <TableRow key={formatUrn(cnProcess.provider_id)}>
-                <TableCell>
-                  <Badge variant={"info"}>{formatUrn(cnProcess.provider_id)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={"info"}>{formatUrn(cnProcess.consumer_id)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={"status"} state={cnProcess.state as BadgeState}>
-                    {cnProcess.state.replace("dspace:", "")}
-                  </Badge>
-                </TableCell>
-                <TableCell>{dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}</TableCell>
-                <TableCell>
-                  <ContractNegotiationActions process={cnProcess} tiny={true} />
-                </TableCell>
-                <TableCell>
-                  <Link
-                    to="/contract-negotiation/$cnProcess"
-                    params={{ cnProcess: cnProcess.provider_id }}
-                  >
-                    <Button variant="link">
-                      See details
-                      <ArrowRight />
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          className="text-sm"
+          data={cnProcessesSorted ?? []}
+          keyExtractor={(p) => p.provider_id}
+          columns={[
+            {
+              header: "ProviderPid",
+              cell: (p) => <Badge variant={"info"}>{formatUrn(p.provider_id)}</Badge>,
+            },
+            {
+              header: "ConsumerPid",
+              cell: (p) => <Badge variant={"info"}>{formatUrn(p.consumer_id)}</Badge>,
+            },
+            {
+              header: "State",
+              cell: (p) => (
+                <Badge variant={"status"} state={p.state as BadgeState}>
+                  {p.state.replace("dspace:", "")}
+                </Badge>
+              ),
+            },
+            {
+              header: "CreatedAt",
+              cell: (p) => <FormatDate date={p.created_at} />,
+            },
+            {
+              header: "Actions",
+              cell: (p) => <ContractNegotiationActions process={p} tiny={true} />,
+            },
+            {
+              header: "Link",
+              cell: (p) => (
+                <Link
+                  to="/contract-negotiation/$cnProcess"
+                  params={{ cnProcess: p.provider_id }}
+                >
+                  <Button variant="link">
+                    See details
+                    <ArrowRight />
+                  </Button>
+                </Link>
+              ),
+            },
+          ]}
+        />
       </PageSection>
     </PageLayout>
   );
