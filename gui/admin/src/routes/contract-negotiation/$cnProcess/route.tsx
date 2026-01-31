@@ -2,6 +2,7 @@ import {createFileRoute, Outlet} from "@tanstack/react-router";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import { getContractNegotiationProcessesByCNIDOptions, getContractNegotiationMessagesByCNIDOptions } from "shared/src/data/contract-queries.ts";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -16,7 +17,7 @@ const RouteComponent = () => {
           Contract negotiation process
           <Badge variant="info" size="lg">
             {" "}
-            {cnProcess.slice(9, 29) + "[...]"}{" "}
+            {formatUrn(cnProcess)}{" "}
           </Badge>
         </Heading>
       </header>

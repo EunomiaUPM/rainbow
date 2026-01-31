@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 function RouteComponent() {
   const { dataServiceId } = Route.useParams();
@@ -14,7 +15,7 @@ function RouteComponent() {
         Data service info with id
         <Badge variant="info" size="lg">
           {" "}
-          {dataService.id.slice(9, 29) + "[...]"}
+          {formatUrn(dataService.id)}
         </Badge>{" "}
       </Heading>
       <div className="gridColsLayout">

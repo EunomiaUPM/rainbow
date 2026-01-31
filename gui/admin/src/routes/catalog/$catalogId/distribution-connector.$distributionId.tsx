@@ -5,6 +5,7 @@ import { Badge } from "shared/src/components/ui/badge";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import { useGetConnectorInstancesByDistribution } from "shared/src/data/connector-queries.ts";
 import { useGetDistributionById } from "shared/src/data/catalog-queries.ts";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 function RouteComponent() {
   const { distributionId } = Route.useParams();
@@ -17,7 +18,7 @@ function RouteComponent() {
         Distribution info with id
         <Badge variant="info" size="lg">
           {" "}
-          {distribution?.id.slice(9, 29) + "[...]"}
+          {formatUrn(distribution?.id)}
         </Badge>{" "}
       </Heading>
       <div>

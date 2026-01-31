@@ -18,6 +18,7 @@ import {
 import { Button } from "shared/src/components/ui/button";
 import { TransferProcessActions } from "shared/src/components/actions/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
@@ -51,11 +52,11 @@ function RouteComponent() {
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.id.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.agreementId.slice(9, 20) + "..."}</Badge>
+                <Badge variant={"info"}>{formatUrn(transferProcess.agreementId)}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
