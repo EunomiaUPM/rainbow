@@ -29,6 +29,7 @@ export const TransferProcessStartDialog = ({ process }: { process: TransferProce
     if (dsrole == "provider") {
       return startAsync({
         api_gateway: api_gateway,
+        // @ts-ignore
         content: {
           consumerParticipantId: (process as any).associated_consumer,
           consumerCallbackAddress: (process as any).data_plane_id,

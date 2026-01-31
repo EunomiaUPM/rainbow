@@ -3,23 +3,9 @@ import { Dispatch, SetStateAction, useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 import {
   Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "shared/src/components/ui/form.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
-import { ChevronsUpDown } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "shared/src/components/ui/command.tsx";
+import { ConsumerParticipantSelector } from "../routes/contract-negotiation/../../components/form/ConsumerParticipantSelector";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { getParticipants } from "shared/src/data/participant-queries.ts";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
@@ -135,80 +121,16 @@ export const OfferDrawer = ({
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Consumer Participant Field */}
-          <FormField
+          <ConsumerParticipantSelector
             control={control}
             name="consumerParticipantId"
-            render={({ field }) => (
-              <FormItem>
-                <div>
-                  <FormLabel className="text-gray-200 font-normal">
-                    Consumer Participant Id
-                  </FormLabel>
-                  <p className="text-xs text-gray-500 mb-1">
-                    Select the ID of the consumer participant for the negotiation.
-                  </p>
-                </div>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={consumerParticipantOpen}
-                      onOpenChange={handleConsumerParticipantOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={consumerParticipantOpen}
-                          className="w-full justify-between font-normal text-gray-300  transition-colors"
-                        >
-                          {field.value
-                            ? consumerParticipants
-                              .find((p) => p.participant_id === field.value)
-                              ?.participant_id.slice(4, 32) + "[...]"
-                            : "Select participant..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-[--radix-popover-trigger-width] bg-background p-0">
-                        <Command>
-                          <CommandInput placeholder="Search participant..." />
-                          <CommandList>
-                            <CommandEmpty>No participants found.</CommandEmpty>
-                            <CommandGroup>
-                              {consumerParticipants.map((consumerParticipant) => (
-                                <CommandItem
-                                  key={consumerParticipant.participant_id}
-                                  value={consumerParticipant.participant_id}
-                                  onSelect={() => {
-                                    field.onChange(consumerParticipant.participant_id);
-                                    setConsumerSelectedParticipant(consumerParticipant);
-                                    setConsumerParticipantOpen(false);
-                                    // No fields follow this one that need clearing based on its change
-                                  }}
-                                  className={
-                                    field.value === consumerParticipant.participant_id
-                                      ? "text-role-consumer font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {consumerParticipant.participant_id.slice(4, 32) + "[...]"}
-                                  <span className="text-gray-400 ml-2 text-sm">
-                                    ({consumerParticipant.base_url})
-                                  </span>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
+            participants={consumerParticipants}
+            isOpen={consumerParticipantOpen}
+            onOpenChange={handleConsumerParticipantOpenChange}
+            onSelect={(participant) => {
+              setConsumerSelectedParticipant(participant);
+              setConsumerParticipantOpen(false);
+            }}
           />
           <div>
             <p className="text-sm text-gray-200 "> Policies</p>
