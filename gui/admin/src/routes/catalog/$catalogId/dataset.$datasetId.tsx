@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useGetDatasetById,
   useGetDistributionsByDatasetId,
+  getDatasetByIdOptions,
+  getDistributionsByDatasetIdOptions,
 } from "shared/src/data/catalog-queries.ts";
 import {
   Table,
@@ -15,8 +17,10 @@ import dayjs from "dayjs";
 import { ArrowRight, Plus } from "lucide-react";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import { SubmitHandler } from "react-hook-form";
+import {useEffect} from "react";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
+import {formatUrn} from "shared/src/lib/utils";
 import Heading from "shared/src/components/ui/heading";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge";
@@ -186,4 +190,9 @@ function RouteComponent() {
 export const Route = createFileRoute("/catalog/$catalogId/dataset/$datasetId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
+  loader: async ({ context: { queryClient, api_gateway }, params: {datasetId} }) => {
+        if (!api_gateway) return;
+        await queryClient.ensureQueryData(getDatasetByIdOptions(api_gateway, datasetId));
+        return queryClient.ensureQueryData(getDistributionsByDatasetIdOptions(api_gateway, datasetId));
+  },
 });

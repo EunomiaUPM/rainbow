@@ -1,6 +1,7 @@
 import {createFileRoute, Outlet} from "@tanstack/react-router";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
+import { getTransferProcessByIdOptions } from "shared/src/data/transfer-queries.ts";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -27,4 +28,8 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/transfer-process/$transferProcessId")({
   component: RouteComponent,
   notFoundComponent: NotFound,
+  loader: ({ context: { queryClient, api_gateway }, params: {transferProcessId} }) => {
+      if (!api_gateway) return;
+      return queryClient.ensureQueryData(getTransferProcessByIdOptions(api_gateway, transferProcessId));
+  },
 });

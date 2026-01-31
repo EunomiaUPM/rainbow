@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useGetDataServiceById } from "shared/src/data/catalog-queries.ts";
+import { useGetDataServiceById, getDataServiceByIdOptions } from "shared/src/data/catalog-queries.ts";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
@@ -44,4 +44,8 @@ function RouteComponent() {
 export const Route = createFileRoute("/catalog/$catalogId/data-service/$dataServiceId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
+  loader: ({ context: { queryClient, api_gateway }, params: {dataServiceId} }) => {
+      if (!api_gateway) return;
+      return queryClient.ensureQueryData(getDataServiceByIdOptions(api_gateway, dataServiceId));
+  },
 });
