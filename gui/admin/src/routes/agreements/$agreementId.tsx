@@ -1,5 +1,5 @@
 import {createFileRoute} from "@tanstack/react-router";
-import {useGetAgreementById} from "shared/src/data/agreement-queries";
+import {useGetAgreementById, getAgreementByIdOptions} from "shared/src/data/agreement-queries";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
@@ -8,6 +8,10 @@ import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
+  loader: ({ context: { queryClient, api_gateway }, params: {agreementId} }) => {
+      if (!api_gateway) return;
+      return queryClient.ensureQueryData(getAgreementByIdOptions(api_gateway, agreementId));
+  },
 });
 
 function RouteComponent() {

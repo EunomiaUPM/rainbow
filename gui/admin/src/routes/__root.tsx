@@ -6,8 +6,11 @@ import React from "react";
 import {AppSidebarProvider} from "shared/src/components/AppSidebarProvider.tsx";
 import {Header} from "shared/src/components/header.tsx";
 
+import { GeneralErrorComponent } from "../components/GeneralErrorComponent";
+
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
+    api_gateway: string;
 }>()({
     component: ({children}: { children: React.ReactNode }) => {
         const widthPage = window.innerWidth;
