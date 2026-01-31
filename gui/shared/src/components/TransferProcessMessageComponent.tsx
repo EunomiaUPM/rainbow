@@ -1,7 +1,5 @@
 import React from "react";
-// @ts-ignore
-import { cn } from "@/lib/utils";
-// @ts-ignore
+
 import {
   MessageBody,
   MessageContent,
@@ -21,6 +19,9 @@ let addSpacesFormat = (text: string) => {
   return text.replace(/(?!^)([A-Z])/g, " $1");
 };
 
+/**
+ * Component for displaying a Transfer Process message.
+ */
 const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentProps> = ({
   message,
 }) => {

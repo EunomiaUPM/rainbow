@@ -34,6 +34,9 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 
+/**
+ * Route for listing participants using a table layout.
+ */
 export const Route = createFileRoute("/participants/")({
   component: RouteComponent,
 });
@@ -84,37 +87,6 @@ function RouteComponent() {
               <div className="basis-3/5">
                 <Input type="search"></Input>
               </div>
-
-              {/* DRAWER ADD PARTICIPANT*/}
-              {/** TO DO: DELETE */}
-              <Drawer direction={"right"}>
-                <DrawerTrigger className="hidden">
-                  <Button>
-                    Add participant
-                    <Plus className="mb-1" />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <DrawerHeader>
-                    <DrawerTitle>
-                      <Heading level="h5" className="text-current">
-                        New Participant
-                      </Heading>
-                    </DrawerTitle>
-                  </DrawerHeader>
-                  <DrawerBody>{/* <NewParticipantForm/> */}</DrawerBody>
-                  <DrawerFooter>
-                    <DrawerClose className="flex justify-start gap-4">
-                      <Button variant="ghost" className="w-40">
-                        Cancel
-                      </Button>
-                      {/* <Button className="w-40">Add Participant</Button> */}
-                    </DrawerClose>
-                  </DrawerFooter>
-                </DrawerContent>
-              </Drawer>
-              {/* /DRAWER ADD PARTICIPANT*/}
-              {/** TO DO: DELETE */}
             </div>
             {/* /HEADER CONTAINER */}
 
@@ -126,7 +98,6 @@ function RouteComponent() {
                   <TableHead>Identity Token</TableHead>
                   <TableHead>Participant Type</TableHead>
                   <TableHead>Base URL</TableHead>
-                  {/* <TableHead>Extra Info</TableHead> */}
                   <TableHead>Link</TableHead>
                 </TableRow>
               </TableHeader>
@@ -134,9 +105,7 @@ function RouteComponent() {
                 {participants.map((participant) => (
                   <TableRow key={formatUrn(participant.participant_id)}>
                     <TableCell>
-                      <Badge variant={"info"}>
-                        {formatUrn(participant.participant_id)}
-                      </Badge>
+                      <Badge variant={"info"}>{formatUrn(participant.participant_id)}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={"info"}>{formatUrn(participant.token)}</Badge>
@@ -149,7 +118,6 @@ function RouteComponent() {
                     <TableCell>
                       <Badge variant={"info"}>{participant.base_url}</Badge>
                     </TableCell>
-                    {/* <TableCell>{JSON.stringify(participant.extra_fields)}</TableCell> */}
                     <TableCell>
                       <Link
                         to="/participants/$participantId"

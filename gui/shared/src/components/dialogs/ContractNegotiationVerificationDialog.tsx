@@ -6,27 +6,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {Button} from "../ui/button";
-import React, {useContext} from "react";
-import {Form} from "../ui/form";
-import {useForm} from "react-hook-form";
-import {usePostContractNegotiationRPCVerification} from "../../data/contract-mutations";
-import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
-import {Badge, BadgeState} from "../ui/badge";
+import { Button } from "../ui/button";
+import React, { useContext } from "react";
+import { Form } from "../ui/form";
+import { useForm } from "react-hook-form";
+import { usePostContractNegotiationRPCVerification } from "../../data/contract-mutations";
+import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
+import { Badge, BadgeState } from "../ui/badge";
 import { InfoList } from "../ui/info-list";
 import dayjs from "dayjs";
 
-export const ContractNegotiationVerificationDialog = ({process}: { process: CNProcess }) => {
-  // --- Form Setup ---
+/**
+ * Dialog for verifying a contract negotiation.
+ */
+export const ContractNegotiationVerificationDialog = ({ process }: { process: CNProcess }) => {
+
   const form = useForm({});
-  const {handleSubmit, control, setValue, getValues} = form;
-  const {mutateAsync: agreeAsync} = usePostContractNegotiationRPCVerification();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { handleSubmit, control, setValue, getValues } = form;
+  const { mutateAsync: agreeAsync } = usePostContractNegotiationRPCVerification();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     agreeAsync({
       api_gateway: api_gateway,
       content: {
-        //@ts-ignore
         providerParticipantId: process.associated_provider,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
@@ -42,13 +44,13 @@ export const ContractNegotiationVerificationDialog = ({process}: { process: CNPr
         <DialogTitle>Verification dialog</DialogTitle>
         <DialogDescription>
           <span>
-            You are about to verify the agreement. <br/>
+            You are about to verify the agreement. <br />
             Please review the details carefully before proceeding.
           </span>
-          {/* <span>{JSON.stringify(process)}</span> */}
+
         </DialogDescription>
       </DialogHeader>
-      {/* List JSON */}
+
       <InfoList items={[
         { label: "Provider id", value: { type: "urn", value: process.provider_id } },
         { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
@@ -59,7 +61,7 @@ export const ContractNegotiationVerificationDialog = ({process}: { process: CNPr
         { label: "Created at", value: { type: "date", value: process.created_at } },
         process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : { label: "Updated at", value: undefined }
       ].filter(item => item.value !== undefined) as any} />
-      {/* / List content */}
+
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <DialogFooter className="[&>*]:w-full">

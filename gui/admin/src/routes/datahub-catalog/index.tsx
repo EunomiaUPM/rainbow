@@ -60,6 +60,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for listing Datahub catalogs.
+ */
 export const Route = createFileRoute("/datahub-catalog/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

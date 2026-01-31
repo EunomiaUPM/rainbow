@@ -5,9 +5,12 @@ import { BusinessRequestAcceptanceDialog } from "../dialogs/BusinessRequestAccep
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
+/**
+ * Actions available for a business process.
+ */
 export const BusinessActions = ({ process }: { process: any }) => {
   const { participant } = useContext<AuthContextType | null>(AuthContext)!;
-  const role = participant?.participant_type; // "Provider" or "Consumer"
+  const role = participant?.participant_type;
 
   const getActions = () => {
     if (role === "Provider") {
@@ -30,23 +33,23 @@ export const BusinessActions = ({ process }: { process: any }) => {
   const actions = getActions();
 
   const showNoFurtherActions = () => {
-      return actions.length === 0;
+    return actions.length === 0;
   }
 
   return (
     <div className="inline-flex items-center">
-       <div className="space-x-2 min-w-[260px]">
+      <div className="space-x-2 min-w-[260px]">
         {actions.map((action, idx) => (
-            <ProcessActionDialog
-                key={idx}
-                label={action.label}
-                variant={action.variant as any}
-                DialogComponent={action.Component}
-                process={process}
-            />
+          <ProcessActionDialog
+            key={idx}
+            label={action.label}
+            variant={action.variant as any}
+            DialogComponent={action.Component}
+            process={process}
+          />
         ))}
-         {showNoFurtherActions() && <NoFurtherActions />}
-       </div>
+        {showNoFurtherActions() && <NoFurtherActions />}
+      </div>
     </div>
   );
 };

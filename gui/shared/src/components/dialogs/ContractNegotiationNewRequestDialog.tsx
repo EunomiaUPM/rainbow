@@ -6,31 +6,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {Button} from "shared/src/components/ui/button";
-import React, {useContext, useRef} from "react";
-import {Form} from "shared/src/components/ui/form";
-import {useForm} from "react-hook-form";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
-import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow";
-import {usePostContractNegotiationRPCRequest} from "shared/src/data/contract-mutations";
+import { Button } from "shared/src/components/ui/button";
+import React, { useContext, useRef } from "react";
+import { Form } from "shared/src/components/ui/form";
+import { useForm } from "react-hook-form";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow";
+import { usePostContractNegotiationRPCRequest } from "shared/src/data/contract-mutations";
 
+/**
+ * Dialog for creating a new contract negotiation request.
+ */
 export const ContractNegotiationNewRequestDialog = ({
-                                                      policy,
-                                                      catalogId,
-                                                      datasetId,
-                                                      participantId,
-                                                    }: {
+  policy,
+  catalogId,
+  datasetId,
+  participantId,
+}: {
   policy: OdrlOffer;
   catalogId: UUID;
   datasetId: UUID;
   participantId: string;
 }) => {
-  // --- Form Setup ---
+
   const closeDialogRef = useRef<HTMLButtonElement>(null);
   const form = useForm({});
-  const {handleSubmit} = form;
-  const {mutateAsync: requestAsync} = usePostContractNegotiationRPCRequest();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { handleSubmit } = form;
+  const { mutateAsync: requestAsync } = usePostContractNegotiationRPCRequest();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   const onSubmit = async () => {
     await requestAsync({
@@ -63,7 +66,7 @@ export const ContractNegotiationNewRequestDialog = ({
               datasetId={datasetId}
               catalogId={catalogId}
               participant={participantId}
-              datasetName={""}/>
+              datasetName={""} />
           </div>
         </DialogDescription>
       </DialogHeader>

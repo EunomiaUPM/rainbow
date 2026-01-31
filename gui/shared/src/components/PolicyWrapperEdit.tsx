@@ -26,6 +26,9 @@ export type PolicyEditorHandle = {
   getPolicy: () => OdrlInfo;
 };
 
+/**
+ * Wrapper component for editing an ODRL policy.
+ */
 export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOffer }>(
   ({ policy }, ref) => {
     const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
@@ -60,7 +63,7 @@ export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOf
     const removeComponentHandler = (componentType: ComponentType, index: number) => {
       const _newPolicy = { ...newPolicy };
       _newPolicy[componentType].splice(index, 1);
-      console.log(_newPolicy);
+
       setNewPolicy(_newPolicy);
     };
 

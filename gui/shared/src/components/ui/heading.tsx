@@ -1,17 +1,20 @@
 "use client";
 
-import React, {FC} from "react";
-import {cn} from "shared/src/lib/utils";
+import React, { FC } from "react";
+import { cn } from "shared/src/lib/utils";
 import IntrinsicElements = JSX.IntrinsicElements;
 
 type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "table" | "title-sm" | "subtitle";
 
+/**
+ * Component for rendering headings with consistent styling based on level.
+ */
 const Heading: FC<{
   level: HeadingLevel,
   children: React.ReactNode,
   className?: string,
   ref?: React.Ref<HTMLHeadingElement>
-}> = ({level = "h1", children, ref, className = ""}) => {
+}> = ({ level = "h1", children, ref, className = "" }) => {
   const Component: keyof IntrinsicElements =
     ({
       h1: "h1",

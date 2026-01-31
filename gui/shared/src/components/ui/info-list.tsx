@@ -5,10 +5,10 @@ import dayjs from "dayjs";
 import { cn } from "shared/src/lib/utils";
 import { formatUrn } from "shared/src/lib/utils";
 
-export type InfoItemValue = 
-  | string 
-  | undefined 
-  | null 
+export type InfoItemValue =
+  | string
+  | undefined
+  | null
   | { type: "date"; value: string | Date }
   | { type: "status"; value: string }
   | { type: "role"; value: string }
@@ -22,6 +22,9 @@ export interface InfoItemProps {
   keyClassName?: string; // class for the key
 }
 
+/**
+ * Renders a list of information items with consistent styling.
+ */
 export const InfoList = ({
   items,
   className,
@@ -39,21 +42,16 @@ export const InfoList = ({
 };
 
 const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) => {
-  // If value is undefined or null, we might want to skip or show placeholder. 
-  // Current pattern often checks `process.associated_consumer && ...` before rendering ListItem.
-  // So if value is explicitly null/undefined passed here, we probably just render nothing or empty?
-  // But usually this component is controlled by the caller constructing the items array.
-
   if (value === undefined || value === null) return null;
 
   const renderValue = () => {
     if (typeof value === "string") {
       return <Badge variant="info">{value}</Badge>;
     }
-    
+
     if (typeof value === "object") {
       if ("content" in value) return value.content;
-      
+
       switch (value.type) {
         case "date":
           return <p>{dayjs(value.value).format("DD/MM/YY HH:mm")}</p>;
@@ -65,7 +63,7 @@ const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) 
           );
         case "role":
           return (
-             <Badge variant="role" role={value.value as BadgeRole}>
+            <Badge variant="role" role={value.value as BadgeRole}>
               {value.value}
             </Badge>
           );

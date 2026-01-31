@@ -10,6 +10,9 @@ interface ProcessActionDialogProps {
   process: any;
 }
 
+/**
+ * Reusable dialog component for process actions.
+ */
 export const ProcessActionDialog: FC<ProcessActionDialogProps> = ({
   label,
   variant,

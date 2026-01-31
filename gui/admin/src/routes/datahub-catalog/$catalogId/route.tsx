@@ -7,6 +7,9 @@ const NotFound = () => {
   return <div>not found</div>;
 };
 
+/**
+ * Route for specific Datahub catalog layout.
+ */
 export const Route = createFileRoute("/datahub-catalog/$catalogId")({
   component: RouteComponent,
   notFoundComponent: NotFound,
@@ -15,7 +18,7 @@ export const Route = createFileRoute("/datahub-catalog/$catalogId")({
 function RouteComponent() {
   const { catalogId } = Route.useParams();
   const routerState = useRouterState();
-  // formatear id del catalogo para que sea igual que el pathname
+
   const catalogIdURL = "/datahub-catalog/" + catalogId.replace(/:/g, "%3A");
 
   return (

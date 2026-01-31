@@ -13,11 +13,14 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Datahub Catalog route layout and data loading.
+ */
 export const Route = createFileRoute("/datahub-catalog")({
   component: RouteComponent,
   notFoundComponent: NotFound,
   loader: ({ context: { queryClient, api_gateway } }) => {
-      if (!api_gateway) return;
-      return queryClient.ensureQueryData(getDatahubCatalogsOptions(api_gateway));
+    if (!api_gateway) return;
+    return queryClient.ensureQueryData(getDatahubCatalogsOptions(api_gateway));
   },
 });

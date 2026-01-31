@@ -74,12 +74,14 @@ const RouteComponent = () => {
           </TableHeader>
           <TableBody>
             {catalogs?.map((catalogItem) => (
-              <TableRow key="urn:uuid:c4d4449d-a">
+              <TableRow key={formatUrn(catalogItem.id)}>
                 <TableCell>
                   <p className="text-18">{catalogItem.dctTitle}</p>
                 </TableCell>
                 <TableCell>
-                  <ListItemDate> 23/6/25 16:34 </ListItemDate>
+                  <ListItemDate>
+                    {dayjs(catalogItem.dctIssued).format("DD/MM/YYYY - HH:mm")}
+                  </ListItemDate>
                 </TableCell>
                 <TableCell>
                   {" "}
@@ -108,6 +110,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for listing catalogs.
+ */
 export const Route = createFileRoute("/catalog/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

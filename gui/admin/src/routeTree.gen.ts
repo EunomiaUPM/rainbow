@@ -14,7 +14,6 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as TransferProcessRouteImport } from './routes/transfer-process/route'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions/route'
 import { Route as ParticipantsRouteImport } from './routes/participants/route'
-import { Route as GuiRouteImport } from './routes/gui/route'
 import { Route as DatahubCatalogRouteImport } from './routes/datahub-catalog/route'
 import { Route as ContractNegotiationRouteImport } from './routes/contract-negotiation/route'
 import { Route as CatalogRouteImport } from './routes/catalog/route'
@@ -24,7 +23,6 @@ import { Route as TransferProcessIndexImport } from './routes/transfer-process/i
 import { Route as SubscriptionsIndexImport } from './routes/subscriptions/index'
 import { Route as ParticipantsIndexImport } from './routes/participants/index'
 import { Route as LoginIndexImport } from './routes/login/index'
-import { Route as GuiIndexImport } from './routes/gui/index'
 import { Route as DatahubCatalogIndexImport } from './routes/datahub-catalog/index'
 import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
 import { Route as CatalogIndexImport } from './routes/catalog/index'
@@ -33,18 +31,14 @@ import { Route as ContractNegotiationOfferImport } from './routes/contract-negot
 import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
 import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
 import { Route as ParticipantsParticipantIdRouteImport } from './routes/participants/$participantId/route'
-import { Route as GuiAgreementsRouteImport } from './routes/gui/agreements/route'
 import { Route as DatahubCatalogCatalogIdRouteImport } from './routes/datahub-catalog/$catalogId/route'
 import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
 import { Route as CatalogCatalogIdRouteImport } from './routes/catalog/$catalogId/route'
 import { Route as TransferProcessTransferProcessIdIndexImport } from './routes/transfer-process/$transferProcessId/index'
 import { Route as ParticipantsParticipantIdIndexImport } from './routes/participants/$participantId/index'
-import { Route as GuiAgreementsIndexImport } from './routes/gui/agreements/index'
 import { Route as DatahubCatalogCatalogIdIndexImport } from './routes/datahub-catalog/$catalogId/index'
 import { Route as ContractNegotiationCnProcessIndexImport } from './routes/contract-negotiation/$cnProcess/index'
 import { Route as CatalogCatalogIdIndexImport } from './routes/catalog/$catalogId/index'
-import { Route as GuiAgreementsHolaImport } from './routes/gui/agreements/hola'
-import { Route as GuiAgreementsAgreementidImport } from './routes/gui/agreements/$agreement_id'
 import { Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport } from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
 import { Route as DatahubCatalogCatalogIdDatasetDatasetIdImport } from './routes/datahub-catalog/$catalogId/dataset.$datasetId'
 import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
@@ -69,12 +63,6 @@ const SubscriptionsRouteRoute = SubscriptionsRouteImport.update({
 const ParticipantsRouteRoute = ParticipantsRouteImport.update({
   id: '/participants',
   path: '/participants',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const GuiRouteRoute = GuiRouteImport.update({
-  id: '/gui',
-  path: '/gui',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -132,12 +120,6 @@ const LoginIndexRoute = LoginIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const GuiIndexRoute = GuiIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GuiRouteRoute,
-} as any)
-
 const DatahubCatalogIndexRoute = DatahubCatalogIndexImport.update({
   id: '/',
   path: '/',
@@ -188,12 +170,6 @@ const ParticipantsParticipantIdRouteRoute =
     getParentRoute: () => ParticipantsRouteRoute,
   } as any)
 
-const GuiAgreementsRouteRoute = GuiAgreementsRouteImport.update({
-  id: '/agreements',
-  path: '/agreements',
-  getParentRoute: () => GuiRouteRoute,
-} as any)
-
 const DatahubCatalogCatalogIdRouteRoute =
   DatahubCatalogCatalogIdRouteImport.update({
     id: '/$catalogId',
@@ -228,12 +204,6 @@ const ParticipantsParticipantIdIndexRoute =
     getParentRoute: () => ParticipantsParticipantIdRouteRoute,
   } as any)
 
-const GuiAgreementsIndexRoute = GuiAgreementsIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GuiAgreementsRouteRoute,
-} as any)
-
 const DatahubCatalogCatalogIdIndexRoute =
   DatahubCatalogCatalogIdIndexImport.update({
     id: '/',
@@ -252,18 +222,6 @@ const CatalogCatalogIdIndexRoute = CatalogCatalogIdIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CatalogCatalogIdRouteRoute,
-} as any)
-
-const GuiAgreementsHolaRoute = GuiAgreementsHolaImport.update({
-  id: '/hola',
-  path: '/hola',
-  getParentRoute: () => GuiAgreementsRouteRoute,
-} as any)
-
-const GuiAgreementsAgreementidRoute = GuiAgreementsAgreementidImport.update({
-  id: '/$agreement_id',
-  path: '/$agreement_id',
-  getParentRoute: () => GuiAgreementsRouteRoute,
 } as any)
 
 const TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute =
@@ -349,13 +307,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DatahubCatalogRouteImport
       parentRoute: typeof rootRoute
     }
-    '/gui': {
-      id: '/gui'
-      path: '/gui'
-      fullPath: '/gui'
-      preLoaderRoute: typeof GuiRouteImport
-      parentRoute: typeof rootRoute
-    }
     '/participants': {
       id: '/participants'
       path: '/participants'
@@ -397,13 +348,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/datahub-catalog/$catalogId'
       preLoaderRoute: typeof DatahubCatalogCatalogIdRouteImport
       parentRoute: typeof DatahubCatalogRouteImport
-    }
-    '/gui/agreements': {
-      id: '/gui/agreements'
-      path: '/agreements'
-      fullPath: '/gui/agreements'
-      preLoaderRoute: typeof GuiAgreementsRouteImport
-      parentRoute: typeof GuiRouteImport
     }
     '/participants/$participantId': {
       id: '/participants/$participantId'
@@ -461,13 +405,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DatahubCatalogIndexImport
       parentRoute: typeof DatahubCatalogRouteImport
     }
-    '/gui/': {
-      id: '/gui/'
-      path: '/'
-      fullPath: '/gui/'
-      preLoaderRoute: typeof GuiIndexImport
-      parentRoute: typeof GuiRouteImport
-    }
     '/login/': {
       id: '/login/'
       path: '/login'
@@ -496,20 +433,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransferProcessIndexImport
       parentRoute: typeof TransferProcessRouteImport
     }
-    '/gui/agreements/$agreement_id': {
-      id: '/gui/agreements/$agreement_id'
-      path: '/$agreement_id'
-      fullPath: '/gui/agreements/$agreement_id'
-      preLoaderRoute: typeof GuiAgreementsAgreementidImport
-      parentRoute: typeof GuiAgreementsRouteImport
-    }
-    '/gui/agreements/hola': {
-      id: '/gui/agreements/hola'
-      path: '/hola'
-      fullPath: '/gui/agreements/hola'
-      preLoaderRoute: typeof GuiAgreementsHolaImport
-      parentRoute: typeof GuiAgreementsRouteImport
-    }
     '/catalog/$catalogId/': {
       id: '/catalog/$catalogId/'
       path: '/'
@@ -530,13 +453,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/datahub-catalog/$catalogId/'
       preLoaderRoute: typeof DatahubCatalogCatalogIdIndexImport
       parentRoute: typeof DatahubCatalogCatalogIdRouteImport
-    }
-    '/gui/agreements/': {
-      id: '/gui/agreements/'
-      path: '/'
-      fullPath: '/gui/agreements/'
-      preLoaderRoute: typeof GuiAgreementsIndexImport
-      parentRoute: typeof GuiAgreementsRouteImport
     }
     '/participants/$participantId/': {
       id: '/participants/$participantId/'
@@ -716,35 +632,6 @@ const DatahubCatalogRouteRouteChildren: DatahubCatalogRouteRouteChildren = {
 const DatahubCatalogRouteRouteWithChildren =
   DatahubCatalogRouteRoute._addFileChildren(DatahubCatalogRouteRouteChildren)
 
-interface GuiAgreementsRouteRouteChildren {
-  GuiAgreementsAgreementidRoute: typeof GuiAgreementsAgreementidRoute
-  GuiAgreementsHolaRoute: typeof GuiAgreementsHolaRoute
-  GuiAgreementsIndexRoute: typeof GuiAgreementsIndexRoute
-}
-
-const GuiAgreementsRouteRouteChildren: GuiAgreementsRouteRouteChildren = {
-  GuiAgreementsAgreementidRoute: GuiAgreementsAgreementidRoute,
-  GuiAgreementsHolaRoute: GuiAgreementsHolaRoute,
-  GuiAgreementsIndexRoute: GuiAgreementsIndexRoute,
-}
-
-const GuiAgreementsRouteRouteWithChildren =
-  GuiAgreementsRouteRoute._addFileChildren(GuiAgreementsRouteRouteChildren)
-
-interface GuiRouteRouteChildren {
-  GuiAgreementsRouteRoute: typeof GuiAgreementsRouteRouteWithChildren
-  GuiIndexRoute: typeof GuiIndexRoute
-}
-
-const GuiRouteRouteChildren: GuiRouteRouteChildren = {
-  GuiAgreementsRouteRoute: GuiAgreementsRouteRouteWithChildren,
-  GuiIndexRoute: GuiIndexRoute,
-}
-
-const GuiRouteRouteWithChildren = GuiRouteRoute._addFileChildren(
-  GuiRouteRouteChildren,
-)
-
 interface ParticipantsParticipantIdRouteRouteChildren {
   ParticipantsParticipantIdIndexRoute: typeof ParticipantsParticipantIdIndexRoute
 }
@@ -822,14 +709,12 @@ export interface FileRoutesByFullPath {
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
   '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
-  '/gui': typeof GuiRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
   '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
-  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
@@ -838,17 +723,13 @@ export interface FileRoutesByFullPath {
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
   '/datahub-catalog/': typeof DatahubCatalogIndexRoute
-  '/gui/': typeof GuiIndexRoute
   '/login': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
-  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
   '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
-  '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -867,17 +748,13 @@ export interface FileRoutesByTo {
   '/catalog': typeof CatalogIndexRoute
   '/contract-negotiation': typeof ContractNegotiationIndexRoute
   '/datahub-catalog': typeof DatahubCatalogIndexRoute
-  '/gui': typeof GuiIndexRoute
   '/login': typeof LoginIndexRoute
   '/participants': typeof ParticipantsIndexRoute
   '/subscriptions': typeof SubscriptionsIndexRoute
   '/transfer-process': typeof TransferProcessIndexRoute
-  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdIndexRoute
-  '/gui/agreements': typeof GuiAgreementsIndexRoute
   '/participants/$participantId': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -895,14 +772,12 @@ export interface FileRoutesById {
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
   '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
-  '/gui': typeof GuiRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
   '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
-  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
@@ -911,17 +786,13 @@ export interface FileRoutesById {
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
   '/datahub-catalog/': typeof DatahubCatalogIndexRoute
-  '/gui/': typeof GuiIndexRoute
   '/login/': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
-  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
   '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
-  '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -940,14 +811,12 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/contract-negotiation'
     | '/datahub-catalog'
-    | '/gui'
     | '/participants'
     | '/subscriptions'
     | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
     | '/datahub-catalog/$catalogId'
-    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
@@ -956,17 +825,13 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/contract-negotiation/'
     | '/datahub-catalog/'
-    | '/gui/'
     | '/login'
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
-    | '/gui/agreements/$agreement_id'
-    | '/gui/agreements/hola'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
     | '/datahub-catalog/$catalogId/'
-    | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -984,17 +849,13 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/contract-negotiation'
     | '/datahub-catalog'
-    | '/gui'
     | '/login'
     | '/participants'
     | '/subscriptions'
     | '/transfer-process'
-    | '/gui/agreements/$agreement_id'
-    | '/gui/agreements/hola'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
     | '/datahub-catalog/$catalogId'
-    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -1010,14 +871,12 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/contract-negotiation'
     | '/datahub-catalog'
-    | '/gui'
     | '/participants'
     | '/subscriptions'
     | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
     | '/datahub-catalog/$catalogId'
-    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
@@ -1026,17 +885,13 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/contract-negotiation/'
     | '/datahub-catalog/'
-    | '/gui/'
     | '/login/'
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
-    | '/gui/agreements/$agreement_id'
-    | '/gui/agreements/hola'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
     | '/datahub-catalog/$catalogId/'
-    | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -1054,7 +909,6 @@ export interface RootRouteChildren {
   CatalogRouteRoute: typeof CatalogRouteRouteWithChildren
   ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
   DatahubCatalogRouteRoute: typeof DatahubCatalogRouteRouteWithChildren
-  GuiRouteRoute: typeof GuiRouteRouteWithChildren
   ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
   SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
   TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
@@ -1067,7 +921,6 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogRouteRoute: CatalogRouteRouteWithChildren,
   ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
   DatahubCatalogRouteRoute: DatahubCatalogRouteRouteWithChildren,
-  GuiRouteRoute: GuiRouteRouteWithChildren,
   ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
   SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
   TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
@@ -1089,7 +942,6 @@ export const routeTree = rootRoute
         "/catalog",
         "/contract-negotiation",
         "/datahub-catalog",
-        "/gui",
         "/participants",
         "/subscriptions",
         "/transfer-process",
@@ -1126,13 +978,6 @@ export const routeTree = rootRoute
       "children": [
         "/datahub-catalog/$catalogId",
         "/datahub-catalog/"
-      ]
-    },
-    "/gui": {
-      "filePath": "gui/route.tsx",
-      "children": [
-        "/gui/agreements",
-        "/gui/"
       ]
     },
     "/participants": {
@@ -1181,15 +1026,6 @@ export const routeTree = rootRoute
         "/datahub-catalog/$catalogId/dataset/$datasetId"
       ]
     },
-    "/gui/agreements": {
-      "filePath": "gui/agreements/route.tsx",
-      "parent": "/gui",
-      "children": [
-        "/gui/agreements/$agreement_id",
-        "/gui/agreements/hola",
-        "/gui/agreements/"
-      ]
-    },
     "/participants/$participantId": {
       "filePath": "participants/$participantId/route.tsx",
       "parent": "/participants",
@@ -1229,10 +1065,6 @@ export const routeTree = rootRoute
       "filePath": "datahub-catalog/index.tsx",
       "parent": "/datahub-catalog"
     },
-    "/gui/": {
-      "filePath": "gui/index.tsx",
-      "parent": "/gui"
-    },
     "/login/": {
       "filePath": "login/index.tsx"
     },
@@ -1248,14 +1080,6 @@ export const routeTree = rootRoute
       "filePath": "transfer-process/index.tsx",
       "parent": "/transfer-process"
     },
-    "/gui/agreements/$agreement_id": {
-      "filePath": "gui/agreements/$agreement_id.tsx",
-      "parent": "/gui/agreements"
-    },
-    "/gui/agreements/hola": {
-      "filePath": "gui/agreements/hola.tsx",
-      "parent": "/gui/agreements"
-    },
     "/catalog/$catalogId/": {
       "filePath": "catalog/$catalogId/index.tsx",
       "parent": "/catalog/$catalogId"
@@ -1267,10 +1091,6 @@ export const routeTree = rootRoute
     "/datahub-catalog/$catalogId/": {
       "filePath": "datahub-catalog/$catalogId/index.tsx",
       "parent": "/datahub-catalog/$catalogId"
-    },
-    "/gui/agreements/": {
-      "filePath": "gui/agreements/index.tsx",
-      "parent": "/gui/agreements"
     },
     "/participants/$participantId/": {
       "filePath": "participants/$participantId/index.tsx",

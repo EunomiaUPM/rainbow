@@ -1,5 +1,8 @@
 import React from "react";
 
+/**
+ * Component to display a message indicating no further actions are available.
+ */
 const NoFurtherActions = () => {
   return (
     <div>

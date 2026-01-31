@@ -1,14 +1,14 @@
-import React, {useEffect} from "react";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import React, { useEffect } from "react";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
 import Heading from "shared/src/components/ui/heading";
-import {ControllerRenderProps, FormProvider, useForm} from "react-hook-form";
+import { ControllerRenderProps, FormProvider, useForm } from "react-hook-form";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "shared/src/components/ui/accordion";
-import {Input} from "shared/src/components/ui/input";
+import { Input } from "shared/src/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,17 +16,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "shared/src/components/ui/select";
-import {FormField} from "shared/src/components/ui/form";
-import {Button} from "shared/src/components/ui/button";
+import { FormField } from "shared/src/components/ui/form";
+import { Button } from "shared/src/components/ui/button";
 
 type DynamicFormValues = {
   [key: string]: string;
 };
 
+/**
+ * Component for editing a policy template.
+ */
 export const PolicyTemplateWrapperEdit = ({
-                                            policyTemplate,
-                                            onSubmit,
-                                          }: {
+  policyTemplate,
+  onSubmit,
+}: {
   policyTemplate: PolicyTemplate;
   onSubmit: (odrlContent: OdrlInfo) => Promise<void>;
 }) => {
@@ -34,7 +37,7 @@ export const PolicyTemplateWrapperEdit = ({
     defaultValues: {},
   });
 
-  // Parse template into form data
+
   useEffect(() => {
     const initialValues: DynamicFormValues = {};
     Object.entries(policyTemplate.operand_options).forEach(([key, value]) => {
@@ -45,7 +48,7 @@ export const PolicyTemplateWrapperEdit = ({
     form.reset(initialValues);
   }, [policyTemplate, form]);
 
-  // On submit conform ODRL and use onSubmit method from parent component
+
   const submitHandler = async (
     formData: DynamicFormValues,
     currentPolicyTemplate: PolicyTemplate,
@@ -64,7 +67,7 @@ export const PolicyTemplateWrapperEdit = ({
     form.reset();
   };
 
-  // Create fields
+
   const renderOperandOptions = (field: ControllerRenderProps, operand: string): React.ReactElement => {
     const options = policyTemplate.operand_options[operand];
     const formType = options.formType;
@@ -80,7 +83,7 @@ export const PolicyTemplateWrapperEdit = ({
         component = (
           <Select defaultValue={defaultValue} onValueChange={field.onChange}>
             <SelectTrigger className="min-w-[200px] w-fit">
-              <SelectValue placeholder="Select an option"/>
+              <SelectValue placeholder="Select an option" />
             </SelectTrigger>
             <SelectContent>
               {innerOptions?.map((opt) => (
@@ -100,11 +103,11 @@ export const PolicyTemplateWrapperEdit = ({
     return component;
   };
 
-  // Render form fields
+
   const renderOperandOptionsFormControl = (operand: string) => {
     return (
       <FormField
-        render={({field}) => renderOperandOptions(field, operand)}
+        render={({ field }) => renderOperandOptions(field, operand)}
         name={operand}
         key={operand}
         control={form.control}
@@ -117,7 +120,7 @@ export const PolicyTemplateWrapperEdit = ({
       <FormProvider {...form}>
         <form
           onSubmit={form.handleSubmit((data) => submitHandler(data, policyTemplate))}
-          className="space-y-4 " // Add some spacing to the form
+          className="space-y-4 "
         >
           <List
             className="border border-white/30 bg-white/10 px-4 py-2 pb-4 rounded-md justify-start max-h-[80vh] overflow-y-auto">
@@ -127,10 +130,7 @@ export const PolicyTemplateWrapperEdit = ({
                 {policyTemplate.title}
               </Heading>
             </div>
-            {/* <ListItem>
-              <ListItemKey>ID</ListItemKey>
-              <Badge variant="info">{policyTemplate.id}</Badge>
-            </ListItem> */}
+
             <ListItem>
               <ListItemKey>Description</ListItemKey>
               <p>{policyTemplate.description}</p>
@@ -255,8 +255,8 @@ export const PolicyTemplateWrapperEdit = ({
                     <AccordionContent className="relative">
                       {(policyTemplate.content.prohibition == undefined ||
                         policyTemplate.content.prohibition?.length == 0) && (
-                        <p>No policy defined</p>
-                      )}
+                          <p>No policy defined</p>
+                        )}
                       {(policyTemplate.content.prohibition || []).map((prohibition, i) => (
                         <div>
                           <div className="policy-item-template">
@@ -292,7 +292,7 @@ export const PolicyTemplateWrapperEdit = ({
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-                {/* <Button className="w-fit mt-4" type="submit">Create policy</Button> */}
+
               </div>
             </div>
           </List>

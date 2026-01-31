@@ -5,6 +5,9 @@ import {
   useGetLastContractNegotiationOfferByCNMessageId,
 } from "shared/src/data/contract-queries.ts";
 
+/**
+ * Route for displaying contract negotiation message details.
+ */
 export const Route = createFileRoute("/contract-negotiation/$cnProcess/message/$messageId")({
   component: RouteComponent,
 });

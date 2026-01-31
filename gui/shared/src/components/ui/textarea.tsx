@@ -1,10 +1,13 @@
 import * as React from "react";
 
-// @ts-ignore
-import {cn} from "shared/src/lib/utils";
 
+import { cn } from "shared/src/lib/utils";
+
+/**
+ * Textarea component for multi-line text input.
+ */
 const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
-  ({className, ...props}, ref) => {
+  ({ className, ...props }, ref) => {
     return (
       <textarea
         className={cn(
@@ -19,4 +22,4 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"tex
 );
 Textarea.displayName = "Textarea";
 
-export {Textarea};
+export { Textarea };

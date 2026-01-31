@@ -4,7 +4,7 @@ import { cn } from "shared/src/lib/utils";
 
 export type RoleType = "Provider" | "Consumer" | "Business" | "Customer";
 
-// Helper para saber qué roles usan el estilo "Provider" y cuáles "Consumer"
+
 export const mapRoleToVariant = (role: RoleType) => {
   if (role === "Provider" || role === "Business") return "Provider";
   if (role === "Consumer" || role === "Customer") return "Consumer";
@@ -25,7 +25,7 @@ export const MessageLog = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { variant: RoleType }
 >(({ className, variant, children, ...props }, ref) => {
-  // Mapeamos a "Provider" o "Consumer"
+
   const styleVariant = mapRoleToVariant(variant);
   const isLeft = styleVariant === "Provider";
 

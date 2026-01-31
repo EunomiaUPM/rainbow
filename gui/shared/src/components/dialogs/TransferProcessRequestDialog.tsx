@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { formatUrn } from "shared/src/lib/utils";
-import {Badge} from "shared/src/components/ui/badge";
+import { Badge } from "shared/src/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "shared/src/components/ui/select";
-import {Button} from "shared/src/components/ui/button";
-import React, {useContext} from "react";
+import { Button } from "shared/src/components/ui/button";
+import React, { useContext } from "react";
 import {
   Form,
   FormControl,
@@ -26,9 +26,9 @@ import {
   FormItem,
   FormMessage,
 } from "shared/src/components/ui/form";
-import {useForm} from "react-hook-form";
-import {usePostTransferRPCRequest} from "shared/src/data/transfer-mutations";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
+import { useForm } from "react-hook-form";
+import { usePostTransferRPCRequest } from "shared/src/data/transfer-mutations";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 
 type Inputs = {
   method: "PULL" | "PUSH";
@@ -38,9 +38,12 @@ type Inputs = {
 const transferMethods = ["PULL", "PUSH"];
 const transferProtocols = ["http", "kafka", "ftp"];
 
-export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement }) => {
-  const {mutateAsync: requestAsync} = usePostTransferRPCRequest();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+/**
+ * Dialog for requesting a new transfer process.
+ */
+export const TransferProcessRequestDialog = ({ agreement }: { agreement: Agreement }) => {
+  const { mutateAsync: requestAsync } = usePostTransferRPCRequest();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const form = useForm<Inputs>({
     defaultValues: {
       method: "PULL",
@@ -67,7 +70,7 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
             <DialogDescription className="max-w-full flex flex-wrap break-all">
               <span className="max-w-full flex flex-wrap">
                 Start transfer process for Agreement{" "}
-              <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
+                <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -75,7 +78,7 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
             <FormField
               control={form.control}
               name="method"
-              render={({field}) => (
+              render={({ field }) => (
                 <FormItem>
                   <label htmlFor="method" className="text-sm mb-1 text-inherit">
                     Method
@@ -87,7 +90,7 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder="Select a transfer protocol"/>
+                        <SelectValue placeholder="Select a transfer protocol" />
                       </SelectTrigger>
                       <SelectContent>
                         {transferMethods.map((transferMethod) => (
@@ -98,15 +101,15 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormDescription>This is your public display name.</FormDescription>
-                  <FormMessage/>
+                  <FormDescription>Select input.</FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="transfer_protocol"
-              render={({field}) => (
+              render={({ field }) => (
                 <FormItem>
                   <label htmlFor="transfer_protocol" className="text-sm mb-1">
                     Transfer protocol
@@ -118,7 +121,7 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder="Select a transfer protocol"/>
+                        <SelectValue placeholder="Select a transfer protocol" />
                       </SelectTrigger>
                       <SelectContent>
                         {transferProtocols.map((transferProtocol) => (
@@ -129,8 +132,8 @@ export const TransferProcessRequestDialog = ({agreement}: { agreement: Agreement
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormDescription>This is your public display name.</FormDescription>
-                  <FormMessage/>
+                  <FormDescription>Select input.</FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />

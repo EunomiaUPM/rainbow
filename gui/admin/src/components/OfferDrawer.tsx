@@ -1,6 +1,6 @@
-import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
-import {Dispatch, SetStateAction, useContext, useState} from "react";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations.ts";
+import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 import {
   Form,
   FormControl,
@@ -9,9 +9,9 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form.tsx";
-import {Popover, PopoverContent, PopoverTrigger} from "shared/src/components/ui/popover.tsx";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {ChevronsUpDown} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover.tsx";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { ChevronsUpDown } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -20,12 +20,12 @@ import {
   CommandItem,
   CommandList,
 } from "shared/src/components/ui/command.tsx";
-import {SubmitHandler, useForm} from "react-hook-form";
-import {getParticipants} from "shared/src/data/participant-queries.ts";
-import {useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
-import {useGetDatahubDataset} from "../../../shared/src/data/datahub-catalog-queries.ts";
-import {Badge} from "shared/src/components/ui/badge.tsx";
-import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { getParticipants } from "shared/src/data/participant-queries.ts";
+import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
+import { useGetDatahubDataset } from "../../../shared/src/data/datahub-catalog-queries.ts";
+import { Badge } from "shared/src/components/ui/badge.tsx";
+import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
 
 type Inputs = {
   consumerParticipantId: string;
@@ -35,20 +35,23 @@ type Inputs = {
   odrl: string;
 };
 
+/**
+ * Drawer component for creating and sending a contract offer.
+ */
 export const OfferDrawer = ({
-                              catalogId,
-                              datasetId,
-                              closeDrawer,
-                            }: {
+  catalogId,
+  datasetId,
+  closeDrawer,
+}: {
   catalogId: string;
   datasetId: string;
   closeDrawer: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer();
-  const {data: policies} = useGetPoliciesByDatasetId(datasetId);
-  const {data: datasetInfo} = useGetDatahubDataset(datasetId);
+  const { mutateAsync: sendOfferAsync, isPending } = usePostContractNegotiationRPCOffer();
+  const { data: policies } = useGetPoliciesByDatasetId(datasetId);
+  const { data: datasetInfo } = useGetDatahubDataset(datasetId);
 
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   // --- State Management ---
   // Consumer Participant
@@ -67,7 +70,7 @@ export const OfferDrawer = ({
       target: datasetId, // Dataset ID
     },
   });
-  const {handleSubmit, control} = form;
+  const { handleSubmit, control } = form;
 
   // --- Popover Open/Change Handlers ---
   const handleConsumerParticipantOpenChange = async (newOpenState: boolean) => {
@@ -126,7 +129,7 @@ export const OfferDrawer = ({
           <p className="text-sm text-gray-200 mb-1"> Selected dataset</p>
           <Badge variant="info">{datasetInfo.name}</Badge>
         </div>
-        {/* {JSON.stringify(datasetInfo)} */}
+
       </div>
       <div className="h-5"></div>
       <Form {...form}>
@@ -135,7 +138,7 @@ export const OfferDrawer = ({
           <FormField
             control={control}
             name="consumerParticipantId"
-            render={({field}) => (
+            render={({ field }) => (
               <FormItem>
                 <div>
                   <FormLabel className="text-gray-200 font-normal">
@@ -160,16 +163,16 @@ export const OfferDrawer = ({
                         >
                           {field.value
                             ? consumerParticipants
-                            .find((p) => p.participant_id === field.value)
-                            ?.participant_id.slice(4, 32) + "[...]"
+                              .find((p) => p.participant_id === field.value)
+                              ?.participant_id.slice(4, 32) + "[...]"
                             : "Select participant..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80"/>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent
                         className="w-[--radix-popover-trigger-width] bg-background p-0">
                         <Command>
-                          <CommandInput placeholder="Search participant..."/>
+                          <CommandInput placeholder="Search participant..." />
                           <CommandList>
                             <CommandEmpty>No participants found.</CommandEmpty>
                             <CommandGroup>
@@ -202,7 +205,7 @@ export const OfferDrawer = ({
                     </Popover>
                   </FormControl>
 
-                  <FormMessage/>
+                  <FormMessage />
                 </div>
               </FormItem>
             )}
@@ -227,15 +230,20 @@ export const OfferDrawer = ({
                       form.setValue("id", policy["@id"]);
                     }}
                   >
-                    {/*// @ts-ignore*/}
-                    <PolicyWrapperShow policy={policy}/>
+                    <PolicyWrapperShow
+                      policy={policy}
+                      datasetId={datasetId}
+                      catalogId={catalogId}
+                      datasetName={datasetInfo?.name || ""}
+                      participant={null}
+                    />
                   </div>
                 ))}
             </div>
           </div>
           <div
             className="flex gap-2 border-t fixed bottom-0  p-6 w-full bg-background border-white/30"
-            style={{marginLeft: -48}}
+            style={{ marginLeft: -48 }}
           >
             <Button type="submit" disabled={isPending} className="w-48">
               Submit Offer {isPending && <span className="ml-2">...</span>}

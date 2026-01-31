@@ -49,6 +49,9 @@ function RouteComponent() {
   );
 }
 
+/**
+ * Route for displaying distribution connector details.
+ */
 export const Route = createFileRoute("/catalog/$catalogId/distribution-connector/$distributionId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

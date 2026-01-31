@@ -1,9 +1,9 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {useGetAgreementById, getAgreementByIdOptions} from "shared/src/data/agreement-queries";
+import { createFileRoute } from "@tanstack/react-router";
+import { useGetAgreementById, getAgreementByIdOptions } from "shared/src/data/agreement-queries";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
-import {Badge} from "shared/src/components/ui/badge.tsx";
+import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { Badge } from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import { formatUrn } from "shared/src/lib/utils.ts";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
@@ -11,11 +11,14 @@ import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
+/**
+ * Route for displaying agreement details.
+ */
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
-  loader: ({ context: { queryClient, api_gateway }, params: {agreementId} }) => {
-      if (!api_gateway) return;
-      return queryClient.ensureQueryData(getAgreementByIdOptions(api_gateway, agreementId));
+  loader: ({ context: { queryClient, api_gateway }, params: { agreementId } }) => {
+    if (!api_gateway) return;
+    return queryClient.ensureQueryData(getAgreementByIdOptions(api_gateway, agreementId));
   },
 });
 
@@ -23,8 +26,8 @@ function RouteComponent() {
   const formatString = (text: string = "") => {
     return text.replace(/[()[]{}"]/g, " ");
   };
-  const {agreementId} = Route.useParams();
-  const {data: agreement} = useGetAgreementById(agreementId);
+  const { agreementId } = Route.useParams();
+  const { data: agreement } = useGetAgreementById(agreementId);
   return (
     <PageLayout>
       <PageHeader
@@ -71,7 +74,6 @@ function RouteComponent() {
           </List>
         </PageSection>
         <PageSection title="Agreement content">
-          {/* <div className="max-w-[940px]">{JSON.stringify(agreement.agreement_content)}</div> */}
           <List>
             <ListItem>
               <ListItemKey> ID </ListItemKey>
@@ -114,7 +116,7 @@ function RouteComponent() {
                   policyItem={agreement.agreement_content.obligation}
                   variant={"obligation"}
                 />
-                {/* {console.log(agreement.agreement_content.obligation, "")} */}
+
                 <PolicyComponent
                   policyItem={agreement.agreement_content.prohibition}
                   variant={"prohibition"}

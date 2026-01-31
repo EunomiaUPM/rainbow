@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, { FC } from "react";
 
 import {
   Policy,
@@ -12,10 +12,13 @@ import {
   PolicyVariants,
 } from "shared/src/components/ui/policy";
 
+/**
+ * Component for displaying policy items recursively.
+ */
 const PolicyComponent: FC<{
   policyItem: OdrlPermission[] | null,
   variant: PolicyVariants
-}> = ({policyItem, variant}) => {
+}> = ({ policyItem, variant }) => {
   return (
     <Policy className="" variant={variant}>
       {policyItem?.length === 0 || policyItem == null ? (

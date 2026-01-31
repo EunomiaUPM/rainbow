@@ -1,5 +1,5 @@
-import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
-import {usePostTransferRPCStart} from "shared/src/data/transfer-mutations";
+import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
+import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
 import dayjs from "dayjs";
 import {
   DialogClose,
@@ -9,29 +9,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {Button} from "../ui/button";
-import React, {useContext} from "react";
-import {Form} from "../ui/form";
-import {useForm} from "react-hook-form";
-import {Badge, BadgeState} from "shared/src/components/ui/badge";
+import { Button } from "../ui/button";
+import React, { useContext } from "react";
+import { Form } from "../ui/form";
+import { useForm } from "react-hook-form";
+import { Badge, BadgeState } from "shared/src/components/ui/badge";
 import { InfoList } from "../ui/info-list";
 
-export const TransferProcessStartDialog = ({process}: { process: TransferProcess }) => {
-  // --- Form Setup ---
+/**
+ * Dialog for starting a transfer process.
+ */
+export const TransferProcessStartDialog = ({ process }: { process: TransferProcess }) => {
+
   const form = useForm({});
-  const {handleSubmit, control, setValue, getValues} = form;
-  const {mutateAsync: startAsync} = usePostTransferRPCStart();
-  const {api_gateway, dsrole} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { handleSubmit, control, setValue, getValues } = form;
+  const { mutateAsync: startAsync } = usePostTransferRPCStart();
+  const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     if (dsrole == "provider") {
       return startAsync({
         api_gateway: api_gateway,
         content: {
-          //@ts-ignore
-          consumerParticipantId: process.associated_consumer,
-          consumerCallbackAddress: process.data_plane_id,
-          consumerPid: process.consumer_pid,
-          providerPid: process.provider_pid,
+          consumerParticipantId: (process as any).associated_consumer,
+          consumerCallbackAddress: (process as any).data_plane_id,
+          consumerPid: (process as any).consumer_pid,
+          providerPid: (process as any).provider_pid,
         },
       });
     }
@@ -39,9 +41,9 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
       return startAsync({
         api_gateway: api_gateway,
         content: {
-          providerParticipantId: process.associated_provider,
-          consumerPid: process.consumer_pid,
-          providerPid: process.provider_pid,
+          providerParticipantId: (process as any).associated_provider,
+          consumerPid: (process as any).consumer_pid,
+          providerPid: (process as any).provider_pid,
         },
       });
     }
@@ -55,10 +57,10 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
         <DialogTitle>Transfer start dialog</DialogTitle>
         <DialogDescription>
           <span>You are about to start the transfer process with the following information.</span>
-          {/* <span>{JSON.stringify(process)}</span> */}
+
         </DialogDescription>
       </DialogHeader>
-      {/* List */}
+
       <InfoList items={[
         { label: "Provider Participant id", value: { type: "urn", value: (process as any).provider_pid } },
         { label: "Consumer Participant id", value: { type: "urn", value: (process as any).consumer_pid } },
@@ -69,7 +71,7 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
         { label: "Created at", value: { type: "date", value: (process as any).created_at } },
         (process as any).updated_at ? { label: "Updated at", value: { type: "date", value: (process as any).updated_at } } : undefined
       ].filter(item => item !== undefined) as any} />
-      {/* / List content */}
+
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <DialogFooter className="[&>*]:w-full">

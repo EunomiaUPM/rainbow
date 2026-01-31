@@ -6,24 +6,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {Button} from "../ui/button";
+import { Button } from "../ui/button";
 import { InfoList } from "../ui/info-list";
 
-import React, {useContext, useRef} from "react";
-import {Form} from "../ui/form";
-import {useForm} from "react-hook-form";
-import {usePostContractNegotiationRPCOffer} from "../../data/contract-mutations";
-import {useGetLastContractNegotiationOfferByCNMessageId} from "shared/src/data/contract-queries";
-import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
-import {PolicyEditorHandle, PolicyWrapperEdit} from "../PolicyWrapperEdit";
+import React, { useContext, useRef } from "react";
+import { Form } from "../ui/form";
+import { useForm } from "react-hook-form";
+import { usePostContractNegotiationRPCOffer } from "../../data/contract-mutations";
+import { useGetLastContractNegotiationOfferByCNMessageId } from "shared/src/data/contract-queries";
+import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
+import { PolicyEditorHandle, PolicyWrapperEdit } from "../PolicyWrapperEdit";
 
-export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }) => {
+/**
+ * Dialog for presenting a contract negotiation offer.
+ */
+export const ContractNegotiationOfferDialog = ({ process }: { process: CNProcess }) => {
   const policyWrapperRef = useRef<PolicyEditorHandle>(null);
   const form = useForm();
-  const {handleSubmit} = form;
-  const {mutateAsync: dataOfferAsync} = usePostContractNegotiationRPCOffer();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data: lastOffer} = useGetLastContractNegotiationOfferByCNMessageId(process.provider_id);
+  const { handleSubmit } = form;
+  const { mutateAsync: dataOfferAsync } = usePostContractNegotiationRPCOffer();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data: lastOffer } = useGetLastContractNegotiationOfferByCNMessageId(process.provider_id);
 
   const onSubmit = async () => {
     if (policyWrapperRef.current) {
@@ -38,9 +41,7 @@ export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }
       await dataOfferAsync({
         api_gateway: api_gateway,
         content: {
-          //@ts-ignore
           consumerParticipantId: process.associated_consumer,
-          //@ts-ignore
           offer: outputOffer,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
@@ -62,27 +63,27 @@ export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }
             <DialogTitle>Contract Negotiation Offer</DialogTitle>
             <DialogDescription>
               <p>Make changes on the Contract Negotiation Offer.</p>
-              {/* <p>{JSON.stringify(process)}</p> */}
+
             </DialogDescription>
           </DialogHeader>
-            <div className=" overflow-y-scroll px-6">
-              <InfoList items={[
-                { label: "Provider id", value: { type: "urn", value: process.provider_id } },
-                { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
-                { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
-                { label: "State", value: { type: "status", value: process.state } },
-                { label: "Iniciated by", value: { type: "role", value: process.initiated_by } },
-                { label: "Created at", value: { type: "date", value: process.created_at } },
-                process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : { label: "Updated at", value: undefined }
-              ].filter(item => item.value !== undefined) as any} />
+          <div className=" overflow-y-scroll px-6">
+            <InfoList items={[
+              { label: "Provider id", value: { type: "urn", value: process.provider_id } },
+              { label: "Consumer id", value: { type: "urn", value: process.consumer_id } },
+              { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
+              { label: "State", value: { type: "status", value: process.state } },
+              { label: "Iniciated by", value: { type: "role", value: process.initiated_by } },
+              { label: "Created at", value: { type: "date", value: process.created_at } },
+              process.updated_at ? { label: "Updated at", value: { type: "date", value: process.updated_at } } : { label: "Updated at", value: undefined }
+            ].filter(item => item.value !== undefined) as any} />
 
-            {/* / List content */}
+
             <div className="h-6"></div>
             {lastOffer && (
               <div className="flex w-full ">
                 <div className="w-full">
                   <p className="mb-2">New policy request</p>
-                  <PolicyWrapperEdit policy={lastOffer.offer_content} ref={policyWrapperRef}/>
+                  <PolicyWrapperEdit policy={lastOffer.offer_content} ref={policyWrapperRef} />
                 </div>
               </div>
             )}

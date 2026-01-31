@@ -55,7 +55,6 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     };
 
     initConfig();
-    console.log(apiGatewayBase, configRole, catalogType, isConfigLoaded, isProduction);
   }, []);
 
   const contextValue = useMemo<GlobalInfoContextType>(() => {
