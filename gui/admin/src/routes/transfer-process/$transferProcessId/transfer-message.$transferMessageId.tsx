@@ -38,30 +38,30 @@ function RouteComponent() {
             </TableRow>
             <TableRow>
               <TableCell>Transfer Process id</TableCell>
-              <TableCell>{transferMessage.transfer_process_id}</TableCell>
+              <TableCell>{transferMessage.transferAgentProcessId}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>Message type</TableCell>
-              <TableCell>{transferMessage.message_type}</TableCell>
+              <TableCell>{transferMessage.messageType}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>Created at</TableCell>
               <TableCell>
-                {dayjs(transferMessage.created_at).format("DD/MM/YYYY - HH:mm")}
+                {dayjs(transferMessage.createdAt).format("DD/MM/YYYY - HH:mm")}
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell>From</TableCell>
-              <TableCell>{transferMessage.from}</TableCell>
+              <TableCell>{transferMessage.stateTransitionFrom}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>To</TableCell>
-              <TableCell>{transferMessage.to}</TableCell>
+              <TableCell>{transferMessage.stateTransitionTo}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </div>
-      <pre className="whitespace-pre-wrap">{JSON.stringify(transferMessage.content)}</pre>
+      <pre className="whitespace-pre-wrap">{JSON.stringify(transferMessage.payload)}</pre>
     </div>
   );
 }
