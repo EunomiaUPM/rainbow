@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "shared/src/lib/utils";
 import { Badge } from "../badge";
-import { ListItem, ListItemKey } from "../list";
+
 
 export const MessageMetaContainer = React.forwardRef<
   HTMLUListElement,
@@ -20,18 +20,18 @@ export interface MessageMetaProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const MessageMeta = React.forwardRef<HTMLDivElement, MessageMetaProps>(
   ({ label, value, className, ...props }, ref) => (
-    <ListItem
+    <li
       className={cn(
         "min-h-8 flex flex-row flex-wrap gap-1 mb-1 text-white/70 border-none p-0 m-0",
         className,
       )}
       {...props}
     >
-      <ListItemKey className="font-bold max-w-40">{label}</ListItemKey>
+      <span className="font-bold max-w-40">{label}</span>
       <Badge className="max-w-full overflow-hidden" variant="info">
         {value}
       </Badge>
-    </ListItem>
+    </li>
   ),
 );
 MessageMeta.displayName = "MessageMeta";

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import Heading from "shared/src/components/ui/heading";
 import { ControllerRenderProps, FormProvider, useForm } from "react-hook-form";
 import {
@@ -122,19 +122,17 @@ export const PolicyTemplateWrapperEdit = ({
           onSubmit={form.handleSubmit((data) => submitHandler(data, policyTemplate))}
           className="space-y-4 "
         >
-          <List
-            className="border border-white/30 bg-white/10 px-4 py-2 pb-4 rounded-md justify-start max-h-[80vh] overflow-y-auto">
-            <div className="flex">
+          <div className="border border-white/30 bg-white/10 px-4 py-2 pb-4 rounded-md justify-start max-h-[80vh] overflow-y-auto">
+            <div className="flex mb-4">
               <Heading level="h5" className="flex gap-3">
                 <span className="font-light">Policy template:</span>
                 {policyTemplate.title}
               </Heading>
             </div>
 
-            <ListItem>
-              <ListItemKey>Description</ListItemKey>
-              <p>{policyTemplate.description}</p>
-            </ListItem>
+            <InfoList
+              items={[{ label: "Description", value: policyTemplate.description }]}
+            />
             <div className="min-h-5"></div>
             <Heading level="h6"> ODRL CONTENT</Heading>
             <p className="mb-2"> Edit the constraint value</p>
@@ -295,7 +293,7 @@ export const PolicyTemplateWrapperEdit = ({
 
               </div>
             </div>
-          </List>
+          </div>
           <Button className="w-fit mt-4" type="submit">
             Create policy
           </Button>

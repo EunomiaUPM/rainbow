@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import {
   Accordion,
   AccordionContent,
@@ -111,8 +111,8 @@ export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOf
 
     return (
       <div className="w-full">
-        <List className=" border border-white/30 bg-white/10 p-4 pt-2 rounded-md justify-start">
-          <div className="flex">
+        <div className="border border-white/30 bg-white/10 p-4 pt-2 rounded-md justify-start">
+          <div className="flex mb-4">
             <Heading level="h5" className="flex gap-3">
               <div>Policy with ID</div>
               <Badge variant="info" className="h-6">
@@ -120,18 +120,13 @@ export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOf
               </Badge>
             </Heading>
           </div>
-          <ListItem>
-            <ListItemKey>Policy Target</ListItemKey>
-            <p>{policy["@type"]}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Profile</ListItemKey>
-            <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Target</ListItemKey>
-            <p> {policy.target.slice(9)}</p>
-          </ListItem>
+          <InfoList
+            items={[
+              { label: "Policy Target", value: policy["@type"] },
+              { label: "Profile", value: JSON.stringify(policy.profile) },
+              { label: "Target", value: policy.target.slice(9) },
+            ]}
+          />
           <div className="h-5"></div>
           <Heading level="h6"> ODRL CONTENT</Heading>
           <div className="flex flex-col gap-2">
@@ -583,7 +578,7 @@ export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOf
               </Accordion>
             </div>
           </div>
-        </List>
+        </div>
       </div>
     );
   },

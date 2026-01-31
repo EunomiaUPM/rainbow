@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
+import { FormatDate } from "shared/src/components/ui/format-date";
 import { useGetConnectorInstancesByDistribution } from "shared/src/data/connector-queries.ts";
 import { useGetDistributionById } from "shared/src/data/catalog-queries.ts";
 import { formatUrn } from "shared/src/lib/utils.ts";
@@ -22,28 +23,27 @@ function RouteComponent() {
         badge={<Badge variant="info" size="lg">{formatUrn(distribution?.id)}</Badge>}
       />
       <PageSection>
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Distribution title</ListItemKey>
-            <p>{distribution?.dctTitle}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Distribution creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(distribution?.dctIssued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
-          </ListItem>
-        </List>
+        <InfoList
+          className="text-sm"
+          items={[
+            { label: "Distribution title", value: distribution?.dctTitle },
+            {
+              label: "Distribution creation date",
+              value: { type: "custom", content: <FormatDate date={distribution?.dctIssued} /> },
+            },
+          ]}
+        />
       </PageSection>
       <PageSection title="Connector Instance info">
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Connector Instance infor</ListItemKey>
-            <ListItemDate>
-              <pre>{JSON.stringify(connector, null, 2)}</pre>
-            </ListItemDate>
-          </ListItem>
-        </List>
+        <InfoList
+          className="text-sm"
+          items={[
+            {
+              label: "Connector Instance info",
+              value: { type: "custom", content: <pre>{JSON.stringify(connector, null, 2)}</pre> },
+            },
+          ]}
+        />
       </PageSection>
     </PageLayout>
   );
