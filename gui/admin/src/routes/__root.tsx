@@ -8,6 +8,8 @@ import {Header} from "shared/src/components/header.tsx";
 
 import { GeneralErrorComponent } from "../components/GeneralErrorComponent";
 
+import {GlobalLoadingIndicator} from "../components/GlobalLoadingIndicator";
+
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
     api_gateway: string;
@@ -30,8 +32,10 @@ export const Route = createRootRouteWithContext<{
                         </div>
                     </main>
                 </SidebarProvider>
+                <GlobalLoadingIndicator />
                 <TanStackRouterDevtools/>
             </>
         );
     },
+    errorComponent: GeneralErrorComponent,
 });
