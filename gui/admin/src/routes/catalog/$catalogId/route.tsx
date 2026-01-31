@@ -11,11 +11,11 @@ const NotFound = () => {
 export const Route = createFileRoute("/catalog/$catalogId")({
   component: RouteComponent,
   notFoundComponent: NotFound,
-  loader: async ({ context: { queryClient, api_gateway }, params: {catalogId} }) => {
-      if (!api_gateway) return;
-      await queryClient.ensureQueryData(getCatalogsByIdOptions(api_gateway, catalogId));
-      await queryClient.ensureQueryData(getDatasetsByCatalogIdOptions(api_gateway, catalogId));
-      return queryClient.ensureQueryData(getDataServicesByCatalogIdOptions(api_gateway, catalogId));
+  loader: async ({ context: { queryClient, api_gateway }, params: { catalogId } }) => {
+    if (!api_gateway) return;
+    await queryClient.ensureQueryData(getCatalogsByIdOptions(api_gateway, catalogId));
+    await queryClient.ensureQueryData(getDatasetsByCatalogIdOptions(api_gateway, catalogId));
+    return queryClient.ensureQueryData(getDataServicesByCatalogIdOptions(api_gateway, catalogId));
   },
 });
 
@@ -28,16 +28,16 @@ function RouteComponent() {
 
   return (
     <div>
-      <header className="mb-2">
-        {routerState.location.pathname !== `${catalogIdURL}` ? null : (
+      {routerState.location.pathname !== `${catalogIdURL}` ? null : (
+        <header className="mb-2">
           <Heading level="h3" className="flex gap-2 items-center">
             Catalog
             <Badge variant="info" size="lg">
               {formatUrn(catalogId)}
             </Badge>
           </Heading>
-        )}
-      </header>
+        </header>
+      )}
       <Outlet />
     </div>
   );

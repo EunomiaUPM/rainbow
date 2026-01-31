@@ -16,7 +16,6 @@ export const Route = createRootRouteWithContext<{
 }>()({
     component: ({children}: { children: React.ReactNode }) => {
         const widthPage = window.innerWidth;
-        // console.log("Width:", widthPage);
         return (
             <>
                 <SidebarProvider>
