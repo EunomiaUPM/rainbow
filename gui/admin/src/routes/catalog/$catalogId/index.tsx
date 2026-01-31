@@ -4,6 +4,10 @@ import dayjs from "dayjs";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 import {
   Drawer,
@@ -40,10 +44,13 @@ const RouteComponent = () => {
   const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
 
   return (
-    <div className="space-y-4 pb-4">
-      <div>
-        <Heading level="h5">Catalog info:</Heading>
-        <div className="gridColsLayout">
+    <PageLayout>
+      <PageHeader
+        title="Catalog info"
+        badge={<Badge variant="info" size="lg">{formatUrn(catalogId)}</Badge>}
+      />
+      <InfoGrid>
+        <PageSection title="Catalog details:">
           <List>
             <ListItem>
               <ListItemKey>Catalog title</ListItemKey>
@@ -62,13 +69,10 @@ const RouteComponent = () => {
               <ListItemDate>{dayjs(catalog.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
-          <div className="filler"></div>
-        </div>
-      </div>
+        </PageSection>
+      </InfoGrid>
 
-      <div>
-        <Heading level="h5">Datasets</Heading>
-
+      <PageSection title="Datasets">
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -144,9 +148,8 @@ const RouteComponent = () => {
             ))}
           </TableBody>
         </Table>
-      </div>
-      <div>
-        <Heading level="h5">Dataservices</Heading>
+      </PageSection>
+      <PageSection title="Dataservices">
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -186,8 +189,8 @@ const RouteComponent = () => {
             ))}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </PageSection>
+    </PageLayout>
   );
 };
 

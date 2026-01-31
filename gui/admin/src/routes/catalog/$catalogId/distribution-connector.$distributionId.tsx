@@ -6,6 +6,9 @@ import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components
 import { useGetConnectorInstancesByDistribution } from "shared/src/data/connector-queries.ts";
 import { useGetDistributionById } from "shared/src/data/catalog-queries.ts";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
 
 function RouteComponent() {
   const { distributionId } = Route.useParams();
@@ -13,15 +16,12 @@ function RouteComponent() {
   const { data: connector } = useGetConnectorInstancesByDistribution(distributionId);
 
   return (
-    <div className="space-y-4 pb-4">
-      <Heading level="h3" className="flex gap-2 items-center">
-        Distribution info with id
-        <Badge variant="info" size="lg">
-          {" "}
-          {formatUrn(distribution?.id)}
-        </Badge>{" "}
-      </Heading>
-      <div>
+    <PageLayout>
+      <PageHeader
+        title="Distribution info with id"
+        badge={<Badge variant="info" size="lg">{formatUrn(distribution?.id)}</Badge>}
+      />
+      <PageSection>
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Distribution title</ListItemKey>
@@ -34,9 +34,8 @@ function RouteComponent() {
             </ListItemDate>
           </ListItem>
         </List>
-      </div>
-      <div>
-        <Heading level="h5">Connector Instance info</Heading>
+      </PageSection>
+      <PageSection title="Connector Instance info">
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Connector Instance infor</ListItemKey>
@@ -45,8 +44,8 @@ function RouteComponent() {
             </ListItemDate>
           </ListItem>
         </List>
-      </div>
-    </div>
+      </PageSection>
+    </PageLayout>
   );
 }
 
