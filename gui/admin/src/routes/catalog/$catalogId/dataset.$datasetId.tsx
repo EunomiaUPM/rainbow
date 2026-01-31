@@ -109,9 +109,9 @@ function RouteComponent() {
                       distributionId: d.id,
                     }}
                   >
-                    <Button variant="link">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                       See connector instance
-                      <ArrowRight />
+                      <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
                   </Link>
                   <Link
@@ -121,9 +121,9 @@ function RouteComponent() {
                       dataserviceId: d.dcatAccessService,
                     }}
                   >
-                    <Button variant="link">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground">
                       See dataservice
-                      <ArrowRight />
+                      <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
                   </Link>
                 </div>
@@ -133,50 +133,49 @@ function RouteComponent() {
         />
       </PageSection>
 
-      <div className=" flex flex-row mb-2 items-center">
-        <Heading level="h5" className="mb-0">
-          {" "}
-          ODRL Policies{" "}
-        </Heading>
-        <Drawer direction={"right"} open={open} onOpenChange={(open) => setOpen(open)}>
-          <DrawerTrigger>
-            <Button variant="default" size="sm" className="mb-1 ml-3">
-              Add ODRL policy
-              <Plus className="" />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader className="px-8">
-              <DrawerTitle>
-                <Heading level="h4" className="text-curren mb-0 ">
-                  New ODRL Policy
-                </Heading>
-                <div className="font-normal text-brand-sky">
-                  for Dataset
-                  <Badge variant="info" size="sm" className="ml-2">
-                    {formatUrn(dataset.id)}
-                  </Badge>
-                </div>
-              </DrawerTitle>
-            </DrawerHeader>
-            <PolicyWrapperNew onSubmit={onSubmit} />
-          </DrawerContent>
-        </Drawer>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {policies &&
-          policies.map((policy) => (
-            <PolicyWrapperShow
-              key={policy.id}
-              policy={policy}
-              participant={participant}
-              datasetId={dataset.id}
-              catalogId={undefined}
-              datasetName={dataset.dctTitle}
-            />
-          ))}
-      </div>
+      <PageSection
+        title="ODRL Policies"
+        className="mt-10"
+        action={
+          <Drawer direction={"right"} open={open} onOpenChange={(open) => setOpen(open)}>
+            <DrawerTrigger asChild>
+              <Button variant="outline" size="sm" className="h-6 text-[10px] uppercase tracking-wide px-2 gap-1">
+                <Plus className="h-3 w-3" />
+                Add Policy
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader className="px-8 border-b border-white/10 pb-4 mb-4">
+                <DrawerTitle className="flex flex-col gap-1">
+                  <span className="text-lg font-semibold">New ODRL Policy</span>
+                  <div className="flex items-center text-sm font-normal text-muted-foreground">
+                    for Dataset
+                    <Badge variant="info" size="sm" className="ml-2 font-mono">
+                      {formatUrn(dataset.id)}
+                    </Badge>
+                  </div>
+                </DrawerTitle>
+              </DrawerHeader>
+              <PolicyWrapperNew onSubmit={onSubmit} />
+            </DrawerContent>
+          </Drawer>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {policies &&
+            policies.map((policy) => (
+              <PolicyWrapperShow
+                key={policy.id}
+                policy={policy}
+                participant={participant}
+                datasetId={dataset.id}
+                catalogId={undefined}
+                datasetName={dataset.dctTitle}
+              />
+            ))}
+        </div>
+      </PageSection>
     </PageLayout>
   );
 }

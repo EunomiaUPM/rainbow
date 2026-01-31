@@ -31,15 +31,15 @@ const Heading: FC<{
   const baseClasses = "text-foreground-100 text-balance";
   const sizeClasses =
     {
-      h1: "md:text-36 sm:text-40 mb-6 font-medium font-title",
-      h2: "md:text-32 sm:text-36 mb-4 font-medium",
-      h3: "md:text-28 sm:text-32 mb-4 font-medium",
-      h4: "md:text-24 sm:text-28 mb-2 font-medium font-display",
-      h5: "md:text-20 text-white/70 sm:text-24 mb-2 font-medium",
-      h6: "text-base font-medium  mb-2",
-      table: "text-base font-medium ",
-      "title-sm": "text-base sm:text-20 font-normal mb-2 leading-snug",
-      subtitle: "text-20 md:text-24 mb-2 font-light max-w-[50ch] md:max-w-[70ch] 2xl:max-w-[75ch]",
+      h1: "text-2xl mb-4 font-semibold font-title tracking-tight",
+      h2: "text-xl mb-3 font-semibold tracking-tight",
+      h3: "text-lg mb-3 font-medium tracking-tight",
+      h4: "text-base mb-2 font-medium font-display tracking-normal text-white/90",
+      h5: "text-sm text-white/80 mb-2 font-medium tracking-wide",
+      h6: "text-xs font-semibold mb-1 uppercase tracking-wider text-muted-foreground",
+      table: "text-xs font-semibold uppercase tracking-wider",
+      "title-sm": "text-sm font-medium mb-1 leading-snug",
+      subtitle: "text-base mb-2 font-normal text-muted-foreground max-w-[65ch]",
     }[level] || "";
 
   return (

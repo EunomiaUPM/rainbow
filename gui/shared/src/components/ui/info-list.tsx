@@ -1,5 +1,4 @@
 import React from "react";
-import { List, ListItem, ListItemKey } from "./list";
 import { Badge, BadgeState, BadgeRole } from "./badge";
 import dayjs from "dayjs";
 import { cn } from "shared/src/lib/utils";
@@ -33,11 +32,11 @@ export const InfoList = ({
   className?: string;
 }) => {
   return (
-    <List className={cn("min-w-full px-2", className)}>
+    <div className={cn("min-w-full px-0", className)}>
       {items.map((item, index) => (
         <InfoListItem key={index} {...item} />
       ))}
-    </List>
+    </div>
   );
 };
 
@@ -77,9 +76,9 @@ const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) 
   };
 
   return (
-    <ListItem className={className}>
-      <ListItemKey className={keyClassName}>{label}</ListItemKey>
-      {renderValue()}
-    </ListItem>
+    <div className={cn("flex flex-col py-2 border-b border-white/5 last:border-0", className)}>
+      <span className={cn("text-[10px] uppercase tracking-wide text-white/50 font-medium mb-1", keyClassName)}>{label}</span>
+      <div className="text-sm font-medium text-white/90">{renderValue()}</div>
+    </div>
   );
 };

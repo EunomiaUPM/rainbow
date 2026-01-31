@@ -12,8 +12,8 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export function PageHeader({ title, badge, className, children, ...props }: PageHeaderProps) {
   return (
-    <header className={cn("mb-2", className)} {...props}>
-      <Heading level="h3" className="flex gap-3 items-center font-display mb-0.5">
+    <header className={cn("mb-1 pb-1 border-b border-white/5", className)} {...props}>
+      <Heading level="h4" className="flex gap-2 items-center font-display mb-0 text-white/90">
         {title}
         {badge}
       </Heading>

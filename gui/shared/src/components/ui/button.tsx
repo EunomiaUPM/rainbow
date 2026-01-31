@@ -23,9 +23,9 @@ const buttonVariants = cva(
         link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        xs: "h-7 rounded-md px-3 text-xs",
+        default: "h-8 px-3 py-1 text-sm",
+        sm: "h-7 rounded-sm px-2 text-xs",
+        xs: "h-6 rounded-sm px-2 text-[10px]",
         lg: "h-10 rounded-md px-8 text-lg",
         icon: "h-9 w-9 rounded-full p-1",
         icon_sm: "h-7 w-7 rounded-full p-0",

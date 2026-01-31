@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
-import { SidebarProvider, SidebarTrigger } from "../../../shared/src/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "../../../shared/src/components/ui/sidebar";
 import React from "react";
 import { AppSidebarProvider } from "shared/src/components/AppSidebarProvider.tsx";
 import { Header } from "shared/src/components/header.tsx";
@@ -22,17 +22,13 @@ export const Route = createRootRouteWithContext<{
         return (
             <>
                 <SidebarProvider>
-                    <div className="fixed flex w-full z-50">
-                        <AppSidebarProvider />
+                    <AppSidebarProvider />
+                    <SidebarInset>
                         <Header />
-                    </div>
-                    <main className="page-container">
-                        {widthPage < 768 ? <SidebarTrigger /> : ""}
-                        {children}
-                        <div className="main-container">
+                        <div className="flex flex-1 flex-col gap-4 p-8 overflow-hidden items-start justify-start w-full h-full">
                             <Outlet />
                         </div>
-                    </main>
+                    </SidebarInset>
                 </SidebarProvider>
                 <GlobalLoadingIndicator />
                 <TanStackRouterDevtools />

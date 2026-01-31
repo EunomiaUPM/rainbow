@@ -30,9 +30,9 @@ function RouteComponent() {
   const catalogIdURL = "/catalog/" + catalogId.replace(/:/g, "%3A");
 
   return (
-    <div>
+    <div className="h-full w-full flex flex-col">
       {routerState.location.pathname !== `${catalogIdURL}` ? null : (
-        <header className="mb-2">
+        <header className="mb-2 shrink-0">
           <Heading level="h3" className="flex gap-2 items-center">
             Catalog
             <Badge variant="info" size="lg">

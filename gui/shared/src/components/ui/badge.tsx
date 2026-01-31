@@ -7,15 +7,15 @@ import { cn } from "shared/src/lib/utils";
  * Displays a badge or a component that looks like a badge.
  */
 const badgeVariants = cva(
-  "px-2 py-0.5 w-fit  inline-flex justify-start items-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all ",
+  "px-1.5 py-0.5 w-fit inline-flex justify-start items-center bg-white/5 font-medium rounded-[4px] border border-white/10 whitespace-nowrap shrink-0 gap-1 transition-all",
   {
     variants: {
       variant: {
-        default: "bg-brand-snow/15 text-brand-snow border-transparent",
-        info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
-        infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-transparent",
-        role: "text-white uppercase border-transparent",
-        status: "bg-opacity-30 border-transparent text-foreground-300",
+        default: "bg-brand-snow/15 text-brand-snow border-white/10",
+        info: "font-mono uppercase bg-background-800 text-secondary-400 border-white/10",
+        infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-white/10",
+        role: "text-white uppercase border-white/10",
+        status: "bg-opacity-30 border-white/10 text-foreground-300",
       },
       state: {
         default: "",
@@ -41,15 +41,15 @@ const badgeVariants = cva(
         TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
       },
       dsrole: {
-        Provider: "bg-roles-provider/30",
-        Consumer: "bg-roles-consumer/30",
-        Business: "bg-roles-business/30",
-        Customer: "bg-roles-customer/30",
+        Provider: "bg-roles-provider/30 border-roles-provider/40",
+        Consumer: "bg-roles-consumer/30 border-roles-consumer/40",
+        Business: "bg-roles-business/30 border-roles-business/40",
+        Customer: "bg-roles-customer/30 border-roles-customer/40",
       },
       size: {
-        default: "text-sm px-2 py-0.5",
-        lg: "text-lg font-bold px-2 py-0",
-        sm: "text-xs px-1 py-0.5",
+        default: "text-xs px-2 py-0.5",
+        lg: "text-sm font-bold px-2 py-1",
+        sm: "text-[10px] px-1.5 py-0.5 leading-none",
       },
     },
     defaultVariants: {
