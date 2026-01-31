@@ -11,6 +11,9 @@ import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { BusinessRequestAccessDialog } from "./dialogs/BusinessRequestAccessDialog";
 
+/**
+ * Wrapper component for displaying policy details.
+ */
 export const PolicyWrapperShow = ({
   policy,
   datasetId,

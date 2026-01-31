@@ -45,11 +45,14 @@ function RouteComponent() {
   );
 }
 
+/**
+ * Route for displaying data service details.
+ */
 export const Route = createFileRoute("/catalog/$catalogId/data-service/$dataServiceId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
-  loader: ({ context: { queryClient, api_gateway }, params: {dataServiceId} }) => {
-      if (!api_gateway) return;
-      return queryClient.ensureQueryData(getDataServiceByIdOptions(api_gateway, dataServiceId));
+  loader: ({ context: { queryClient, api_gateway }, params: { dataServiceId } }) => {
+    if (!api_gateway) return;
+    return queryClient.ensureQueryData(getDataServiceByIdOptions(api_gateway, dataServiceId));
   },
 });

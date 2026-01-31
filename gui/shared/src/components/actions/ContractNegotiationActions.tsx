@@ -12,6 +12,9 @@ import { ContractNegotiationVerificationDialog } from "../dialogs/ContractNegoti
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
+/**
+ * Actions available for a contract negotiation process.
+ */
 export const ContractNegotiationActions = ({
   process,
   tiny = false,
@@ -73,9 +76,9 @@ export const ContractNegotiationActions = ({
             { label: "Terminate", variant: "destructive", Component: ContractNegotiationTerminationDialog },
           ];
         case "AGREED":
-           return [
-             { label: "Verify", variant: "default", Component: ContractNegotiationVerificationDialog },
-           ];
+          return [
+            { label: "Verify", variant: "default", Component: ContractNegotiationVerificationDialog },
+          ];
         default:
           return [];
       }

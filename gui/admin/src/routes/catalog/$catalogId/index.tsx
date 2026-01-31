@@ -18,7 +18,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@./../../shared/src/components/ui/drawer";
+} from "shared/src/components/ui/drawer";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import {
   Table,
@@ -194,6 +194,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for displaying catalog details.
+ */
 export const Route = createFileRoute("/catalog/$catalogId/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

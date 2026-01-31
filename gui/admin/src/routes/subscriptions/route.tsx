@@ -19,6 +19,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Subscriptions route layout.
+ */
 export const Route = createFileRoute("/subscriptions")({
   component: RouteComponent,
   notFoundComponent: NotFound,

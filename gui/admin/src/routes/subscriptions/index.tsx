@@ -92,6 +92,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for displaying subscription details and notifications.
+ */
 export const Route = createFileRoute("/subscriptions/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

@@ -2,6 +2,9 @@ import { useIsFetching } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+/**
+ * Global loading indicator component that shows when queries are fetching.
+ */
 export function GlobalLoadingIndicator() {
   const isFetching = useIsFetching();
   const [visible, setVisible] = useState(false);

@@ -5,6 +5,9 @@ import { usePolicyForm } from "shared/src/hooks/usePolicyForm";
 import { PolicySection } from "./policy-form/PolicySection";
 import { SubmitHandler } from "react-hook-form";
 
+/**
+ * Wrapper component for creating a new policy.
+ */
 export const PolicyWrapperNew: FC<{
   onSubmit: SubmitHandler<any>;
 }> = ({ onSubmit }) => {

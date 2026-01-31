@@ -6,32 +6,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {Button} from "../ui/button";
-import React, {useContext} from "react";
-import {Form} from "../ui/form";
-import {useForm} from "react-hook-form";
-import {GlobalInfoContext, GlobalInfoContextType} from "../../context/GlobalInfoContext";
-import {usePostTransferRPCCompletion} from "shared/src/data/transfer-mutations";
+import { Button } from "../ui/button";
+import React, { useContext } from "react";
+import { Form } from "../ui/form";
+import { useForm } from "react-hook-form";
+import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
+import { usePostTransferRPCCompletion } from "shared/src/data/transfer-mutations";
 import { InfoList } from "shared/src/components/ui/info-list";
-import {Badge, BadgeState} from "shared/src/components/ui/badge";
+import { Badge, BadgeState } from "shared/src/components/ui/badge";
 import dayjs from "dayjs";
 
-export const TransferProcessCompletionDialog = ({process}: { process: TransferProcess }) => {
-  // --- Form Setup ---
+/**
+ * Dialog for completing a transfer process.
+ */
+export const TransferProcessCompletionDialog = ({ process }: { process: TransferProcess }) => {
+
   const form = useForm({});
-  const {handleSubmit, control, setValue, getValues} = form;
-  const {mutateAsync: completeAsync} = usePostTransferRPCCompletion();
-  const {api_gateway, dsrole} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { handleSubmit, control, setValue, getValues } = form;
+  const { mutateAsync: completeAsync } = usePostTransferRPCCompletion();
+  const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   const onSubmit = () => {
     if (dsrole == "provider") {
       return completeAsync({
         api_gateway: api_gateway,
         content: {
-          consumerParticipantId: process.associated_consumer,
-          consumerCallbackAddress: process.data_plane_id,
-          consumerPid: process.consumer_pid,
-          providerPid: process.provider_pid,
+          consumerParticipantId: (process as any).associated_consumer,
+          consumerCallbackAddress: (process as any).data_plane_id,
+          consumerPid: (process as any).consumer_pid,
+          providerPid: (process as any).provider_pid,
         },
       });
     }
@@ -39,9 +42,9 @@ export const TransferProcessCompletionDialog = ({process}: { process: TransferPr
       completeAsync({
         api_gateway: api_gateway,
         content: {
-          providerParticipantId: process.associated_provider,
-          consumerPid: process.consumer_pid,
-          providerPid: process.provider_pid,
+          providerParticipantId: (process as any).associated_provider,
+          consumerPid: (process as any).consumer_pid,
+          providerPid: (process as any).provider_pid,
         },
       });
     }
@@ -57,10 +60,10 @@ export const TransferProcessCompletionDialog = ({process}: { process: TransferPr
           <span>
             You are about to complete the transfer process with the following information.
           </span>
-          {/* <span>{JSON.stringify(process)}</span> */}
+
         </DialogDescription>
       </DialogHeader>
-      {/* List */}
+
       <InfoList items={[
         { label: "Provider Participant id", value: { type: "urn", value: (process as any).provider_pid } },
         { label: "Consumer Participant id", value: { type: "urn", value: (process as any).consumer_pid } },
@@ -71,7 +74,7 @@ export const TransferProcessCompletionDialog = ({process}: { process: TransferPr
         { label: "Created at", value: { type: "date", value: (process as any).created_at } },
         (process as any).updated_at ? { label: "Updated at", value: { type: "date", value: (process as any).updated_at } } : undefined
       ].filter(item => item !== undefined) as any} />
-      {/* / List content */}
+
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <DialogFooter className="[&>*]:w-full">

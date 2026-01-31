@@ -18,15 +18,16 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 
+/**
+ * Route for listing all agreements.
+ */
 export const Route = createFileRoute("/agreements/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { data: agreements } = useGetAgreements();
-  agreements.map((agreement) => {
-    console.log(agreement.active);
-  });
+
 
   return (
     <PageLayout>
@@ -39,9 +40,7 @@ function RouteComponent() {
           <TableHeader>
             <TableRow>
               <TableHead>Agreement Id</TableHead>
-              {/* <TableHead>Related Message</TableHead> */}
               <TableHead>Consumer Participant Id</TableHead>
-              {/* <TableHead>Provider Participant Id</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Created at</TableHead>
 
@@ -56,11 +55,7 @@ function RouteComponent() {
                   <Badge variant={"info"}>{formatUrn(agreement.agreement_id)}</Badge>
                 </TableCell>
                 {/* Related Message */}
-                {/* <TableCell>
-                  <Badge variant={"info"}>
-                    {agreement.cn_message_id?.slice(9, 20) + "..."}
-                  </Badge>
-                </TableCell> */}
+
                 {/* Consumer Participant Id */}
                 <TableCell>
                   <div className="flex flex-col gap-1">
@@ -69,15 +64,11 @@ function RouteComponent() {
                     </Badge>
                   </div>
                 </TableCell>
-                {/* 
-                  <Badge variant={"info"}>
-                    {agreement.provider_participant_id?.slice(0, 20) + "..."}
-                  </Badge>
-                  </div> */}
+
                 <TableCell>
                   <Badge
                     variant={"status"}
-                    state={agreement.active ? "ACTIVE" : "SUSPENDED"} // lo dejo para que ponga un color gris, pero se puede poner rojo
+                    state={agreement.active ? "ACTIVE" : "SUSPENDED"}
                   >
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
                   </Badge>

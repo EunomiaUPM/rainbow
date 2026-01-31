@@ -21,6 +21,9 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 
+/**
+ * Route for listing transfer processes.
+ */
 export const Route = createFileRoute("/transfer-process/")({
   component: RouteComponent,
 });

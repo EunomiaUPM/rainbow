@@ -23,6 +23,9 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
+/**
+ * Route for displaying individual transfer process details.
+ */
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
 });
@@ -37,15 +40,7 @@ function RouteComponent() {
       <Tabs defaultValue="data-control" className="w-full">
         <TabsList>
           <TabsTrigger value="data-control">Control Plane</TabsTrigger>
-          {/* <TabsTrigger value="data-plane">Data Plane</TabsTrigger> */}
         </TabsList>
-        {/* <TabsContent value="data-plane" className="gridColsLayout">
-          {dataPlane && (
-            <div>
-              <TransferProcessDataPlaneComponent dataPlane={dataPlane} />
-            </div>
-          )}
-        </TabsContent> */}
         <TabsContent value="data-control">
           {" "}
           <PageSection title="Transfer process info">
@@ -76,7 +71,7 @@ function RouteComponent() {
               </List>
             </InfoGrid>
           </PageSection>
-          
+
           <PageSection>
             {/* DRAWER */}
             <Drawer direction={"right"}>

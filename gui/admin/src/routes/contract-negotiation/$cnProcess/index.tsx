@@ -1,14 +1,14 @@
-import {createFileRoute} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import {
   useGetContractNegotiationMessagesByCNID,
   useGetContractNegotiationProcessesByCNID,
 } from "shared/src/data/contract-queries.ts";
-import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
-import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list.tsx";
+import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions.tsx";
+import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import {
   Drawer,
   DrawerBody,
@@ -19,8 +19,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer.tsx";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {useEffect} from "react";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { useEffect } from "react";
 import CnProcessMessageComponent
   from "@./../../shared/src/components/CnProcessMessageComponent.tsx";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
@@ -29,13 +29,10 @@ import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 const RouteComponent = () => {
 
-  const {cnProcess} = Route.useParams();
-  const {data} = useGetContractNegotiationProcessesByCNID(cnProcess);
+  const { cnProcess } = Route.useParams();
+  const { data } = useGetContractNegotiationProcessesByCNID(cnProcess);
   const process = data as CNProcess;
-  const {data: cnMessages} = useGetContractNegotiationMessagesByCNID(cnProcess);
-  useEffect(() => {
-    console.log("📨 cnMessages:", cnMessages);
-  }, [cnMessages]);
+  const { data: cnMessages } = useGetContractNegotiationMessagesByCNID(cnProcess);
 
   return (
     <PageLayout>
@@ -86,7 +83,7 @@ const RouteComponent = () => {
             <DrawerBody>
               {/* New message subcomponent */}
               {cnMessages.map((message) => (
-                <CnProcessMessageComponent message={message}/>
+                <CnProcessMessageComponent message={message} />
               ))}
               {/* / New message subcomponent */}
             </DrawerBody>
@@ -100,11 +97,14 @@ const RouteComponent = () => {
       </PageSection>
 
       {/* ACTIONS */}
-      <ContractNegotiationActions process={process} tiny={false}/>
+      <ContractNegotiationActions process={process} tiny={false} />
     </PageLayout>
   );
 };
 
+/**
+ * Route for displaying contract negotiation process details.
+ */
 export const Route = createFileRoute("/contract-negotiation/$cnProcess/")({
   component: RouteComponent,
 });

@@ -1,17 +1,17 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {SubmitHandler} from "react-hook-form";
-import {useGetDatahubDataset} from "../../../../../shared/src/data/datahub-catalog-queries.ts";
-import {useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
-import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
-import {useContext, useState} from "react";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { SubmitHandler } from "react-hook-form";
+import { useGetDatahubDataset } from "../../../../../shared/src/data/datahub-catalog-queries.ts";
+import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
+import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
+import { useContext, useState } from "react";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 
-import {PolicyWrapperNew} from "shared/src/components/PolicyWrapperNew.tsx";
-import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
+import { PolicyWrapperNew } from "shared/src/components/PolicyWrapperNew.tsx";
+import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
-import {Badge} from "shared/src/components/ui/badge.tsx";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import { Badge } from "shared/src/components/ui/badge.tsx";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
 import {
   Drawer,
   DrawerContent,
@@ -19,19 +19,19 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {Plus} from "lucide-react";
+import { Plus } from "lucide-react";
 
 type Inputs = {
   odrl: string;
 };
 
 function RouteComponent() {
-  const {datasetId} = Route.useParams();
-  const {data: dataset} = useGetDatahubDataset(datasetId);
+  const { datasetId } = Route.useParams();
+  const { data: dataset } = useGetDatahubDataset(datasetId);
   const [open, setOpen] = useState(false);
-  const {data: policies} = useGetPoliciesByDatasetId(datasetId);
-  const {mutateAsync: createPolicyAsync} = usePostNewPolicyInDataset();
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data: policies } = useGetPoliciesByDatasetId(datasetId);
+  const { mutateAsync: createPolicyAsync } = usePostNewPolicyInDataset();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const participant = {
     participant_type: "Provider",
   };
@@ -73,7 +73,7 @@ function RouteComponent() {
           <DrawerTrigger asChild={true}>
             <Button variant="default" size="sm" className="mb-1 ml-3">
               Add ODRL policy
-              <Plus className=""/>
+              <Plus className="" />
             </Button>
           </DrawerTrigger>
           <DrawerContent>
@@ -90,7 +90,7 @@ function RouteComponent() {
                 </p>
               </DrawerTitle>
             </DrawerHeader>
-            <PolicyWrapperNew onSubmit={onSubmit}/>
+            <PolicyWrapperNew onSubmit={onSubmit} />
           </DrawerContent>
         </Drawer>
       </div>
@@ -112,6 +112,9 @@ function RouteComponent() {
   );
 }
 
+/**
+ * Route for displaying Datahub dataset details.
+ */
 export const Route = createFileRoute("/datahub-catalog/$catalogId/dataset/$datasetId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

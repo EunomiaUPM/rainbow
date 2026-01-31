@@ -75,10 +75,10 @@ const RouteComponent = () => {
                 <TableCell>
                   <Drawer
                     direction={"right"}
-                    open={openedDrawerId === dataset.urn} // Se abre solo si su ID coincide
+                    open={openedDrawerId === dataset.urn}
                     onOpenChange={(isOpen) => {
                       if (!isOpen) {
-                        setOpenedDrawerId(null); // Si el usuario lo cierra, actualiza el estado
+                        setOpenedDrawerId(null);
                       }
                     }}
                   >
@@ -129,6 +129,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for displaying Datahub catalog details.
+ */
 export const Route = createFileRoute("/datahub-catalog/$catalogId/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

@@ -18,11 +18,7 @@ interface ConstraintItemProps {
   onRemove: () => void;
 }
 
-export const ConstraintItem: FC<ConstraintItemProps> = ({
-  constraint,
-  onUpdate,
-  onRemove,
-}) => {
+export const ConstraintItem: FC<ConstraintItemProps> = ({ constraint, onUpdate, onRemove }) => {
   return (
     <div className="flex flex-col gap-2">
       <div className="constraint-create mb-2 flex gap-3 justify-end items-end">
@@ -74,12 +70,7 @@ export const ConstraintItem: FC<ConstraintItemProps> = ({
         </div>
 
         <div>
-           {/*  importante este div sino se deforma el boton */}
-          <Button
-            variant="icon_destructive"
-            size="icon"
-            onClick={onRemove}
-          >
+          <Button variant="icon_destructive" size="icon" onClick={onRemove}>
             <Trash className="mb-0.5 " />
           </Button>
         </div>

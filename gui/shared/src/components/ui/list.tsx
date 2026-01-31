@@ -1,11 +1,14 @@
 import * as React from "react";
-import {cn} from "shared/src/lib/utils";
+import { cn } from "shared/src/lib/utils";
 
+/**
+ * Wrapper for a list of items.
+ */
 const List = ({
-                className,
-                children,
-                ...props
-              }: {
+  className,
+  children,
+  ...props
+}: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -14,7 +17,6 @@ const List = ({
     <ul
       className={cn(
         "mt-0 px-2 min-w-fit w-full text-sm flex flex-col justify-center relative bg-brand-sky/5 overflow-auto border border-white/10 rounded-md",
-        // si el salto es muy horrible se le puede sustituir el min-w-fit por un min-w en pixeles
         className,
       )}
       {...props}
@@ -25,10 +27,10 @@ const List = ({
 };
 
 const ListItem = ({
-                    className,
-                    children,
-                    ...props
-                  }: {
+  className,
+  children,
+  ...props
+}: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -36,7 +38,7 @@ const ListItem = ({
   return (
     <li
       className={cn(
-        "h-fit min-h-9 w-full py-1.5 flex flex-row tracking-wide flex-wrap justify-start items-center gap-2 border-b border-white/20 last:border-0", // place-content-center
+        "h-fit min-h-9 w-full py-1.5 flex flex-row tracking-wide flex-wrap justify-start items-center gap-2 border-b border-white/20 last:border-0",
         className,
       )}
       {...props}
@@ -47,10 +49,10 @@ const ListItem = ({
 };
 
 const ListItemKey = ({
-                       className,
-                       children,
-                       ...props
-                     }: {
+  className,
+  children,
+  ...props
+}: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -63,10 +65,10 @@ const ListItemKey = ({
 };
 
 const ListItemDate = ({
-                        className,
-                        children,
-                        ...props
-                      }: {
+  className,
+  children,
+  ...props
+}: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -78,4 +80,4 @@ const ListItemDate = ({
   );
 };
 
-export {List, ListItem, ListItemKey, ListItemDate};
+export { List, ListItem, ListItemKey, ListItemDate };

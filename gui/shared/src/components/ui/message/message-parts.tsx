@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import Heading from "../heading";
 import { RoleType, mapRoleToVariant } from "./message-log";
 
-// Color variants para mensajes
+
 export const roleVariants = cva("", {
   variants: {
     variant: {

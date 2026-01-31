@@ -1,4 +1,4 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
 import dayjs from "dayjs";
 import {
@@ -9,19 +9,19 @@ import {
   TableHeader,
   TableRow,
 } from "shared/src/components/ui/table";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
-import {Input} from "shared/src/components/ui/input.tsx";
-import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
-import {ContractNegotiationActions} from "shared/src/components/actions/ContractNegotiationActions";
-import {useMemo} from "react";
-import {ArrowRight} from "lucide-react";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
+import { Input } from "shared/src/components/ui/input.tsx";
+import { useGetContractNegotiationProcesses } from "shared/src/data/contract-queries.ts";
+import { ContractNegotiationActions } from "shared/src/components/actions/ContractNegotiationActions";
+import { useMemo } from "react";
+import { ArrowRight } from "lucide-react";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 
 const RouteComponent = () => {
-  const {data: cnProcesses} = useGetContractNegotiationProcesses();
+  const { data: cnProcesses } = useGetContractNegotiationProcesses();
   const cnProcessesSorted = useMemo(() => {
     if (!cnProcesses) return [];
     return [...cnProcesses].sort((a, b) => {
@@ -65,16 +65,16 @@ const RouteComponent = () => {
                 </TableCell>
                 <TableCell>{dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}</TableCell>
                 <TableCell>
-                  <ContractNegotiationActions process={cnProcess} tiny={true}/>
+                  <ContractNegotiationActions process={cnProcess} tiny={true} />
                 </TableCell>
                 <TableCell>
                   <Link
                     to="/contract-negotiation/$cnProcess"
-                    params={{cnProcess: cnProcess.provider_id}}
+                    params={{ cnProcess: cnProcess.provider_id }}
                   >
                     <Button variant="link">
                       See details
-                      <ArrowRight/>
+                      <ArrowRight />
                     </Button>
                   </Link>
                 </TableCell>
@@ -87,6 +87,9 @@ const RouteComponent = () => {
   );
 };
 
+/**
+ * Route for listing contract negotiation processes.
+ */
 export const Route = createFileRoute("/contract-negotiation/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,

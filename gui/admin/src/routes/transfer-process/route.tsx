@@ -1,4 +1,4 @@
-import {createFileRoute, Outlet, useRouterState} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 import { getTransferProcessesOptions } from "shared/src/data/transfer-queries.ts";
 
@@ -19,11 +19,14 @@ const RouteComponent = () => {
           </div>
         </>
       )}
-      <Outlet/>
+      <Outlet />
     </>
   );
 };
 
+/**
+ * Transfer Process route layout and data loading.
+ */
 export const Route = createFileRoute("/transfer-process")({
   component: RouteComponent,
   notFoundComponent: NotFound,

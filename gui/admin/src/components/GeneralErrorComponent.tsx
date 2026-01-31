@@ -15,6 +15,9 @@ interface GeneralErrorComponentProps {
   reset: () => void;
 }
 
+/**
+ * Component for displaying a general error message.
+ */
 export function GeneralErrorComponent({ error, reset }: GeneralErrorComponentProps) {
   const router = useRouter();
 

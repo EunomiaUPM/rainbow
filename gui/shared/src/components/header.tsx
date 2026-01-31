@@ -15,25 +15,26 @@ import { Button } from "shared/src/components/ui/button";
 import { LogOut } from "lucide-react";
 import { formatUrn } from "shared/src/lib/utils";
 
+/**
+ * Header component containing breadcrumbs and user actions.
+ */
 export const Header = () => {
   const routerState = useRouterState();
   const { isAuthenticated, unsetAuthentication } = useContext<AuthContextType | null>(AuthContext)!;
 
   const breadcrumbs = useMemo(() => {
     const rawPaths = routerState.location.pathname.split("/").filter((p) => p !== "");
-    
-    // Logic to determine if a path segment should be visible
+
     const isVisible = (segment: string, allSegments: string[]) => {
       if (segment === "dataset") return false;
       if (segment === "data-service") return false;
-      // Hide 'catalog' if 'provider-catalog' is present in the path (specific legacy logic)
       if (segment === "catalog" && allSegments.includes("provider-catalog")) return false;
       return true;
     };
 
     const formatLabel = (segment: string, prevSegment: string | undefined) => {
       if (segment.includes("urn")) {
-         return formatUrn(segment);
+        return formatUrn(segment);
       }
       return segment.split("-").join(" ");
     };
@@ -48,7 +49,7 @@ export const Header = () => {
 
       if (isVisible(decodedSegment, rawPaths)) {
         items.push({
-          key: currentPath, // unique key based on full path
+          key: currentPath,
           href: currentPath,
           label: formatLabel(decodedSegment, rawPaths[i - 1]),
           originalSegment: segment,
@@ -88,8 +89,8 @@ export const Header = () => {
         <Link to="/subscriptions">
           <NotificationsIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
         </Link>
-        {/* Placeholder for Profile - kept blank to='' as in original, but typically should point somewhere or be a button */}
-        <Link to=""> 
+
+        <Link to="">
           <PersonIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
         </Link>
         {isAuthenticated && (

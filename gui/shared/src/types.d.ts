@@ -31,6 +31,8 @@ declare global {
   }
 
   export interface OdrlOffer {
+    "@id": string;
+    "@type"?: string;
     createdAt: Date;
     entity: string;
     entityType: string;
@@ -39,6 +41,11 @@ declare global {
     odrlOffer: OdrlInfo;
     sourceTemplateId: JSON;
     sourceTemplateVersion: JSON;
+    target?: string;
+    permission?: OdrlPermission[];
+    prohibition?: OdrlPermission[];
+    obligation?: OdrlPermission[];
+    profile?: string;
   }
 
   export interface OdrlInfo {
@@ -69,6 +76,8 @@ declare global {
   }
 
   export interface Catalog {
+    "@id": string;
+    title?: string;
     dctConformsTo: string;
     dctCreator: string;
     dctIdentifier: string;
@@ -82,6 +91,8 @@ declare global {
   }
 
   export interface Dataset {
+    "@id": string;
+    title?: string;
     catalogId: string;
     dctConformsTo: string;
     dctCreator: string;
