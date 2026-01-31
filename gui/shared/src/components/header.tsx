@@ -1,5 +1,6 @@
 import React, { useContext, useMemo } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { cn } from "shared/src/lib/utils";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,12 +9,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "shared/src/components/ui/breadcrumb";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import PersonIcon from "@mui/icons-material/Person";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { Button } from "shared/src/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell, User } from "lucide-react";
 import { formatUrn } from "shared/src/lib/utils";
+import { SidebarTrigger } from "shared/src/components/ui/sidebar";
+import { Separator } from "shared/src/components/ui/separator";
 
 /**
  * Header component containing breadcrumbs and user actions.
@@ -60,38 +61,54 @@ export const Header = () => {
   }, [routerState.location.pathname]);
 
   return (
-    <div className="bg-background w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
-      <Breadcrumb>
-        <BreadcrumbList>
-          {breadcrumbs.map((item, index) => {
-            const isLast = index === breadcrumbs.length - 1;
+    <div className="bg-background w-full border-b border-white/5 py-1 z-50 h-9 px-3 flex justify-between items-center gap-4">
+      <div className="flex items-center gap-2 overflow-hidden">
+        <SidebarTrigger className="h-6 w-6 shrink-0" />
+        <Separator orientation="vertical" className="h-4 shrink-0" />
+        <Breadcrumb className="overflow-hidden">
+          <BreadcrumbList className="flex-nowrap whitespace-nowrap">
+            {breadcrumbs.map((item, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const isFirst = index === 0;
+              // On mobile, only show first and last items. Hide intermediate items.
+              const isHiddenOnMobile = !isFirst && !isLast;
 
-            return (
-              <React.Fragment key={item.key}>
-                <BreadcrumbItem className="max-w-40 truncate">
-                  {isLast ? (
-                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink asChild>
-                      <Link to={item.href}>
-                        {item.label}
-                      </Link>
-                    </BreadcrumbLink>
+              return (
+                <React.Fragment key={item.key}>
+                  <BreadcrumbItem className={cn("truncate max-w-[150px] md:max-w-xs",
+                    isHiddenOnMobile ? "hidden md:inline-flex" : "inline-flex"
+                  )}>
+                    {isHiddenOnMobile && index === 1 && breadcrumbs.length > 2 && (
+                      <span className="md:hidden mx-1">...</span>
+                    )}
+                    {!isHiddenOnMobile && (
+                      isLast ? (
+                        <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild className="text-xs text-muted-foreground hover:text-foreground transition-colors truncate">
+                          <Link to={item.href}>
+                            {item.label}
+                          </Link>
+                        </BreadcrumbLink>
+                      )
+                    )}
+                  </BreadcrumbItem>
+                  {!isLast && (
+                    <BreadcrumbSeparator className={cn(isHiddenOnMobile ? "hidden md:flex" : "flex")} />
                   )}
-                </BreadcrumbItem>
-                {!isLast && <BreadcrumbSeparator />}
-              </React.Fragment>
-            );
-          })}
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex flex-row gap-4">
+                </React.Fragment>
+              );
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <div className="flex flex-row gap-4 shrink-0">
         <Link to="/subscriptions">
-          <NotificationsIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
+          <Bell className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors h-5 w-5" />
         </Link>
 
         <Link to="">
-          <PersonIcon className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
+          <User className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors h-5 w-5" />
         </Link>
         {isAuthenticated && (
           <Button variant="ghost" size="xs" onClick={() => unsetAuthentication()}>

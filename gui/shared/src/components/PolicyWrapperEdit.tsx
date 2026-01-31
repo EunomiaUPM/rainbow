@@ -105,7 +105,7 @@ export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOf
 
     return (
       <div className="w-full">
-        <div className="border border-white/30 bg-white/10 p-4 pt-2 rounded-md justify-start">
+        <div className="border border-white/30 bg-white/10 p-3 pt-2 rounded-md justify-start">
           <div className="flex mb-4">
             <Heading level="h5" className="flex gap-3">
               <div>Policy with ID</div>

@@ -8,7 +8,7 @@ interface InfoGridProps extends React.HTMLAttributes<HTMLDivElement> { }
  */
 export function InfoGrid({ className, children, ...props }: InfoGridProps) {
   return (
-    <div className={cn("gridColsLayout", className)} {...props}>
+    <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-3 mb-4", className)} {...props}>
       {children}
     </div>
   );
