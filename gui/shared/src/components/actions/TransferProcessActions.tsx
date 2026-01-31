@@ -1,11 +1,11 @@
 import React, { FC, useContext } from "react";
 import { cva } from "class-variance-authority";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { TransferProcessStartDialog } from "shared/src/components/TransferProcessStartDialog";
-import { TransferProcessTerminationDialog } from "shared/src/components/TransferProcessTerminationDialog";
+import { TransferProcessStartDialog } from "shared/src/components/dialogs/TransferProcessStartDialog";
+import { TransferProcessTerminationDialog } from "shared/src/components/dialogs/TransferProcessTerminationDialog";
 import NoFurtherActions from "../ui/noFurtherActions";
-import { TransferProcessSuspensionDialog } from "shared/src/components/TransferProcessSuspensionDialog";
-import { TransferProcessCompletionDialog } from "shared/src/components/TransferProcessCompletionDialog";
+import { TransferProcessSuspensionDialog } from "shared/src/components/dialogs/TransferProcessSuspensionDialog";
+import { TransferProcessCompletionDialog } from "shared/src/components/dialogs/TransferProcessCompletionDialog";
 import { ProcessActionDialog } from "../common/ProcessActionDialog";
 
 export const TransferProcessActions: FC<{

@@ -18,14 +18,6 @@ const RouteComponent = () => {
             {transferProcessId.slice(9, 29) + "[...]"}{" "}
           </Badge>
         </Heading>
-        {/* no borrar */}
-        {/* <div className="flex gap-2">
-          <p className="text-base mt-[3px]">ID: </p>{" "}
-          <Badge variant="info" size="lg">
-            {" "}
-            {transferProcessId}{" "}
-          </Badge>
-        </div> */}
       </header>
       <Outlet/>
     </div>
