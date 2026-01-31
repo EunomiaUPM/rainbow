@@ -1,26 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "shared/src/components/ui/form";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "shared/src/components/ui/button.tsx";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "shared/src/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
 import { useContext, useEffect, useState } from "react"; // Import useEffect
+import { ConsumerParticipantSelector } from "../../components/form/ConsumerParticipantSelector";
 import { getParticipants } from "shared/src/data/participant-queries.ts";
 import { getPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations.ts";
@@ -223,73 +208,16 @@ export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset
             Chosen dataset: {dataset.title} {dataset["@id"]}
           </div>
           {/* Consumer Participant Field */}
-          <FormField
+          <ConsumerParticipantSelector
             control={control}
             name="consumerParticipantId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Consumer Participant Id</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={consumerParticipantOpen}
-                      onOpenChange={handleConsumerParticipantOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={consumerParticipantOpen}
-                          className="w-full justify-between font-normal text-gray-300  transition-colors"
-                        >
-                          {field.value
-                            ? consumerParticipants.find((p) => p.participant_id === field.value)
-                              ?.participant_id
-                            : "Select participant..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search participant..." />
-                          <CommandList>
-                            <CommandEmpty>No participant found.</CommandEmpty>
-                            <CommandGroup>
-                              {consumerParticipants.map((consumerParticipant) => (
-                                <CommandItem
-                                  key={consumerParticipant.participant_id}
-                                  value={consumerParticipant.participant_id}
-                                  onSelect={() => {
-                                    field.onChange(consumerParticipant.participant_id);
-                                    setConsumerSelectedParticipant(consumerParticipant);
-                                    setConsumerParticipantOpen(false);
-                                    // No fields follow this one that need clearing based on its change
-                                  }}
-                                  className={
-                                    field.value === consumerParticipant.participant_id
-                                      ? "text-role-consumer font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {consumerParticipant.participant_id}
-                                  <span className="text-gray-400 ml-2 text-sm">
-                                    ({consumerParticipant.base_url})
-                                  </span>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Provide the ID of the consumer participant for the negotiation.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
+            participants={consumerParticipants}
+            isOpen={consumerParticipantOpen}
+            onOpenChange={handleConsumerParticipantOpenChange}
+            onSelect={(participant) => {
+              setConsumerSelectedParticipant(participant);
+              setConsumerParticipantOpen(false);
+            }}
           />
           <div> POLICIES</div>
           {policies &&
