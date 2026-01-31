@@ -68,7 +68,7 @@ function RouteComponent() {
         Dataset with id
         <Badge variant="info" size="lg">
           {" "}
-          {dataset.id.slice(9, 29) + "[...]"}
+          {formatUrn(dataset.id)}
         </Badge>
       </Heading>
       <div className="gridColsLayout">
@@ -97,9 +97,9 @@ function RouteComponent() {
           </TableHeader>
           <TableBody>
             {distributions.map((distribution) => (
-              <TableRow key={distribution.id.slice(0, 20)}>
+              <TableRow key={distribution.id}>
                 <TableCell>
-                  <Badge variant="info">{distribution.id.slice(9, 29) + "[...]"}</Badge>
+                  <Badge variant="info">{formatUrn(distribution.id)}</Badge>
                 </TableCell>
                 <TableCell>{distribution.dctTitle ? distribution.dctTitle : "undefined"}</TableCell>
                 <TableCell>
@@ -160,7 +160,7 @@ function RouteComponent() {
                 <div className="font-normal text-brand-sky">
                   for Dataset
                   <Badge variant="info" size="sm" className="ml-2">
-                    {dataset.id.slice(9, 29) + "[...]"}
+                    {formatUrn(dataset.id)}
                   </Badge>
                 </div>
               </DrawerTitle>

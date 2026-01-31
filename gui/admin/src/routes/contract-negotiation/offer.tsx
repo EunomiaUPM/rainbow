@@ -27,6 +27,7 @@ import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutat
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import {Badge} from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 type Inputs = {
   consumerParticipantId: UUID;
@@ -229,7 +230,7 @@ export const RouteComponent = ({catalog, dataset}: { catalog: Catalog, dataset: 
             {" "}
             {/* <p className="text-xs"> Chosen catalog:  </p> */}
             <p>{catalog.title}</p>{" "}
-            <Badge variant="info">{catalog["@id"].slice(9, 29) + "[...]"}</Badge>
+            <Badge variant="info">{formatUrn(catalog["@id"])}</Badge>
           </div>
           {/* {console.log(selectedCatalog, " selectedCatalogº")} */}
           <FormField

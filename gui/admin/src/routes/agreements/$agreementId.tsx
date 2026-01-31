@@ -5,6 +5,7 @@ import Heading from "shared/src/components/ui/heading";
 import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
@@ -26,7 +27,7 @@ function RouteComponent() {
         Agreement with id
         <Badge variant="info" size="lg">
           {" "}
-          {agreement.agreement_id.slice(9, 29) + "[...]"}
+          {formatUrn(agreement.agreement_id)}
         </Badge>
       </Heading>
       <div className="gridColsLayout">
@@ -37,24 +38,24 @@ function RouteComponent() {
           <List>
             <ListItem>
               <ListItemKey>Agreement Id</ListItemKey>
-              <Badge variant="info">{agreement.agreement_id.slice(9, 29) + "[...]"}</Badge>
+              <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
             </ListItem>
             <div className={"border-b border-white/20"}>
               <ListItem>
                 <ListItemKey>Related Message</ListItemKey>
-                <Badge variant="info">{agreement.cn_message_id.slice(9, 29) + "[...]"}</Badge>
+                <Badge variant="info">{formatUrn(agreement.cn_message_id)}</Badge>
               </ListItem>
             </div>
             <ListItem>
               <ListItemKey>Consumer Participant Id</ListItemKey>
               <Badge variant="info">
-                {agreement.consumer_participant_id.slice(9, 29) + "[...]"}
+                {formatUrn(agreement.consumer_participant_id)}
               </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Provider Participant Id</ListItemKey>{" "}
               <Badge variant="info">
-                {agreement.provider_participant_id.slice(9, 29) + "[...]"}
+                {formatUrn(agreement.provider_participant_id)}
               </Badge>
             </ListItem>
             <ListItem>
@@ -81,7 +82,7 @@ function RouteComponent() {
               <ListItemKey> ID </ListItemKey>
               <Badge variant="info">
                 {formatString(
-                  JSON.stringify(agreement.agreement_content["@id"].slice(9, 29) + "[...]"),
+                  JSON.stringify(formatUrn(agreement.agreement_content["@id"])),
                 )}
               </Badge>
             </ListItem>
@@ -93,7 +94,7 @@ function RouteComponent() {
               <ListItemKey> Assignee </ListItemKey>
               <Badge variant="info">
                 {formatString(
-                  JSON.stringify(agreement.agreement_content.assignee.slice(9, 29) + "[...]"),
+                  JSON.stringify(formatUrn(agreement.agreement_content.assignee)),
                 )}
               </Badge>
             </ListItem>
@@ -101,7 +102,7 @@ function RouteComponent() {
               <ListItemKey> Assigner </ListItemKey>
               <Badge variant="info">
                 {formatString(
-                  JSON.stringify(agreement.agreement_content.assigner.slice(9, 29) + "[...]"),
+                  JSON.stringify(formatUrn(agreement.agreement_content.assigner)),
                 )}
               </Badge>
             </ListItem>

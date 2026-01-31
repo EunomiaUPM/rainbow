@@ -3,6 +3,7 @@ import {
   useGetAgreementsByParticipantId,
   useGetParticipantById,
 } from "shared/src/data/participant-queries.ts";
+import { formatUrn } from "shared/src/lib/utils.ts";
 import dayjs from "dayjs";
 
 // Components
@@ -44,7 +45,7 @@ function RouteComponent() {
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
         <Badge variant={"info"} size={"lg"} className="max-w-[50%] truncate text-overflow-ellipsis">
-          {participant.participant_id.slice(9, -1)}
+          {formatUrn(participant.participant_id)}
         </Badge>
       </Heading>
       {/* Page content */}
@@ -58,7 +59,7 @@ function RouteComponent() {
             <List className={"min-w-fit"}>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
-                <Badge variant={"info"}>{participant.participant_id.slice(9, 29) + "[...]"}</Badge>
+                <Badge variant={"info"}>{formatUrn(participant.participant_id)}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>Identity Token</ListItemKey>

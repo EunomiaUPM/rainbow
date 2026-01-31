@@ -2,6 +2,7 @@ import {createFileRoute, Outlet} from "@tanstack/react-router";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import { getTransferProcessByIdOptions } from "shared/src/data/transfer-queries.ts";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -16,7 +17,7 @@ const RouteComponent = () => {
           Transfer Process
           <Badge variant="info" size="lg">
             {" "}
-            {transferProcessId.slice(9, 29) + "[...]"}{" "}
+            {formatUrn(transferProcessId)}{" "}
           </Badge>
         </Heading>
       </header>

@@ -13,6 +13,7 @@ import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { useGetDatahubCatalogs } from "../../../../shared/src/data/datahub-catalog-queries.ts";
 import { Badge } from "shared/src/components/ui/badge";
+import { formatUrn } from "shared/src/lib/utils.ts";
 
 const RouteComponent = () => {
   const { data: datahubCatalogs } = useGetDatahubCatalogs();
@@ -38,7 +39,7 @@ const RouteComponent = () => {
             {datahubCatalogs.map((datahubCatalog) => (
               <TableRow key={datahubCatalog.urn}>
                 <TableCell>
-                  <Badge variant="info">{datahubCatalog.urn.slice(4)}</Badge>
+                  <Badge variant="info">{formatUrn(datahubCatalog.urn)}</Badge>
                 </TableCell>
                 <TableCell>{datahubCatalog.properties.name}</TableCell>
                 <TableCell>{datahubCatalog.properties.description}</TableCell>
