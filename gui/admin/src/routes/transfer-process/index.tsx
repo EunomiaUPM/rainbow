@@ -17,6 +17,9 @@ import { TransferProcessActions } from "shared/src/components/actions/TransferPr
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 import { mergeStateAndAttribute } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
 
 export const Route = createFileRoute("/transfer-process/")({
   component: RouteComponent,
@@ -32,56 +35,59 @@ function RouteComponent() {
   }, [transferProcesses]);
 
   return (
-    <div>
-      <div className="pb-3 w-3/5">
-        <Input type="search"></Input>
-      </div>
-      <Table className="text-sm">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Provider pid</TableHead>
-            <TableHead>State</TableHead>
-            <TableHead>Created at</TableHead>
-            <TableHead>Updated at</TableHead>
-            <TableHead>Actions</TableHead>
-            <TableHead>Link</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transferProcessesSorted.map((transferProcess) => (
-            <TableRow key={formatUrn(transferProcess.id)}>
-              <TableCell>
-                <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={"status"} state={transferProcess.state as BadgeState}>
-                  {mergeStateAndAttribute(transferProcess.state, transferProcess.stateAttribute)}
-                </Badge>
-              </TableCell>
-              <TableCell>{dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</TableCell>
-              <TableCell>
-                {transferProcess.updatedAt
-                  ? dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")
-                  : "-"}
-              </TableCell>
-              <TableCell>
-                <TransferProcessActions process={transferProcess} tiny={true} />
-              </TableCell>
-              <TableCell>
-                <Link
-                  to="/transfer-process/$transferProcessId"
-                  params={{ transferProcessId: transferProcess.id }}
-                >
-                  <Button variant="link">
-                    See details
-                    <ArrowRight />
-                  </Button>
-                </Link>
-              </TableCell>
+    <PageLayout>
+      <PageHeader title="Transfer Processes" />
+      <PageSection>
+        <div className="pb-3 w-3/5">
+          <Input type="search"></Input>
+        </div>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Provider pid</TableHead>
+              <TableHead>State</TableHead>
+              <TableHead>Created at</TableHead>
+              <TableHead>Updated at</TableHead>
+              <TableHead>Actions</TableHead>
+              <TableHead>Link</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {transferProcessesSorted.map((transferProcess) => (
+              <TableRow key={formatUrn(transferProcess.id)}>
+                <TableCell>
+                  <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={"status"} state={transferProcess.state as BadgeState}>
+                    {mergeStateAndAttribute(transferProcess.state, transferProcess.stateAttribute)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</TableCell>
+                <TableCell>
+                  {transferProcess.updatedAt
+                    ? dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")
+                    : "-"}
+                </TableCell>
+                <TableCell>
+                  <TransferProcessActions process={transferProcess} tiny={true} />
+                </TableCell>
+                <TableCell>
+                  <Link
+                    to="/transfer-process/$transferProcessId"
+                    params={{ transferProcessId: transferProcess.id }}
+                  >
+                    <Button variant="link">
+                      See details
+                      <ArrowRight />
+                    </Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </PageSection>
+    </PageLayout>
   );
 }

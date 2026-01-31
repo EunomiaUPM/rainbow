@@ -1,8 +1,8 @@
 import {createFileRoute, Outlet} from "@tanstack/react-router";
-import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import { getContractNegotiationProcessesByCNIDOptions, getContractNegotiationMessagesByCNIDOptions } from "shared/src/data/contract-queries.ts";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -12,15 +12,10 @@ const RouteComponent = () => {
   const {cnProcess} = Route.useParams();
   return (
     <div>
-      <header className="mb-2">
-        <Heading level="h3" className="mb-0.5 font-display flex  gap-3 items-center">
-          Contract negotiation process
-          <Badge variant="info" size="lg">
-            {" "}
-            {formatUrn(cnProcess)}{" "}
-          </Badge>
-        </Heading>
-      </header>
+        <PageHeader
+            title="Contract negotiation process"
+            badge={<Badge variant="info" size="lg">{formatUrn(cnProcess)}</Badge>}
+        />
       <Outlet/>
     </div>
   );

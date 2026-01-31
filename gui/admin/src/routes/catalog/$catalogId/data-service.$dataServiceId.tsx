@@ -5,40 +5,43 @@ import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
+import { PageSection } from "shared/src/components/layout/PageSection";
 
 function RouteComponent() {
   const { dataServiceId } = Route.useParams();
   const { data: dataService } = useGetDataServiceById(dataServiceId);
   return (
-    <div className="space-y-4 pb-4">
-      <Heading level="h3" className="flex gap-2 items-center">
-        Data service info with id
-        <Badge variant="info" size="lg">
-          {" "}
-          {formatUrn(dataService.id)}
-        </Badge>{" "}
-      </Heading>
-      <div className="gridColsLayout">
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Data service title</ListItemKey>
-            <p>{dataService.dctTitle}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Data service creation date</ListItemKey>
-            <ListItemDate>{dayjs(dataService.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Data service endpoint URL</ListItemKey>
-            <p>{dataService.dcatEndpointUrl}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Data service description</ListItemKey>
-            <p>{dataService.dcatEndpointDescription}</p>
-          </ListItem>
-        </List>
-      </div>
-    </div>
+    <PageLayout>
+      <PageHeader
+        title="Data service info with id"
+        badge={<Badge variant="info" size="lg">{formatUrn(dataService.id)}</Badge>}
+      />
+      <InfoGrid>
+        <PageSection>
+          <List className="text-sm">
+            <ListItem>
+              <ListItemKey>Data service title</ListItemKey>
+              <p>{dataService.dctTitle}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Data service creation date</ListItemKey>
+              <ListItemDate>{dayjs(dataService.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Data service endpoint URL</ListItemKey>
+              <p>{dataService.dcatEndpointUrl}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Data service description</ListItemKey>
+              <p>{dataService.dcatEndpointDescription}</p>
+            </ListItem>
+          </List>
+        </PageSection>
+      </InfoGrid>
+    </PageLayout>
   );
 }
 

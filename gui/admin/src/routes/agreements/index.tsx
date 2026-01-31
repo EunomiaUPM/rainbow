@@ -14,6 +14,9 @@ import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { ArrowRight } from "lucide-react";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
 
 export const Route = createFileRoute("/agreements/")({
   component: RouteComponent,
@@ -26,8 +29,9 @@ function RouteComponent() {
   });
 
   return (
-    <div>
-      <div>
+    <PageLayout>
+      <PageHeader title="Agreements" />
+      <PageSection>
         <div className="pb-3 w-3/5">
           <Input type="search"></Input>
         </div>
@@ -94,7 +98,7 @@ function RouteComponent() {
             ))}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </PageSection>
+    </PageLayout>
   );
 }

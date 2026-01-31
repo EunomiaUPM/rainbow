@@ -16,21 +16,22 @@ import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 const RouteComponent = () => {
   const { data: mainCatalog } = useGetMainCatalogs();
   const { data: catalogs } = useGetCatalogs(false);
   return (
-    <div className="space-y-4 pb-4">
-      <Heading level="h3" className="flex gap-2 items-center">
-        Main Catalog with id
-        <Badge variant="info" size="lg">
-          {formatUrn(mainCatalog.id)}{" "}
-        </Badge>
-      </Heading>
-      <div>
-        <Heading level="h5">Main Catalog info: </Heading>
-        <div className="gridColsLayout">
+    <PageLayout>
+      <PageHeader
+        title="Main Catalog with id"
+        badge={<Badge variant="info" size="lg">{formatUrn(mainCatalog.id)}</Badge>}
+      />
+      <InfoGrid>
+        <PageSection title="Main Catalog info: ">
           <List className="text-sm">
             <ListItem>
               <ListItemKey>Catalog title</ListItemKey>
@@ -54,12 +55,10 @@ const RouteComponent = () => {
               </ListItemDate>
             </ListItem>
           </List>
-          <div className="filler"></div>
-        </div>
-      </div>
+        </PageSection>
+      </InfoGrid>
 
-      <div>
-        <Heading level="h5">Catalogs</Heading>
+      <PageSection title="Catalogs">
         <div className="pb-3 w-3/5">
           <Input type="search"></Input>
         </div>
@@ -104,8 +103,8 @@ const RouteComponent = () => {
             ))}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </PageSection>
+    </PageLayout>
   );
 };
 

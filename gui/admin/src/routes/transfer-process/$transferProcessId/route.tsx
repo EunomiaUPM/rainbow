@@ -3,6 +3,7 @@ import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import { getTransferProcessByIdOptions } from "shared/src/data/transfer-queries.ts";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -12,15 +13,11 @@ const RouteComponent = () => {
   const {transferProcessId} = Route.useParams();
   return (
     <div className=" mb-2">
-      <header className="mb-6">
-        <Heading level="h3" className="mb-0.5 font-display flex  gap-3 items-center">
-          Transfer Process
-          <Badge variant="info" size="lg">
-            {" "}
-            {formatUrn(transferProcessId)}{" "}
-          </Badge>
-        </Heading>
-      </header>
+      <PageHeader
+        className="mb-6"
+        title="Transfer Process"
+        badge={<Badge variant="info" size="lg">{formatUrn(transferProcessId)}</Badge>}
+      />
       <Outlet/>
     </div>
   );

@@ -6,6 +6,10 @@ import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/u
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
@@ -22,19 +26,13 @@ function RouteComponent() {
   const {agreementId} = Route.useParams();
   const {data: agreement} = useGetAgreementById(agreementId);
   return (
-    <div className="space-y-4 pb-4">
-      <Heading level="h3" className="mb-0.5 font-display flex gap-3 items-center">
-        Agreement with id
-        <Badge variant="info" size="lg">
-          {" "}
-          {formatUrn(agreement.agreement_id)}
-        </Badge>
-      </Heading>
-      <div className="gridColsLayout">
-        <div className=" ">
-          <Heading level="h6" className="text-text">
-            Agreement info
-          </Heading>
+    <PageLayout>
+      <PageHeader
+        title="Agreement with id"
+        badge={<Badge variant="info" size="lg">{formatUrn(agreement.agreement_id)}</Badge>}
+      />
+      <InfoGrid>
+        <PageSection title="Agreement info">
           <List>
             <ListItem>
               <ListItemKey>Agreement Id</ListItemKey>
@@ -71,11 +69,8 @@ function RouteComponent() {
               </ListItemDate>
             </ListItem>
           </List>
-        </div>
-        <div>
-          <Heading level="h6" className="text-text">
-            Agreement content
-          </Heading>
+        </PageSection>
+        <PageSection title="Agreement content">
           {/* <div className="max-w-[940px]">{JSON.stringify(agreement.agreement_content)}</div> */}
           <List>
             <ListItem>
@@ -127,8 +122,8 @@ function RouteComponent() {
               </div>
             </div>
           </List>
-        </div>
-      </div>
-    </div>
+        </PageSection>
+      </InfoGrid>
+    </PageLayout>
   );
 }

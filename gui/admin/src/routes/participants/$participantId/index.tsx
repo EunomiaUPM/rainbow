@@ -4,6 +4,9 @@ import {
   useGetParticipantById,
 } from "shared/src/data/participant-queries.ts";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { PageSection } from "shared/src/components/layout/PageSection";
 import dayjs from "dayjs";
 
 // Components
@@ -40,21 +43,20 @@ function RouteComponent() {
   const scopedListItemKeyClasses = "basis-[28%]";
 
   return (
-    <div className="w-full">
+    <PageLayout>
       {/* Page Header */}
-      <Heading level="h3" className="flex items-center gap-3">
-        Participant with id
-        <Badge variant={"info"} size={"lg"} className="max-w-[50%] truncate text-overflow-ellipsis">
-          {formatUrn(participant.participant_id)}
-        </Badge>
-      </Heading>
+      <PageHeader
+        title="Participant with id"
+        badge={
+          <Badge variant={"info"} size={"lg"} className="max-w-[50%] truncate text-overflow-ellipsis">
+            {formatUrn(participant.participant_id)}
+          </Badge>
+        }
+      />
       {/* Page content */}
       <div className="bg-blue-500/0">
         {/* Div Participant Info */}
-        <div className="flex flex-col bg-green-800/0">
-          <Heading level="h6" className="text-foreground h-[36px] place-content-center">
-            Participant info:
-          </Heading>
+        <PageSection title="Participant info:">
           <div className="max-w-screen-md bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
@@ -77,7 +79,7 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-        </div>
+        </PageSection>
 
         {/* Div Participant Tabs */}
         {/* {agreements && agreements.length > 0 && (
@@ -140,6 +142,6 @@ function RouteComponent() {
           <Heading level="h5">Agreements to be done...</Heading>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -22,6 +22,10 @@ import { Button } from "shared/src/components/ui/button.tsx";
 import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
 import {formatUrn} from "shared/src/lib/utils";
 import Heading from "shared/src/components/ui/heading";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageHeader } from "shared/src/components/layout/PageHeader";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
+import { PageSection } from "shared/src/components/layout/PageSection";
 import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge";
 import {
@@ -63,29 +67,27 @@ function RouteComponent() {
   };
 
   return (
-    <div className="space-y-8 pb-4">
-      <Heading level="h3" className="flex gap-2 items-center">
-        Dataset with id
-        <Badge variant="info" size="lg">
-          {" "}
-          {formatUrn(dataset.id)}
-        </Badge>
-      </Heading>
-      <div className="gridColsLayout">
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Dataset title</ListItemKey>
-            <p>{dataset.dctTitle}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>{dayjs(dataset.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-          </ListItem>
-        </List>
-      </div>
+    <PageLayout>
+      <PageHeader
+        title="Dataset with id"
+        badge={<Badge variant="info" size="lg">{formatUrn(dataset.id)}</Badge>}
+      />
+      <InfoGrid>
+        <PageSection>
+          <List className="text-sm">
+            <ListItem>
+              <ListItemKey>Dataset title</ListItemKey>
+              <p>{dataset.dctTitle}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog creation date</ListItemKey>
+              <ListItemDate>{dayjs(dataset.dctIssued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            </ListItem>
+          </List>
+        </PageSection>
+      </InfoGrid>
 
-      <div>
-        <Heading level="h5">Distributions</Heading>
+      <PageSection title="Distributions">
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -137,7 +139,7 @@ function RouteComponent() {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </PageSection>
 
       <div className=" flex flex-row mb-2 items-center">
         <Heading level="h5" className="mb-0">
@@ -183,7 +185,7 @@ function RouteComponent() {
             />
           ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

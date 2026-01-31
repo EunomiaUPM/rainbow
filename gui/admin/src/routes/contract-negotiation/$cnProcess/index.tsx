@@ -23,6 +23,9 @@ import {Button} from "shared/src/components/ui/button.tsx";
 import {useEffect} from "react";
 import CnProcessMessageComponent
   from "@./../../shared/src/components/CnProcessMessageComponent.tsx";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageSection } from "shared/src/components/layout/PageSection";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 const RouteComponent = () => {
 
@@ -35,37 +38,36 @@ const RouteComponent = () => {
   }, [cnMessages]);
 
   return (
-    <div className="space-y-4 pb-4">
-      <Heading level="h5" className="mt-3">
-        Contract negotiation info{" "}
-      </Heading>
-      <div className="mb-4 gridColsLayout">
-        <List>
-          <ListItem>
-            <ListItemKey>ProviderPid</ListItemKey>
-            <Badge variant="info">{formatUrn(process.provider_id)}</Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>ConsumerPid</ListItemKey>
-            <Badge variant="info">{formatUrn(process.consumer_id)}</Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>State</ListItemKey>
-            <Badge variant="status" state={process.state as BadgeState}>
-              {process.state}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Client type</ListItemKey>
-            <Badge>{process.is_business ? "Business" : "Standard"}</Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Created at</ListItemKey>
-            <ListItemDate>{dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
-          </ListItem>
-        </List>
-      </div>
-      <div>
+    <PageLayout>
+      <PageSection title="Contract negotiation info">
+        <InfoGrid className="mb-4">
+          <List>
+            <ListItem>
+              <ListItemKey>ProviderPid</ListItemKey>
+              <Badge variant="info">{formatUrn(process.provider_id)}</Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>ConsumerPid</ListItemKey>
+              <Badge variant="info">{formatUrn(process.consumer_id)}</Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>State</ListItemKey>
+              <Badge variant="status" state={process.state as BadgeState}>
+                {process.state}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Client type</ListItemKey>
+              <Badge>{process.is_business ? "Business" : "Standard"}</Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Created at</ListItemKey>
+              <ListItemDate>{dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            </ListItem>
+          </List>
+        </InfoGrid>
+      </PageSection>
+      <PageSection>
         {/*  */}
 
         {/* DRAWER */}
@@ -95,60 +97,11 @@ const RouteComponent = () => {
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
-        {/* <h1>Messages</h1>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Message Id</TableHead>
-              <TableHead>Process Id</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>From</TableHead>
-              <TableHead>To</TableHead>
-              <TableHead>CreatedAt</TableHead>
-              <TableHead>Content</TableHead>
-              <TableHead>Offer</TableHead>
-              <TableHead>Agreement</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cnMessages.map((message) => (
-              <TableRow key={message.cn_message_id}>
-                <TableCell>
-                  <Link
-                    to="/contract-negotiation/$cnProcess/message/$cnMessage"
-                    params={{
-                      cnProcess: message.cn_process_id,
-                      cnMessage: message.cn_message_id,
-                    }}
-                  >
-                    {message.cn_message_id.slice(0, 20) + "..."}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {message.cn_process_id.slice(0, 20) + "..."}
-                </TableCell>
-                <TableCell>{message._type}</TableCell>
-                <TableCell>{message.from}</TableCell>
-                <TableCell>{message.to}</TableCell>
-                <TableCell>
-                  {dayjs(message.created_at).format("DD/MM/YYYY - HH:mm")}
-                </TableCell>
-                <TableCell>{JSON.stringify(message.content)}</TableCell>
-                <TableCell>
-                  <Link to="/contract-negotiation">Offer</Link>
-                </TableCell>
-                <TableCell>
-                  <Link to="/contract-negotiation">Agreement</Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table> */}
-      </div>
+      </PageSection>
 
       {/* ACTIONS */}
       <ContractNegotiationActions process={process} tiny={false}/>
-    </div>
+    </PageLayout>
   );
 };
 

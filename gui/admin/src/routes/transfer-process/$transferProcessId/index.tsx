@@ -19,6 +19,9 @@ import { Button } from "shared/src/components/ui/button";
 import { TransferProcessActions } from "shared/src/components/actions/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
 import { formatUrn } from "shared/src/lib/utils.ts";
+import { PageLayout } from "shared/src/components/layout/PageLayout";
+import { PageSection } from "shared/src/components/layout/PageSection";
+import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
@@ -30,7 +33,7 @@ function RouteComponent() {
   // const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
 
   return (
-    <div className="space-y-4 pb-4">
+    <PageLayout>
       <Tabs defaultValue="data-control" className="w-full">
         <TabsList>
           <TabsTrigger value="data-control">Control Plane</TabsTrigger>
@@ -45,64 +48,66 @@ function RouteComponent() {
         </TabsContent> */}
         <TabsContent value="data-control">
           {" "}
-          <Heading level="h5" className="mt-3">
-            Transfer process info{" "}
-          </Heading>
-          <div className="mb-4 gridColsLayout">
-            <List>
-              <ListItem>
-                <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>{formatUrn(transferProcess.agreementId)}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Transfer Process State</ListItemKey>
-                <Badge variant={"status"} state={transferProcess.state as BadgeState}>
-                  {transferProcess.state}
-                </Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Created at</ListItemKey>
-                <p> {dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</p>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Updated at</ListItemKey>
-                <p> {dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")}</p>
-              </ListItem>
-            </List>
-          </div>
-          {/* DRAWER */}
-          <Drawer direction={"right"}>
-            <DrawerTrigger>
-              <Button variant={"secondary"}>See Transfer Process Messages</Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>
-                  <Heading level="h5" className="text-current">
-                    Transfer Messages
-                  </Heading>
-                </DrawerTitle>
-              </DrawerHeader>
-              {/* Messages */}
-              <DrawerBody>
-                {transferProcess.messages.map((message) => {
-                  return <TransferProcessMessageComponent key={message.id} message={message} />;
-                })}
-              </DrawerBody>
-              <DrawerFooter>
-                <DrawerClose>
-                  <Button variant="ghost">Hide Messages</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
+          <PageSection title="Transfer process info">
+            <InfoGrid className="mb-4">
+              <List>
+                <ListItem>
+                  <ListItemKey>Process pid</ListItemKey>
+                  <Badge variant={"info"}>{formatUrn(transferProcess.id)}</Badge>
+                </ListItem>
+                <ListItem>
+                  <ListItemKey>Agreement id</ListItemKey>
+                  <Badge variant={"info"}>{formatUrn(transferProcess.agreementId)}</Badge>
+                </ListItem>
+                <ListItem>
+                  <ListItemKey>Transfer Process State</ListItemKey>
+                  <Badge variant={"status"} state={transferProcess.state as BadgeState}>
+                    {transferProcess.state}
+                  </Badge>
+                </ListItem>
+                <ListItem>
+                  <ListItemKey>Created at</ListItemKey>
+                  <p> {dayjs(transferProcess.createdAt).format("DD/MM/YY HH:mm")}</p>
+                </ListItem>
+                <ListItem>
+                  <ListItemKey>Updated at</ListItemKey>
+                  <p> {dayjs(transferProcess.updatedAt).format("DD/MM/YY HH:mm")}</p>
+                </ListItem>
+              </List>
+            </InfoGrid>
+          </PageSection>
+          
+          <PageSection>
+            {/* DRAWER */}
+            <Drawer direction={"right"}>
+              <DrawerTrigger>
+                <Button variant={"secondary"}>See Transfer Process Messages</Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>
+                    <Heading level="h5" className="text-current">
+                      Transfer Messages
+                    </Heading>
+                  </DrawerTitle>
+                </DrawerHeader>
+                {/* Messages */}
+                <DrawerBody>
+                  {transferProcess.messages.map((message) => {
+                    return <TransferProcessMessageComponent key={message.id} message={message} />;
+                  })}
+                </DrawerBody>
+                <DrawerFooter>
+                  <DrawerClose>
+                    <Button variant="ghost">Hide Messages</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          </PageSection>
         </TabsContent>
       </Tabs>
       <TransferProcessActions process={transferProcess} tiny={false} />
-    </div>
+    </PageLayout>
   );
 }
