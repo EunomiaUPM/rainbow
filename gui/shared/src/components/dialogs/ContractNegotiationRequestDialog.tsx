@@ -8,11 +8,11 @@
  * <ContractNegotiationRequestDialog process={cnProcess} />
  */
 
-import React, { useContext, useRef } from "react";
+import React, { useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { usePostContractNegotiationRPCRequest } from "shared/src/data/contract-mutations";
 import { useGetLastContractNegotiationOfferByCNMessageId } from "shared/src/data/contract-queries";
-import { PolicyEditorHandle, PolicyWrapperEdit } from "../PolicyWrapperEdit";
+import { PolicyWrapperEdit } from "../PolicyWrapperEdit";
 import { BaseProcessDialog } from "./base";
 import { mapCNProcessToInfoItemsForConsumer } from "./base/infoItemMappers";
 import Heading from "../ui/heading";
@@ -44,7 +44,13 @@ export interface ContractNegotiationRequestDialogProps {
 export const ContractNegotiationRequestDialog = ({
   process,
 }: ContractNegotiationRequestDialogProps) => {
-  const policyWrapperRef = useRef<PolicyEditorHandle>(null);
+  // ---------------------------------------------------------------------------
+  // State & Hooks
+  // ---------------------------------------------------------------------------
+
+  /** Current edited policy state (declarative pattern) */
+  const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null);
+
   const { mutateAsync: dataRequestAsync } = usePostContractNegotiationRPCRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { data: lastOffer } = useGetLastContractNegotiationOfferByCNMessageId(process.consumer_id);
@@ -60,16 +66,21 @@ export const ContractNegotiationRequestDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    if (policyWrapperRef.current && lastOffer) {
-      const policy = policyWrapperRef.current.getPolicy();
+    if (currentPolicy && lastOffer) {
       const outputOffer = {
         ...lastOffer.offer_content,
         prohibition:
-          policy.prohibition && policy.prohibition.length > 0 ? policy.prohibition : null,
+          currentPolicy.prohibition && currentPolicy.prohibition.length > 0
+            ? currentPolicy.prohibition
+            : null,
         permission:
-          policy.permission && policy.permission.length > 0 ? policy.permission : null,
+          currentPolicy.permission && currentPolicy.permission.length > 0
+            ? currentPolicy.permission
+            : null,
         obligation:
-          policy.obligation && policy.obligation.length > 0 ? policy.obligation : null,
+          currentPolicy.obligation && currentPolicy.obligation.length > 0
+            ? currentPolicy.obligation
+            : null,
       };
 
       await dataRequestAsync({
@@ -93,7 +104,10 @@ export const ContractNegotiationRequestDialog = ({
       <Heading level="h6" className="mb-2">
         New Policy Request
       </Heading>
-      <PolicyWrapperEdit policy={lastOffer.offer_content} ref={policyWrapperRef} />
+      <PolicyWrapperEdit
+        policy={lastOffer.offer_content}
+        onChange={setCurrentPolicy}
+      />
     </div>
   ) : null;
 
