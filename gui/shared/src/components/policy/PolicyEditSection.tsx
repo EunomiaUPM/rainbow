@@ -1,3 +1,25 @@
+/**
+ * PolicyEditSection.tsx
+ *
+ * Accordion section for editing ODRL policy rules inline.
+ * Provides full CRUD functionality for permissions, prohibitions, and obligations.
+ *
+ * Unlike PolicyTemplateSection (for template-based editing), this component
+ * allows direct editing of policy content with selects and inputs.
+ *
+ * @example
+ * <PolicyEditSection
+ *   type="permission"
+ *   items={policy.permission}
+ *   onAdd={(type) => addComponent(type)}
+ *   onRemove={(type, idx) => removeComponent(type, idx)}
+ *   onActionChange={(type, idx, value) => updateAction(type, idx, value)}
+ *   onAddConstraint={(type, idx) => addConstraint(type, idx)}
+ *   onRemoveConstraint={(type, idx, cIdx) => removeConstraint(type, idx, cIdx)}
+ *   onOperandChange={(type, idx, cIdx, operand, value) => updateOperand(...)}
+ * />
+ */
+
 import React from "react";
 import {
   Accordion,
@@ -17,17 +39,46 @@ import {
 import { Input } from "shared/src/components/ui/input";
 import { leftOperands, odrlActions, operators } from "shared/src/odrl_actions";
 
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/** Policy component type identifier */
 export type ComponentType = "permission" | "obligation" | "prohibition";
+
+/** Constraint operand field identifier */
 export type OperandType = "leftOperand" | "rightOperand" | "operator";
 
-interface PolicyEditSectionProps {
+/**
+ * Props for the PolicyEditSection component.
+ */
+export interface PolicyEditSectionProps {
+  /** Type of policy section to render */
   type: ComponentType;
-  items: any[]; // OdrlPermission[] | OdrlObligation[] | OdrlProhibition[] - usage is generic enough
+
+  /** List of policy items (permissions, obligations, or prohibitions) */
+  items: any[];
+
+  /** Callback when a new policy item is added */
   onAdd: (type: ComponentType) => void;
+
+  /** Callback when a policy item is removed */
   onRemove: (type: ComponentType, index: number) => void;
+
+  /** Callback when a policy item's action changes */
   onActionChange: (type: ComponentType, index: number, value: string) => void;
+
+  /** Callback when a constraint is added to a policy item */
   onAddConstraint: (type: ComponentType, index: number) => void;
-  onRemoveConstraint: (type: ComponentType, index: number, constraintIndex: number) => void;
+
+  /** Callback when a constraint is removed from a policy item */
+  onRemoveConstraint: (
+    type: ComponentType,
+    index: number,
+    constraintIndex: number
+  ) => void;
+
+  /** Callback when a constraint's operand value changes */
   onOperandChange: (
     type: ComponentType,
     index: number,
@@ -37,7 +88,14 @@ interface PolicyEditSectionProps {
   ) => void;
 }
 
-const styles = {
+// =============================================================================
+// STYLES
+// =============================================================================
+
+/**
+ * Color-coded styles for each policy type.
+ */
+const SECTION_STYLES = {
   permission: {
     accordionItem: "bg-success-500/10 border border-success-600/20",
     trigger: "bg-success-400/25",
@@ -53,8 +111,23 @@ const styles = {
     trigger: "bg-danger-500/25",
     removeIcon: "text-foreground",
   },
-};
+} as const;
 
+// =============================================================================
+// COMPONENT
+// =============================================================================
+
+/**
+ * Full-featured policy section editor.
+ *
+ * Provides:
+ * - Add/remove policy items
+ * - Action selection from ODRL actions
+ * - Constraint management with operand selectors
+ *
+ * @param props - PolicyEditSection properties
+ * @returns A collapsible section with inline policy editing
+ */
 export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
   type,
   items,
@@ -65,11 +138,12 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
   onRemoveConstraint,
   onOperandChange,
 }) => {
-  const currentStyle = styles[type];
+  const currentStyle = SECTION_STYLES[type];
 
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1" className={currentStyle.accordionItem}>
+        {/* Section Header */}
         <AccordionTrigger
           className={`text-white/70 flex ${currentStyle.trigger} uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none`}
         >
@@ -77,7 +151,10 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
             <p className="text-current">{type}</p>
           </div>
         </AccordionTrigger>
+
+        {/* Section Content */}
         <AccordionContent className="relative">
+          {/* Add new item button */}
           <Button
             className="border-b border-white/15"
             variant="outline"
@@ -87,11 +164,14 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
             <Plus />
             Add {type}
           </Button>
+
+          {/* Policy items list */}
           {items.map((item, i) => (
             <div key={`${type}-${i}-${item.action || "new"}`}>
               <div className="policy-item-create">
+                {/* Item header with action label and remove button */}
                 <div className="flex justify-between">
-                  <p className="mb-2"> Action: </p>
+                  <p className="mb-2">Action:</p>
                   <Button
                     variant="icon_destructive"
                     size="xs"
@@ -102,6 +182,8 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                     Remove {type}
                   </Button>
                 </div>
+
+                {/* Action selector */}
                 <Select
                   onValueChange={(value: string) => onActionChange(type, i, value)}
                   value={item.action}
@@ -117,11 +199,16 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="h-6"></div>
-                <p className="mb-2"> Constraints: </p>
+
+                {/* Constraints section */}
+                <div className="h-6" />
+                <p className="mb-2">Constraints:</p>
+
+                {/* Constraint list */}
                 {item.constraint?.map((constraint: any, j: number) => (
                   <div className="flex flex-col gap-2" key={j}>
                     <div className="constraint-create flex gap-3 items-end">
+                      {/* Left operand selector */}
                       <Select
                         onValueChange={(value: string) =>
                           onOperandChange(type, i, j, "leftOperand", value)
@@ -142,6 +229,8 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                           </SelectContent>
                         </div>
                       </Select>
+
+                      {/* Operator selector */}
                       <Select
                         onValueChange={(value: string) =>
                           onOperandChange(type, i, j, "operator", value)
@@ -162,6 +251,8 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                           </SelectContent>
                         </div>
                       </Select>
+
+                      {/* Right operand input */}
                       <div className="flex flex-col">
                         <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
                         <Input
@@ -172,6 +263,8 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                           }
                         />
                       </div>
+
+                      {/* Remove constraint button */}
                       <div>
                         <Button
                           variant="icon_destructive"
@@ -184,6 +277,8 @@ export const PolicyEditSection: React.FC<PolicyEditSectionProps> = ({
                     </div>
                   </div>
                 ))}
+
+                {/* Add constraint button */}
                 <Button
                   size="xs"
                   variant="outline"
