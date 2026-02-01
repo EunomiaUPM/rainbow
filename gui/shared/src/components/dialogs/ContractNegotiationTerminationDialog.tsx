@@ -23,7 +23,7 @@ export const ContractNegotiationTerminationDialog = ({ process }: { process: CNP
       await terminateAsync({
         api_gateway,
         content: {
-          providerParticipantId: process.associated_provider,
+          providerParticipantId: process.associated_provider!,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
         },
@@ -32,7 +32,7 @@ export const ContractNegotiationTerminationDialog = ({ process }: { process: CNP
       await terminateAsync({
         api_gateway,
         content: {
-          consumerParticipantId: process.associated_consumer,
+          consumerParticipantId: process.associated_consumer!,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
         },

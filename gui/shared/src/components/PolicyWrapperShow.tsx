@@ -46,16 +46,16 @@ export interface PolicyWrapperShowProps {
   policy: OdrlOffer;
 
   /** ID of the parent dataset (for actions) */
-  datasetId: string | undefined;
+  datasetId?: string;
 
   /** ID of the parent catalog (for actions) */
-  catalogId: string | undefined;
+  catalogId?: string;
 
   /** Current participant information (for role-based actions) */
-  participant: { participant_type: "Provider" | "Consumer" } | undefined;
+  participant?: { participant_type: string };
 
   /** Name of the dataset (for display in dialogs) */
-  datasetName: string;
+  datasetName?: string;
 }
 
 // =============================================================================

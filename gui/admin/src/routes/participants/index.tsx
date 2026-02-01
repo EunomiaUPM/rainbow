@@ -119,7 +119,7 @@ function RouteComponent() {
           {
             header: "Participant Type",
             cell: (p) => (
-              <Badge variant={"role"} role={p.participant_type as BadgeRole}>
+              <Badge variant={"role"} dsrole={p.participant_type as BadgeRole}>
                 {p.participant_type}
               </Badge>
             ),

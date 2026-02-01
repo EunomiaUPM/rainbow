@@ -75,24 +75,25 @@ export const OfferDrawer = ({
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     const policy = policies.find((p) => p["@id"] == data.id)!;
     await sendOfferAsync({
-      // @ts-ignore
+      // @ts-ignore - DTO does not match full OdrlOffer type
       content: {
         consumerParticipantId: data.consumerParticipantId,
+        // @ts-ignore - Simplified offer DTO for API
         offer: {
           "@id": policy["@id"],
           "@type": "Offer",
           target: policy.target,
           permission:
             policy.permission == undefined || policy.permission.length == 0
-              ? null
+              ? undefined
               : policy.permission,
           obligation:
             policy.obligation == undefined || policy.obligation.length == 0
-              ? null
+              ? undefined
               : policy.obligation,
           prohibition:
             policy.prohibition == undefined || policy.prohibition.length == 0
-              ? null
+              ? undefined
               : policy.prohibition,
           profile: policy.profile,
         },
@@ -157,7 +158,7 @@ export const OfferDrawer = ({
                       datasetId={datasetId}
                       catalogId={catalogId}
                       datasetName={datasetInfo?.name || ""}
-                      participant={null}
+                      participant={undefined}
                     />
                   </div>
                 ))}

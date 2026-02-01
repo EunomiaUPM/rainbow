@@ -13,14 +13,15 @@ export const MessageMetaContainer = React.forwardRef<
 ));
 MessageMetaContainer.displayName = "MessageMetaContainer";
 
-export interface MessageMetaProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface MessageMetaProps extends React.HTMLAttributes<HTMLLIElement> {
   label: string;
   value: string;
 }
 
-export const MessageMeta = React.forwardRef<HTMLDivElement, MessageMetaProps>(
+export const MessageMeta = React.forwardRef<HTMLLIElement, MessageMetaProps>(
   ({ label, value, className, ...props }, ref) => (
     <li
+      ref={ref}
       className={cn(
         "min-h-8 flex flex-row flex-wrap gap-1 mb-1 text-white/70 border-none p-0 m-0",
         className,

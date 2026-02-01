@@ -234,7 +234,7 @@ export const PolicyWrapperEdit = ({
           items={[
             { label: "Policy Target", value: policy["@type"] },
             { label: "Profile", value: JSON.stringify(policy.profile) },
-            { label: "Target", value: policy.target.slice(9) },
+            { label: "Target", value: policy.target?.slice(9) },
           ]}
         />
 

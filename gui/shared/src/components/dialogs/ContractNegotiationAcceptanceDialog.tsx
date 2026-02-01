@@ -22,7 +22,7 @@ export const ContractNegotiationAcceptanceDialog = ({ process }: { process: CNPr
     await acceptAsync({
       api_gateway,
       content: {
-        providerParticipantId: process.associated_provider,
+        providerParticipantId: process.associated_provider!,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
       },
