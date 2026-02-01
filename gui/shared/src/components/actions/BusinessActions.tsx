@@ -3,7 +3,7 @@ import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { BusinessRequestTerminationDialog } from "../dialogs/BusinessRequestTerminationDialog";
 import { BusinessRequestAcceptanceDialog } from "../dialogs/BusinessRequestAcceptanceDialog";
 import NoFurtherActions from "../ui/noFurtherActions";
-import { ProcessActionDialog } from "../common/ProcessActionDialog";
+import { ProcessActionDialog } from "./ProcessActionDialog";
 
 /**
  * Actions available for a business process.
@@ -34,7 +34,7 @@ export const BusinessActions = ({ process }: { process: any }) => {
 
   const showNoFurtherActions = () => {
     return actions.length === 0;
-  }
+  };
 
   return (
     <div className="inline-flex items-center">

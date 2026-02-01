@@ -1,39 +1,78 @@
-import {
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+/**
+ * BusinessRemovePolicyDialog.tsx
+ *
+ * Confirmation dialog for removing a policy from a dataset.
+ * Uses BaseProcessDialog for consistent structure.
+ *
+ * @example
+ * <BusinessRemovePolicyDialog
+ *   policy={policy}
+ *   catalogId="catalog-123"
+ *   datasetId="dataset-456"
+ * />
+ */
+
 import React, { useContext } from "react";
-import { Form } from "../ui/form";
-import { useForm } from "react-hook-form";
-import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { formatUrn } from "shared/src/lib/utils";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { useDeleteBusinessNewPolicyInDataset } from "shared/src/data/business-mutations";
-import { Badge } from "shared/src/components/ui/badge";
+import { BaseProcessDialog } from "./base";
+import { urnInfoItem } from "./base/infoItemMappers";
+import { InfoItemProps } from "../ui/info-list";
+
+// =============================================================================
+// TYPES
+// =============================================================================
 
 /**
- * Dialog for removing a business policy.
+ * Props for the BusinessRemovePolicyDialog component.
+ */
+export interface BusinessRemovePolicyDialogProps {
+  /** The ODRL policy to remove */
+  policy: OdrlOffer;
+
+  /** ID of the parent catalog */
+  catalogId: UUID;
+
+  /** ID of the parent dataset */
+  datasetId: UUID;
+}
+
+// =============================================================================
+// COMPONENT
+// =============================================================================
+
+/**
+ * Confirmation dialog for deleting a policy from a dataset.
+ *
+ * Features:
+ * - Displays policy information for confirmation
+ * - Destructive action styling
+ * - Handles deletion via business mutations API
  */
 export const BusinessRemovePolicyDialog = ({
   policy,
   catalogId,
   datasetId,
-}: {
-  policy: OdrlOffer;
-  catalogId: UUID;
-  datasetId: UUID;
-}) => {
-
-  const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
+}: BusinessRemovePolicyDialogProps) => {
   const { mutateAsync: deleteAsync } = useDeleteBusinessNewPolicyInDataset();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const onSubmit = () => {
-    deleteAsync({
+
+  // ---------------------------------------------------------------------------
+  // Info Items
+  // ---------------------------------------------------------------------------
+
+  const infoItems: InfoItemProps[] = [
+    urnInfoItem("Policy ID", policy["@id"]),
+    urnInfoItem("Catalog ID", catalogId),
+    urnInfoItem("Dataset ID", datasetId),
+  ].filter((item): item is InfoItemProps => item !== undefined);
+
+  // ---------------------------------------------------------------------------
+  // Submit Handler
+  // ---------------------------------------------------------------------------
+
+  const handleSubmit = async () => {
+    await deleteAsync({
       api_gateway,
       catalogId,
       datasetId,
@@ -41,32 +80,18 @@ export const BusinessRemovePolicyDialog = ({
     });
   };
 
-  return (
-    <DialogContent className="max-w-fit sm:max-w-fit ">
-      <DialogHeader>
-        <DialogTitle>Delete policy dialog</DialogTitle>
-        <DialogDescription className="max-w-full flex flex-wrap break-all">
-          <span className="max-w-full flex flex-wrap">
-            Are you sure you want to delete Policy with ID{" "}
-            <Badge variant="info">{formatUrn(policy["@id"])}</Badge>
-          </span>
-        </DialogDescription>
-      </DialogHeader>
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <DialogFooter className="[&>*]:w-full">
-            <DialogClose asChild>
-              <Button variant="ghost" type="reset">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button variant="destructive" type="submit">
-              Remove policy
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </DialogContent>
+  return (
+    <BaseProcessDialog
+      title="Delete Policy"
+      description="Are you sure you want to delete this policy? This action cannot be undone."
+      infoItems={infoItems}
+      submitLabel="Remove Policy"
+      submitVariant="destructive"
+      onSubmit={handleSubmit}
+    />
   );
 };

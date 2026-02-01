@@ -1,10 +1,19 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+/*
+  Utility function to merge class names using clsx and tailwind-merge.
+  This helps in conditionally applying class names and resolving conflicts
+  in Tailwind CSS classes.
+*/
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/*
+  Utility function to generate a random alphanumeric string of a given length.
+  This can be used for creating unique identifiers or tokens.
+*/
 export const generateRandomString = (length: number) => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -15,6 +24,10 @@ export const generateRandomString = (length: number) => {
   return result;
 };
 
+/*
+  Utility function to merge state and attribute into a formatted string.
+  This is useful for displaying combined status information in a user-friendly way.
+*/
 export const mergeStateAndAttribute = (state: string, attribute: string): string => {
   let textOut = "";
   switch (state) {
@@ -34,6 +47,10 @@ export const mergeStateAndAttribute = (state: string, attribute: string): string
   return textOut;
 };
 
+/*
+  Utility function to format URNs (Uniform Resource Names).
+  It can truncate long URNs for better readability while preserving key parts.
+*/
 export const formatUrn = (urn: string | undefined, truncate: boolean = true): string => {
   if (!urn || typeof urn !== "string") return "";
 
