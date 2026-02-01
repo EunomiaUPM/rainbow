@@ -3,13 +3,22 @@ import { useState } from "react";
 export type ComponentType = "permission" | "obligation" | "prohibition";
 export type OperandType = "leftOperand" | "rightOperand" | "operator";
 
+/*
+  Custom React hook to manage the state of an ODRL policy form.
+  It provides functions to add/remove components and constraints,
+  as well as to update field values and reset the policy.
+*/
 export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
-  const [newPolicy, setNewPolicy] = useState<OdrlInfo>(initialPolicy || {
-    obligation: [],
-    permission: [],
-    prohibition: [],
-  });
+  const [newPolicy, setNewPolicy] = useState<OdrlInfo>(
+    initialPolicy || {
+      obligation: [],
+      permission: [],
+      prohibition: [],
+    },
+  );
 
+  // Handlers for managing policy components and constraints
+  // Add a new component (permission, obligation, prohibition)
   const addComponentHandler = (componentType: ComponentType) => {
     const newComponent: OdrlPermission = {
       action: "",
@@ -21,12 +30,14 @@ export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
     setNewPolicy(_newPolicy);
   };
 
+  // Remove a component by index
   const removeComponentHandler = (componentType: ComponentType, index: number) => {
     const _newPolicy = { ...newPolicy };
     _newPolicy[componentType].splice(index, 1);
     setNewPolicy(_newPolicy);
   };
 
+  // Add a new constraint to a specific component
   const addConstraintHandler = (componentType: ComponentType, componentIndex: number) => {
     const _newPolicy = { ...newPolicy };
     _newPolicy[componentType][componentIndex].constraint.push({
@@ -37,6 +48,7 @@ export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
     setNewPolicy(_newPolicy);
   };
 
+  // Remove a constraint from a specific component
   const removeConstraintHandler = (
     componentType: ComponentType,
     componentIndex: number,
@@ -47,6 +59,7 @@ export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
     setNewPolicy(_newPolicy);
   };
 
+  // Update field values for action and constraints
   const fieldValueChangeHandler = (
     componentType: ComponentType,
     componentIndex: number,
@@ -57,6 +70,7 @@ export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
     setNewPolicy(_newPolicy);
   };
 
+  // Update operand values for constraints
   const operandValueChangeHandler = (
     componentType: ComponentType,
     componentIndex: number,
@@ -70,6 +84,7 @@ export const usePolicyForm = (initialPolicy?: OdrlInfo) => {
     setNewPolicy(_newPolicy);
   };
 
+  // Reset the policy to an empty state
   const resetPolicy = () => {
     setNewPolicy({
       permission: [],

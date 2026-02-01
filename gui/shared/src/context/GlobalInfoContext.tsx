@@ -21,13 +21,22 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   const [catalogType] = useState<"rainbow" | "datahub" | "both">("rainbow");
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
-  // PLEASE CHANGE THIS FOR PRODUCTION OR DEV
+  /**
+   * CHANGE ME - Configuration Logic
+   * Production vs Development Configuration
+   * In production, fetch configuration from server endpoint.
+   * In development, use local hardcoded configuration.
+   */
   const isProduction = false;
   const localConfig = {
     config_role: "Agent",
     gateway_host: "http://127.0.0.1",
     gateway_port: "1200",
   };
+
+  /**
+   * Initialize configuration on mount
+   */
   useEffect(() => {
     const initConfig = async () => {
       try {
@@ -57,6 +66,9 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     initConfig();
   }, []);
 
+  /**
+   * Memoized context value
+   */
   const contextValue = useMemo<GlobalInfoContextType>(() => {
     const prefix = apiGatewayBase === "/" ? "" : apiGatewayBase;
     return {
@@ -68,6 +80,9 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     };
   }, [catalogType, configRole, apiGatewayBase]);
 
+  /**
+   * Render when config is loaded
+   */
   if (!isConfigLoaded) {
     return <div>Cargando...</div>;
   }

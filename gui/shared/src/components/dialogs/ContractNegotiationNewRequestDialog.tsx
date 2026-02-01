@@ -1,90 +1,130 @@
-import {
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Button } from "shared/src/components/ui/button";
+/**
+ * ContractNegotiationNewRequestDialog.tsx
+ *
+ * Dialog for creating a new contract negotiation request.
+ * Displays policy information and initiates a new CN process.
+ *
+ * @example
+ * <ContractNegotiationNewRequestDialog
+ *   policy={policyData}
+ *   catalogId="catalog-123"
+ *   datasetId="dataset-456"
+ *   participantId="provider-participant-id"
+ * />
+ */
+
 import React, { useContext, useRef } from "react";
-import { Form } from "shared/src/components/ui/form";
-import { useForm } from "react-hook-form";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow";
 import { usePostContractNegotiationRPCRequest } from "shared/src/data/contract-mutations";
+import { BaseProcessDialog } from "./base";
+import { urnInfoItem } from "./base/infoItemMappers";
+import { InfoItemProps } from "../ui/info-list";
+import { DialogClose } from "../ui/dialog";
+
+// =============================================================================
+// TYPES
+// =============================================================================
 
 /**
- * Dialog for creating a new contract negotiation request.
+ * Props for the ContractNegotiationNewRequestDialog component.
+ */
+export interface ContractNegotiationNewRequestDialogProps {
+  /** The ODRL policy to negotiate */
+  policy: OdrlOffer;
+
+  /** ID of the parent catalog */
+  catalogId: UUID;
+
+  /** ID of the dataset */
+  datasetId: UUID;
+
+  /** Provider participant ID to negotiate with */
+  participantId: string;
+}
+
+// =============================================================================
+// COMPONENT
+// =============================================================================
+
+/**
+ * Dialog for initiating a new contract negotiation request.
+ *
+ * Features:
+ * - Displays catalog and dataset information
+ * - Shows policy details via PolicyWrapperShow
+ * - Initiates CN request with provider
  */
 export const ContractNegotiationNewRequestDialog = ({
   policy,
   catalogId,
   datasetId,
   participantId,
-}: {
-  policy: OdrlOffer;
-  catalogId: UUID;
-  datasetId: UUID;
-  participantId: string;
-}) => {
-
+}: ContractNegotiationNewRequestDialogProps) => {
   const closeDialogRef = useRef<HTMLButtonElement>(null);
-  const form = useForm({});
-  const { handleSubmit } = form;
   const { mutateAsync: requestAsync } = usePostContractNegotiationRPCRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
-  const onSubmit = async () => {
+  // ---------------------------------------------------------------------------
+  // Info Items
+  // ---------------------------------------------------------------------------
+
+  const infoItems: InfoItemProps[] = [
+    urnInfoItem("Catalog ID", catalogId),
+    urnInfoItem("Dataset ID", datasetId),
+    urnInfoItem("Provider", participantId),
+  ].filter((item): item is InfoItemProps => item !== undefined);
+
+  // ---------------------------------------------------------------------------
+  // Submit Handler
+  // ---------------------------------------------------------------------------
+
+  const handleSubmit = async () => {
     await requestAsync({
       api_gateway,
       content: {
         providerParticipantId: participantId,
-        //@ts-ignore
+        //@ts-ignore - policy @id format
         offer: {
           "@id": policy["@id"],
         },
       },
     });
-    form.reset();
     closeDialogRef.current?.click();
   };
 
-  return (
-    <DialogContent className="max-w-fit sm:max-w-fi ">
-      <DialogHeader>
-        <DialogTitle>Contract Negotiation Request</DialogTitle>
-        <DialogDescription className="max-w-full flex flex-col break-all gap-2">
-          <div className="max-w-full flex">
-            You are to request a contract negotiation to dataset under policy.
-          </div>
-          <div>{catalogId}</div>
-          <div>{datasetId}</div>
-          <div>
-            <PolicyWrapperShow
-              policy={policy}
-              datasetId={datasetId}
-              catalogId={catalogId}
-              participant={participantId}
-              datasetName={""} />
-          </div>
-        </DialogDescription>
-      </DialogHeader>
+  // ---------------------------------------------------------------------------
+  // After Info Content (Policy Display)
+  // ---------------------------------------------------------------------------
 
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <DialogFooter className="[&>*]:w-full">
-            <DialogClose asChild ref={closeDialogRef}>
-              <Button variant="ghost" type="reset">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button variant="default" type="submit">
-              Request Contract Negotiation
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </DialogContent>
+  const policyContent = (
+    <div className="pt-4">
+      <PolicyWrapperShow
+        policy={policy}
+        datasetId={datasetId}
+        catalogId={catalogId}
+        participant={participantId}
+        datasetName=""
+      />
+      {/* Hidden close button for programmatic dialog close */}
+      <DialogClose ref={closeDialogRef} className="hidden" />
+    </div>
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  return (
+    <BaseProcessDialog
+      title="Contract Negotiation Request"
+      description="You are about to request a contract negotiation for the selected dataset and policy."
+      infoItems={infoItems}
+      afterInfoContent={policyContent}
+      submitLabel="Request Contract Negotiation"
+      submitVariant="default"
+      onSubmit={handleSubmit}
+      scrollable
+    />
   );
 };

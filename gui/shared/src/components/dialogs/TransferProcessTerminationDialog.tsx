@@ -1,119 +1,56 @@
-import {
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Badge, BadgeState } from "shared/src/components/ui/badge";
-import { InfoList } from "../ui/info-list";
+/**
+ * TransferProcessTerminationDialog.tsx
+ *
+ * Dialog for terminating a transfer process.
+ * Available to both provider and consumer roles.
+ */
 
 import React, { useContext } from "react";
-import { Form } from "../ui/form";
-import { useForm } from "react-hook-form";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostTransferRPCTermination } from "shared/src/data/transfer-mutations";
-import dayjs from "dayjs";
+import { usePostTransferRPCTermination } from "../../data/transfer-mutations";
+import { BaseProcessDialog, mapTransferProcessToInfoItems } from "./base";
 
-/**
- * Dialog for terminating a transfer process.
- */
 export const TransferProcessTerminationDialog = ({ process }: { process: TransferProcess }) => {
-  const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: terminateAsync } = usePostTransferRPCTermination();
   const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const onSubmit = async () => {
-    if (dsrole == "provider") {
+  const { mutateAsync: terminateAsync } = usePostTransferRPCTermination();
+
+  /**
+   * Handles the termination submission.
+   * Payload structure differs based on the user's role.
+   */
+  const handleSubmit = async () => {
+    const p = process as any;
+
+    if (dsrole === "provider") {
       await terminateAsync({
-        api_gateway: api_gateway,
+        api_gateway,
         content: {
-          consumerParticipantId: (process as any).associated_consumer,
-          consumerCallbackAddress: (process as any).data_plane_id,
-          consumerPid: (process as any).consumer_pid,
-          providerPid: (process as any).provider_pid,
+          consumerParticipantId: p.associated_consumer,
+          consumerCallbackAddress: p.data_plane_id,
+          consumerPid: p.consumer_pid,
+          providerPid: p.provider_pid,
         },
       });
-    }
-    if (dsrole == "consumer") {
+    } else if (dsrole === "consumer") {
       await terminateAsync({
-        api_gateway: api_gateway,
+        api_gateway,
         content: {
-          providerParticipantId: (process as any).associated_provider,
-          consumerPid: (process as any).consumer_pid,
-          providerPid: (process as any).provider_pid,
+          providerParticipantId: p.associated_provider,
+          consumerPid: p.consumer_pid,
+          providerPid: p.provider_pid,
         },
       });
     }
   };
 
-  const scopedListItemKeyClasses = "basis-[33%]";
-
   return (
-    <DialogContent className="w-[70dvw] sm:max-w-fit">
-      <DialogHeader>
-        <DialogTitle>Transfer termination dialog</DialogTitle>
-        <DialogDescription className="max-w-full flex flex-wrap">
-          <span className="max-w-full flex flex-wrap">
-            You are about to terminate the transfer process.
-          </span>
-        </DialogDescription>
-      </DialogHeader>
-
-      <InfoList
-        items={
-          [
-            {
-              label: "Provider Participant id",
-              value: { type: "urn", value: (process as any).provider_pid },
-            },
-            {
-              label: "Consumer Participant id",
-              value: { type: "urn", value: (process as any).consumer_pid },
-            },
-            dsrole === "provider"
-              ? {
-                  label: "Associated consumer",
-                  value: { type: "urn", value: (process as any).associated_consumer },
-                }
-              : undefined,
-            dsrole === "consumer"
-              ? {
-                  label: "Associated provider",
-                  value: { type: "urn", value: (process as any).associated_provider },
-                }
-              : undefined,
-            { label: "Current state", value: { type: "status", value: process.state } },
-            (process as any).state_attribute
-              ? {
-                  label: "State attribute",
-                  value: { type: "status", value: (process as any).state_attribute },
-                }
-              : undefined,
-            { label: "Created at", value: { type: "date", value: (process as any).created_at } },
-            (process as any).updated_at
-              ? { label: "Updated at", value: { type: "date", value: (process as any).updated_at } }
-              : undefined,
-          ].filter((item) => item !== undefined) as any
-        }
-      />
-
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <DialogFooter className="[&>*]:w-full">
-            <DialogClose asChild>
-              <Button variant="ghost" type="reset">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button variant="destructive" type="submit">
-              Terminate
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </DialogContent>
+    <BaseProcessDialog
+      title="Transfer Termination Dialog"
+      description="You are about to terminate the transfer process."
+      infoItems={mapTransferProcessToInfoItems(process, dsrole as "provider" | "consumer")}
+      submitLabel="Terminate"
+      submitVariant="destructive"
+      onSubmit={handleSubmit}
+    />
   );
 };
