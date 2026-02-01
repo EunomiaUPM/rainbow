@@ -22,7 +22,7 @@ export const ContractNegotiationVerificationDialog = ({ process }: { process: CN
     await verifyAsync({
       api_gateway,
       content: {
-        providerParticipantId: process.associated_provider,
+        providerParticipantId: process.associated_provider!,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
       },

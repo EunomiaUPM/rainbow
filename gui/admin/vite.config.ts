@@ -16,5 +16,25 @@ export default defineConfig(() => {
         plugins: [tailwind, autoprefixer],
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom"],
+            ui: [
+              "@radix-ui/react-dialog",
+              "@radix-ui/react-slot",
+              "@radix-ui/react-tooltip",
+              "class-variance-authority",
+              "lucide-react",
+              "clsx",
+              "tailwind-merge",
+            ],
+            tanstack: ["@tanstack/react-router", "@tanstack/react-query"],
+            syntax: ["react-syntax-highlighter"],
+          },
+        },
+      },
+    },
   };
 });

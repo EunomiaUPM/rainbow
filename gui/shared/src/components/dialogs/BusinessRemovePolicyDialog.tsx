@@ -31,10 +31,10 @@ export interface BusinessRemovePolicyDialogProps {
   policy: OdrlOffer;
 
   /** ID of the parent catalog */
-  catalogId: UUID;
+  catalogId?: UUID;
 
   /** ID of the parent dataset */
-  datasetId: UUID;
+  datasetId?: UUID;
 }
 
 // =============================================================================
@@ -74,8 +74,8 @@ export const BusinessRemovePolicyDialog = ({
   const handleSubmit = async () => {
     await deleteAsync({
       api_gateway,
-      catalogId,
-      datasetId,
+      catalogId: catalogId!,
+      datasetId: datasetId!,
       policyId: policy["@id"],
     });
   };

@@ -72,21 +72,21 @@ export const ContractNegotiationOfferDialog = ({
         prohibition:
           currentPolicy.prohibition && currentPolicy.prohibition.length > 0
             ? currentPolicy.prohibition
-            : null,
+            : undefined,
         permission:
           currentPolicy.permission && currentPolicy.permission.length > 0
             ? currentPolicy.permission
-            : null,
+            : undefined,
         obligation:
           currentPolicy.obligation && currentPolicy.obligation.length > 0
             ? currentPolicy.obligation
-            : null,
+            : undefined,
       };
 
       await dataOfferAsync({
         api_gateway,
         content: {
-          consumerParticipantId: process.associated_consumer,
+          consumerParticipantId: process.associated_consumer!,
           offer: outputOffer,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,

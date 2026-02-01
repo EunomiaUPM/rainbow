@@ -142,6 +142,7 @@ export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset
         //@ts-ignore
         content: {
           consumerParticipantId: data.consumerParticipantId,
+          // @ts-ignore - Simplified offer DTO for API
           offer: {
             "@id": data.id,
             "@type": "Offer",

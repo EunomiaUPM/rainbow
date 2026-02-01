@@ -22,17 +22,18 @@ import { InfoItemProps } from "../../ui/info-list";
  * Use this when the current user role is "provider".
  */
 export function mapCNProcessToInfoItemsForProvider(process: CNProcess): InfoItemProps[] {
-  return [
-    { label: "Provider ID", value: { type: "urn", value: process.provider_id } },
-    { label: "Consumer ID", value: { type: "urn", value: process.consumer_id } },
-    { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
-    { label: "Current State", value: { type: "status", value: process.state } },
-    { label: "Initiated By", value: { type: "role", value: process.initiated_by } },
-    { label: "Created At", value: { type: "date", value: process.created_at } },
+  const items: (InfoItemProps | undefined)[] = [
+    { label: "Provider ID", value: { type: "urn" as const, value: process.provider_id } },
+    { label: "Consumer ID", value: { type: "urn" as const, value: process.consumer_id } },
+    { label: "Associated Consumer", value: { type: "urn" as const, value: process.associated_consumer } },
+    { label: "Current State", value: { type: "status" as const, value: process.state } },
+    { label: "Initiated By", value: { type: "role" as const, value: process.initiated_by ?? "" } },
+    { label: "Created At", value: { type: "date" as const, value: process.created_at } },
     process.updated_at
-      ? { label: "Updated At", value: { type: "date", value: process.updated_at } }
+      ? { label: "Updated At", value: { type: "date" as const, value: process.updated_at } }
       : undefined,
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items.filter((item): item is InfoItemProps => item !== undefined);
 }
 
 /**
@@ -40,17 +41,18 @@ export function mapCNProcessToInfoItemsForProvider(process: CNProcess): InfoItem
  * Use this when the current user role is "consumer".
  */
 export function mapCNProcessToInfoItemsForConsumer(process: CNProcess): InfoItemProps[] {
-  return [
-    { label: "Provider ID", value: { type: "urn", value: process.provider_id } },
-    { label: "Consumer ID", value: { type: "urn", value: process.consumer_id } },
-    { label: "Associated Provider", value: { type: "urn", value: process.associated_provider } },
-    { label: "Current State", value: { type: "status", value: process.state } },
-    { label: "Initiated By", value: { type: "role", value: process.initiated_by } },
-    { label: "Created At", value: { type: "date", value: process.created_at } },
+  const items: (InfoItemProps | undefined)[] = [
+    { label: "Provider ID", value: { type: "urn" as const, value: process.provider_id } },
+    { label: "Consumer ID", value: { type: "urn" as const, value: process.consumer_id } },
+    { label: "Associated Provider", value: { type: "urn" as const, value: process.associated_provider } },
+    { label: "Current State", value: { type: "status" as const, value: process.state } },
+    { label: "Initiated By", value: { type: "role" as const, value: process.initiated_by ?? "" } },
+    { label: "Created At", value: { type: "date" as const, value: process.created_at } },
     process.updated_at
-      ? { label: "Updated At", value: { type: "date", value: process.updated_at } }
+      ? { label: "Updated At", value: { type: "date" as const, value: process.updated_at } }
       : undefined,
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items.filter((item): item is InfoItemProps => item !== undefined);
 }
 
 /**
@@ -58,18 +60,19 @@ export function mapCNProcessToInfoItemsForConsumer(process: CNProcess): InfoItem
  * Includes both associated consumer and provider fields.
  */
 export function mapCNProcessToFullInfoItems(process: CNProcess): InfoItemProps[] {
-  return [
-    { label: "Provider ID", value: { type: "urn", value: process.provider_id } },
-    { label: "Consumer ID", value: { type: "urn", value: process.consumer_id } },
-    { label: "Associated Consumer", value: { type: "urn", value: process.associated_consumer } },
-    { label: "Associated Provider", value: { type: "urn", value: process.associated_provider } },
-    { label: "Current State", value: { type: "status", value: process.state } },
-    { label: "Initiated By", value: { type: "role", value: process.initiated_by } },
-    { label: "Created At", value: { type: "date", value: process.created_at } },
+  const items: (InfoItemProps | undefined)[] = [
+    { label: "Provider ID", value: { type: "urn" as const, value: process.provider_id } },
+    { label: "Consumer ID", value: { type: "urn" as const, value: process.consumer_id } },
+    { label: "Associated Consumer", value: { type: "urn" as const, value: process.associated_consumer } },
+    { label: "Associated Provider", value: { type: "urn" as const, value: process.associated_provider } },
+    { label: "Current State", value: { type: "status" as const, value: process.state } },
+    { label: "Initiated By", value: { type: "role" as const, value: process.initiated_by ?? "" } },
+    { label: "Created At", value: { type: "date" as const, value: process.created_at } },
     process.updated_at
-      ? { label: "Updated At", value: { type: "date", value: process.updated_at } }
+      ? { label: "Updated At", value: { type: "date" as const, value: process.updated_at } }
       : undefined,
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items.filter((item): item is InfoItemProps => item !== undefined);
 }
 
 /**
@@ -94,20 +97,20 @@ export function mapCNProcessToInfoItems(
 export function mapTransferProcessToInfoItemsForProvider(
   process: TransferProcess,
 ): InfoItemProps[] {
-  const p = process as any; // Handle flexible typing
-  return [
-    { label: "Provider PID", value: { type: "urn", value: p.provider_pid } },
-    { label: "Consumer PID", value: { type: "urn", value: p.consumer_pid } },
-    { label: "Associated Consumer", value: { type: "urn", value: p.associated_consumer } },
-    { label: "Current State", value: { type: "status", value: process.state } },
-    p.state_attribute
-      ? { label: "State Attribute", value: { type: "status", value: p.state_attribute } }
+  const items: (InfoItemProps | undefined)[] = [
+    { label: "Provider PID", value: { type: "urn" as const, value: process.provider_pid } },
+    { label: "Consumer PID", value: { type: "urn" as const, value: process.consumer_pid } },
+    { label: "Associated Consumer", value: { type: "urn" as const, value: process.associated_consumer } },
+    { label: "Current State", value: { type: "status" as const, value: process.state } },
+    process.stateAttribute
+      ? { label: "State Attribute", value: { type: "status" as const, value: process.stateAttribute } }
       : undefined,
-    { label: "Created At", value: { type: "date", value: p.created_at } },
-    p.updated_at
-      ? { label: "Updated At", value: { type: "date", value: p.updated_at } }
+    { label: "Created At", value: { type: "date" as const, value: process.createdAt } },
+    process.updatedAt
+      ? { label: "Updated At", value: { type: "date" as const, value: process.updatedAt } }
       : undefined,
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items.filter((item): item is InfoItemProps => item !== undefined);
 }
 
 /**
@@ -116,20 +119,20 @@ export function mapTransferProcessToInfoItemsForProvider(
 export function mapTransferProcessToInfoItemsForConsumer(
   process: TransferProcess,
 ): InfoItemProps[] {
-  const p = process as any;
-  return [
-    { label: "Provider PID", value: { type: "urn", value: p.provider_pid } },
-    { label: "Consumer PID", value: { type: "urn", value: p.consumer_pid } },
-    { label: "Associated Provider", value: { type: "urn", value: p.associated_provider } },
-    { label: "Current State", value: { type: "status", value: process.state } },
-    p.state_attribute
-      ? { label: "State Attribute", value: { type: "status", value: p.state_attribute } }
+  const items: (InfoItemProps | undefined)[] = [
+    { label: "Provider PID", value: { type: "urn" as const, value: process.provider_pid } },
+    { label: "Consumer PID", value: { type: "urn" as const, value: process.consumer_pid } },
+    { label: "Associated Provider", value: { type: "urn" as const, value: process.associated_provider } },
+    { label: "Current State", value: { type: "status" as const, value: process.state } },
+    process.stateAttribute
+      ? { label: "State Attribute", value: { type: "status" as const, value: process.stateAttribute } }
       : undefined,
-    { label: "Created At", value: { type: "date", value: p.created_at } },
-    p.updated_at
-      ? { label: "Updated At", value: { type: "date", value: p.updated_at } }
+    { label: "Created At", value: { type: "date" as const, value: process.createdAt } },
+    process.updatedAt
+      ? { label: "Updated At", value: { type: "date" as const, value: process.updatedAt } }
       : undefined,
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items.filter((item): item is InfoItemProps => item !== undefined);
 }
 
 /**
@@ -152,17 +155,18 @@ export function mapTransferProcessToInfoItems(
  * Maps an Agreement to InfoList items.
  */
 export function mapAgreementToInfoItems(agreement: Agreement): InfoItemProps[] {
-  return [
-    { label: "Agreement ID", value: { type: "urn", value: agreement.agreement_id } },
+  const items: InfoItemProps[] = [
+    { label: "Agreement ID", value: { type: "urn" as const, value: agreement.agreement_id } },
     {
       label: "Provider Participant",
-      value: { type: "urn", value: agreement.provider_participant_id },
+      value: { type: "urn" as const, value: agreement.provider_participant_id },
     },
     {
       label: "Consumer Participant",
-      value: { type: "urn", value: agreement.consumer_participant_id },
+      value: { type: "urn" as const, value: agreement.consumer_participant_id },
     },
-  ].filter((item): item is InfoItemProps => item !== undefined);
+  ];
+  return items;
 }
 
 // =============================================================================
@@ -182,7 +186,7 @@ export function textInfoItem(label: string, value: string | undefined): InfoItem
  */
 export function urnInfoItem(label: string, value: string | undefined): InfoItemProps | undefined {
   if (!value) return undefined;
-  return { label, value: { type: "urn", value } };
+  return { label, value: { type: "urn" as const, value } };
 }
 
 /**
@@ -193,7 +197,7 @@ export function statusInfoItem(
   value: string | undefined,
 ): InfoItemProps | undefined {
   if (!value) return undefined;
-  return { label, value: { type: "status", value } };
+  return { label, value: { type: "status" as const, value } };
 }
 
 /**
@@ -204,7 +208,7 @@ export function dateInfoItem(
   value: string | Date | undefined,
 ): InfoItemProps | undefined {
   if (!value) return undefined;
-  return { label, value: { type: "date", value: value as string } };
+  return { label, value: { type: "date" as const, value: value as string } };
 }
 
 /**
@@ -212,5 +216,5 @@ export function dateInfoItem(
  */
 export function roleInfoItem(label: string, value: string | undefined): InfoItemProps | undefined {
   if (!value) return undefined;
-  return { label, value: { type: "role", value } };
+  return { label, value: { type: "role" as const, value } };
 }

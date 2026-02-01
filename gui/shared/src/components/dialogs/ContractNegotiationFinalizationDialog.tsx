@@ -22,7 +22,7 @@ export const ContractNegotiationFinalizationDialog = ({ process }: { process: CN
     await finalizeAsync({
       api_gateway,
       content: {
-        consumerParticipantId: process.associated_consumer,
+        consumerParticipantId: process.associated_consumer!,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
       },

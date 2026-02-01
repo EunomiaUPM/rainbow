@@ -37,13 +37,13 @@ export interface BusinessRequestAccessDialogProps {
   policy: OdrlOffer;
 
   /** ID of the parent catalog */
-  catalogId: UUID;
+  catalogId?: UUID;
 
   /** ID of the dataset to request access to */
-  datasetId: UUID;
+  datasetId?: UUID;
 
   /** Display name of the dataset */
-  datasetName: string;
+  datasetName?: string;
 }
 
 // =============================================================================
@@ -87,7 +87,7 @@ export const BusinessRequestAccessDialog = ({
     await requestAsync({
       api_gateway,
       content: {
-        consumerParticipantId: participant?.participant_id,
+        consumerParticipantId: participant?.participant_id!,
         offer: {
           "@id": policy["@id"],
         },

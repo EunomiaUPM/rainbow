@@ -29,7 +29,7 @@ export const TransferProcessStartDialog = ({ process }: { process: TransferProce
           consumerCallbackAddress: p.data_plane_id,
           consumerPid: p.consumer_pid,
           providerPid: p.provider_pid,
-        },
+        } as any,
       });
     } else if (dsrole === "consumer") {
       await startAsync({

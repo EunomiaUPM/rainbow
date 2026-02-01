@@ -138,7 +138,7 @@ const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) 
 
         case "role":
           return (
-            <Badge variant="role" role={value.value as BadgeRole}>
+            <Badge variant="role" dsrole={value.value as BadgeRole}>
               {value.value}
             </Badge>
           );

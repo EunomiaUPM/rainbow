@@ -5,7 +5,7 @@ import {
   useGetContractNegotiationMessagesByCNID,
   useGetContractNegotiationProcessesByCNID,
 } from "shared/src/data/contract-queries.ts";
-import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions.tsx";
+import { ContractNegotiationActions } from "shared/src/components/actions/ContractNegotiationActions";
 import { InfoList } from "shared/src/components/ui/info-list";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
