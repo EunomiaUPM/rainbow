@@ -1,23 +1,22 @@
 /**
  * header.tsx
  *
- * Main application header component that provides navigation breadcrumbs
- * and user action controls. Positioned at the top of the content area.
+ * Main application header component with dynamic breadcrumb navigation
+ * and user action controls.
  *
  * Features:
- * - Dynamic breadcrumb generation from current route
- * - Responsive design (collapses intermediate breadcrumbs on mobile)
- * - User authentication status display
- * - Quick access to notifications and user profile
+ * - Clean breadcrumb generation from current route
+ * - Proper formatting for URNs and path segments
+ * - Responsive design with dropdown for intermediate items on mobile
+ * - User authentication controls
  *
  * @example
- * // Used in the root layout
  * <Header />
  */
 
 import React, { useContext, useMemo } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { cn } from "shared/src/lib/utils";
+import { cn, formatUrn } from "shared/src/lib/utils";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,26 +24,173 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  BreadcrumbEllipsis,
 } from "shared/src/components/ui/breadcrumb";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { Button } from "shared/src/components/ui/button";
 import { LogOut, Bell, User } from "lucide-react";
-import { formatUrn } from "shared/src/lib/utils";
 import { SidebarTrigger } from "shared/src/components/ui/sidebar";
 import { Separator } from "shared/src/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "shared/src/components/ui/tooltip";
 
 // =============================================================================
-// HEADER COMPONENT
+// TYPES
+// =============================================================================
+
+/**
+ * Represents a single breadcrumb item.
+ */
+interface BreadcrumbItemData {
+  /** Unique key for React rendering */
+  key: string;
+  /** Navigation path */
+  href: string;
+  /** Display label */
+  label: string;
+  /** Whether this is a dynamic segment (e.g., urn:xxx) */
+  isDynamic: boolean;
+}
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+/**
+ * Mapping of route segments to human-readable labels.
+ * Add new routes here for proper display.
+ */
+const ROUTE_LABELS: Record<string, string> = {
+  "datahub-catalog": "DataHub Catalog",
+  "provider-catalog": "Provider Catalog",
+  "contract-negotiation": "Contract Negotiation",
+  "transfer-process": "Transfer Process",
+  "business-requests": "Business Requests",
+  "customer-requests": "Customer Requests",
+  subscriptions: "Subscriptions",
+  participants: "Participants",
+  agreements: "Agreements",
+  catalog: "Catalog",
+  dataset: "Dataset",
+  dashboard: "Dashboard",
+  login: "Login",
+};
+
+/**
+ * Segments that should be hidden from breadcrumbs.
+ * These are typically route structure artifacts.
+ */
+const HIDDEN_SEGMENTS = new Set([
+  "data-service",
+]);
+
+/**
+ * Segments that should be merged with the following segment.
+ * For example: /catalog/$catalogId becomes "Catalog: catalogId"
+ */
+const MERGE_WITH_NEXT = new Set([
+  "dataset",
+  "transfer-message",
+  "cn-message",
+]);
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+/**
+ * Formats a path segment for display.
+ *
+ * @param segment - Raw URL segment
+ * @returns Formatted display label
+ */
+function formatSegmentLabel(segment: string): string {
+  // Check for configured label
+  if (ROUTE_LABELS[segment]) {
+    return ROUTE_LABELS[segment];
+  }
+
+  // Format URNs
+  if (segment.includes("urn:")) {
+    return formatUrn(segment);
+  }
+
+  // Convert kebab-case to Title Case
+  return segment
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Checks if a segment is a dynamic route parameter (URN or UUID-like).
+ */
+function isDynamicSegment(segment: string): boolean {
+  return (
+    segment.includes("urn:") ||
+    /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(segment) ||
+    segment.startsWith("$")
+  );
+}
+
+/**
+ * Generates breadcrumb items from a pathname.
+ *
+ * @param pathname - Current URL pathname
+ * @returns Array of breadcrumb items
+ */
+function generateBreadcrumbs(pathname: string): BreadcrumbItemData[] {
+  const segments = pathname.split("/").filter((s) => s !== "");
+  const items: BreadcrumbItemData[] = [];
+  let currentPath = "";
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = decodeURIComponent(segments[i]);
+    currentPath += `/${segments[i]}`;
+
+    // Skip hidden segments
+    if (HIDDEN_SEGMENTS.has(segment)) {
+      continue;
+    }
+
+    // Check if this segment should be merged with next
+    const nextSegment = segments[i + 1] ? decodeURIComponent(segments[i + 1]) : null;
+    if (MERGE_WITH_NEXT.has(segment) && nextSegment) {
+      // Skip this segment, it will be included in the next item's label
+      continue;
+    }
+
+    // Check if previous segment wanted to merge
+    const prevSegment = segments[i - 1] ? decodeURIComponent(segments[i - 1]) : null;
+    let label = formatSegmentLabel(segment);
+    if (prevSegment && MERGE_WITH_NEXT.has(prevSegment)) {
+      const prevLabel = formatSegmentLabel(prevSegment);
+      label = `${prevLabel}: ${formatSegmentLabel(segment)}`;
+    }
+
+    items.push({
+      key: currentPath,
+      href: currentPath,
+      label,
+      isDynamic: isDynamicSegment(segment),
+    });
+  }
+
+  return items;
+}
+
+// =============================================================================
+// COMPONENT
 // =============================================================================
 
 /**
  * Application header with breadcrumb navigation and user controls.
  *
- * The breadcrumb trail is automatically generated from the current URL path,
- * with smart formatting for URN segments and responsive visibility rules
- * that hide intermediate items on mobile devices.
- *
- * @returns The header component with sidebar trigger, breadcrumbs, and user actions
+ * Breadcrumbs are automatically generated from the current URL path
+ * with smart formatting and responsive behavior.
  */
 export const Header = () => {
   const routerState = useRouterState();
@@ -54,55 +200,119 @@ export const Header = () => {
   // Breadcrumb Generation
   // ---------------------------------------------------------------------------
 
-  /**
-   * Generates breadcrumb items from the current route path.
-   * Handles URN formatting and filters out certain navigation segments
-   * that shouldn't appear in the breadcrumb trail.
-   */
   const breadcrumbs = useMemo(() => {
-    const rawPaths = routerState.location.pathname.split("/").filter((p) => p !== "");
-
-    /**
-     * Determines if a path segment should be visible in the breadcrumb.
-     * Some segments are implementation details and shouldn't be shown.
-     */
-    const isVisible = (segment: string, allSegments: string[]) => {
-      if (segment === "dataset") return false;
-      if (segment === "data-service") return false;
-      if (segment === "catalog" && allSegments.includes("provider-catalog")) return false;
-      return true;
-    };
-
-    /**
-     * Formats a path segment for display.
-     * URNs are truncated, dashes are replaced with spaces.
-     */
-    const formatLabel = (segment: string, prevSegment: string | undefined) => {
-      if (segment.includes("urn")) {
-        return formatUrn(segment);
-      }
-      return segment.split("-").join(" ");
-    };
-
-    const items = [];
-    let currentPath = "";
-
-    for (let i = 0; i < rawPaths.length; i++) {
-      const segment = rawPaths[i];
-      const decodedSegment = decodeURIComponent(segment);
-      currentPath += `/${segment}`;
-
-      if (isVisible(decodedSegment, rawPaths)) {
-        items.push({
-          key: currentPath,
-          href: currentPath,
-          label: formatLabel(decodedSegment, rawPaths[i - 1]),
-          originalSegment: segment,
-        });
-      }
-    }
-    return items;
+    return generateBreadcrumbs(routerState.location.pathname);
   }, [routerState.location.pathname]);
+
+  // ---------------------------------------------------------------------------
+  // Render Helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Renders the breadcrumb items with responsive behavior.
+   * - On mobile: Shows first, dropdown with middle items, and last
+   * - On desktop: Shows all items
+   */
+  const renderBreadcrumbs = () => {
+    if (breadcrumbs.length === 0) {
+      return null;
+    }
+
+    // If only 1-3 items, show all
+    if (breadcrumbs.length <= 3) {
+      return breadcrumbs.map((item, index) => {
+        const isLast = index === breadcrumbs.length - 1;
+        return (
+          <React.Fragment key={item.key}>
+            <BreadcrumbItem className="truncate max-w-[200px]">
+              {isLast ? (
+                <BreadcrumbPage className="truncate font-medium">
+                  {item.label}
+                </BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link
+                    to={item.href}
+                    className="text-muted-foreground hover:text-foreground transition-colors truncate"
+                  >
+                    {item.label}
+                  </Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+            {!isLast && <BreadcrumbSeparator />}
+          </React.Fragment>
+        );
+      });
+    }
+
+    // For 4+ items: show first, dropdown, last
+    const firstItem = breadcrumbs[0];
+    const middleItems = breadcrumbs.slice(1, -1);
+    const lastItem = breadcrumbs[breadcrumbs.length - 1];
+
+    return (
+      <>
+        {/* First Item */}
+        <BreadcrumbItem className="truncate max-w-[150px]">
+          <BreadcrumbLink asChild>
+            <Link
+              to={firstItem.href}
+              className="text-muted-foreground hover:text-foreground transition-colors truncate"
+            >
+              {firstItem.label}
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+
+        {/* Middle Items Ellipsis (shown on mobile, hidden on desktop) */}
+        <BreadcrumbItem className="md:hidden">
+          <Tooltip>
+            <TooltipTrigger className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
+              <BreadcrumbEllipsis className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="flex flex-col gap-1">
+              {middleItems.map((item) => (
+                <Link
+                  key={item.key}
+                  to={item.href}
+                  className="text-sm hover:underline"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator className="md:hidden" />
+
+        {/* Middle Items (visible on desktop) */}
+        {middleItems.map((item) => (
+          <React.Fragment key={item.key}>
+            <BreadcrumbItem className="hidden md:inline-flex truncate max-w-[150px]">
+              <BreadcrumbLink asChild>
+                <Link
+                  to={item.href}
+                  className="text-muted-foreground hover:text-foreground transition-colors truncate"
+                >
+                  {item.label}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="hidden md:flex" />
+          </React.Fragment>
+        ))}
+
+        {/* Last Item */}
+        <BreadcrumbItem className="truncate max-w-[200px]">
+          <BreadcrumbPage className="truncate font-medium">
+            {lastItem.label}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
+      </>
+    );
+  };
 
   // ---------------------------------------------------------------------------
   // Render
@@ -111,44 +321,12 @@ export const Header = () => {
   return (
     <div className="bg-background w-full border-b border-white/5 py-1 z-50 h-9 px-3 flex justify-between items-center gap-4">
       {/* Left section: Sidebar trigger and breadcrumbs */}
-      <div className="flex items-center gap-2 overflow-hidden">
+      <div className="flex items-center gap-2 overflow-hidden min-w-0">
         <SidebarTrigger className="h-6 w-6 shrink-0" />
         <Separator orientation="vertical" className="h-4 shrink-0" />
         <Breadcrumb className="overflow-hidden">
-          <BreadcrumbList className="flex-nowrap whitespace-nowrap">
-            {breadcrumbs.map((item, index) => {
-              const isLast = index === breadcrumbs.length - 1;
-              const isFirst = index === 0;
-              // On mobile, only show first and last items
-              const isHiddenOnMobile = !isFirst && !isLast;
-
-              return (
-                <React.Fragment key={item.key}>
-                  <BreadcrumbItem className={cn("truncate max-w-[150px] md:max-w-xs",
-                    isHiddenOnMobile ? "hidden md:inline-flex" : "inline-flex"
-                  )}>
-                    {/* Show ellipsis on mobile for collapsed items */}
-                    {isHiddenOnMobile && index === 1 && breadcrumbs.length > 2 && (
-                      <span className="md:hidden mx-1">...</span>
-                    )}
-                    {!isHiddenOnMobile && (
-                      isLast ? (
-                        <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink asChild className="text-xs text-muted-foreground hover:text-foreground transition-colors truncate">
-                          <Link to={item.href}>
-                            {item.label}
-                          </Link>
-                        </BreadcrumbLink>
-                      )
-                    )}
-                  </BreadcrumbItem>
-                  {!isLast && (
-                    <BreadcrumbSeparator className={cn(isHiddenOnMobile ? "hidden md:flex" : "flex")} />
-                  )}
-                </React.Fragment>
-              );
-            })}
+          <BreadcrumbList className="flex-nowrap">
+            {renderBreadcrumbs()}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
@@ -162,6 +340,7 @@ export const Header = () => {
         <Link to="">
           <User className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors h-5 w-5" />
         </Link>
+
         {isAuthenticated && (
           <Button variant="ghost" size="xs" onClick={() => unsetAuthentication()}>
             Logout
