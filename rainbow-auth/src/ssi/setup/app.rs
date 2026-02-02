@@ -128,22 +128,11 @@ impl AuthApplication {
 
         let router = Self::create_router(&config, vault_service).await;
 
-        let listener = match config.common().is_local() {
-            true => {
-                TcpListener::bind(format!(
-                    "127.0.0.1{}",
-                    config.common().get_weird_port(HostType::Http)
-                ))
-                .await?
-            }
-            false => {
-                TcpListener::bind(format!(
-                    "0.0.0.0{}",
-                    config.common().get_weird_port(HostType::Http)
-                ))
-                .await?
-            }
-        };
+        let listener = TcpListener::bind(format!(
+            "0.0.0.0{}",
+            config.common().get_weird_port(HostType::Http)
+        ))
+        .await?;
 
         serve(listener, router).await?;
 
@@ -168,11 +157,7 @@ impl AuthApplication {
 
         let router = Self::create_router(config, vault).await;
 
-        let addr_str = if config.common().is_local() {
-            "127.0.0.1:443".to_string()
-        } else {
-            "0.0.0.0:443".to_string()
-        };
+        let addr_str = "0.0.0.0:443".to_string();
         let addr: SocketAddr = addr_str.parse()?;
         info!("Starting Authority server with TLS in {}", addr);
 

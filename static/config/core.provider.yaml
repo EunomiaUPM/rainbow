@@ -74,9 +74,9 @@ ssi_auth:
       url: "127.0.0.1"
       port: "7001"
     type: "email"
-    name: "RainbowProvider"
-    email: "RainbowProvider@rainbow.com"
-    password: "rainbow"
+    name: "provider"
+    email: "provider@rainbow.dev"
+    password: "provider"
     id: null
   client:
     class_id: "rainbow_provider"

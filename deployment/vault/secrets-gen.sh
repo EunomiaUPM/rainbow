@@ -8,7 +8,7 @@ ROLE=$2
 
 if [ -z "$ROLE" ]; then
     echo "Usage: $0 <secrets_dir> <role>"
-    echo "Role must be 'provider' or 'consumer'"
+    echo "Role must be 'provider' 'consumer' or 'authority'"
     exit 1
 fi
 
@@ -49,7 +49,13 @@ if [ ! -f "$SECRETS_DIR/db.json" ]; then
   "password": "ds_consumer",
   "name": "ds_consumer"
 }' > "$SECRETS_DIR/db.json"
-    fi
+    elif [ "$ROLE" = "authority" ]; then
+            echo '{
+      "user": "ds_authority",
+      "password": "ds_authority",
+      "name": "ds_authority"
+    }' > "$SECRETS_DIR/db.json"
+   fi
 else
     echo "db.json already exists. Skipping."
 fi
@@ -69,6 +75,14 @@ if [ ! -f "$SECRETS_DIR/wallet.json" ]; then
   "name": "consumer",
   "email": "consumer@rainbow.dev",
   "password": "consumer"
+}' > "$SECRETS_DIR/wallet.json"
+
+elif [ "$ROLE" = "authority" ]; then
+        echo '{
+  "type": "email",
+  "name": "authority",
+  "email": "authority@rainbow.dev",
+  "password": "authority"
 }' > "$SECRETS_DIR/wallet.json"
     fi
 else
