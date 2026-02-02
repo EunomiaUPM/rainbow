@@ -18,6 +18,7 @@
 use async_trait::async_trait;
 use serde_json::Value;
 use ymir::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use ymir::types::wallet::WalletCredentials;
 
 #[async_trait]
 pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
@@ -28,4 +29,9 @@ pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
     fn generate_issuing_uri(&self, id: &str) -> String;
     fn get_did(&self) -> String;
     async fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
+    async fn build_vp(
+        &self,
+        vcs: Vec<WalletCredentials>,
+        did: Option<String>,
+    ) -> anyhow::Result<String>;
 }

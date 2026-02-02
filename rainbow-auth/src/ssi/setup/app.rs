@@ -168,10 +168,11 @@ impl AuthApplication {
 
         let router = Self::create_router(config, vault).await;
 
+        let port = config.common().hosts().get_tls_port(HostType::Http);
         let addr_str = if config.common().is_local() {
-            "127.0.0.1:443".to_string()
+            format!("127.0.0.1:{}", port)
         } else {
-            "0.0.0.0:443".to_string()
+            format!("0.0.0.0:{}", port)
         };
         let addr: SocketAddr = addr_str.parse()?;
         info!("Starting Authority server with TLS in {}", addr);

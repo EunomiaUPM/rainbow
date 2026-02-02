@@ -41,7 +41,8 @@ impl GaiaSelfIssuerRouter {
             .route("/.well-known/openid-credential-issuer", get(Self::get_issuer))
             .route("/.well-known/oauth-authorization-server", get(Self::get_oauth_server))
             .route("/token", post(Self::get_token))
-            .route("/credential", post(Self::post_credential))
+            .route("/credential/generate", post(Self::post_credential))
+            .route("/credential/request", post(Self::req_credential))
             .with_state(self.self_issuer)
     }
 
@@ -87,6 +88,15 @@ impl GaiaSelfIssuerRouter {
         State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>,
     ) -> impl IntoResponse {
         match self_issuer.issue_cred().await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn req_credential(
+        State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>,
+    ) -> impl IntoResponse {
+        match self_issuer.request_gaia_vc().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
         }

@@ -19,18 +19,15 @@ use std::sync::Arc;
 
 use super::super::GaiaSelfIssuerTrait;
 use super::config::{GaiaGaiaSelfIssuerConfigTrait, GaiaSelfIssuerConfig};
-use anyhow::bail;
 use async_trait::async_trait;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{Algorithm, Header};
 use serde_json::{json, Value};
-use tracing::{error, info};
+use tracing::info;
 use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
-use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::vault::vault_rs::VaultService;
 use ymir::services::vault::VaultTrait;
-use ymir::types::errors::BadFormat;
 use ymir::types::issuing::{AuthServerMetadata, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer};
 use ymir::types::secrets::StringHelper;
 use ymir::types::vcs::claims_v1::{VCClaimsV1, VCFromClaimsV1};
@@ -38,8 +35,9 @@ use ymir::types::vcs::claims_v2::VCClaimsV2;
 use ymir::types::vcs::vc_issuer::VCIssuer;
 use ymir::types::vcs::vc_specs::legal_person::LegalPersonCredentialSubject;
 use ymir::types::vcs::vc_specs::terms_and_conds::TermsAndConditionsCredSub;
-use ymir::types::vcs::{VcType, W3cDataModelVersion};
-use ymir::utils::expect_from_env;
+use ymir::types::vcs::{GaiaVP, VcInsideGaiaVPBuilder, VcType, W3cDataModelVersion};
+use ymir::types::wallet::WalletCredentials;
+use ymir::utils::{expect_from_env, get_rsa_key, sign_token};
 
 pub struct BasicGaiaSelfIssuer {
     vault: Arc<VaultService>,
@@ -222,40 +220,11 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         let key = expect_from_env("VAULT_APP_PRIV_KEY");
         let key: StringHelper = self.vault.read(None, &key).await?;
 
-        let key = match EncodingKey::from_rsa_pem(key.data().as_bytes()) {
-            Ok(data) => data,
-            Err(e) => {
-                let error = Errors::format_new(
-                    BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
+        let key = get_rsa_key(key.data())?;
 
-        let person_vc_jwt = match encode(&header, &person_vc, &key) {
-            Ok(data) => data,
-            Err(e) => {
-                let error = Errors::format_new(
-                    BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
-        let terms_vc_jwt = match encode(&header, &terms_vc, &key) {
-            Ok(data) => data,
-            Err(e) => {
-                let error = Errors::format_new(
-                    BadFormat::Unknown,
-                    &format!("Error parsing private key: {}", e.to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
+        let person_vc_jwt = sign_token(&header, &person_vc, &key)?;
+
+        let terms_vc_jwt = sign_token(&header, &terms_vc, &key)?;
 
         Ok(json!({
             "credential_responses": vec![
@@ -269,5 +238,59 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
                 }
             ]
         }))
+    }
+
+    async fn build_vp(
+        &self,
+        vcs: Vec<WalletCredentials>,
+        did: Option<String>,
+    ) -> anyhow::Result<String> {
+        info!("Building VP 4 GAIA");
+
+        let did = did.unwrap_or_else(|| self.config.get_did());
+
+        let mut header = Header::new(Algorithm::RS256);
+        header.kid = Some(did.clone());
+        let priv_key = expect_from_env("VAULT_APP_PRIV_KEY");
+        let priv_key: StringHelper = self.vault.read(None, &priv_key).await?;
+
+        let key = get_rsa_key(priv_key.data())?;
+
+        let now = Utc::now();
+
+        let mut claims = GaiaVP {
+            context: vec![],
+            r#type: "VerifiablePresentation".to_string(),
+            verifiable_credential: vec![],
+            issuer: did,
+            valid_from: Some(now),
+            valid_until: Some(now + Duration::days(1)),
+        };
+
+        let context;
+        match self.config.get_data_model_version() {
+            W3cDataModelVersion::V1 => {
+                context = vec!["https://www.w3.org/ns/credentials/v1".to_string()];
+            }
+            W3cDataModelVersion::V2 => {
+                context = vec!["https://www.w3.org/ns/credentials/v2".to_string()];
+            }
+        }
+
+        let mut jwts = vec![];
+
+        for vc in vcs {
+            let jwt =
+                VcInsideGaiaVPBuilder::default().context(context.clone()).id(vc.document).build();
+            jwts.push(jwt);
+        }
+
+        claims.verifiable_credential = jwts;
+        claims.context = context;
+
+        let vc_jwt = sign_token(&header, &claims, &key)?;
+
+        info!("{}", vc_jwt);
+        Ok(vc_jwt)
     }
 }

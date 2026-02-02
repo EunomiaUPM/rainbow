@@ -17,10 +17,11 @@
 
 use std::sync::Arc;
 
+use crate::ssi::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use async_trait::async_trait;
 use serde_json::Value;
-
-use crate::ssi::services::gaia_self_issuer::GaiaSelfIssuerTrait;
+use tracing::error;
+use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::wallet::WalletTrait;
 use ymir::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
 use ymir::types::wallet::OidcUri;
@@ -63,5 +64,23 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
         };
 
         self.self_issuer().issue_cred(&did).await
+    }
+
+    async fn request_gaia_vc(&self) -> anyhow::Result<()> {
+        let wallet = self.wallet().ok_or_else(|| {
+            let error = Errors::not_impl_new(
+                "Not implemented if wallet is not connected",
+                "Not implemented if wallet is not connected",
+            );
+            error!("{}", error.log());
+            error
+        })?;
+
+        let vcs = wallet.retrieve_wallet_credentials().await?;
+
+        let did = wallet.get_did().await?;
+        let kk = self.self_issuer().build_vp(vcs, Some(did)).await?;
+        
+        Ok(())
     }
 }
