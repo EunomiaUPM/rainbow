@@ -1,0 +1,103 @@
+# Consumer PostgreSQL - Deployment, Service, PVC, Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: consumer-postgres-secret
+  namespace: rainbow-consumer
+type: Opaque
+stringData:
+  POSTGRES_USER: ds_consumer
+  POSTGRES_PASSWORD: ds_consumer
+  POSTGRES_DB: ds_consumer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: consumer-postgres-pvc
+  namespace: rainbow-consumer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-postgres
+  namespace: rainbow-consumer
+  labels:
+    app: consumer-postgres
+    stack: consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-postgres
+  template:
+    metadata:
+      labels:
+        app: consumer-postgres
+        stack: consumer
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          envFrom:
+            - secretRef:
+                name: consumer-postgres-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - ds_consumer
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - ds_consumer
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: consumer-postgres-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consumer-postgres
+  namespace: rainbow-consumer
+  labels:
+    app: consumer-postgres
+    stack: consumer
+spec:
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+      nodePort: 31300
+      name: postgres
+  selector:
+    app: consumer-postgres

@@ -1,0 +1,139 @@
+# Heimdall Application - Deployment, Service, ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heimdall-config
+  namespace: rainbow-infra
+data:
+  VAULT_ADDR: "http://authority-vault:8200"
+  VAULT_PATH: "/files"
+  DB_HOST: "authority-postgres"
+  DATABASE_HOST: "authority-postgres"
+  WALLET_API_PROTOCOL: "http"
+  WALLET_API_URL: "host.k8s.internal"
+  WALLET_API_PORT: "7001"
+  WALLET_TYPE: "email"
+  WALLET_NAME: "authority"
+  WALLET_EMAIL: "authority@rainbow.dev"
+  WALLET_PASSWORD: "authority"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heimdall
+  namespace: rainbow-infra
+  labels:
+    app: heimdall
+    stack: infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: heimdall
+  template:
+    metadata:
+      labels:
+        app: heimdall
+        stack: infra
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL..."
+              until nc -z authority-postgres 5432; do
+                echo "PostgreSQL not ready, sleeping..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+        - name: wait-for-vault
+          image: busybox:1.36
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Vault..."
+              until wget -q --spider http://authority-vault:8200/v1/sys/health; do
+                echo "Vault not ready, sleeping..."
+                sleep 2
+              done
+              echo "Vault is ready!"
+      containers:
+        - name: heimdall
+          image: rmenendez8/heimdall:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 1500
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: heimdall-config
+          env:
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: authority-vault-token
+                  key: token
+                  optional: true
+          volumeMounts:
+            - name: authority-files
+              mountPath: /files
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 1500
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 1500
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: authority-files
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heimdall
+  namespace: rainbow-infra
+  labels:
+    app: heimdall
+    stack: infra
+spec:
+  type: NodePort
+  ports:
+    - port: 1500
+      targetPort: 1500
+      nodePort: 31500
+      name: http
+  selector:
+    app: heimdall

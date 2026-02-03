@@ -1,0 +1,8 @@
+# Consumer Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rainbow-consumer
+  labels:
+    app.kubernetes.io/name: rainbow-consumer
+    app.kubernetes.io/part-of: rainbow

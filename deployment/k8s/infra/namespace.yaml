@@ -1,0 +1,8 @@
+# Infra Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rainbow-infra
+  labels:
+    app.kubernetes.io/name: rainbow-infra
+    app.kubernetes.io/part-of: rainbow

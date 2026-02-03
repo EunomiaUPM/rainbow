@@ -1,0 +1,124 @@
+# Authority/Heimdall Vault - Deployment, Service, PVC
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: authority-vault-pvc
+  namespace: rainbow-infra
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authority-vault-config
+  namespace: rainbow-infra
+data:
+  vault-config.json: |
+    {
+      "storage": { "file": { "path": "/vault/file" } },
+      "listener": [{
+        "tcp": {
+          "address": "0.0.0.0:8200",
+          "tls_disable": 1
+        }
+      }],
+      "ui": true,
+      "api_addr": "http://0.0.0.0:8200",
+      "default_lease_ttl": "168h",
+      "max_lease_ttl": "720h"
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authority-vault
+  namespace: rainbow-infra
+  labels:
+    app: authority-vault
+    stack: infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authority-vault
+  template:
+    metadata:
+      labels:
+        app: authority-vault
+        stack: infra
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: vault
+          image: hashicorp/vault:1.21
+          ports:
+            - containerPort: 8200
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          command:
+            - vault
+            - server
+            - -config=/vault/config/vault-config.json
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          env:
+            - name: VAULT_ADDR
+              value: "http://127.0.0.1:8200"
+          volumeMounts:
+            - name: vault-config
+              mountPath: /vault/config
+            - name: vault-data
+              mountPath: /vault/file
+          readinessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+              port: 8200
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+              port: 8200
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      volumes:
+        - name: vault-config
+          configMap:
+            name: authority-vault-config
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: authority-vault-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authority-vault
+  namespace: rainbow-infra
+  labels:
+    app: authority-vault
+    stack: infra
+spec:
+  type: NodePort
+  ports:
+    - port: 8200
+      targetPort: 8200
+      nodePort: 31203
+      name: vault
+  selector:
+    app: authority-vault

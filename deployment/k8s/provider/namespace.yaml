@@ -1,0 +1,8 @@
+# Provider Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rainbow-provider
+  labels:
+    app.kubernetes.io/name: rainbow-provider
+    app.kubernetes.io/part-of: rainbow

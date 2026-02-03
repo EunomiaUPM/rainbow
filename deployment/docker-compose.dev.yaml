@@ -199,7 +199,7 @@ services:
       VAULT_ADDR: "http://heimdall-vault:8200"
       VAULT_FILE: "/vault/file"
       VAULT_HOST_ADDR: "http://heimdall-vault:8200"
-      VAULT_HOST_PATH: "${PWD}/../static/vault/authority"
+      VAULT_HOST_PATH: "/files"
     volumes:
       - ../static/vault/authority/config:/vault/config
       - ../static/vault/authority/data:/vault/file
@@ -243,20 +243,8 @@ services:
         condition: service_started
     env_file:
       - ../static/vault/authority/data/vault.env
-    environment:
-      - VAULT_ADDR=http://heimdall-vault:8200
-      - VAULT_PATH=/files
-      - DB_HOST=heimdall-db
-      - DATABASE_HOST=heimdall-db
-      # Wallet config
-      - WALLET_API_PROTOCOL=http
-      - WALLET_API_URL=host.docker.internal
-      - WALLET_API_PORT=7001
-      - WALLET_TYPE=email
-      - WALLET_NAME=authority
-      - WALLET_EMAIL=authority@rainbow.dev
-      - WALLET_PASSWORD=authority
     volumes:
       - ../static/vault/authority:/files
+      - ../static/environment/config/auth.yaml:/app/dataspace.yaml
     ports:
       - "1500:1500"

@@ -63,23 +63,23 @@ catalog:
 # SSI AUTH
 # ==========================
 ssi_auth:
-  common: *common_config
+  common_config: *common_config
   wallet:
     api:
       protocol: "http"
       url: "127.0.0.1"
       port: "7001"
     id: null
-  client:
+  client_config:
     class_id: "rainbow_consumer"
     display: null
   gaia_active: false
-  stuff_to_issue:
+  vc_config:
     vc_model: JwtVc
     w3c_data_model: V1
     dataspace_id: null
     federated_catalog_uri: null
-  requirements_to_verify:
+  verify_req_config:
     is_cert_allowed: false
     vcs_requested: [ ]
   did_config:
