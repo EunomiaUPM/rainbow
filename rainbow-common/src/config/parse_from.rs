@@ -24,7 +24,7 @@ use ymir::services::wallet::walt_id::config::{WaltIdConfig, WaltIdConfigBuilder}
 
 impl From<SsiAuthConfig> for WaltIdConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        WaltIdConfigBuilder::new().ssi_wallet_config(value.wallet()).did_config(value.did()).build()
+        WaltIdConfigBuilder::new().ssi_wallet_config(value.wallet_config()).did_config(value.did()).build()
     }
 }
 
@@ -34,7 +34,7 @@ impl From<SsiAuthConfig> for BasicVerifierConfig {
         BasicVerifierConfigBuilder::new()
             .hosts(value.common().hosts().clone())
             .is_local(value.common().is_local())
-            .requested_vcs(value.requirements_to_verify().vcs_requested)
+            .requested_vcs(value.verify_req_config().vcs_requested)
             .api_path(api_path)
             .build()
     }

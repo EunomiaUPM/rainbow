@@ -16,10 +16,11 @@
  */
 
 use std::sync::Arc;
+
 use ymir::services::repo::subtraits::{
-    BusinessMatesRepoTrait, MatesTrait, RecvInteractionTrait, RecvRequestTrait,
+    BusinessMatesRepoTrait, IssuingTrait, MatesTrait, RecvInteractionTrait, RecvRequestTrait,
     RecvVerificationTrait, ReqInteractionTrait, ReqRequestTrait, ReqVcTrait, ReqVerificationTrait,
-    TokenRequirementsTrait,
+    TokenRequirementsTrait
 };
 
 pub trait AuthRepoTrait: Send + Sync + 'static {
@@ -33,4 +34,5 @@ pub trait AuthRepoTrait: Send + Sync + 'static {
     fn mates(&self) -> Arc<dyn MatesTrait>;
     fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait>;
     fn vc_req(&self) -> Arc<dyn ReqVcTrait>;
+    fn issuing(&self) -> Arc<dyn IssuingTrait>;
 }

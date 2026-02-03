@@ -17,21 +17,20 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
-use ymir::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use ymir::data::entities::issuing;
+use ymir::types::issuing::IssuingToken;
 use ymir::types::wallet::WalletCredentials;
 
 #[async_trait]
-pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
-    fn get_cred_offer_data(&self) -> VCCredOffer;
-    fn get_issuer_data(&self) -> IssuerMetadata;
-    fn get_oauth_server_data(&self) -> AuthServerMetadata;
+pub trait GaiaOwnIssuerTrait: Send + Sync + 'static {
+    fn start_basic_vcs(&self) -> issuing::NewModel;
     fn get_token(&self) -> IssuingToken;
-    fn generate_issuing_uri(&self, id: &str) -> String;
     fn get_did(&self) -> String;
     async fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
     async fn build_vp(
         &self,
         vcs: Vec<WalletCredentials>,
-        did: Option<String>,
+        did: Option<String>
     ) -> anyhow::Result<String>;
+    async fn send_req(&self, body: String) -> anyhow::Result<String>;
 }

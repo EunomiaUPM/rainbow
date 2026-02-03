@@ -19,29 +19,29 @@
 
 use crate::config::services::CommonConfig;
 use crate::config::traits::{CommonConfigTrait, ConfigLoader};
-use crate::config::types::ClientConfig;
+use crate::config::types::{ClientConfig, GaiaConfig};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::types::dids::did_config::DidConfig;
-use ymir::types::issuing::StuffToIssue;
-use ymir::types::verifying::RequirementsToVerify;
+use ymir::types::issuing::VcConfig;
+use ymir::types::verifying::VerifyReqConfig;
 use ymir::types::wallet::WalletConfig;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SsiAuthConfig {
-    common: CommonConfig,
-    wallet: Option<WalletConfig>,
-    client: ClientConfig,
+    common_config: CommonConfig,
+    wallet_config: Option<WalletConfig>,
+    client_config: ClientConfig,
     did_config: DidConfig,
-    stuff_to_issue: StuffToIssue,
-    requirements_to_verify: RequirementsToVerify,
-    gaia_active: bool,
+    vc_config: VcConfig,
+    verify_req_config: VerifyReqConfig,
+    gaia_config: Option<GaiaConfig>,
 }
 
 impl SsiAuthConfig {
-    pub fn wallet(&self) -> WalletConfig {
-        let wallet = match self.wallet.as_ref() {
+    pub fn wallet_config(&self) -> WalletConfig {
+        let wallet = match self.wallet_config.as_ref() {
             Some(wallet) => Some(wallet.clone()),
             None => {
                 let error = Errors::module_new("wallet");
@@ -51,23 +51,34 @@ impl SsiAuthConfig {
         };
         wallet.expect("Wallet not active")
     }
-    pub fn client(&self) -> ClientConfig {
-        self.client.clone()
+    pub fn client_config(&self) -> ClientConfig {
+        self.client_config.clone()
+    }
+    pub fn gaia_config(&self) -> GaiaConfig {
+        let gaia = match self.gaia_config.as_ref() {
+            Some(gaia) => Some(gaia.clone()),
+            None => {
+                let error = Errors::module_new("gaia");
+                error!("{}", error.log());
+                None
+            }
+        };
+        gaia.expect("Gaia not active")
     }
     pub fn is_gaia_active(&self) -> bool {
-        self.gaia_active
+        self.gaia_config.is_some()
     }
     pub fn is_wallet_active(&self) -> bool {
-        self.wallet.is_some()
+        self.wallet_config.is_some()
     }
     pub fn did(&self) -> DidConfig {
         self.did_config.clone()
     }
-    pub fn stuff_to_issue(&self) -> StuffToIssue {
-        self.stuff_to_issue.clone()
+    pub fn vc_config(&self) -> VcConfig {
+        self.vc_config.clone()
     }
-    pub fn requirements_to_verify(&self) -> RequirementsToVerify {
-        self.requirements_to_verify.clone()
+    pub fn verify_req_config(&self) -> VerifyReqConfig {
+        self.verify_req_config.clone()
     }
 }
 
@@ -82,6 +93,6 @@ impl ConfigLoader for SsiAuthConfig {
 
 impl CommonConfigTrait for SsiAuthConfig {
     fn common(&self) -> &CommonConfig {
-        &self.common
+        &self.common_config
     }
 }
