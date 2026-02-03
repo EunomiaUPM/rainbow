@@ -57,6 +57,6 @@ tokio-util = "0.7.17"
 async-trait = {workspace = true}
 rustls = {workspace = true}
 axum-server = {workspace = true}
-#ymir = { workspace = true }
+ymir = { workspace = true }
 #ymir = { path = "./../../ymir" }
-ymir = {git = "https://github.com/EunomiaUPM/ymir.git", tag = "v0.3.0"}
+#ymir = {git = "https://github.com/EunomiaUPM/ymir.git", tag = "v0.3.0"}

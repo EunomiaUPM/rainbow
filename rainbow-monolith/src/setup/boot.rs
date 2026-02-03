@@ -57,6 +57,7 @@ impl BootstrapServiceTrait for CoreBoot {
 
         // attempt first
         let url = format!("{}{}/mates/myself", base_url, api);
+        let url = url.replace("host.docker.internal", "127.0.0.1");
         let participant = client.get_json::<mates::Model>(url.as_str()).await;
 
         // catch error
