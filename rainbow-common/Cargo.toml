@@ -31,4 +31,5 @@ bytes = "1.10.1"
 serde_urlencoded = "0.7.1"
 serde_norway = { workspace = true }
 #ymir = { workspace = true }
-ymir = { path = "./../../ymir" }
+#ymir = { path = "./../../ymir" }
+ymir = {git = "https://github.com/EunomiaUPM/ymir.git", tag = "v0.3.0"}
