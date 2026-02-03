@@ -16,12 +16,12 @@
  */
 
 use sea_orm_migration::MigrationTrait;
-
 use ymir::data::migrations::{
-    m20250403_094651_business_mates, m20250403_094651_mates, m20250403_094651_recv_interaction,
-    m20250403_094651_recv_request, m20250403_094651_recv_verification,
-    m20250403_094651_req_interaction, m20250403_094651_req_request, m20250403_094651_req_vc,
-    m20250403_094651_req_verification, m20250403_094651_token_requirements,
+    m20250403_094651_business_mates, m20250403_094651_issuing, m20250403_094651_mates,
+    m20250403_094651_recv_interaction, m20250403_094651_recv_request,
+    m20250403_094651_recv_verification, m20250403_094651_req_interaction,
+    m20250403_094651_req_request, m20250403_094651_req_vc, m20250403_094651_req_verification,
+    m20250403_094651_token_requirements
 };
 
 pub fn get_auth_migrations() -> Vec<Box<dyn MigrationTrait>> {
@@ -36,5 +36,6 @@ pub fn get_auth_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20250403_094651_recv_verification::Migration),
         Box::new(m20250403_094651_business_mates::Migration),
         Box::new(m20250403_094651_recv_interaction::Migration),
+        Box::new(m20250403_094651_issuing::Migration),
     ]
 }

@@ -15,13 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use super::GaiaGaiaSelfIssuerConfigTrait;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::CommonConfigTrait;
+use rainbow_common::config::types::ClientConfig;
 use ymir::config::traits::ApiConfigTrait;
-use ymir::config::types::CommonHostsConfig;
+use ymir::config::types::{CommonHostsConfig, HostConfig};
 use ymir::types::dids::did_config::DidConfig;
 use ymir::types::vcs::W3cDataModelVersion;
+
+use super::GaiaGaiaSelfIssuerConfigTrait;
 
 pub struct GaiaSelfIssuerConfig {
     hosts: CommonHostsConfig,
@@ -29,6 +31,8 @@ pub struct GaiaSelfIssuerConfig {
     api_path: String,
     vc_data_model: W3cDataModelVersion,
     did_config: DidConfig,
+    client_config: ClientConfig,
+    gaia_api: HostConfig
 }
 
 impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
@@ -40,24 +44,18 @@ impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
             api_path,
             vc_data_model: W3cDataModelVersion::V1,
             did_config: value.did().clone(),
+            client_config: value.client_config().clone(),
+            gaia_api: value.gaia_config().host.clone()
         }
     }
 }
 
 impl GaiaGaiaSelfIssuerConfigTrait for GaiaSelfIssuerConfig {
-    fn hosts(&self) -> &CommonHostsConfig {
-        &self.hosts
-    }
-    fn is_local(&self) -> bool {
-        self.is_local
-    }
-    fn get_api_path(&self) -> String {
-        self.api_path.clone()
-    }
-    fn get_data_model_version(&self) -> W3cDataModelVersion {
-        self.vc_data_model.clone()
-    }
-    fn get_did(&self) -> String {
-        self.did_config.did.clone()
-    }
+    fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
+    fn gaia_api(&self) -> &HostConfig { &self.gaia_api }
+    fn is_local(&self) -> bool { self.is_local }
+    fn get_api_path(&self) -> String { self.api_path.clone() }
+    fn get_data_model_version(&self) -> W3cDataModelVersion { self.vc_data_model.clone() }
+    fn get_did(&self) -> String { self.did_config.did.clone() }
+    fn get_client_config(&self) -> &ClientConfig { &self.client_config }
 }
