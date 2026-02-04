@@ -63,22 +63,7 @@ catalog:
 # SSI AUTH
 # ==========================
 ssi_auth:
-  common_config:
-    hosts:
-      http:
-        protocol: 'http'
-        url: 'host.docker.internal'
-        port: '1100'
-      grpc: null
-      graphql: null
-    db:
-      db_type: Postgres
-      url: '127.0.0.1'
-      port: '1300'
-    api:
-      version: *api_version
-      openapi_path: '../static/specs/openapi/auth/auth_consumer.json'
-    is_local: true
+  common_config: *common_config
   wallet_config:
     api:
       protocol: 'http'

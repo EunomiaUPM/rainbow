@@ -151,11 +151,11 @@ impl VcRequesterRouter {
         };
 
         match payload {
-            CallbackBody::TypeA(data) => match requester.continue_req(id, data).await {
+            CallbackBody::Approved(data) => match requester.continue_req(id, data).await {
                 Ok(data) => (StatusCode::OK, Json(data)).into_response(),
                 Err(e) => e.to_response()
             },
-            CallbackBody::TypeB(_) => match requester.manage_rejection(id).await {
+            CallbackBody::Rejected(_) => match requester.manage_rejection(id).await {
                 Ok(_) => (StatusCode::OK,).into_response(),
                 Err(e) => e.to_response()
             }

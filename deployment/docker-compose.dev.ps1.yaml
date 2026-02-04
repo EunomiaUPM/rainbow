@@ -258,5 +258,6 @@ services:
       - WALLET_PASSWORD=authority
     volumes:
       - ../static/vault/authority:/files
+      - ./dataspace_authority.yaml:/app/dataspace.yaml
     ports:
       - "1500:1500"
