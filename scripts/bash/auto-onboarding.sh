@@ -95,7 +95,7 @@ echo "-----------------------------------------------" >&2
 # 2.5 C Beg 4 Credential (Consumer Requests Credential from Authority)
 C_BEG_BODY=$(jq -n --arg url "$AuthorityUrl/api/v1/gate/access" \
     --arg id "$AuthorityDid" \
-    '{"url": $url, "id": $id, "slug": "authority", "vc_type": "DataspaceParticipantCredential"}')
+    '{"url": $url, "id": $id, "slug": "authority", "vc_type": "DataspaceParticipant"}')
 
 invoke_curl_robust "POST" "$ConsumerUrl/api/v1/vc-request/beg/cross-user" "$C_BEG_BODY" "5. C Requests Credential (Beg 4 Credential)"
 

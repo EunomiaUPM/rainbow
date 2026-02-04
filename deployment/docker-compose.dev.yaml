@@ -235,7 +235,7 @@ services:
     container_name: heimdall
     platform: linux/amd64
     restart: on-failure
-    image: "rmenendez8/heimdall:latest"
+    image: "rmenendez8/heimdall:v1.0.5"
     depends_on:
       heimdall-db:
         condition: service_healthy
@@ -248,16 +248,8 @@ services:
       - VAULT_PATH=/files
       - DB_HOST=heimdall-db
       - DATABASE_HOST=heimdall-db
-      # Wallet config
-      - WALLET_API_PROTOCOL=http
-      - WALLET_API_URL=host.docker.internal
-      - WALLET_API_PORT=7001
-      - WALLET_TYPE=email
-      - WALLET_NAME=authority
-      - WALLET_EMAIL=authority@rainbow.dev
-      - WALLET_PASSWORD=authority
     volumes:
       - ../static/vault/authority:/files
-      - ./dataspace_authority.yaml:/app/dataspace.yaml
+      - ../static/environment/config/dataspace_authority.yaml:/app/dataspace.yaml
     ports:
       - "1500:1500"
