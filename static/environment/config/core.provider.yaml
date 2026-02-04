@@ -2,16 +2,16 @@
 # COMMON ANCHORS
 # ==========================
 http_host: &http_host
-  protocol: "http"
-  url: "127.0.0.1"
-  port: "1200"
+  protocol: 'http'
+  url: '127.0.0.1'
+  port: '1200'
 
 hosts_default: &hosts_default
   http: *http_host
   grpc: null
   graphql: null
 
-api_version: &api_version "v1"
+api_version: &api_version 'v1'
 
 min_known_config: &min_known_config
   hosts: *hosts_default
@@ -19,25 +19,25 @@ min_known_config: &min_known_config
 
 is_catalog_datahub: &is_catalog_datahub false
 
-policy_templates_folder: &policy_templates_folder "../static/policy_templates/"
+policy_templates_folder: &policy_templates_folder '../static/policy_templates/'
 
 cache_config: &cache_config
   cache_type: Redis
-  url: "127.0.0.1"
-  port: "6379"
-  user: "default"
-  password: "ds_core_provider_redis"
+  url: '127.0.0.1'
+  port: '6379'
+  user: 'default'
+  password: 'ds_core_provider_redis'
 
 common_config: &common_config
   hosts: *hosts_default
   db:
     db_type: Postgres
-    url: "127.0.0.1"
-    port: "1400"
+    url: '127.0.0.1'
+    port: '1400'
   api:
     version: *api_version
-    openapi_path: "../static/specs/openapi/auth/auth_provider.json"
-  keys_path: "../static/certificates/provider/"
+    openapi_path: '../static/specs/openapi/auth/auth_provider.json'
+  keys_path: '../static/certificates/provider/'
   is_local: true
 
 # ==========================
@@ -64,32 +64,29 @@ catalog:
 # SSI AUTH
 # ==========================
 ssi_auth:
-  common: *common_config
-  wallet:
+  common_config: *common_config
+  wallet_config:
     api:
-      protocol: "http"
-      url: "127.0.0.1"
-      port: "7001"
+      protocol: 'http'
+      url: '127.0.0.1'
+      port: '7001'
     id: null
-  client:
-    class_id: "rainbow_provider"
+  client_config:
+    class_id: 'rainbow_consumer'
     display: null
-  gaia_active: false
-  stuff_to_issue:
+  vc_config:
     vc_model: JwtVc
     w3c_data_model: V1
-    dataspace_id: null
-    federated_catalog_uri: null
-  requirements_to_verify:
+  verify_req_config:
     is_cert_allowed: false
-    vcs_requested: [ ]
+    vcs_requested: [DataspaceParticipant]
+  gaia_config: null
   did_config:
-    did: "did:jwk:eyJrdHkiOiJSU0EiLAJlIjoiQVFBQiIsIm4iOiJ4T0F3WlpkQ3AwQ0dCQV9tMVVHR1VXcEM5THJlcmJjbDMxblJoZThzNzd6R204aXA3YUgtUW5NNUNLbEo1YXlvUDhKTV9rLWhVQ0V2Q09qNWw5VmNhN0RfNTdRMjRJUEtHN0dQSGdnYzZ5bGxwZFlnSkVlY2xUcXJGcjdGUFBxcThDQzY1WVpfS1hGY3ByOHJGRVFEUGtkc3gzbU1qTkYzQUpNNzBpaEItdGtOOWxxcHZLb0h6MzJRaHRybVhFY2t1X1NtVFlFTU9GVU0xd0I1TE4xNmN4ZzIxZXYwMnZGdlVCYmdWZENTNHZocjNHNlNMM2dPZXVzd3BZaTZtTTZ6clloY3lkaDJaRjZCUEZVMS1NNk9tcENGRnd6SFVWNTdqMHJMLUR0OU1Ja1FUWmxXam5kcVVOZG1Ecnlyd0E1OU8zS1lWYWY5cmUwdW9QS3ZGUmRmY3cifQ"
+    did: 'did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsIm4iOiIwLW5uempxdDNQVXZtMUVPaEVxNUNxQ05WcEVUM3I4S0Y3VWRKSDJlRFV1dDNhSFlFWGFxbG51SXZ4TUVmN0J1dkhMVnlUaW95U1BoMV9TaDF0ZnBwdF9aNXpXU1ZZUGp0ekZ0QlJsQ0pQYzNfc2YtelRIQURMMmNyYW84WmxXa1FFR2ZtX1g3Y2QtMkd5bmVuR0k0a01rLU9vRERUWEJNRmVoOVdtR1dyMGZBeHJ4Qkp3Unh4QTExODNIOWo1QkY3dlpVZ0Y3akYzV28xcVlva0Z4emJ0Q2FhWWkzTmE3aFYtWWRIYkg3QUhkYnlJa1JvTHhhVG9tb3ktRHRmb0dSSGRzTmpzNDFqZUwxTG5XczJENnVJMm43QTBFQ1hIaHJjZTlMbkt6eXNMWktRM3Ffa2hxR0UzRTZJT1djajRMT1NvNGJ4SXktZzNVT0NpeElSelJ2bFEifQ'
     type: Jwk
     did_web_options: null
     #    domain: "CHANGE_ME"
     #    path: null
-
 
 # ==========================
 # CONTRACTS
@@ -120,4 +117,3 @@ gateway:
   catalog: *min_known_config
   ssi_auth: *min_known_config
   is_catalog_datahub: *is_catalog_datahub
-
