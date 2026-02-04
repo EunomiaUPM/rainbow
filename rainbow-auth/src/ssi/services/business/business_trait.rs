@@ -15,19 +15,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::ssi::types::business::BusinessResponse;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use ymir::data::entities::{business_mates, mates, recv_request, recv_verification};
+
+use crate::ssi::types::business::BusinessResponse;
 
 pub trait BusinessTrait: Send + Sync + 'static {
     fn start(
         &self,
-        payload: &RainbowBusinessLoginRequest,
+        payload: &RainbowBusinessLoginRequest
     ) -> (recv_request::NewModel, recv_verification::Model);
     fn get_token(
         &self,
         mate: &mates::Model,
-        bus_model: &business_mates::Model,
+        bus_model: &business_mates::Model
     ) -> anyhow::Result<BusinessResponse>;
     fn end(&self, ver_model: &recv_verification::Model)
         -> anyhow::Result<business_mates::NewModel>;

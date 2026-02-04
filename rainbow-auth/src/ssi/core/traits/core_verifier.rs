@@ -17,12 +17,13 @@
 
 use std::sync::Arc;
 
-use crate::ssi::services::business::BusinessTrait;
-use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use async_trait::async_trait;
 use ymir::services::verifier::VerifierTrait;
 use ymir::types::vcs::VPDef;
 use ymir::types::verifying::VerifyPayload;
+
+use crate::ssi::services::business::BusinessTrait;
+use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 
 #[async_trait]
 pub trait CoreVerifierTrait: Send + Sync + 'static {
@@ -36,7 +37,7 @@ pub trait CoreVerifierTrait: Send + Sync + 'static {
     async fn verify(
         &self,
         state: String,
-        payload: VerifyPayload,
+        payload: VerifyPayload
     ) -> anyhow::Result<Option<String>> {
         let mut ver_model = self.repo().verification_rcv().get_by_state(&state).await?;
         let result = self.verifier().verify_all(&mut ver_model, payload.vp_token).await;

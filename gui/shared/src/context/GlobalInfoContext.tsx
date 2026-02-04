@@ -11,7 +11,7 @@ export interface GlobalInfoContextType {
 
 type ConfigInfo = {
   config_role: string;
-}
+};
 
 export const GlobalInfoContext = createContext<GlobalInfoContextType | null>(null);
 
@@ -21,19 +21,28 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   const [catalogType] = useState<"rainbow" | "datahub" | "both">("rainbow");
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
-  // PLEASE CHANGE THIS FOR PRODUCTION OR DEV
-  const isProduction = true;
+  /**
+   * CHANGE ME - Configuration Logic
+   * Production vs Development Configuration
+   * In production, fetch configuration from server endpoint.
+   * In development, use local hardcoded configuration.
+   */
+  const isProduction = false; // Set to false for local development
   const localConfig = {
-    config_role: "Provider",
+    config_role: "Agent",
     gateway_host: "http://127.0.0.1",
-    gateway_port: "1207"
+    gateway_port: "1200",
   };
+
+  /**
+   * Initialize configuration on mount
+   */
   useEffect(() => {
     const initConfig = async () => {
       try {
         if (isProduction) {
           setApiGatewayBase("/");
-          const res = await fetch("/fe-config");
+          const res = await fetch("/admin/api/fe-config");
           if (res.ok) {
             const data = await res.json();
             setConfigRole(data.config_role);
@@ -55,33 +64,28 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     };
 
     initConfig();
-    console.log(
-        apiGatewayBase,
-      configRole,
-      catalogType,
-      isConfigLoaded,
-      isProduction,
-    )
   }, []);
 
+  /**
+   * Memoized context value
+   */
   const contextValue = useMemo<GlobalInfoContextType>(() => {
     const prefix = apiGatewayBase === "/" ? "" : apiGatewayBase;
     return {
       catalog_type: catalogType,
       dsrole: configRole,
       api_gateway_base: prefix,
-      api_gateway: `${prefix}/gateway/api`,
-      api_gateway_callback_address: `${prefix}/incoming-notification`,
+      api_gateway: `${prefix}/admin/api`,
+      api_gateway_callback_address: `${prefix}/admin/api/incoming-notification`,
     };
   }, [catalogType, configRole, apiGatewayBase]);
 
+  /**
+   * Render when config is loaded
+   */
   if (!isConfigLoaded) {
     return <div>Cargando...</div>;
   }
 
-  return (
-      <GlobalInfoContext.Provider value={contextValue}>
-        {children}
-      </GlobalInfoContext.Provider>
-  );
+  return <GlobalInfoContext.Provider value={contextValue}>{children}</GlobalInfoContext.Provider>;
 };

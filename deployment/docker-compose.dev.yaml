@@ -165,7 +165,7 @@ services:
       - ./vault/vault-init.sh:/vault-init.sh
 
   # ------------------------------------------------------------------
-  # INFRASTRUCTURE (IDM & AUTHORITY)
+  # IDM
   # ------------------------------------------------------------------
   idm:
     container_name: idm
@@ -178,41 +178,78 @@ services:
       - "2000:8080"
     command: ["start-dev"]
 
-  ds_authority:
-    container_name: ds_authority
-    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
-    platform: linux/amd64
-    restart: on-failure
-    depends_on:
-      - ds_authority_db
+  # ------------------------------------------------------------------
+  # DS AUTHORITY
+  # ------------------------------------------------------------------
+  heimdall-vault:
+    <<: *vault-base
+    container_name: heimdall-vault
     ports:
-      - "1500:1500"
+      - "8203:8200"
     volumes:
-      - ./../static/config/.env.authority:/app/.env.authority
-      - ./../static/certificates:/app/certificates
-      - ./../static/specs:/app/specs
-    entrypoint: ["/usr/local/bin/rainbow_authority"]
-    command: ["start", "--env-file", "/app/.env.authority"]
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - ../static/vault/authority/config:/vault/config
+      - ../static/vault/authority/data:/vault/file
 
-  ds_authority_setup:
-    container_name: ds_authority_setup
-    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
-    platform: linux/amd64
+  heimdall_vault_setup:
+    <<: *vault-setup-base
+    container_name: heimdall_vault_setup
     depends_on:
-      - ds_authority_db
-    volumes:
-      - ./../static/config/.env.authority:/app/.env.authority
-    entrypoint: ["/usr/local/bin/rainbow_authority"]
-    command: ["setup", "--env-file", "/app/.env.authority"]
-
-  ds_authority_db:
-    <<: *postgres-base
-    container_name: ds_authority_db
+      - heimdall-vault
     environment:
-      POSTGRES_USER: ds_authority
+      VAULT_ADDR: "http://heimdall-vault:8200"
+      VAULT_FILE: "/vault/file"
+      VAULT_HOST_ADDR: "http://heimdall-vault:8200"
+      VAULT_HOST_PATH: "${PWD}/../static/vault/authority"
+    volumes:
+      - ../static/vault/authority/config:/vault/config
+      - ../static/vault/authority/data:/vault/file
+      - ./vault/vault-setup.sh:/vault-setup.sh
+      - ./vault/vault-init.sh:/vault-init.sh
+
+  heimdall_secrets_setup:
+    image: alpine:latest
+    container_name: heimdall_secrets_setup
+    volumes:
+      - ../static/vault/authority/secrets:/secrets
+      - ./vault/secrets-gen.sh:/secrets-gen.sh
+    command: sh -c "apk add --no-cache openssl && /secrets-gen.sh /secrets authority"
+
+  heimdall-db:
+    <<: *postgres-base
+    container_name: heimdall-db
+    image: "postgres"
+    restart: always
+    environment:
       POSTGRES_PASSWORD: ds_authority
+      POSTGRES_USER: ds_authority
       POSTGRES_DB: ds_authority
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ds_authority"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "1450:5432"
+
+  heimdall:
+    container_name: heimdall
+    platform: linux/amd64
+    restart: on-failure
+    image: "rmenendez8/heimdall:v1.0.5"
+    depends_on:
+      heimdall-db:
+        condition: service_healthy
+      heimdall-vault:
+        condition: service_started
+    env_file:
+      - ../static/vault/authority/data/vault.env
+    environment:
+      - VAULT_ADDR=http://heimdall-vault:8200
+      - VAULT_PATH=/files
+      - DB_HOST=heimdall-db
+      - DATABASE_HOST=heimdall-db
+    volumes:
+      - ../static/vault/authority:/files
+      - ../static/environment/config/dataspace_authority.yaml:/app/dataspace.yaml
+    ports:
+      - "1500:1500"

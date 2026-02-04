@@ -13,7 +13,7 @@ interface AuthStorageData {
   clientToken: string | null;
 }
 
-const AUTH_STORAGE_KEY = "auth_data"; // La única clave que usaremos
+const AUTH_STORAGE_KEY = "auth_data";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 

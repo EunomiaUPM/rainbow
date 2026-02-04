@@ -1,4 +1,5 @@
 import { Apple, Archive, ChartBarIncreasing } from "lucide-react";
+import logoImg from "./../img/eunomia_logo_lg_light.svg";
 import React, { useContext } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -10,11 +11,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
-// @ts-ignore
-import logoImg from "./../img/eunomia_logo_lg_light.svg";
+
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 
-// Menu items.
 const businessItems = [
   {
     title: "Datahub Catalogs",
@@ -45,10 +44,12 @@ const customerItems = [
   },
 ];
 
+/**
+ * Sidebar component for Business users.
+ */
 export function AppSidebarBusiness() {
   const routerState = useRouterState();
   const { participant } = useContext<AuthContextType | null>(AuthContext)!;
-  // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
 
   return (
     <Sidebar className="bg-base-sidebar">
@@ -58,8 +59,6 @@ export function AppSidebarBusiness() {
             src={logoImg}
             className="h-11 mt-2 mb-4 mr-auto ml-1 flex justify-start object-contain"
           ></img>
-          {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
-          {/* <SidebarTrigger/> */}
 
           <SidebarGroupContent>
             <SidebarMenu>

@@ -17,8 +17,7 @@
  *
  */
 
-pub mod consumer_subscriptions;
-pub mod provider_subscriptions;
+pub mod subscriptions;
 
 pub enum MicroserviceSubscriptionKey {
     Catalog,

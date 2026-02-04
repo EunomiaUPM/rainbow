@@ -17,7 +17,6 @@
 
 use std::sync::Arc;
 
-use crate::ssi::core::traits::CoreBusinessTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -28,14 +27,14 @@ use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use tracing::error;
 use ymir::errors::CustomToResponse;
 
+use crate::ssi::core::traits::CoreBusinessTrait;
+
 pub struct BusinessRouter {
-    pub business: Arc<dyn CoreBusinessTrait>,
+    pub business: Arc<dyn CoreBusinessTrait>
 }
 
 impl BusinessRouter {
-    pub fn new(business: Arc<dyn CoreBusinessTrait>) -> Self {
-        BusinessRouter { business }
-    }
+    pub fn new(business: Arc<dyn CoreBusinessTrait>) -> Self { BusinessRouter { business } }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -46,7 +45,7 @@ impl BusinessRouter {
 
     async fn login(
         State(business): State<Arc<dyn CoreBusinessTrait>>,
-        payload: Result<Json<RainbowBusinessLoginRequest>, JsonRejection>,
+        payload: Result<Json<RainbowBusinessLoginRequest>, JsonRejection>
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
@@ -58,12 +57,12 @@ impl BusinessRouter {
 
         match business.login(payload).await {
             Ok(data) => data.into_response(),
-            Err(e) => e.to_response(),
+            Err(e) => e.to_response()
         }
     }
     async fn token(
         State(business): State<Arc<dyn CoreBusinessTrait>>,
-        payload: Result<Json<RainbowBusinessLoginRequest>, JsonRejection>,
+        payload: Result<Json<RainbowBusinessLoginRequest>, JsonRejection>
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
@@ -75,7 +74,7 @@ impl BusinessRouter {
 
         match business.token(payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response(),
+            Err(e) => e.to_response()
         }
     }
 }

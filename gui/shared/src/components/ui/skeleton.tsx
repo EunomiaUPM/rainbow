@@ -1,8 +1,11 @@
 import React from "react";
-import {cn} from "shared/src/lib/utils";
+import { cn } from "shared/src/lib/utils";
 
-function Skeleton({className, ...props}: React.HTMLAttributes<HTMLDivElement>) {
+/**
+ * Component for displaying a placeholder skeleton while content is loading.
+ */
+function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("animate-pulse rounded-md bg-primary/10", className)} {...props} />;
 }
 
-export {Skeleton};
+export { Skeleton };

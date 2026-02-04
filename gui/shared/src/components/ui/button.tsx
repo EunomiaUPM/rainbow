@@ -1,7 +1,7 @@
 import * as React from "react";
-import {Slot} from "@radix-ui/react-slot";
-import {cva, type VariantProps} from "class-variance-authority";
-import {cn} from "shared/src/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "shared/src/lib/utils";
 
 
 const buttonVariants = cva(
@@ -9,9 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // primary
         default: "bg-primary text-brand-snow hover:bg-primary/90 hover:text-white shadow",
-        // destructive: "bg-danger text-danger-50 hover:bg-danger/90 shadow-sm",
         destructive:
           "border border-danger text-danger-300 bg-foreground/10 shadow-sm hover:bg-foreground/20 hover:text-danger-400",
         outline:
@@ -22,12 +20,12 @@ const buttonVariants = cva(
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
         icon_destructive:
           "flex text-danger-400 border border-danger hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 mb-0 [&_svg]:w-5 [&_svg]:h-5 p-1",
-        link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline", // ok
+        link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        xs: "h-7 rounded-md px-3 text-xs",
+        default: "h-8 px-3 py-1 text-sm",
+        sm: "h-7 rounded-sm px-2 text-xs",
+        xs: "h-6 rounded-sm px-2 text-[10px]",
         lg: "h-10 rounded-md px-8 text-lg",
         icon: "h-9 w-9 rounded-full p-1",
         icon_sm: "h-7 w-7 rounded-full p-0",
@@ -51,16 +49,19 @@ export type ButtonSizes = VariantProps<typeof buttonVariants>["size"];
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
+/**
+ * Displays a button or a component that looks like a button.
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({className, variant, size, policy, asChild = false, ...props}, ref) => {
+  ({ className, variant, size, policy, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({variant, size, policy, className}))}
+        className={cn(buttonVariants({ variant, size, policy, className }))}
         ref={ref}
         {...props}
       />
@@ -69,4 +70,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export {Button, buttonVariants};
+export { Button, buttonVariants };

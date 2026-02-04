@@ -25,8 +25,7 @@ use futures_util::TryStreamExt;
 use reqwest::Client;
 use tracing::{debug, error, info, warn};
 
-pub mod consumer_gateway;
-pub mod provider_gateway;
+pub mod gateway;
 
 pub async fn execute_proxy(
     client: Client,
@@ -44,17 +43,20 @@ pub async fn execute_proxy(
         "dataplane" => "api/v1/dataplane",
         "notifications" => "api/v1/contract-negotiation/notifications",
         "subscriptions" => "api/v1/contract-negotiation/subscriptions",
-        "catalogs" => "api/v1/catalogs",
-        "datasets" => "api/v1/datasets",
-        "data-services" => "api/v1/data-services",
-        "distributions" => "api/v1/distributions",
-        "datahub" => "api/v1/datahub",
+        "catalogs" => "api/v1/catalog-agent/catalogs",
+        "connector" => "api/v1/connector",
+        "datasets" => "api/v1/catalog-agent/datasets",
+        "data-services" => "api/v1/catalog-agent/data-services",
+        "distributions" => "api/v1/catalog-agent/distributions",
+        "odrl-policies" => "api/v1/catalog-agent/odrl-policies",
+        "datahub" => "api/v1/catalog-agent/datahub",
         "contract-negotiation" => "api/v1/contract-negotiation",
         "mates" => "api/v1/mates",
         "catalog-bypass" => "api/v1/catalog-bypass",
         "negotiations" => "api/v1/negotiations",
-        "transfers" => "api/v1/transfers",
+        "transfers" => "api/v1/transfer-agent",
         "auth" => "api/v1/auth",
+        "mates" => "api/v1/mates",
         "ssi-auth" => "api/v1/ssi-auth",
         "wallet" => "api/v1/wallet",
         "request" => "api/v1/request",

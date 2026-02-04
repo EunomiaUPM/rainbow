@@ -19,19 +19,28 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use serde_json::Value;
-
-use crate::ssi::services::gaia_self_issuer::GaiaSelfIssuerTrait;
+use tracing::error;
+use ymir::errors::{ErrorLogTrait, Errors};
+use ymir::services::issuer::IssuerTrait;
 use ymir::services::wallet::WalletTrait;
-use ymir::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use ymir::types::issuing::{
+    AuthServerMetadata, CredentialRequest, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer
+};
 use ymir::types::wallet::OidcUri;
+
+use crate::ssi::services::gaia_self_issuer::GaiaOwnIssuerTrait;
+use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 
 #[async_trait]
 pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
-    fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait>;
+    fn issuer(&self) -> Arc<dyn IssuerTrait>;
+    fn gaia(&self) -> Arc<dyn GaiaOwnIssuerTrait>;
     fn wallet(&self) -> Option<Arc<dyn WalletTrait>>;
+    fn repo(&self) -> Arc<dyn AuthRepoTrait>;
     async fn generate_gaia_vcs(&self) -> anyhow::Result<Option<OidcUri>> {
-        let id = uuid::Uuid::new_v4().to_string();
-        let uri = self.self_issuer().generate_issuing_uri(&id);
+        let model = self.gaia().start_basic_vcs();
+        let model = self.repo().issuing().create(model).await?;
+        let uri = self.issuer().generate_issuing_uri(&model.id);
 
         match self.wallet() {
             Some(wallet) => {
@@ -41,27 +50,63 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
                 wallet.use_offer_req(&payload, &cred_offer).await?;
                 Ok(None)
             }
-            None => Ok(Some(OidcUri { uri })),
+            None => Ok(Some(OidcUri { uri }))
         }
     }
-    fn get_cred_offer_data(&self) -> VCCredOffer {
-        self.self_issuer().get_cred_offer_data()
-    }
-    fn get_issuer_data(&self) -> IssuerMetadata {
-        self.self_issuer().get_issuer_data()
-    }
-    fn get_oauth_server_data(&self) -> AuthServerMetadata {
-        self.self_issuer().get_oauth_server_data()
-    }
-    fn get_token(&self) -> IssuingToken {
-        self.self_issuer().get_token()
-    }
-    async fn issue_cred(&self) -> anyhow::Result<Value> {
-        let did = match self.wallet() {
-            Some(wallet) => wallet.get_did().await?,
-            None => self.self_issuer().get_did(),
+    async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<VCCredOffer> {
+        let mut model = self.repo().issuing().get_by_id(&id).await?;
+
+        let data = self.issuer().get_cred_offer_data(&model)?;
+
+        if model.step {
+            model.step = false;
+            self.repo().issuing().update(model).await?;
         };
 
-        self.self_issuer().issue_cred(&did).await
+        Ok(data)
+    }
+    fn get_issuer_data(&self) -> IssuerMetadata { self.issuer().get_issuer_data(Some("gaia")) }
+    fn get_oauth_server_data(&self) -> AuthServerMetadata {
+        self.issuer().get_oauth_server_data(Some("gaia"))
+    }
+    async fn get_token(&self, payload: TokenRequest) -> anyhow::Result<IssuingToken> {
+        let model =
+            self.repo().issuing().get_by_pre_auth_code(&payload.pre_authorized_code).await?;
+
+        self.issuer().validate_token_req(&model, &payload)?;
+
+        let response = self.issuer().get_token(&model);
+        Ok(response)
+    }
+    async fn issue_cred(&self, payload: CredentialRequest, token: String) -> anyhow::Result<Value> {
+        let did = match self.wallet() {
+            Some(wallet) => wallet.get_did().await?,
+            None => self.gaia().get_did()
+        };
+
+        let mut iss_model = self.repo().issuing().get_by_token(&token).await?;
+        self.issuer().validate_cred_req(&mut iss_model, &payload, &token).await?;
+        self.repo().issuing().update(iss_model).await?;
+
+        self.gaia().issue_cred(&did).await
+    }
+
+    async fn request_gaia_vc(&self) -> anyhow::Result<()> {
+        let wallet = self.wallet().ok_or_else(|| {
+            let error = Errors::not_impl_new(
+                "Not implemented if wallet is not connected",
+                "Not implemented if wallet is not connected"
+            );
+            error!("{}", error.log());
+            error
+        })?;
+
+        let vcs = wallet.retrieve_wallet_credentials().await?;
+
+        let did = wallet.get_did().await?;
+        let body = self.gaia().build_vp(vcs, Some(did)).await?;
+        let vc = self.gaia().send_req(body).await?;
+
+        Ok(())
     }
 }

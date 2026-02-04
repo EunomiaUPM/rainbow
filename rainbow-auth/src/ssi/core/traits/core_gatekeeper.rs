@@ -17,13 +17,14 @@
 
 use std::sync::Arc;
 
-use crate::ssi::services::gatekeeper::GateKeeperTrait;
-use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 use async_trait::async_trait;
 use ymir::services::verifier::VerifierTrait;
 use ymir::types::gnap::grant_request::GrantRequest;
 use ymir::types::gnap::grant_response::GrantResponse;
 use ymir::types::gnap::{AccessToken, RefBody};
+
+use crate::ssi::services::gatekeeper::GateKeeperTrait;
+use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
 
 #[async_trait]
 pub trait CoreGateKeeperTrait: Send + Sync + 'static {
@@ -46,7 +47,7 @@ pub trait CoreGateKeeperTrait: Send + Sync + 'static {
         &self,
         id: String,
         payload: RefBody,
-        token: String,
+        token: String
     ) -> anyhow::Result<AccessToken> {
         let int_model = self.repo().interaction_rcv().get_by_cont_id(&id).await?;
         let mut req_model = self.repo().request_rcv().get_by_id(&int_model.id).await?;

@@ -18,4 +18,4 @@
 pub mod basic;
 mod gaia_self_issuer_trait;
 
-pub use gaia_self_issuer_trait::GaiaSelfIssuerTrait;
+pub use gaia_self_issuer_trait::GaiaOwnIssuerTrait;

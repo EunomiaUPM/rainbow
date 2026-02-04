@@ -1,587 +1,287 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+/**
+ * PolicyWrapperEdit.tsx
+ *
+ * Wrapper component for editing an existing ODRL policy.
+ * Provides a complete UI for modifying permissions, obligations, and prohibitions
+ * with their associated constraints.
+ *
+ * Uses a declarative pattern with `onChange` callback to notify parent
+ * components of policy changes.
+ *
+ * @example
+ * const [policy, setPolicy] = useState<OdrlInfo | null>(null);
+ *
+ * <PolicyWrapperEdit
+ *   policy={existingPolicy}
+ *   onChange={setPolicy}
+ * />
+ *
+ * // Access current policy state via `policy` variable
+ */
+
+import React, { useEffect, useState, useCallback } from "react";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { InfoList } from "shared/src/components/ui/info-list";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "shared/src/components/ui/accordion";
-import { Button } from "shared/src/components/ui/button";
-import { Plus, Trash } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "shared/src/components/ui/select";
-import { leftOperands, odrlActions, operators } from "shared/src/odrl_actions";
-import { Input } from "shared/src/components/ui/input";
+  ComponentType,
+  OperandType,
+  PolicyEditSection,
+} from "shared/src/components/policy/PolicyEditSection";
 
-type ComponentType = "permission" | "obligation" | "prohibition";
-type OperandType = "leftOperand" | "rightOperand" | "operator";
-export type PolicyEditorHandle = {
-  getPolicy: () => OdrlInfo;
-};
+// =============================================================================
+// TYPES
+// =============================================================================
 
-export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOffer }>(
-  ({ policy }, ref) => {
-    const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
-      obligation: [],
-      permission: [],
-      prohibition: [],
-    });
+/**
+ * Props for the PolicyWrapperEdit component.
+ */
+export interface PolicyWrapperEditProps {
+  /** The ODRL policy to edit */
+  policy: OdrlOffer;
 
-    useImperativeHandle(ref, () => ({
-      getPolicy: () => {
+  /**
+   * Callback invoked when the policy changes.
+   * Called with the updated policy state after any modification.
+   */
+  onChange?: (policy: OdrlInfo) => void;
+}
+
+// =============================================================================
+// COMPONENT
+// =============================================================================
+
+/**
+ * Full-featured policy editor with declarative state management.
+ *
+ * Features:
+ * - Displays policy metadata (ID, type, target)
+ * - Three collapsible sections for permission/obligation/prohibition
+ * - Add/remove policy items and constraints
+ * - Notifies parent of changes via `onChange` callback
+ *
+ * @param props - PolicyWrapperEdit properties
+ * @returns A complete policy editing interface
+ */
+export const PolicyWrapperEdit = ({
+  policy,
+  onChange,
+}: PolicyWrapperEditProps) => {
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
+  const [editedPolicy, setEditedPolicy] = useState<OdrlInfo>({
+    obligation: [],
+    permission: [],
+    prohibition: [],
+  });
+
+  // ---------------------------------------------------------------------------
+  // Effects
+  // ---------------------------------------------------------------------------
+
+  /** Initialize state from incoming policy prop */
+  useEffect(() => {
+    const initialPolicy: OdrlInfo = {
+      obligation: policy.obligation || [],
+      permission: policy.permission || [],
+      prohibition: policy.prohibition || [],
+    };
+    setEditedPolicy(initialPolicy);
+    // Also notify parent of initial state
+    onChange?.(initialPolicy);
+  }, [policy]);
+
+  /** Notify parent when policy changes */
+  const updatePolicyAndNotify = useCallback(
+    (updater: (prev: OdrlInfo) => OdrlInfo) => {
+      setEditedPolicy((prev) => {
+        const newPolicy = updater(prev);
+        onChange?.(newPolicy);
         return newPolicy;
-      },
-    }));
-
-    useEffect(() => {
-      setNewPolicy({
-        obligation: policy.obligation || [],
-        permission: policy.permission || [],
-        prohibition: policy.prohibition || [],
       });
-    }, [policy]);
+    },
+    [onChange]
+  );
 
-    const addComponentHandler = (componentType: ComponentType) => {
+  // ---------------------------------------------------------------------------
+  // Event Handlers
+  // ---------------------------------------------------------------------------
+
+  /** Add a new policy component (permission/obligation/prohibition) */
+  const handleAddComponent = useCallback(
+    (componentType: ComponentType) => {
       const newComponent: OdrlPermission = {
         action: "",
         constraint: [],
       };
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType].push(newComponent);
-      setNewPolicy(_newPolicy);
-    };
-    const removeComponentHandler = (componentType: ComponentType, index: number) => {
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType].splice(index, 1);
-      console.log(_newPolicy);
-      setNewPolicy(_newPolicy);
-    };
+      updatePolicyAndNotify((prev) => ({
+        ...prev,
+        [componentType]: [...prev[componentType], newComponent],
+      }));
+    },
+    [updatePolicyAndNotify]
+  );
 
-    const addConstraintHandler = (componentType: ComponentType, componentIndex: number) => {
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType][componentIndex].constraint.push({
-        leftOperand: "",
-        operator: "",
-        rightOperand: "",
+  /** Remove a policy component by index */
+  const handleRemoveComponent = useCallback(
+    (componentType: ComponentType, index: number) => {
+      updatePolicyAndNotify((prev) => ({
+        ...prev,
+        [componentType]: prev[componentType].filter((_, i) => i !== index),
+      }));
+    },
+    [updatePolicyAndNotify]
+  );
+
+  /** Add a constraint to a policy component */
+  const handleAddConstraint = useCallback(
+    (componentType: ComponentType, componentIndex: number) => {
+      updatePolicyAndNotify((prev) => {
+        const updated = [...prev[componentType]];
+        updated[componentIndex] = {
+          ...updated[componentIndex],
+          constraint: [
+            ...updated[componentIndex].constraint,
+            { leftOperand: "", operator: "", rightOperand: "" },
+          ],
+        };
+        return { ...prev, [componentType]: updated };
       });
-      setNewPolicy(_newPolicy);
-    };
+    },
+    [updatePolicyAndNotify]
+  );
 
-    const removeConstraintHandler = (
+  /** Remove a constraint from a policy component */
+  const handleRemoveConstraint = useCallback(
+    (
       componentType: ComponentType,
       componentIndex: number,
-      constraintIndex: number,
+      constraintIndex: number
     ) => {
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType][componentIndex].constraint.splice(constraintIndex, 1);
-      setNewPolicy(_newPolicy);
-    };
+      updatePolicyAndNotify((prev) => {
+        const updated = [...prev[componentType]];
+        updated[componentIndex] = {
+          ...updated[componentIndex],
+          constraint: updated[componentIndex].constraint.filter(
+            (_, i) => i !== constraintIndex
+          ),
+        };
+        return { ...prev, [componentType]: updated };
+      });
+    },
+    [updatePolicyAndNotify]
+  );
 
-    const fieldValueChangeHandler = (
-      componentType: ComponentType,
-      componentIndex: number,
-      value: string,
-    ) => {
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType][componentIndex].action = value;
-      setNewPolicy(_newPolicy);
-    };
+  /** Update a policy component's action */
+  const handleActionChange = useCallback(
+    (componentType: ComponentType, componentIndex: number, value: string) => {
+      updatePolicyAndNotify((prev) => {
+        const updated = [...prev[componentType]];
+        updated[componentIndex] = { ...updated[componentIndex], action: value };
+        return { ...prev, [componentType]: updated };
+      });
+    },
+    [updatePolicyAndNotify]
+  );
 
-    const operandValueChangeHandler = (
+  /** Update a constraint's operand value */
+  const handleOperandChange = useCallback(
+    (
       componentType: ComponentType,
       componentIndex: number,
       constraintIndex: number,
       operand: OperandType,
-      value: string,
+      value: string
     ) => {
-      const _newPolicy = { ...newPolicy };
-      _newPolicy[componentType][componentIndex].constraint[constraintIndex][operand] = value;
-      setNewPolicy(_newPolicy);
-    };
+      updatePolicyAndNotify((prev) => {
+        const updated = [...prev[componentType]];
+        const constraints = [...updated[componentIndex].constraint];
+        constraints[constraintIndex] = {
+          ...constraints[constraintIndex],
+          [operand]: value,
+        };
+        updated[componentIndex] = {
+          ...updated[componentIndex],
+          constraint: constraints,
+        };
+        return { ...prev, [componentType]: updated };
+      });
+    },
+    [updatePolicyAndNotify]
+  );
 
-    return (
-      <div className="w-full">
-        <List className=" border border-white/30 bg-white/10 p-4 pt-2 rounded-md justify-start">
-          <div className="flex">
-            <Heading level="h5" className="flex gap-3">
-              <div>Policy with ID</div>
-              <Badge variant="info" className="h-6">
-                {policy["@id"].slice(9, 29) + "[...]"}
-              </Badge>
-            </Heading>
-          </div>
-          <ListItem>
-            <ListItemKey>Policy Target</ListItemKey>
-            <p>{policy["@type"]}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Profile</ListItemKey>
-            <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Target</ListItemKey>
-            <p> {policy.target.slice(9)}</p>
-          </ListItem>
-          <div className="h-5"></div>
-          <Heading level="h6"> ODRL CONTENT</Heading>
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-4">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem
-                  value="item-1"
-                  className="bg-success-500/10 border border-success-600/20"
-                >
-                  <AccordionTrigger className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                    <div className="flex items-center w-full">
-                      <p className="text-current">permission</p>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="relative">
-                    <Button
-                      className="border-b border-white/15"
-                      policy="permission"
-                      variant="outline"
-                      size="xs"
-                      onClick={() => addComponentHandler("permission")}
-                    >
-                      <Plus />
-                      Add permission
-                    </Button>
-                    {newPolicy.permission.map((permission, i) => (
-                      <div key={permission.action}>
-                        <div className="policy-item-create">
-                          <div className="flex justify-between">
-                            <p className="mb-2"> Action: </p>
-                            <Button
-                              variant="icon_destructive"
-                              size="xs"
-                              className="ml-4 border"
-                              onClick={() => removeComponentHandler("permission", i)}
-                            >
-                              <Trash className="mb-0.5" />
-                              Remove permission
-                            </Button>
-                          </div>
-                          <Select
-                            onValueChange={(value: string) =>
-                              fieldValueChangeHandler("permission", i, value)
-                            }
-                            value={permission.action}
-                          >
-                            <SelectTrigger className="w-[240px]">
-                              <SelectValue placeholder="Select action" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {odrlActions.map((odrlAction) => (
-                                <SelectItem value={odrlAction} key={odrlAction}>
-                                  {odrlAction}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="h-6"></div>
-                          <p className="mb-2"> Constraints: </p>
-                          {permission.constraint.map((constraint, j) => (
-                            <div className="flex flex-col gap-2" key={j}>
-                              <div className="constraint-create flex gap-3 items-end">
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler(
-                                      "permission",
-                                      i,
-                                      j,
-                                      "leftOperand",
-                                      value,
-                                    )
-                                  }
-                                  value={constraint.leftOperand}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select item" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {leftOperands.map((leftOperand) => (
-                                        <SelectItem value={leftOperand} key={leftOperand}>
-                                          {leftOperand}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler("permission", i, j, "operator", value)
-                                  }
-                                  value={constraint.operator}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Operator:</p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select operator" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {operators.map((operator) => (
-                                        <SelectItem value={operator} key={operator}>
-                                          {operator}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
-                                  <Input
-                                    placeholder="Type value"
-                                    value={constraint.rightOperand}
-                                    onChange={(ev) =>
-                                      operandValueChangeHandler(
-                                        "permission",
-                                        i,
-                                        j,
-                                        "rightOperand",
-                                        ev.currentTarget.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                <div>
-                                  <Button
-                                    variant="icon_destructive"
-                                    size="icon"
-                                    onClick={() => removeConstraintHandler("permission", i, j)}
-                                  >
-                                    <Trash className="mb-0.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            className="mt-3"
-                            onClick={() => addConstraintHandler("permission", i)}
-                          >
-                            <Plus />
-                            Add constraint
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1" className="bg-warn-500/10 border border-warn-600/20">
-                  <AccordionTrigger className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                    <div className="flex items-center w-full">
-                      <p className="text-current">obligation</p>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="relative">
-                    <Button
-                      className="border-b border-white/15"
-                      policy="obligation"
-                      variant="outline"
-                      size="xs"
-                      onClick={() => addComponentHandler("obligation")}
-                    >
-                      <Plus />
-                      Add obligation
-                    </Button>
-                    {newPolicy.obligation.map((obligation, i) => (
-                      <div key={i}>
-                        <div className="policy-item-create">
-                          <div className="flex justify-between">
-                            <p className="mb-2"> Action: </p>
-                            <Button
-                              variant="icon_destructive"
-                              size="xs"
-                              className="ml-4"
-                              onClick={() => removeComponentHandler("obligation", i)}
-                            >
-                              <Trash className="mb-0.5 text-danger" />
-                              Remove obligation
-                            </Button>
-                          </div>
-                          <Select
-                            onValueChange={(value: string) =>
-                              fieldValueChangeHandler("obligation", i, value)
-                            }
-                            value={obligation.action}
-                          >
-                            <SelectTrigger className="w-[240px]">
-                              <SelectValue placeholder="Select action" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {odrlActions.map((odrlAction) => (
-                                <SelectItem value={odrlAction} key={odrlAction}>
-                                  {odrlAction}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="h-6"></div>
-                          <p className="mb-2"> Constraints: </p>
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
-                          {obligation.constraint.map((constraint, j) => (
-                            <div key={j} className="flex flex-col gap-2 mb-[8px]">
-                              <div className="constraint-create flex gap-3 items-end">
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler(
-                                      "obligation",
-                                      i,
-                                      j,
-                                      "leftOperand",
-                                      value,
-                                    )
-                                  }
-                                  value={constraint.leftOperand}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select item" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {leftOperands.map((leftOperand) => (
-                                        <SelectItem value={leftOperand} key={leftOperand}>
-                                          {leftOperand}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler("obligation", i, j, "operator", value)
-                                  }
-                                  value={constraint.operator}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Operator:</p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select operator" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {operators.map((operator) => (
-                                        <SelectItem value={operator} key={operator}>
-                                          {operator}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
-                                  <Input
-                                    placeholder="Type value"
-                                    value={constraint.rightOperand}
-                                    onChange={(ev) =>
-                                      operandValueChangeHandler(
-                                        "obligation",
-                                        i,
-                                        j,
-                                        "rightOperand",
-                                        ev.currentTarget.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                <div>
-                                  <Button
-                                    variant="icon_destructive"
-                                    size="icon"
-                                    onClick={() => removeConstraintHandler("obligation", i, j)}
-                                  >
-                                    <Trash className="mb-0.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            className="mt-3"
-                            onClick={() => addConstraintHandler("obligation", i)}
-                          >
-                            <Plus />
-                            Add constraint
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem
-                  value="item-1"
-                  className="bg-danger-500/10 border border-danger-600/20"
-                >
-                  <AccordionTrigger className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                    <div className="flex items-center w-full">
-                      <p className="text-current">prohibition</p>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="relative">
-                    <Button
-                      className="border-b border-white/15"
-                      policy="prohibition"
-                      variant="outline"
-                      size="xs"
-                      onClick={() => addComponentHandler("prohibition")}
-                    >
-                      <Plus />
-                      Add prohibition
-                    </Button>
-                    {newPolicy.prohibition.map((prohibition, i) => (
-                      <div key={i}>
-                        <div className="policy-item-create">
-                          <div className="flex justify-between">
-                            <p className="mb-2"> Action: </p>
-                            <Button
-                              variant="icon_destructive"
-                              size="xs"
-                              className="ml-4"
-                              onClick={() => removeComponentHandler("prohibition", i)}
-                            >
-                              <Trash className="mb-0.5" />
-                              Remove prohibition
-                            </Button>
-                          </div>
-                          <Select
-                            onValueChange={(value: string) =>
-                              fieldValueChangeHandler("prohibition", i, value)
-                            }
-                            value={prohibition.action}
-                          >
-                            <SelectTrigger className="w-[240px]">
-                              <SelectValue placeholder="Select action" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {odrlActions.map((odrlAction) => (
-                                <SelectItem value={odrlAction} key={odrlAction}>
-                                  {odrlAction}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="h-6"></div>
-                          <p className="mb-2"> Constraints: </p>
-                          {prohibition.constraint.map((constraint, j) => (
-                            <div className="flex flex-col gap-2" key={j}>
-                              <div className="constraint-create flex gap-3 items-end">
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler(
-                                      "prohibition",
-                                      i,
-                                      j,
-                                      "leftOperand",
-                                      value,
-                                    )
-                                  }
-                                  value={constraint.leftOperand}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select item" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {leftOperands.map((leftOperand) => (
-                                        <SelectItem value={leftOperand} key={leftOperand}>
-                                          {leftOperand}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select
-                                  onValueChange={(value: string) =>
-                                    operandValueChangeHandler(
-                                      "prohibition",
-                                      i,
-                                      j,
-                                      "operator",
-                                      value,
-                                    )
-                                  }
-                                  value={constraint.operator}
-                                >
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">Operator:</p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select operator" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {operators.map((operator) => (
-                                        <SelectItem value={operator} key={operator}>
-                                          {operator}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
-                                  <Input
-                                    placeholder="Type value"
-                                    value={constraint.rightOperand}
-                                    onChange={(ev) =>
-                                      operandValueChangeHandler(
-                                        "prohibition",
-                                        i,
-                                        j,
-                                        "rightOperand",
-                                        ev.currentTarget.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                <div>
-                                  <Button
-                                    variant="icon_destructive"
-                                    size="icon"
-                                    onClick={() => removeConstraintHandler("prohibition", i, j)}
-                                  >
-                                    <Trash className="mb-0.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            className="mt-3"
-                            onClick={() => addConstraintHandler("prohibition", i)}
-                          >
-                            <Plus />
-                            Add constraint
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+  return (
+    <div className="w-full">
+      <div className="border border-white/30 bg-white/10 p-3 pt-2 rounded-md justify-start">
+        {/* Policy Header */}
+        <div className="flex mb-4">
+          <Heading level="h5" className="flex gap-3">
+            <div>Policy with ID</div>
+            <Badge variant="info" className="h-6">
+              {policy["@id"].slice(9, 29) + "[...]"}
+            </Badge>
+          </Heading>
+        </div>
+
+        {/* Policy Metadata */}
+        <InfoList
+          items={[
+            { label: "Policy Target", value: policy["@type"] },
+            { label: "Profile", value: JSON.stringify(policy.profile) },
+            { label: "Target", value: policy.target?.slice(9) },
+          ]}
+        />
+
+        {/* ODRL Content Editor */}
+        <div className="h-5" />
+        <Heading level="h6">ODRL CONTENT</Heading>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
+            {/* Permission Section */}
+            <PolicyEditSection
+              type="permission"
+              items={editedPolicy.permission}
+              onAdd={handleAddComponent}
+              onRemove={handleRemoveComponent}
+              onActionChange={handleActionChange}
+              onAddConstraint={handleAddConstraint}
+              onRemoveConstraint={handleRemoveConstraint}
+              onOperandChange={handleOperandChange}
+            />
+
+            {/* Obligation Section */}
+            <PolicyEditSection
+              type="obligation"
+              items={editedPolicy.obligation}
+              onAdd={handleAddComponent}
+              onRemove={handleRemoveComponent}
+              onActionChange={handleActionChange}
+              onAddConstraint={handleAddConstraint}
+              onRemoveConstraint={handleRemoveConstraint}
+              onOperandChange={handleOperandChange}
+            />
+
+            {/* Prohibition Section */}
+            <PolicyEditSection
+              type="prohibition"
+              items={editedPolicy.prohibition}
+              onAdd={handleAddComponent}
+              onRemove={handleRemoveComponent}
+              onActionChange={handleActionChange}
+              onAddConstraint={handleAddConstraint}
+              onRemoveConstraint={handleRemoveConstraint}
+              onOperandChange={handleOperandChange}
+            />
           </div>
-        </List>
+        </div>
       </div>
-    );
-  },
-);
+    </div>
+  );
+};

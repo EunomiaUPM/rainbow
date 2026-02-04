@@ -2,7 +2,6 @@ export const odrlActions = [
   "read",
   "analyze",
   "share",
-  "ole", // OLE no es una acción ODRL estándar, la mantengo si es tuya específica.
   "use",
   "play",
   "transfer",
@@ -31,16 +30,15 @@ export const odrlActions = [
 
 export const leftOperands = [
   "date",
-  "user", // Podría ser más específico como "assignee" o "assigner"
+  "user",
   "location",
-  "clara", // Clara no es un operando ODRL estándar, la mantengo si es tuya específica.
   "dateTime",
   "purpose",
   "recipient",
   "legalBasis",
   "language",
   "industry",
-  "spatial", // para territorios
+  "spatial",
   "elapsedTime",
   "count",
   "event",
@@ -50,20 +48,20 @@ export const leftOperands = [
 ];
 
 export const operators = [
-  "eq", // equal
-  "neq", // not equal
-  "gt", // greater than
-  "lt", // less than
-  "gteq", // greater than or equal
-  "lteq", // less than or equal
-  "isA", // is a type of
-  "isAnyOf", // is any of the listed values
+  "eq",
+  "neq",
+  "gt",
+  "lt",
+  "gteq",
+  "lteq",
+  "isA",
+  "isAnyOf",
   "hasPart",
   "isPartOf",
   "isMemberOf",
-  "not", // negation (often used with other operators or constraints)
+  "not",
   "and",
   "or",
-  "xone", // exclusive or
+  "xone",
   "andSequence",
 ];

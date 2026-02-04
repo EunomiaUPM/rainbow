@@ -20,9 +20,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::mates::mates::VerifyTokenRequest;
+use ymir::data::entities::mates::Model;
 
 use crate::ssi::services::repo::repo_trait::AuthRepoTrait;
-use ymir::data::entities::mates::Model;
 
 #[async_trait]
 pub trait CoreMateTrait: Send + Sync + 'static {
@@ -36,9 +36,7 @@ pub trait CoreMateTrait: Send + Sync + 'static {
         self.repo().mates().get_by_id(&id).await
     }
 
-    async fn get_me(&self) -> anyhow::Result<Model> {
-        self.repo().mates().get_me().await
-    }
+    async fn get_me(&self) -> anyhow::Result<Model> { self.repo().mates().get_me().await }
 
     async fn get_mate_batch(&self, payload: BatchRequests) -> anyhow::Result<Vec<Model>> {
         self.repo().mates().get_batch(&payload.ids).await

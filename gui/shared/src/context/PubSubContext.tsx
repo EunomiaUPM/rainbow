@@ -1,7 +1,26 @@
-import {createContext, ReactNode, useContext, useEffect, useState} from "react";
-import {useGetSubscriptionByCallbackAddress} from "../data/pubsub-queries";
-import {useQueryClient} from "@tanstack/react-query";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+/**
+ * PubSubContext.tsx
+ *
+ * This module provides a React Context for managing WebSocket-based PubSub
+ * (Publish/Subscribe) notifications. It handles real-time updates for:
+ * - Contract Negotiations (requests, offers, agreements, verifications, terminations)
+ * - Transfer Processes (requests, starts, suspensions, completions, terminations)
+ * - Catalog events (datasets, data services, distributions)
+ *
+ * Architecture:
+ * - WebSocket connection management with automatic reconnection
+ * - Notification routing via category/subcategory dispatching
+ * - React Query cache invalidation for real-time UI updates
+ */
+
+import { createContext, ReactNode, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useGetSubscriptionByCallbackAddress } from "../data/pubsub-queries";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+
+// =============================================================================
+// TYPES & INTERFACES
+// =============================================================================
 
 interface PubSubContextType {
   websocket: WebSocket | null;
@@ -11,574 +30,486 @@ interface PubSubContextType {
   lastHighLightedNotification: UUID | null;
 }
 
+/**
+ * Notification categories supported by the PubSub system.
+ */
+type NotificationCategory = "ContractNegotiation" | "Catalog" | "TransferProcess";
+
+/**
+ * Query keys used for React Query cache management.
+ */
+const QUERY_KEYS = {
+  // Contract Negotiation
+  PARTICIPANTS: "PARTICIPANTS",
+  CN_PROCESSES: "CONTRACT_NEGOTIATION_PROCESSES",
+  CN_PROCESS_BY_ID: "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
+  CN_MESSAGES_BY_ID: "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
+  // Transfer Process
+  TRANSFER_PROCESSES: "TRANSFER_PROCESSES",
+  TRANSFER_PROCESS_BY_ID: "TRANSFER_PROCESS_BY_ID",
+  TRANSFER_MESSAGES_BY_ID: "TRANSFER_MESSAGES_BY_PROVIDER_ID",
+} as const;
+
+// =============================================================================
+// WEBSOCKET CONFIGURATION
+// =============================================================================
+
+const WS_RECONNECT_INTERVAL_MS = 1000;
+
+// =============================================================================
+// NOTIFICATION HANDLERS
+// =============================================================================
+
+/**
+ * Updates the list cache by finding and replacing an existing item,
+ * or adding a new one if not found.
+ *
+ * @param oldData - Current cached data array
+ * @param newItem - New item to upsert
+ * @param matchFn - Function to find the matching item
+ * @returns Updated data array
+ */
+function upsertInList<T>(
+  oldData: T[] | undefined,
+  newItem: T,
+  matchFn: (item: T) => boolean
+): T[] | undefined {
+  if (!oldData) return undefined;
+
+  const data = [...oldData];
+  const index = data.findIndex(matchFn);
+
+  if (index !== -1) {
+    data[index] = newItem;
+  } else {
+    data.push(newItem);
+  }
+
+  return data;
+}
+
+/**
+ * Updates the list cache by finding and replacing an existing item only.
+ * Does not add new items if not found.
+ *
+ * @param oldData - Current cached data array
+ * @param newItem - New item to update
+ * @param matchFn - Function to find the matching item
+ * @returns Updated data array
+ */
+function updateInList<T>(
+  oldData: T[] | undefined,
+  newItem: T,
+  matchFn: (item: T) => boolean
+): T[] | undefined {
+  if (!oldData) return undefined;
+
+  const data = [...oldData];
+  const index = data.findIndex(matchFn);
+
+  if (index !== -1) {
+    data[index] = newItem;
+  }
+
+  return data;
+}
+
+/**
+ * Handles Contract Negotiation process updates.
+ * Updates both list and single-item caches, and refetches related messages.
+ */
+function handleContractNegotiationProcess(
+  queryClient: QueryClient,
+  process: CNProcess,
+  setHighlight: (id: UUID) => void
+): void {
+  // Update the list view cache
+  queryClient.setQueryData(
+    [QUERY_KEYS.CN_PROCESSES],
+    (oldData: CNProcess[] | undefined) =>
+      updateInList(oldData, process, (d) => d.provider_id === process.provider_id)
+  );
+
+  // Update the single item cache
+  queryClient.setQueryData(
+    [QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id],
+    process
+  );
+
+  // Refetch related messages to show new activity
+  queryClient.refetchQueries({
+    queryKey: [QUERY_KEYS.CN_MESSAGES_BY_ID, process.cn_process_id],
+  });
+
+  // Highlight the updated item in the UI
+  setHighlight(process.cn_process_id);
+}
+
+/**
+ * Handles Contract Request Message specifically, which may create new processes.
+ */
+function handleContractRequestMessage(
+  queryClient: QueryClient,
+  process: CNProcess,
+  setHighlight: (id: UUID) => void
+): void {
+  // Contract requests may create new processes, so we use upsert
+  queryClient.setQueryData(
+    [QUERY_KEYS.CN_PROCESSES],
+    (oldData: CNProcess[] | undefined) =>
+      upsertInList(oldData, process, (d) => d.provider_id === process.provider_id)
+  );
+
+  queryClient.setQueryData(
+    [QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id],
+    process
+  );
+
+  queryClient.refetchQueries({
+    queryKey: [QUERY_KEYS.CN_MESSAGES_BY_ID, process.cn_process_id],
+  });
+
+  setHighlight(process.cn_process_id);
+}
+
+/**
+ * Handles Transfer Process updates.
+ * Updates both list and single-item caches, and refetches related messages.
+ */
+function handleTransferProcess(
+  queryClient: QueryClient,
+  process: TransferProcess,
+  setHighlight: (id: UUID) => void
+): void {
+  // Update the list view cache
+  queryClient.setQueryData(
+    [QUERY_KEYS.TRANSFER_PROCESSES],
+    (oldData: TransferProcess[] | undefined) =>
+      updateInList(oldData, process, (d) => d.provider_pid === process.provider_pid)
+  );
+
+  // Update the single item cache
+  queryClient.setQueryData(
+    [QUERY_KEYS.TRANSFER_PROCESS_BY_ID, process.provider_pid],
+    process
+  );
+
+  // Refetch related messages
+  queryClient.refetchQueries({
+    queryKey: [QUERY_KEYS.TRANSFER_MESSAGES_BY_ID, process.provider_pid],
+  });
+
+  // Highlight the updated item
+  setHighlight(process.provider_pid);
+}
+
+/**
+ * Handles Participant creation notifications.
+ */
+function handleParticipantCreation(
+  queryClient: QueryClient,
+  participant: Participant,
+  setHighlight: (id: UUID) => void
+): void {
+  queryClient.setQueryData(
+    [QUERY_KEYS.PARTICIPANTS],
+    (oldData: Participant[] | undefined) => {
+      if (!oldData) return undefined;
+      return [...oldData, participant];
+    }
+  );
+
+  setHighlight(participant.participant_id);
+}
+
+// =============================================================================
+// NOTIFICATION DISPATCHER
+// =============================================================================
+
+/**
+ * Subcategories that trigger Contract Negotiation process updates.
+ * These all share the same handling logic for process state changes.
+ */
+const CN_PROCESS_SUBCATEGORIES = new Set([
+  "ContractOfferMessage",
+  "ContractNegotiationEventMessage:accepted",
+  "ContractAgreementMessage",
+  "ContractVerificationMessage",
+  "ContractAgreementVerificationMessage",
+  "ContractEventMessage:finalized",
+  "ContractNegotiationEventMessage:finalized",
+  "ContractAcceptanceMessage",
+  "ContractNegotiationTerminationMessage",
+  "ContractTerminationMessage",
+]);
+
+/**
+ * Subcategories that trigger Transfer Process updates.
+ */
+const TRANSFER_PROCESS_SUBCATEGORIES = new Set([
+  "TransferRequestMessage",
+  "TransferStartMessage",
+  "TransferSuspensionMessage",
+  "TransferCompletionMessage",
+  "TransferTerminationMessage",
+]);
+
+/**
+ * Main notification dispatcher. Routes incoming WebSocket messages
+ * to the appropriate handler based on category and subcategory.
+ */
+function dispatchNotification(
+  notification: NotificationSub,
+  queryClient: QueryClient,
+  setHighlight: (id: UUID) => void
+): void {
+  const { category, subcategory, messageOperation, messageContent } = notification;
+
+  switch (category) {
+    case "ContractNegotiation":
+      handleContractNegotiationCategory(
+        subcategory,
+        messageOperation,
+        messageContent,
+        queryClient,
+        setHighlight
+      );
+      break;
+
+    case "Catalog":
+      handleCatalogCategory(subcategory, notification);
+      break;
+
+    case "TransferProcess":
+      handleTransferProcessCategory(
+        subcategory,
+        messageContent,
+        queryClient,
+        setHighlight
+      );
+      break;
+
+    default:
+      console.warn("Unknown notification category:", category);
+  }
+}
+
+/**
+ * Handles all Contract Negotiation category notifications.
+ */
+function handleContractNegotiationCategory(
+  subcategory: string,
+  messageOperation: string,
+  messageContent: any,
+  queryClient: QueryClient,
+  setHighlight: (id: UUID) => void
+): void {
+  // Handle Participant subcategory separately
+  if (subcategory === "Participant") {
+    if (messageOperation === "Creation") {
+      handleParticipantCreation(queryClient, messageContent as Participant, setHighlight);
+      console.log("Participant Creation Notification:", messageContent);
+    } else {
+      console.warn("Unknown Participant operation:", messageOperation);
+    }
+    return;
+  }
+
+  // Handle Contract Request (may create new process)
+  if (subcategory === "ContractRequestMessage") {
+    handleContractRequestMessage(queryClient, messageContent.process as CNProcess, setHighlight);
+    console.log("ContractRequestMessage Notification:", messageContent);
+    return;
+  }
+
+  // Handle all other CN process subcategories with unified logic
+  if (CN_PROCESS_SUBCATEGORIES.has(subcategory)) {
+    handleContractNegotiationProcess(queryClient, messageContent.process as CNProcess, setHighlight);
+    console.log(`${subcategory} Notification:`, messageContent);
+    return;
+  }
+
+  console.warn("Unknown ContractNegotiation subcategory:", subcategory);
+}
+
+/**
+ * Handles all Catalog category notifications.
+ * Currently just logs them - extend as needed.
+ */
+function handleCatalogCategory(
+  subcategory: string,
+  notification: NotificationSub
+): void {
+  const catalogSubcategories = ["Catalog", "Dataset", "DataService", "Distribution", "DatasetPolicies"];
+
+  if (catalogSubcategories.includes(subcategory)) {
+    console.log(`${subcategory} Notification:`, notification);
+  } else {
+    console.warn("Unknown Catalog subcategory:", subcategory);
+  }
+}
+
+/**
+ * Handles all Transfer Process category notifications.
+ */
+function handleTransferProcessCategory(
+  subcategory: string,
+  messageContent: any,
+  queryClient: QueryClient,
+  setHighlight: (id: UUID) => void
+): void {
+  if (TRANSFER_PROCESS_SUBCATEGORIES.has(subcategory)) {
+    handleTransferProcess(queryClient, messageContent.process as TransferProcess, setHighlight);
+    console.log(`${subcategory} Notification:`, messageContent);
+    return;
+  }
+
+  console.warn("Unknown TransferProcess subcategory:", subcategory);
+}
+
+// =============================================================================
+// CONTEXT PROVIDER
+// =============================================================================
+
 export const PubSubContext = createContext<PubSubContextType | null>(null);
-export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
+
+export const PubSubContextProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
+
+  // WebSocket state
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsConnectionError, setWsConnectionError] = useState(false);
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastHighLightedNotification, setLastHighLightedNotification] = useState<UUID | null>(null);
-  const globalInfo =
-    useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+
+  // Reconnection timer ref (using ref to avoid stale closure issues)
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Global configuration
+  const globalInfo = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const api_gateway = globalInfo?.api_gateway;
   const api_gateway_callback_address = globalInfo?.api_gateway_callback_address;
-  const {data: dataSubscriptions, isError: isDataSubscriptionError} =
+
+  // Subscription data
+  const { data: dataSubscriptions, isError: isDataSubscriptionError } =
     useGetSubscriptionByCallbackAddress(api_gateway_callback_address);
 
-
-  useEffect(() => {
-    if (!api_gateway) return;
-    console.log("Init WebSocket in:", api_gateway + "/ws");
-    const connectWs = () => {
-      const ws = new WebSocket(api_gateway + "/ws");
-      setWebsocket(ws);
-
-      ws.onopen = () => {
-        console.log("WebSocket connected");
-        setWsConnected(true);
-      };
-    };
-
-    connectWs();
-    return () => {
-      if(websocket) websocket.close();
+  /**
+   * Clears the reconnection timer if active.
+   */
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearInterval(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
     }
+  }, []);
 
-  }, [api_gateway]);
+  /**
+   * Creates and configures a new WebSocket connection.
+   */
+  const createWebSocket = useCallback((): WebSocket | null => {
+    if (!api_gateway) return null;
 
-  const reconnectOnClose = () => {
-    const _timer = setInterval(() => {
-      if (!websocket || websocket.readyState === WebSocket.CLOSED) {
-        console.log("Attempting to reconnect WebSocket");
-        webSocketConfig();
-      }
-    }, 1000);
-    setTimer(_timer);
-  };
+    const wsUrl = `${api_gateway}/ws`;
+    console.log("Connecting WebSocket to:", wsUrl);
 
-  // connect to the WebSocket server
-  const webSocketConfig = () => {
-    const ws = new WebSocket(api_gateway + "/ws");
-    setWebsocket(ws);
+    const ws = new WebSocket(wsUrl);
+
     ws.onopen = () => {
       console.log("WebSocket connected");
       setWsConnected(true);
+      setWsConnectionError(false);
+      clearReconnectTimer();
     };
+
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       setWsConnected(false);
     };
+
     ws.onerror = (error) => {
-      console.error("WebSocket error", error);
+      console.error("WebSocket error:", error);
       setWsConnectionError(true);
     };
+
     ws.onmessage = (event) => {
-      const notification: NotificationSub = JSON.parse(event.data);
-      console.log(notification);
-      const category = notification.category;
-      const subcategory = notification.subcategory;
-      const notificationOperation = notification.messageOperation;
-
-      switch (category) {
-        case "ContractNegotiation":
-          switch (subcategory) {
-            case "Participant":
-              switch (notificationOperation) {
-                case "Creation":
-                  queryClient.setQueryData(["PARTICIPANTS"], (oldData: Participant[]) => {
-                    if (!oldData) return;
-
-                    const data = [...oldData];
-                    data.push(notification.messageContent as Participant);
-                    return data;
-                  });
-                  setLastHighLightedNotification(notification.messageContent.participant_id);
-                  break;
-                default:
-                  console.warn("Unknown ContractNegotiation subcategory:", subcategory);
-              }
-              console.log("Participant Notification:", notification);
-              break;
-            case "ContractRequestMessage":
-              // for list view
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const isRequestAvailable = data.find(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (!isRequestAvailable) {
-                    data.push(notification.messageContent.process as CNProcess);
-                  } else {
-                    const index = data.findIndex(
-                      (d) => d.provider_id === notification.messageContent.process.provider_id,
-                    );
-                    if (index !== -1) {
-                      data[index] = notification.messageContent.process as CNProcess;
-                    }
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractRequestMessage Notification:", notification);
-              break;
-            case "ContractOfferMessage":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractOfferMessage Notification:", notification);
-              break;
-            case "ContractNegotiationEventMessage:accepted":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractNegotiationEventMessage Notification:", notification);
-              break;
-            case "ContractAgreementMessage":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractAgreementMessage Notification:", notification);
-              break;
-            case "ContractVerificationMessage":
-            case "ContractAgreementVerificationMessage":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractAgreementVerificationMessage Notification:", notification);
-              break;
-            case "ContractEventMessage:finalized":
-            case "ContractNegotiationEventMessage:finalized":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractNegotiationEventMessage:finalized Notification:", notification);
-              break;
-            case "ContractAcceptanceMessage":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractAcceptanceMessage Notification:", notification);
-              break;
-            case "ContractNegotiationTerminationMessage":
-            case "ContractTerminationMessage":
-              queryClient.setQueryData(
-                ["CONTRACT_NEGOTIATION_PROCESSES"],
-                (oldData: CNProcess[]) => {
-                  if (!oldData) return;
-
-                  const data = [...oldData];
-                  const index = data.findIndex(
-                    (d) => d.provider_id === notification.messageContent.process.provider_id,
-                  );
-                  if (index !== -1) {
-                    data[index] = notification.messageContent.process as CNProcess;
-                  }
-                  return data;
-                },
-              );
-              // for single view
-              queryClient.setQueryData(
-                [
-                  "CONTRACT_NEGOTIATION_PROCESSES_BY_ID",
-                  notification.messageContent.process.cn_process_id,
-                ],
-                notification.messageContent.process as CNProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "CONTRACT_NEGOTIATION_MESSAGES_BY_CNID",
-                notification.messageContent.process.cn_process_id,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.cn_process_id);
-              console.log("ContractNegotiationEventMessage:finalized Notification:", notification);
-              break;
-            default:
-              console.warn("Unknown ContractNegotiation subcategory:", subcategory);
-          }
-          break;
-        case "Catalog":
-          switch (subcategory) {
-            case "Catalog":
-              console.log("Catalog Notification:", notification);
-              break;
-            case "Dataset":
-              console.log("Dataset Notification:", notification);
-              break;
-            case "DataService":
-              console.log("DataService Notification:", notification);
-              break;
-            case "Distribution":
-              console.log("Distribution Notification:", notification);
-              break;
-            case "DatasetPolicies":
-              console.log("DatasetPolicies Notification:", notification);
-              break;
-            default:
-              console.warn("Unknown Catalog subcategory:", subcategory);
-          }
-          break;
-        case "TransferProcess":
-          switch (subcategory) {
-            case "TransferRequestMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
-                if (!oldData) return;
-
-                const data = [...oldData];
-                const index = data.findIndex(
-                  (d) => d.provider_pid === notification.messageContent.process.provider_pid,
-                );
-                if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcess;
-                }
-                return data;
-              });
-              // for single view
-              queryClient.setQueryData(
-                ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "TRANSFER_MESSAGES_BY_PROVIDER_ID",
-                notification.messageContent.process.provider_pid,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.provider_pid);
-              console.log("TransferRequestMessage Notification:", notification);
-              break;
-            case "TransferStartMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
-                if (!oldData) return;
-                const data = [...oldData];
-                const index = data.findIndex(
-                  (d) => d.provider_pid === notification.messageContent.process.provider_pid,
-                );
-                if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcess;
-                }
-                return data;
-              });
-              // for single view
-              queryClient.setQueryData(
-                ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "TRANSFER_MESSAGES_BY_PROVIDER_ID",
-                notification.messageContent.process.provider_pid,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.provider_pid);
-              console.log("TransferStartMessage Notification:", notification);
-              break;
-            case "TransferSuspensionMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
-                if (!oldData) return;
-
-                const data = [...oldData];
-                const index = data.findIndex(
-                  (d) => d.provider_pid === notification.messageContent.process.provider_pid,
-                );
-                if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcess;
-                }
-                return data;
-              });
-              // for single view
-              queryClient.setQueryData(
-                ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "TRANSFER_MESSAGES_BY_PROVIDER_ID",
-                notification.messageContent.process.provider_pid,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.provider_pid);
-              console.log("TransferSuspensionMessage Notification:", notification);
-              break;
-            case "TransferCompletionMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
-                if (!oldData) return;
-
-                const data = [...oldData];
-                const index = data.findIndex(
-                  (d) => d.provider_pid === notification.messageContent.process.provider_pid,
-                );
-                if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcess;
-                }
-                return data;
-              });
-              // for single view
-              queryClient.setQueryData(
-                ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "TRANSFER_MESSAGES_BY_PROVIDER_ID",
-                notification.messageContent.process.provider_pid,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.provider_pid);
-              console.log("TransferCompletionMessage Notification:", notification);
-              break;
-            case "TransferTerminationMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
-                if (!oldData) return;
-                const data = [...oldData];
-                const index = data.findIndex(
-                  (d) => d.provider_pid === notification.messageContent.process.provider_pid,
-                );
-                if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcess;
-                }
-                return data;
-              });
-              // for single view
-              queryClient.setQueryData(
-                ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcess,
-              );
-              // for messages list
-              // @ts-ignore
-              queryClient.refetchQueries([
-                "TRANSFER_MESSAGES_BY_PROVIDER_ID",
-                notification.messageContent.process.provider_pid,
-              ]);
-              setLastHighLightedNotification(notification.messageContent.process.provider_pid);
-              console.log("TransferTerminationMessage Notification:", notification);
-              break;
-            default:
-              console.warn("Unknown TransferProcess subcategory:", subcategory);
-          }
-          break;
-        default:
-          console.warn("Unknown notification category:", category);
+      try {
+        const notification: NotificationSub = JSON.parse(event.data);
+        console.log("Received notification:", notification);
+        dispatchNotification(notification, queryClient, setLastHighLightedNotification);
+      } catch (error) {
+        console.error("Failed to parse WebSocket message:", error);
       }
     };
-    return () => {
-      ws.close();
-    };
-  };
 
-  useEffect(() => {
-    webSocketConfig();
-  }, []);
+    return ws;
+  }, [api_gateway, queryClient, clearReconnectTimer]);
 
-  useEffect(() => {
-    if (websocket) {
-      if (websocket.readyState === WebSocket.CLOSED) {
-        reconnectOnClose();
-      } else {
-        if (timer) {
-          clearInterval(timer);
-          setTimer(null);
+  /**
+   * Starts the reconnection loop when WebSocket is closed.
+   */
+  const startReconnectLoop = useCallback(() => {
+    if (reconnectTimerRef.current) return; // Already reconnecting
+
+    reconnectTimerRef.current = setInterval(() => {
+      if (!websocket || websocket.readyState === WebSocket.CLOSED) {
+        console.log("Attempting to reconnect WebSocket...");
+        const newWs = createWebSocket();
+        if (newWs) {
+          setWebsocket(newWs);
         }
       }
-      return () => {
-        if (timer) {
-          clearInterval(timer);
-          setTimer(null);
-        }
-      };
+    }, WS_RECONNECT_INTERVAL_MS);
+  }, [websocket, createWebSocket]);
+
+  // Initialize WebSocket on mount
+  useEffect(() => {
+    if (!api_gateway) return;
+
+    const ws = createWebSocket();
+    if (ws) {
+      setWebsocket(ws);
     }
-  }, [wsConnected]);
 
-  const value = {
+    return () => {
+      clearReconnectTimer();
+      ws?.close();
+    };
+  }, [api_gateway]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle reconnection logic when connection state changes
+  useEffect(() => {
+    if (!websocket) return;
+
+    if (websocket.readyState === WebSocket.CLOSED) {
+      startReconnectLoop();
+    } else {
+      clearReconnectTimer();
+    }
+
+    return clearReconnectTimer;
+  }, [wsConnected, websocket, startReconnectLoop, clearReconnectTimer]);
+
+  // Context value
+  const value: PubSubContextType = {
     websocket,
     connected: wsConnected,
     connectionError: wsConnectionError,
-    subscriptionId: isDataSubscriptionError ? null : dataSubscriptions.subscriptionId,
+    subscriptionId: isDataSubscriptionError ? null : dataSubscriptions?.subscriptionId ?? null,
     lastHighLightedNotification,
   };
 
-  // @ts-ignore
   return <PubSubContext.Provider value={value}>{children}</PubSubContext.Provider>;
+};
+
+/**
+ * Custom hook to access the PubSub context.
+ * Throws an error if used outside of PubSubContextProvider.
+ */
+export const usePubSub = (): PubSubContextType => {
+  const context = useContext(PubSubContext);
+  if (!context) {
+    throw new Error("usePubSub must be used within a PubSubContextProvider");
+  }
+  return context;
 };

@@ -25,8 +25,6 @@ use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Response;
 use sha2::{Digest, Sha256};
 use tracing::{error, info};
-
-use super::super::CallbackTrait;
 use ymir::data::entities::req_interaction;
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::client::ClientTrait;
@@ -34,8 +32,10 @@ use ymir::types::gnap::{ApprovedCallbackBody, RefBody};
 use ymir::types::http::Body;
 use ymir::utils::get_from_opt;
 
+use super::super::CallbackTrait;
+
 pub struct BasicCallbackService {
-    client: Arc<dyn ClientTrait>,
+    client: Arc<dyn ClientTrait>
 }
 
 impl BasicCallbackService {
@@ -49,7 +49,7 @@ impl CallbackTrait for BasicCallbackService {
     fn check_callback(
         &self,
         int_model: &mut req_interaction::Model,
-        payload: &ApprovedCallbackBody,
+        payload: &ApprovedCallbackBody
     ) -> anyhow::Result<()> {
         info!("Checking callback");
 
