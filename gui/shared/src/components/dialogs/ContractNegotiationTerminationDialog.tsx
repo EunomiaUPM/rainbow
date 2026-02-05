@@ -10,8 +10,12 @@ import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalIn
 import { usePostContractNegotiationRPCTermination } from "../../data/contract-mutations";
 import { BaseProcessDialog, mapCNProcessToFullInfoItems } from "./base";
 
-export const ContractNegotiationTerminationDialog = ({ process }: { process: CNProcess }) => {
-  const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+export const ContractNegotiationTerminationDialog = ({
+  process,
+}: {
+  process: NegotiationProcessDto;
+}) => {
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: terminateAsync } = usePostContractNegotiationRPCTermination();
 
   /**
@@ -19,22 +23,22 @@ export const ContractNegotiationTerminationDialog = ({ process }: { process: CNP
    * The payload differs based on whether the user is a provider or consumer.
    */
   const handleSubmit = async () => {
-    if (dsrole === "consumer") {
+    if (process.role === "Consumer") {
       await terminateAsync({
         api_gateway,
         content: {
-          providerParticipantId: process.associated_provider!,
-          consumerPid: process.consumer_id,
-          providerPid: process.provider_id,
+          providerParticipantId: process.associatedAgentPeer!,
+          consumerPid: process.identifiers.consumer_id,
+          providerPid: process.identifiers.provider_id,
         },
       });
-    } else if (dsrole === "provider") {
+    } else if (process.role === "Provider") {
       await terminateAsync({
         api_gateway,
         content: {
-          consumerParticipantId: process.associated_consumer!,
-          consumerPid: process.consumer_id,
-          providerPid: process.provider_id,
+          consumerParticipantId: process.associatedAgentPeer!,
+          consumerPid: process.identifiers.consumer_id,
+          providerPid: process.identifiers.provider_id,
         },
       });
     }

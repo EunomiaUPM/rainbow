@@ -51,11 +51,11 @@ export interface PolicyWrapperShowProps {
   /** ID of the parent catalog (for actions) */
   catalogId?: string;
 
-  /** Current participant information (for role-based actions) */
-  participant?: { participant_type: string };
-
   /** Name of the dataset (for display in dialogs) */
   datasetName?: string;
+
+  /** Whether to show the Request Access button (default: false) */
+  showRequestAccess?: boolean;
 }
 
 // =============================================================================
@@ -67,7 +67,6 @@ export interface PolicyWrapperShowProps {
  *
  * The component adapts its behavior based on:
  * - Current route (shows different actions on datahub-catalog pages)
- * - Participant type (providers see delete, consumers see request access)
  *
  * @param props - PolicyWrapperShow properties
  * @returns A styled policy display card
@@ -76,8 +75,8 @@ export const PolicyWrapperShow = ({
   policy,
   datasetId,
   catalogId,
-  participant,
   datasetName,
+  showRequestAccess = false,
 }: PolicyWrapperShowProps) => {
   const routerState = useRouterState();
 
@@ -89,12 +88,6 @@ export const PolicyWrapperShow = ({
   const isDatahubDatasetView =
     routerState.location.pathname.includes("datahub-catalog") &&
     routerState.location.pathname.includes("dataset");
-
-  /** Whether current user is a provider */
-  const isProvider = participant?.participant_type === "Provider";
-
-  /** Whether current user is a consumer */
-  const isConsumer = participant?.participant_type === "Consumer";
 
   // ---------------------------------------------------------------------------
   // Render
@@ -115,7 +108,7 @@ export const PolicyWrapperShow = ({
           </div>
 
           {/* Provider action: Delete policy */}
-          {isDatahubDatasetView && isProvider && (
+          {isDatahubDatasetView && (
             <Dialog>
               <DialogTrigger asChild>
                 <Button
@@ -139,8 +132,13 @@ export const PolicyWrapperShow = ({
         <InfoList
           className="w-full mb-3"
           items={[
-            { label: "Policy Target", value: policy.entityType },
-            { label: "Target", value: policy.entity.slice(9) },
+            { label: "Policy Target", value: (policy as any).entityType || "Agreement" },
+            {
+              label: "Target",
+              value: (policy as any).entity
+                ? (policy as any).entity.slice(9)
+                : (policy as any).target || "",
+            },
           ]}
         />
 
@@ -150,14 +148,23 @@ export const PolicyWrapperShow = ({
             ODRL Content
           </Heading>
           <div className="flex flex-col gap-2 w-full">
-            <PolicyComponent policyItem={policy.odrlOffer.permission} variant="permission" />
-            <PolicyComponent policyItem={policy.odrlOffer.prohibition} variant="prohibition" />
-            <PolicyComponent policyItem={policy.odrlOffer.obligation} variant="obligation" />
+            <PolicyComponent
+              policyItem={(policy as any).odrlOffer?.permission || (policy as any).permission}
+              variant="permission"
+            />
+            <PolicyComponent
+              policyItem={(policy as any).odrlOffer?.prohibition || (policy as any).prohibition}
+              variant="prohibition"
+            />
+            <PolicyComponent
+              policyItem={(policy as any).odrlOffer?.obligation || (policy as any).obligation}
+              variant="obligation"
+            />
           </div>
         </div>
 
         {/* Consumer action: Request access */}
-        {isConsumer && (
+        {showRequestAccess && (
           <div className="mt-4 w-full flex justify-end">
             <Dialog>
               <DialogTrigger asChild>

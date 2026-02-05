@@ -70,14 +70,14 @@ impl DspRouter {
             //  COMMON & PROVIDER ROUTES (DSP 8.2)
             // =========================================================
             // 8.2.1 & 8.3.2: Get Negotiation (Unified)
-            .route("/:id", get(Self::handle_get_negotiation))
+            .route("/{id}", get(Self::handle_get_negotiation))
             // 8.2.2: Contract Request Endpoint (Consumer initiates) -> ROLE: PROVIDER
             .route("/request", post(Self::handle_initial_request))
             // 8.2.3: Contract Request Endpoint (Consumer counters) -> ROLE: PROVIDER
-            .route("/:id/request", post(Self::handle_consumer_request))
+            .route("/{id}/request", post(Self::handle_consumer_request))
             // 8.2.5: Agreement Verification (Consumer verifies) -> ROLE: PROVIDER
             .route(
-                "/:id/agreement/verification",
+                "/{id}/agreement/verification",
                 post(Self::handle_agreement_verification),
             )
             // =========================================================
@@ -86,17 +86,17 @@ impl DspRouter {
             // 8.3.3: Contract Offer Endpoint (Provider initiates) -> ROLE: CONSUMER
             .route("/offers", post(Self::handle_initial_offer))
             // 8.3.4: Contract Offer Endpoint (Provider counters) -> ROLE: CONSUMER
-            .route("/:id/offers", post(Self::handle_provider_offer))
+            .route("/{id}/offers", post(Self::handle_provider_offer))
             // 8.3.5: Contract Agreement Endpoint (Provider sends Agreement) -> ROLE: CONSUMER
-            .route("/:id/agreement", post(Self::handle_agreement_reception))
+            .route("/{id}/agreement", post(Self::handle_agreement_reception))
             // =========================================================
             //  SHARED / AMBIGUOUS ROUTES
             // =========================================================
             // 8.2.4 (Provider Endpoint) & 8.3.6 (Consumer Endpoint) -> Events
             // Both allow POST /events. The logic inside must discriminate based on state/role.
-            .route("/:id/events", post(Self::handle_negotiation_events))
+            .route("/{id}/events", post(Self::handle_negotiation_events))
             // 8.2.6 (Provider Endpoint) & 8.3.7 (Consumer Endpoint) -> Termination
-            .route("/:id/termination", post(Self::handle_negotiation_termination))
+            .route("/{id}/termination", post(Self::handle_negotiation_termination))
             .with_state(self)
     }
 

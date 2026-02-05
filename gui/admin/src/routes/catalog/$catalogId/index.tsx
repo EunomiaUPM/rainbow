@@ -42,7 +42,11 @@ const RouteComponent = () => {
     <PageLayout>
       <PageHeader
         title="Catalog info"
-        badge={<Badge variant="info" size="lg">{formatUrn(catalogId)}</Badge>}
+        badge={
+          <Badge variant="info" size="lg">
+            {formatUrn(catalogId)}
+          </Badge>
+        }
       />
       <InfoGrid>
         <PageSection title="Catalog details:">

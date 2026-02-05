@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
-import dayjs from "dayjs";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
@@ -19,7 +18,7 @@ const RouteComponent = () => {
   const cnProcessesSorted = useMemo(() => {
     if (!cnProcesses) return [];
     return [...cnProcesses].sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [cnProcesses]);
 
@@ -35,16 +34,13 @@ const RouteComponent = () => {
         <DataTable
           className="text-sm"
           data={cnProcessesSorted ?? []}
-          keyExtractor={(p) => p.provider_id}
+          keyExtractor={(p) => p.id}
           columns={[
             {
-              header: "ProviderPid",
-              cell: (p) => <Badge variant={"info"}>{formatUrn(p.provider_id)}</Badge>,
+              header: "id",
+              cell: (p) => <Badge variant={"info"}>{formatUrn(p.id)}</Badge>,
             },
-            {
-              header: "ConsumerPid",
-              cell: (p) => <Badge variant={"info"}>{formatUrn(p.consumer_id)}</Badge>,
-            },
+
             {
               header: "State",
               cell: (p) => (
@@ -54,8 +50,20 @@ const RouteComponent = () => {
               ),
             },
             {
+              header: "State Attribute",
+              cell: (p) => (
+                <Badge variant={"status"} state={p.stateAttribute as BadgeState}>
+                  {p.state.replace("dspace:", "")}
+                </Badge>
+              ),
+            },
+            {
+              header: "Peer",
+              cell: (p) => <p className="">{formatUrn(p.associatedAgentPeer)}</p>,
+            },
+            {
               header: "CreatedAt",
-              cell: (p) => <FormatDate date={p.created_at} />,
+              cell: (p) => <FormatDate date={p.createdAt} />,
             },
             {
               header: "Actions",
@@ -64,10 +72,7 @@ const RouteComponent = () => {
             {
               header: "Link",
               cell: (p) => (
-                <Link
-                  to="/contract-negotiation/$cnProcess"
-                  params={{ cnProcess: p.provider_id }}
-                >
+                <Link to="/contract-negotiation/$cnProcess" params={{ cnProcess: p.id }}>
                   <Button variant="link">
                     See details
                     <ArrowRight />

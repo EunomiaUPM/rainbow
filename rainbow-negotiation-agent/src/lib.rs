@@ -29,3 +29,5 @@ pub(crate) mod setup;
 pub use entities::agreement::AgreementDto;
 pub use entities::offer::OfferDto;
 pub use setup::cmd::NegotiationCommands;
+pub use setup::http_worker::create_root_http_router as create_negotiations_http_router;
+pub use data::migrations::get_negotiation_agent_migrations;

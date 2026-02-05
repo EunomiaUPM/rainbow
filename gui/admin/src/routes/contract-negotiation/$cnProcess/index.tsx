@@ -1,15 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { formatUrn } from "shared/src/lib/utils";
-import dayjs from "dayjs";
-import {
-  useGetContractNegotiationMessagesByCNID,
-  useGetContractNegotiationProcessesByCNID,
-} from "shared/src/data/contract-queries.ts";
+import { useGetContractNegotiationProcessesByCNID } from "shared/src/data/contract-queries.ts";
 import { ContractNegotiationActions } from "shared/src/components/actions/ContractNegotiationActions";
 import { InfoList } from "shared/src/components/ui/info-list";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import {
   Drawer,
   DrawerBody,
@@ -21,44 +15,33 @@ import {
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
-import { useEffect } from "react";
-import CnProcessMessageComponent
-  from "@./../../shared/src/components/CnProcessMessageComponent.tsx";
+import CnProcessMessageComponent from "@./../../shared/src/components/CnProcessMessageComponent.tsx";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 
 const RouteComponent = () => {
-
   const { cnProcess } = Route.useParams();
   const { data } = useGetContractNegotiationProcessesByCNID(cnProcess);
-  const process = data as CNProcess;
-  const { data: cnMessages } = useGetContractNegotiationMessagesByCNID(cnProcess);
+  const process = data as NegotiationProcessDto;
 
   return (
     <PageLayout>
-      <PageSection title="Contract negotiation info">
-        <InfoGrid className="mb-4">
+      <InfoGrid className="mb-4">
+        <PageSection title="Contract negotiation info">
           <InfoList
             items={[
-              { label: "ProviderPid", value: { type: "urn", value: process.provider_id } },
-              { label: "ConsumerPid", value: { type: "urn", value: process.consumer_id } },
+              { label: "ProviderPid", value: { type: "urn", value: process.id } },
               { label: "State", value: { type: "status", value: process.state } },
               {
-                label: "Client type",
-                value: { type: "custom", content: <Badge>{process.is_business ? "Business" : "Standard"}</Badge> },
-              },
-              {
                 label: "Created at",
-                value: { type: "custom", content: <FormatDate date={process.created_at} /> },
+                value: { type: "custom", content: <FormatDate date={process.createdAt} /> },
               },
             ]}
           />
-        </InfoGrid>
-      </PageSection>
+        </PageSection>
+      </InfoGrid>
       <PageSection>
-        {/*  */}
-
         {/* DRAWER */}
         <Drawer direction={"right"}>
           <DrawerTrigger>
@@ -74,7 +57,7 @@ const RouteComponent = () => {
             </DrawerHeader>
             <DrawerBody>
               {/* New message subcomponent */}
-              {cnMessages.map((message) => (
+              {process.messages.map((message) => (
                 <CnProcessMessageComponent message={message} />
               ))}
               {/* / New message subcomponent */}

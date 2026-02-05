@@ -21,7 +21,6 @@ export const Route = createFileRoute("/agreements/")({
 function RouteComponent() {
   const { data: agreements } = useGetAgreements();
 
-
   return (
     <PageLayout>
       <PageHeader title="Agreements" />
@@ -32,39 +31,44 @@ function RouteComponent() {
         <DataTable
           className="text-sm"
           data={agreements ?? []}
-          keyExtractor={(a) => a.agreement_id}
+          keyExtractor={(a) => a.id}
           columns={[
             {
               header: "Agreement Id",
-              cell: (a) => <Badge variant={"info"}>{formatUrn(a.agreement_id)}</Badge>,
+              cell: (a) => <Badge variant={"info"}>{formatUrn(a.id)}</Badge>,
+            },
+            {
+              header: "Provider Participant Id",
+              cell: (a) => (
+                <div className="flex flex-col gap-1">
+                  <Badge variant={"info"}>{formatUrn(a.providerParticipantId)}</Badge>
+                </div>
+              ),
             },
             {
               header: "Consumer Participant Id",
               cell: (a) => (
                 <div className="flex flex-col gap-1">
-                  <Badge variant={"info"}>{formatUrn(a.consumer_participant_id)}</Badge>
+                  <Badge variant={"info"}>{formatUrn(a.consumerParticipantId)}</Badge>
                 </div>
               ),
             },
             {
               header: "Status",
               cell: (a) => (
-                <Badge variant={"status"} state={a.active ? "ACTIVE" : "PAUSE"}>
-                  {a.active ? "ACTIVE" : "INACTIVE"}
+                <Badge variant={"status"} state={a.state ? "ACTIVE" : "PAUSE"}>
+                  {a.state}
                 </Badge>
               ),
             },
             {
               header: "Created at",
-              cell: (a) => <FormatDate date={a.created_at} />,
+              cell: (a) => <FormatDate date={a.createdAt} />,
             },
             {
               header: "Link",
               cell: (a) => (
-                <Link
-                  to="/agreements/$agreementId"
-                  params={{ agreementId: a.agreement_id }}
-                >
+                <Link to="/agreements/$agreementId" params={{ agreementId: a.id }}>
                   <Button variant="link">
                     See details
                     <ArrowRight />

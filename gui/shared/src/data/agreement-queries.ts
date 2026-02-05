@@ -1,13 +1,13 @@
-import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
-import {useContext} from "react";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useContext } from "react";
+import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
 
 /**
  *  GET /contract-negotiation/agreements
  * */
 export const getAgreements = async (api_gateway: string) => {
-  const catalogs: Agreement[] = await (
-    await fetch(api_gateway + "/contract-negotiation/agreements")
+  const catalogs: NegotiationAgreement[] = await (
+    await fetch(api_gateway + "/negotiations/agreements")
   ).json();
   return catalogs;
 };
@@ -19,17 +19,17 @@ export const getAgreementsOptions = (api_gateway: string) =>
   });
 
 export const useGetAgreements = () => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(getAgreementsOptions(api_gateway));
-  return {data, isLoading, isError, error};
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(getAgreementsOptions(api_gateway));
+  return { data, isLoading, isError, error };
 };
 
 /**
  *  GET /contract-negotiation/agreements
  * */
 export const getAgreementById = async (api_gateway: string, agreementId: UUID) => {
-  const catalogs: Agreement = await (
-    await fetch(api_gateway + `/contract-negotiation/agreements/${agreementId}`)
+  const catalogs: NegotiationAgreement = await (
+    await fetch(api_gateway + `/negotiations/agreements/${agreementId}`)
   ).json();
   return catalogs;
 };
@@ -42,9 +42,9 @@ export const getAgreementByIdOptions = (api_gateway: string, agreementId: UUID) 
   });
 
 export const useGetAgreementById = (agreementId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getAgreementByIdOptions(api_gateway, agreementId),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };

@@ -152,7 +152,7 @@ impl GatewayRouter {
             "datahub" => config.catalog().get_host(HostType::Http),
             "contract-negotiation" => config.contracts().get_host(HostType::Http),
             "mates" => config.ssi_auth().get_host(HostType::Http),
-            "negotiations" => config.catalog().get_host(HostType::Http),
+            "negotiations" => config.contracts().get_host(HostType::Http),
             "transfers" => config.transfer().get_host(HostType::Http),
             "auth" => config.ssi_auth().get_host(HostType::Http),
             "wallet" => config.ssi_auth().get_host(HostType::Http),

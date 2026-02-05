@@ -19,25 +19,23 @@ export const ContractNegotiationActions = ({
   process,
   tiny = false,
 }: {
-  process: CNProcess;
+  process: NegotiationProcessDto;
   tiny: boolean;
 }) => {
-  const { dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-
   // Define container class name with variants
   const containerClassName = cva("", {
     variants: {
       tiny: {
         true: "inline-flex items-center ",
         false:
-          " w-full p-6 fixed bottom-0 left-0 md:left-[223px] bg-background/80 backdrop-blur-sm border border-t-stroke [&>*>button]:min-w-20",
+          " w-full p-6 fixed bottom-0 left-0 bg-background/80 backdrop-blur-sm border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });
 
   // Determine available actions based on process state and user role
   const getActions = () => {
-    if (dsrole === "provider") {
+    if (process.role === "Provider") {
       switch (process.state) {
         case "REQUESTED":
           return [
@@ -89,7 +87,7 @@ export const ContractNegotiationActions = ({
         default:
           return [];
       }
-    } else if (dsrole === "consumer") {
+    } else if (process.role === "Consumer") {
       switch (process.state) {
         case "REQUESTED":
           return [
@@ -134,7 +132,7 @@ export const ContractNegotiationActions = ({
   // Determine if no further actions are available
   const showNoFurtherActions = () => {
     if (process.state === "FINALIZED" || process.state === "TERMINATED") return true;
-    if (dsrole === "consumer") {
+    if (process.role === "Consumer") {
       if (process.state === "ACCEPTED") return true;
       if (process.state === "VERIFIED") return true;
     }

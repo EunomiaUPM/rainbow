@@ -88,7 +88,7 @@ impl NegotiationHttpWorker {
         vault: Arc<VaultService>,
     ) -> anyhow::Result<Router> {
         let router = create_root_http_router(config, vault.clone())
-            .await?
+            .await
             .fallback(Self::handler_404)
             .layer(
                 TraceLayer::new_for_http()
@@ -112,10 +112,7 @@ impl NegotiationHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(
-    config: &ContractsConfig,
-    vault: Arc<VaultService>,
-) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &ContractsConfig, vault: Arc<VaultService>) -> Router {
     // ROOT Dependency Injection
     let db_connection = vault.get_db_connection(config.common()).await;
     let config = Arc::new(config.clone());
@@ -148,10 +145,11 @@ pub async fn create_root_http_router(
         config.clone(),
     )
     .build_router()
-    .await?;
+    .await
+    .expect("Failed to build DSP router");
 
     // router
-    let router_str = format!("/api/{}/negotiation-agent", config.common().get_api_version());
+    let router_str = format!("{}/negotiation-agent", config.common().get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/negotiation-messages", router_str.as_str()).as_str(),
@@ -171,5 +169,5 @@ pub async fn create_root_http_router(
         )
         .nest("/dsp/current/negotiations", dsp_router);
 
-    Ok(router)
+    router
 }

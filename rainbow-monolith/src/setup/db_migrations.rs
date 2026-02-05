@@ -25,6 +25,7 @@ use rainbow_events::data::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_negotiation_agent::get_negotiation_agent_migrations;
 
 pub struct CoreProviderMigration;
 
@@ -33,7 +34,7 @@ impl MigratorTrait for CoreProviderMigration {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
         let mut connector_migrations = get_connector_migrations();
-        //let mut contract_negotiation_provider_migrations = get_contracts_migrations();
+        let mut contract_negotiation_provider_migrations = get_negotiation_agent_migrations();
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
@@ -41,7 +42,7 @@ impl MigratorTrait for CoreProviderMigration {
 
         migrations.append(&mut catalog_migrations);
         migrations.append(&mut connector_migrations);
-        //migrations.append(&mut contract_negotiation_provider_migrations);
+        migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
         migrations.append(&mut dataplane_migrations);

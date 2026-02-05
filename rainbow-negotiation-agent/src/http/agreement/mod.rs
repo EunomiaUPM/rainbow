@@ -74,17 +74,17 @@ impl NegotiationAgentAgreementsRouter {
             )
             .route("/batch", post(Self::handle_get_batch_agreements))
             .route(
-                "/:id",
+                "/{id}",
                 get(Self::handle_get_agreement_by_id)
                     .put(Self::handle_put_agreement)
                     .delete(Self::handle_delete_agreement),
             )
             .route(
-                "/process/:process_id",
+                "/process/{process_id}",
                 get(Self::handle_get_agreement_by_negotiation_process),
             )
             .route(
-                "/message/:message_id",
+                "/message/{message_id}",
                 get(Self::handle_get_agreement_by_negotiation_message),
             )
             .with_state(self)

@@ -146,9 +146,9 @@ declare global {
   export interface OdrlAgreement {
     "@id": UUID;
     "@type": string;
-    obligation: any[];
+    obligation: OdrlPermission[];
     permission: OdrlPermission[];
-    prohibition: any[];
+    prohibition: OdrlPermission[];
     target: UUID;
     assignee: UUID;
     assigner: UUID;
@@ -298,12 +298,64 @@ declare global {
     };
   }
 
+  export interface NegotiationMessage {
+    id: string;
+    negotiationAgentProcessId: string;
+    createdAt: Date;
+    direction: string;
+    protocol: string;
+    messageType: string;
+    stateTransitionFrom: string;
+    stateTransitionTo: string;
+    payload: JSON;
+  }
+
+  export interface NegotiationOffer {
+    id: string;
+    negotiationAgentProcessId: string;
+    negotiationAgentMessageId: string;
+    offerId: string;
+    offerContent: JSON;
+    createdAt: Date;
+  }
+
+  export interface NegotiationAgreement {
+    id: string;
+    negotiationAgentProcessId: string;
+    negotiationAgentMessageId: string;
+    consumerParticipantId: string;
+    providerParticipantId: string;
+    agreementContent: OdrlOffer;
+    target: string;
+    state: string;
+    createdAt: Date;
+    updatedAt?: Date;
+  }
+
+  export interface NegotiationProcessDto {
+    id: string;
+    state: string;
+    stateAttribute?: string;
+    associatedAgentPeer: string;
+    protocol: string;
+    callbackAddress?: string;
+    role: string;
+    properties: JSON;
+    errorDetails?: JSON;
+    createdAt: Date;
+    updatedAt?: Date;
+    identifiers: Record<string, string>;
+    messages: NegotiationMessage[];
+    offers: NegotiationOffer[];
+    agreement?: NegotiationAgreement;
+  }
+
   /**
    * Tipos generados para Rainbow Catalog Agent API
    * Basado en la especificación OpenAPI
    */
 
-// --- Metadata Base ---
+  // --- Metadata Base ---
 
   export interface ConnectorMetadata {
     name?: string;
@@ -313,49 +365,42 @@ declare global {
     createdAt?: Date;
   }
 
-// --- Authentication Configurations ---
+  // --- Authentication Configurations ---
 
-  export type AuthenticationConfig =
-      | NoAuth
-      | BasicAuthConfig
-      | BearerToken
-      | ApiKey
-      | OAuth2;
+  export type AuthenticationConfig = NoAuth | BasicAuthConfig | BearerToken | ApiKey | OAuth2;
 
   export interface NoAuth {
-    type: 'NO_AUTH';
+    type: "NO_AUTH";
   }
 
   export interface BasicAuthConfig {
-    type: 'BASIC_AUTH';
+    type: "BASIC_AUTH";
     username?: string;
     password?: string;
   }
 
   export interface BearerToken {
-    type: 'BEARER_TOKEN';
+    type: "BEARER_TOKEN";
     token?: string;
   }
 
   export interface ApiKey {
-    type: 'API_KEY';
+    type: "API_KEY";
     key?: string;
     value?: string;
-    location?: 'HEADER' | 'QUERY';
+    location?: "HEADER" | "QUERY";
   }
 
   export interface OAuth2 {
-    type: 'OAUTH_2';
-    grantType?: 'ClientCredentials' | 'AuthorizationCode';
+    type: "OAUTH_2";
+    grantType?: "ClientCredentials" | "AuthorizationCode";
     tokenUrl?: string;
     clientId?: string;
     clientSecret?: string;
     scopes?: string[] | string;
   }
 
-  export type InteractionConfig =
-      | PullLifecycle
-      | PushLifecycle;
+  export type InteractionConfig = PullLifecycle | PushLifecycle;
 
   export interface ProtocolSpec {
     protocol?: string;
@@ -364,12 +409,12 @@ declare global {
   }
 
   export interface PullLifecycle {
-    mode: 'PULL';
+    mode: "PULL";
     dataAccess?: ProtocolSpec;
   }
 
   export interface PushLifecycle {
-    mode: 'PUSH';
+    mode: "PUSH";
     subscribe?: Record<string, unknown>;
     unsubscribe?: Record<string, unknown>;
   }

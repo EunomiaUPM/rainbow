@@ -10,11 +10,9 @@ import { FormatDate } from "shared/src/components/ui/format-date";
 import { ArrowRight, Plus } from "lucide-react";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import { SubmitHandler } from "react-hook-form";
-import { useEffect } from "react";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
 import { formatUrn } from "shared/src/lib/utils";
-import Heading from "shared/src/components/ui/heading";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
@@ -41,13 +39,11 @@ function RouteComponent() {
   const { catalogId, datasetId } = Route.useParams();
   const { data: dataset } = useGetDatasetById(datasetId);
   const { data: distributions } = useGetDistributionsByDatasetId(datasetId);
-  const { data: policies } = useGetPoliciesByDatasetId(dataset.id);
+  const { data: policies } = useGetPoliciesByDatasetId(datasetId);
   const [open, setOpen] = useState(false);
   const { mutateAsync: createPolicyAsync } = usePostNewPolicyInDataset();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const participant = {
-    participant_type: "Provider",
-  };
+
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     await createPolicyAsync({
       api_gateway,
@@ -63,7 +59,11 @@ function RouteComponent() {
     <PageLayout>
       <PageHeader
         title="Dataset with id"
-        badge={<Badge variant="info" size="lg">{formatUrn(dataset.id)}</Badge>}
+        badge={
+          <Badge variant="info" size="lg">
+            {formatUrn(dataset.id)}
+          </Badge>
+        }
       />
       <InfoGrid>
         <PageSection>
@@ -121,7 +121,11 @@ function RouteComponent() {
                       dataserviceId: d.dcatAccessService,
                     }}
                   >
-                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                    >
                       See dataservice
                       <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
@@ -133,14 +137,17 @@ function RouteComponent() {
         />
       </PageSection>
 
-
       <PageSection
         title="ODRL Policies"
         className="mt-10"
         action={
           <Drawer direction={"right"} open={open} onOpenChange={(open) => setOpen(open)}>
             <DrawerTrigger asChild>
-              <Button variant="outline" size="sm" className="h-6 text-[10px] uppercase tracking-wide px-2 gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 text-[10px] uppercase tracking-wide px-2 gap-1"
+              >
                 <Plus className="h-3 w-3" />
                 Add Policy
               </Button>
@@ -168,7 +175,6 @@ function RouteComponent() {
               <PolicyWrapperShow
                 key={policy.id}
                 policy={policy}
-                participant={participant}
                 datasetId={dataset.id}
                 catalogId={undefined}
                 datasetName={dataset.dctTitle}
