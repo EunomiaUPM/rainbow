@@ -71,7 +71,7 @@ impl SsiAuthConfig {
     pub fn is_wallet_active(&self) -> bool {
         self.wallet_config.is_some()
     }
-    pub fn did(&self) -> DidConfig {
+    pub fn did_config(&self) -> DidConfig {
         self.did_config.clone()
     }
     pub fn vc_config(&self) -> VcConfig {

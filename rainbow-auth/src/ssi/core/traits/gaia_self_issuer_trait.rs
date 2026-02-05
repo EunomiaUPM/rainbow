@@ -85,7 +85,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
         };
 
         let mut iss_model = self.repo().issuing().get_by_token(&token).await?;
-        self.issuer().validate_cred_req(&mut iss_model, &payload, &token).await?;
+        self.issuer().validate_cred_req(&mut iss_model, &payload, &token, Some(did.clone())).await?;
         self.repo().issuing().update(iss_model).await?;
 
         self.gaia().issue_cred(&did).await
