@@ -53,6 +53,7 @@ const badgeVariants = cva(
         infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-white/10",
         role: "text-white uppercase border-white/10",
         status: "bg-opacity-30 border-white/10 text-foreground-300",
+        inactive: "bg-gray-700/50 text-gray-500 font-mono uppercase"
       },
 
       /**

@@ -55,19 +55,27 @@ const RouteComponent = () => {
             {
               header: "Title",
               accessorKey: "dctTitle",
-              cell: (c) => <p className="text-18">{c.dctTitle}</p>,
+              cell: (c) => <p className={c.dctTitle !== null ? `text-18` : `text-18 text-gray-300/60 italic`}>
+                {c.dctTitle !== null ? c.dctTitle : "Undefined"}
+                </p>,
             },
             {
               header: "Created at",
-              cell: (c) => <FormatDate date={c.dctIssued} />,
+              cell: (c) => <FormatDate date={c.dctIssued !== null ? c.dctIssued : "undefined"} />,
             },
             {
               header: "Catalog ID",
-              cell: (c) => <Badge variant="info">{formatUrn(c.id)}</Badge>,
+              cell: (c) => <Badge variant={c.id !== null ? "info" : "inactive"}>
+                {c.id !== null ? formatUrn(c.id) : "undefined"}
+                </Badge>,
             },
             {
               header: "Provider ID",
-              cell: (c) => <Badge variant="info">{formatUrn(c.dspaceParticipantId)}</Badge>,
+              cell: (c) => 
+              <Badge variant={c.dspaceParticipantId !== null ? "info" : "inactive"}>
+                {c.dspaceParticipantId !== null ? formatUrn(c.dspaceParticipantId) : "undefined"}
+                </Badge>
+       
             },
             {
               header: "Link",

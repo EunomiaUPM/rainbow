@@ -97,6 +97,9 @@ export const InfoList = ({ items, className }: InfoListProps) => {
     <div className={cn("min-w-full px-0", className)}>
       {items.map((item, index) => (
         <InfoListItem key={index} {...item} />
+
+        // if item = "null" -> poner unset / undefined
+       
       ))}
     </div>
   );
@@ -117,7 +120,9 @@ const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) 
   const renderValue = () => {
     // Plain string: wrap in info badge
     if (typeof value === "string") {
-      return <Badge variant="info">{value}</Badge>;
+      console.log(value, " valor")
+      return <Badge variant="info">{value !== null ? value : "undefined"}
+      </Badge>;
     }
 
     // Typed objects: render based on type
@@ -127,24 +132,30 @@ const InfoListItem = ({ label, value, className, keyClassName }: InfoItemProps) 
 
       switch (value.type) {
         case "date":
-          return <p>{dayjs(value.value).format("DD/MM/YY HH:mm")}</p>;
+          return <p>
+            {value.value !== null ? dayjs(value.value).format("DD/MM/YY HH:mm") : "undefined"}
+            </p>;
 
         case "status":
           return (
-            <Badge variant="status" state={value.value as BadgeState}>
-              {value.value}
+            <Badge variant={value.value !== null ? "status" : "inactive"} state={value.value as BadgeState}>
+              {value.value !== null ? value.value : "undefined"}
             </Badge>
           );
 
         case "role":
           return (
-            <Badge variant="role" dsrole={value.value as BadgeRole}>
-              {value.value}
+            <Badge variant={value.value !== null ? "role" : "inactive"} dsrole={value.value as BadgeRole}>
+             {value.value !== null ? value.value : "undefined"}
             </Badge>
           );
 
         case "urn":
-          return <Badge variant="info">{formatUrn(value.value)}</Badge>;
+          return <Badge variant={value.value !== null ? "info" : "inactive"}>
+            {value.value !== null ? formatUrn(value.value) : "undefined"}
+            </Badge>;
+
+
 
         default:
           return null;
