@@ -63,10 +63,7 @@ export interface PolicyWrapperEditProps {
  * @param props - PolicyWrapperEdit properties
  * @returns A complete policy editing interface
  */
-export const PolicyWrapperEdit = ({
-  policy,
-  onChange,
-}: PolicyWrapperEditProps) => {
+export const PolicyWrapperEdit = ({ policy, onChange }: PolicyWrapperEditProps) => {
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
@@ -102,7 +99,7 @@ export const PolicyWrapperEdit = ({
         return newPolicy;
       });
     },
-    [onChange]
+    [onChange],
   );
 
   // ---------------------------------------------------------------------------
@@ -121,7 +118,7 @@ export const PolicyWrapperEdit = ({
         [componentType]: [...prev[componentType], newComponent],
       }));
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   /** Remove a policy component by index */
@@ -132,7 +129,7 @@ export const PolicyWrapperEdit = ({
         [componentType]: prev[componentType].filter((_, i) => i !== index),
       }));
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   /** Add a constraint to a policy component */
@@ -150,28 +147,22 @@ export const PolicyWrapperEdit = ({
         return { ...prev, [componentType]: updated };
       });
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   /** Remove a constraint from a policy component */
   const handleRemoveConstraint = useCallback(
-    (
-      componentType: ComponentType,
-      componentIndex: number,
-      constraintIndex: number
-    ) => {
+    (componentType: ComponentType, componentIndex: number, constraintIndex: number) => {
       updatePolicyAndNotify((prev) => {
         const updated = [...prev[componentType]];
         updated[componentIndex] = {
           ...updated[componentIndex],
-          constraint: updated[componentIndex].constraint.filter(
-            (_, i) => i !== constraintIndex
-          ),
+          constraint: updated[componentIndex].constraint.filter((_, i) => i !== constraintIndex),
         };
         return { ...prev, [componentType]: updated };
       });
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   /** Update a policy component's action */
@@ -183,7 +174,7 @@ export const PolicyWrapperEdit = ({
         return { ...prev, [componentType]: updated };
       });
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   /** Update a constraint's operand value */
@@ -193,7 +184,7 @@ export const PolicyWrapperEdit = ({
       componentIndex: number,
       constraintIndex: number,
       operand: OperandType,
-      value: string
+      value: string,
     ) => {
       updatePolicyAndNotify((prev) => {
         const updated = [...prev[componentType]];
@@ -209,7 +200,7 @@ export const PolicyWrapperEdit = ({
         return { ...prev, [componentType]: updated };
       });
     },
-    [updatePolicyAndNotify]
+    [updatePolicyAndNotify],
   );
 
   // ---------------------------------------------------------------------------

@@ -2,7 +2,11 @@ import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { formatUrn } from "shared/src/lib/utils";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import { getCatalogsByIdOptions, getDatasetsByCatalogIdOptions, getDataServicesByCatalogIdOptions } from "shared/src/data/catalog-queries.ts";
+import {
+  getCatalogsByIdOptions,
+  getDatasetsByCatalogIdOptions,
+  getDataServicesByCatalogIdOptions,
+} from "shared/src/data/catalog-queries.ts";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -25,7 +29,6 @@ export const Route = createFileRoute("/catalog/$catalogId")({
 function RouteComponent() {
   const { catalogId } = Route.useParams();
   const routerState = useRouterState();
-
 
   const catalogIdURL = "/catalog/" + catalogId.replace(/:/g, "%3A");
 

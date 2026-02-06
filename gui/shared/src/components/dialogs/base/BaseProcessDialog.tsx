@@ -42,13 +42,7 @@ import { useForm, UseFormReturn, FieldValues, DefaultValues } from "react-hook-f
 // TYPES
 // =============================================================================
 
-export type ButtonVariant =
-  | "default"
-  | "destructive"
-  | "outline"
-  | "secondary"
-  | "ghost"
-  | "link";
+export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 
 export interface BaseProcessDialogProps<TFormValues extends FieldValues = FieldValues> {
   /** Dialog title displayed in the header */
@@ -135,18 +129,14 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
   // Render description as string or ReactNode
   const renderDescription = () => {
     if (typeof description === "string") {
-      return (
-        <span className="max-w-full flex flex-wrap">
-          {description}
-        </span>
-      );
+      return <span className="max-w-full flex flex-wrap">{description}</span>;
     }
     return description;
   };
 
   // Filter out undefined info items
   const filteredInfoItems = infoItems.filter(
-    (item): item is InfoItemProps => item !== undefined && item.value !== undefined
+    (item): item is InfoItemProps => item !== undefined && item.value !== undefined,
   );
 
   // Scrollable layout for dialogs with lots of content
@@ -201,9 +191,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
       </DialogHeader>
 
       {beforeInfoContent}
-      {!hideInfoList && filteredInfoItems.length > 0 && (
-        <InfoList items={filteredInfoItems} />
-      )}
+      {!hideInfoList && filteredInfoItems.length > 0 && <InfoList items={filteredInfoItems} />}
       {formFields}
       {afterInfoContent}
 

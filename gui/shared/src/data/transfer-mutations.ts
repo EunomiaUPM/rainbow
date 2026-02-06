@@ -1,5 +1,6 @@
-import {useMutation} from "@tanstack/react-query";
-import {useRouter} from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
+import { TransferDSPService } from "./api/dsp/transfer";
 
 /**
  *  POST /negotiation/rpc/setup-request
@@ -16,39 +17,25 @@ export interface TransferRPCProviderStartBody {
 export const postTransferRPCRequest = async (
   body: TransferRPCProviderStartBody | TransferRPCConsumerStartBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/transfers/rpc/setup-request`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return {providerPid: rpc_response.providerPid};
+  return TransferDSPService.setupRequest({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostTransferRPCRequest = () => {
   const router = useRouter();
-  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
     mutationFn: postTransferRPCRequest,
-    onMutate: async () => {
-    },
+    onMutate: async () => {},
     onError: (error) => {
       console.log("onError");
       console.log(error);
     },
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
-      await router.navigate({to: `/transfer-process`});
+      await router.navigate({ to: `/transfer-process` });
     },
-    onSettled: () => {
-    },
+    onSettled: () => {},
   });
-  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
+  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
 };
 
 /**
@@ -78,26 +65,13 @@ export interface TransferRPCConsumerStartBody {
 export const postTransferRPCStart = async (
   body: TransferRPCProviderStartBody | TransferRPCConsumerStartBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/transfers/rpc/setup-start`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify((body as any).content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return {providerPid: rpc_response.providerPid};
+  return TransferDSPService.setupStart({ api_gateway: body.api_gateway }, (body as any).content);
 };
 
 export const usePostTransferRPCStart = () => {
-  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
     mutationFn: postTransferRPCStart,
-    onMutate: async () => {
-    },
+    onMutate: async () => {},
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -105,10 +79,9 @@ export const usePostTransferRPCStart = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {
-    },
+    onSettled: () => {},
   });
-  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
+  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
 };
 
 /**
@@ -136,26 +109,13 @@ export interface TransferRPCConsumerSuspensionBody {
 export const postTransferRPCSuspension = async (
   body: TransferRPCProviderSuspensionBody | TransferRPCConsumerSuspensionBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/transfers/rpc/setup-suspension`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return {providerPid: rpc_response.providerPid};
+  return TransferDSPService.setupSuspension({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostTransferRPCSuspension = () => {
-  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
     mutationFn: postTransferRPCSuspension,
-    onMutate: async () => {
-    },
+    onMutate: async () => {},
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -163,10 +123,9 @@ export const usePostTransferRPCSuspension = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {
-    },
+    onSettled: () => {},
   });
-  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
+  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
 };
 
 /**
@@ -194,26 +153,13 @@ export interface TransferRPCConsumerCompletionBody {
 export const postTransferRPCCompletion = async (
   body: TransferRPCProviderCompletionBody | TransferRPCConsumerCompletionBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/transfers/rpc/setup-completion`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return {providerPid: rpc_response.providerPid};
+  return TransferDSPService.setupCompletion({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostTransferRPCCompletion = () => {
-  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
     mutationFn: postTransferRPCCompletion,
-    onMutate: async () => {
-    },
+    onMutate: async () => {},
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -221,10 +167,9 @@ export const usePostTransferRPCCompletion = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {
-    },
+    onSettled: () => {},
   });
-  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
+  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
 };
 
 /**
@@ -252,26 +197,13 @@ export interface TransferRPCConsumerTerminationBody {
 export const postTransferRPCTermination = async (
   body: TransferRPCProviderTerminationBody | TransferRPCConsumerTerminationBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/transfers/rpc/setup-termination`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return {providerPid: rpc_response.providerPid};
+  return TransferDSPService.setupTermination({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostTransferRPCTermination = () => {
-  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
     mutationFn: postTransferRPCTermination,
-    onMutate: async () => {
-    },
+    onMutate: async () => {},
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -279,8 +211,7 @@ export const usePostTransferRPCTermination = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {
-    },
+    onSettled: () => {},
   });
-  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
+  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
 };

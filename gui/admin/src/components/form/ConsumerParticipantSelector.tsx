@@ -7,11 +7,7 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "shared/src/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover";
 import { Button } from "shared/src/components/ui/button";
 import { ChevronsUpDown } from "lucide-react";
 import {
@@ -59,8 +55,7 @@ export const ConsumerParticipantSelector = ({
                     className="w-full justify-between font-normal text-gray-300 transition-colors"
                   >
                     {field.value
-                      ? participants.find((p) => p.participant_id === field.value)
-                        ?.participant_id
+                      ? participants.find((p) => p.participant_id === field.value)?.participant_id
                       : "Select participant..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
                   </Button>

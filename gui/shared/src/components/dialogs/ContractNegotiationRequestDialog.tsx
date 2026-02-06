@@ -104,10 +104,7 @@ export const ContractNegotiationRequestDialog = ({
       <Heading level="h6" className="mb-2">
         New Policy Request
       </Heading>
-      <PolicyWrapperEdit
-        policy={lastOffer.offer_content}
-        onChange={setCurrentPolicy}
-      />
+      <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
     </div>
   ) : null;
 

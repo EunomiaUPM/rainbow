@@ -82,8 +82,6 @@ function RouteComponent() {
           catalogId={undefined}
           datasetName={agreement.agreementContent.target}
         />
-
-
       </InfoGrid>
     </PageLayout>
   );

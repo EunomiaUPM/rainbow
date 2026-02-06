@@ -104,10 +104,7 @@ export const ContractNegotiationOfferDialog = ({
       <Heading level="h6" className="mb-2">
         Counter Offer Policy
       </Heading>
-      <PolicyWrapperEdit
-        policy={lastOffer.offer_content}
-        onChange={setCurrentPolicy}
-      />
+      <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
     </div>
   ) : null;
 

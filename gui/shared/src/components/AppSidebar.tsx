@@ -147,9 +147,7 @@ export function AppSidebar() {
                     <Link
                       to={item.url}
                       className={
-                        routerState.location.pathname === item.url
-                          ? "bg-white/10 text-white"
-                          : ""
+                        routerState.location.pathname === item.url ? "bg-white/10 text-white" : ""
                       }
                     >
                       <item.icon />

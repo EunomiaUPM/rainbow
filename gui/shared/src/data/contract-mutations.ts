@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
+import { NegotiationService } from "./api/dsp/negotiation";
 
 /**
  *  POST /negotiation/rpc/setup-request
@@ -8,7 +9,7 @@ export interface ContractNegotiationRPCProviderRequestBody {
   api_gateway: string;
   content: {
     providerParticipantId: UUID;
-    offer: OdrlOffer;
+    offer: any; // OdrlOffer
     consumerPid?: UUID;
     providerPid?: UUID;
   };
@@ -17,19 +18,7 @@ export interface ContractNegotiationRPCProviderRequestBody {
 export const postContractNegotiationRPCRequest = async (
   body: ContractNegotiationRPCProviderRequestBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-request`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupRequest({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCRequest = () => {
@@ -56,7 +45,7 @@ export interface ContractNegotiationRPCProviderOfferBody {
   api_gateway: string;
   content: {
     consumerParticipantId: UUID;
-    offer: OdrlOffer;
+    offer: any; // OdrlOffer
     consumerPid: UUID;
     providerPid: UUID;
   };
@@ -65,19 +54,7 @@ export interface ContractNegotiationRPCProviderOfferBody {
 export const postContractNegotiationRPCOffer = async (
   body: ContractNegotiationRPCProviderOfferBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-offer`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupOffer({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCOffer = () => {
@@ -113,19 +90,7 @@ export interface ContractNegotiationRPCProviderAcceptanceBody {
 export const postContractNegotiationRPCAcceptance = async (
   body: ContractNegotiationRPCProviderAcceptanceBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-acceptance`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupAcceptance({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCAcceptance = () => {
@@ -161,19 +126,7 @@ export interface ContractNegotiationRPCProviderAgreementBody {
 export const postContractNegotiationRPCAgreement = async (
   body: ContractNegotiationRPCProviderAgreementBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-agreement`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupAgreement({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCAgreement = () => {
@@ -210,19 +163,7 @@ export interface ContractNegotiationRPCProviderVerificationBody {
 export const postContractNegotiationRPCVerification = async (
   body: ContractNegotiationRPCProviderVerificationBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-verification`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupVerification({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCVerification = () => {
@@ -259,19 +200,7 @@ export interface ContractNegotiationRPCProviderFinalizationBody {
 export const postContractNegotiationRPCFinalization = async (
   body: ContractNegotiationRPCProviderFinalizationBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-finalization`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupFinalization({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCFinalization = () => {
@@ -319,19 +248,7 @@ export const postContractNegotiationRPCTermination = async (
     | ContractNegotiationRPCProviderTerminationBody
     | ContractNegotiationRPCConsumerTerminationBody,
 ) => {
-  let rpc_response = await (
-    await fetch(body.api_gateway + `/negotiations/rpc/setup-termination`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body.content),
-      method: "POST",
-    })
-  ).json();
-  if (rpc_response.error) {
-    throw new Error(rpc_response.error);
-  }
-  return { providerPid: rpc_response.providerPid };
+  return NegotiationService.setupTermination({ api_gateway: body.api_gateway }, body.content);
 };
 
 export const usePostContractNegotiationRPCTermination = () => {

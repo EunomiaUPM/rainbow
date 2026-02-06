@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DatasetEntityService } from "./api/entities";
 
 /**
  *  POST /datasets/{datasetId}/policies
@@ -16,16 +17,7 @@ export const postNewPolicyInDataset = async ({
   datasetId,
   api_gateway,
 }: PostPolicyPayload) => {
-  const policies: OdrlOffer = await (
-    await fetch(api_gateway + `/datasets/${datasetId}/policies`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: content.offer,
-      method: "POST",
-    })
-  ).json();
-  return policies;
+  return DatasetEntityService.addPolicy({ api_gateway }, datasetId, content.offer);
 };
 
 export const usePostNewPolicyInDataset = () => {

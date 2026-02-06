@@ -47,9 +47,15 @@ function RouteComponent() {
           <div className="max-w-screen-md bg-green-500/0">
             <InfoList
               items={[
-                { label: "Participant ID", value: { type: "urn", value: participant.participant_id } },
+                {
+                  label: "Participant ID",
+                  value: { type: "urn", value: participant.participant_id },
+                },
                 { label: "Identity Token", value: { type: "urn", value: participant.token } },
-                { label: "Participant Type", value: { type: "role", value: participant.participant_type } },
+                {
+                  label: "Participant Type",
+                  value: { type: "role", value: participant.participant_type },
+                },
                 { label: "Base URL", value: { type: "urn", value: participant.base_url } },
               ]}
             />

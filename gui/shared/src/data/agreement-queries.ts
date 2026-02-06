@@ -1,15 +1,13 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import { AgreementEntityService } from "./api/entities/agreement";
 
 /**
  *  GET /contract-negotiation/agreements
  * */
 export const getAgreements = async (api_gateway: string) => {
-  const catalogs: NegotiationAgreement[] = await (
-    await fetch(api_gateway + "/negotiations/agreements")
-  ).json();
-  return catalogs;
+  return AgreementEntityService.getAgreements({ api_gateway });
 };
 
 export const getAgreementsOptions = (api_gateway: string) =>
@@ -28,10 +26,7 @@ export const useGetAgreements = () => {
  *  GET /contract-negotiation/agreements
  * */
 export const getAgreementById = async (api_gateway: string, agreementId: UUID) => {
-  const catalogs: NegotiationAgreement = await (
-    await fetch(api_gateway + `/negotiations/agreements/${agreementId}`)
-  ).json();
-  return catalogs;
+  return AgreementEntityService.getAgreementById({ api_gateway }, agreementId);
 };
 
 export const getAgreementByIdOptions = (api_gateway: string, agreementId: UUID) =>

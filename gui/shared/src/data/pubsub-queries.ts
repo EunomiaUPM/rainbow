@@ -1,6 +1,6 @@
-import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
-import {useContext} from "react";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useContext } from "react";
+import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
 
 /**
  *  GET /catalog/subscriptions
@@ -17,11 +17,11 @@ export const getSubscriptionsOptions = (api_gateway: string) =>
   });
 
 export const useGetAgreements = () => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getSubscriptionsOptions(api_gateway),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };
 
 /**
@@ -41,11 +41,11 @@ export const getSubscriptionByIdOptions = (api_gateway: string, subscriptionId: 
   });
 
 export const useGetSubscriptionById = (subscriptionId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getSubscriptionByIdOptions(api_gateway, subscriptionId),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };
 
 /**
@@ -68,11 +68,11 @@ export const getSubscriptionByCallbackAddressOptions = (api_gateway: string, cal
   });
 
 export const useGetSubscriptionByCallbackAddress = (callbackUrl: string) => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getSubscriptionByCallbackAddressOptions(api_gateway, callbackUrl),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };
 
 /**
@@ -98,11 +98,11 @@ export const getNotificationsBySubscriptionIdOptions = (
   });
 
 export const useGetNotificationsBySubscriptionId = (subscriptionId: string) => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getNotificationsBySubscriptionIdOptions(api_gateway, subscriptionId),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };
 
 /**
@@ -128,9 +128,9 @@ export const getPendingNotificationsBySubscriptionIdOptions = (
   });
 
 export const useGetPendingNotificationsBySubscriptionId = (subscriptionId: string) => {
-  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const {data, isLoading, isError, error} = useSuspenseQuery(
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { data, isLoading, isError, error } = useSuspenseQuery(
     getPendingNotificationsBySubscriptionIdOptions(api_gateway, subscriptionId),
   );
-  return {data, isLoading, isError, error};
+  return { data, isLoading, isError, error };
 };

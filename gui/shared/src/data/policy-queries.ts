@@ -1,15 +1,13 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import { DatasetEntityService, PolicyEntityService } from "./api/entities";
 
 /**
  *  GET /datasets/{datasetId}/policies
  * */
 export const getPoliciesByDatasetId = async (api_gateway: string, datasetId: UUID) => {
-  const policies: OdrlOffer[] = await (
-    await fetch(api_gateway + `/odrl-policies/entity/${datasetId}`)
-  ).json();
-  return policies;
+  return PolicyEntityService.getPoliciesByEntityId({ api_gateway }, datasetId);
 };
 
 export const getPoliciesByDatasetIdOptions = (api_gateway: string, datasetId: UUID) =>
@@ -41,9 +39,7 @@ export const deletePolicyInDataset = async ({
   datasetId,
   policyId,
 }: DeletePolicyPayload) => {
-  await fetch(api_gateway + `/datasets/${datasetId}/policies/${policyId}`, {
-    method: "DELETE",
-  });
+  return DatasetEntityService.deletePolicy({ api_gateway }, datasetId, policyId);
 };
 
 export const useDeletePolicyInDataset = () => {

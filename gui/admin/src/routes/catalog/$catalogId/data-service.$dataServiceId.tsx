@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useGetDataServiceById, getDataServiceByIdOptions } from "shared/src/data/catalog-queries.ts";
+import {
+  useGetDataServiceById,
+  getDataServiceByIdOptions,
+} from "shared/src/data/catalog-queries.ts";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
@@ -17,7 +20,11 @@ function RouteComponent() {
     <PageLayout>
       <PageHeader
         title="Data service info with id"
-        badge={<Badge variant="info" size="lg">{formatUrn(dataService.id)}</Badge>}
+        badge={
+          <Badge variant="info" size="lg">
+            {formatUrn(dataService.id)}
+          </Badge>
+        }
       />
       <InfoGrid>
         <PageSection>

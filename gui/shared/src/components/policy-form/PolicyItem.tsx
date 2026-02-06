@@ -98,12 +98,7 @@ export const PolicyItem: FC<PolicyItemProps> = ({
         {/* Header with action label and remove button */}
         <div className="flex justify-between">
           <p className="mb-2">Action:</p>
-          <Button
-            variant="icon_destructive"
-            size="xs"
-            className="ml-4"
-            onClick={onRemove}
-          >
+          <Button variant="icon_destructive" size="xs" className="ml-4" onClick={onRemove}>
             <Trash className="mb-0.5" />
             Remove {typeLabel}
           </Button>
@@ -138,12 +133,7 @@ export const PolicyItem: FC<PolicyItemProps> = ({
         ))}
 
         {/* Add constraint button */}
-        <Button
-          size="xs"
-          variant="outline"
-          className="mt-3"
-          onClick={onAddConstraint}
-        >
+        <Button size="xs" variant="outline" className="mt-3" onClick={onAddConstraint}>
           <Plus />
           Add constraint
         </Button>

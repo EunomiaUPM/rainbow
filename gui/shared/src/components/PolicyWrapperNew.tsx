@@ -39,9 +39,7 @@ export const PolicyWrapperNew: FC<{
             triggerStyles="bg-success-400/25"
             onAdd={() => addComponent("permission")}
             onRemove={(index) => removeComponent("permission", index)}
-            onUpdateAction={(index, value) =>
-              updateField("permission", index, value)
-            }
+            onUpdateAction={(index, value) => updateField("permission", index, value)}
             onAddConstraint={(index) => addConstraint("permission", index)}
             onRemoveConstraint={(itemIndex, constraintIndex) =>
               removeConstraint("permission", itemIndex, constraintIndex)
@@ -60,9 +58,7 @@ export const PolicyWrapperNew: FC<{
             triggerStyles="bg-warn-400/25"
             onAdd={() => addComponent("obligation")}
             onRemove={(index) => removeComponent("obligation", index)}
-            onUpdateAction={(index, value) =>
-              updateField("obligation", index, value)
-            }
+            onUpdateAction={(index, value) => updateField("obligation", index, value)}
             onAddConstraint={(index) => addConstraint("obligation", index)}
             onRemoveConstraint={(itemIndex, constraintIndex) =>
               removeConstraint("obligation", itemIndex, constraintIndex)
@@ -81,9 +77,7 @@ export const PolicyWrapperNew: FC<{
             triggerStyles="bg-danger-500/25"
             onAdd={() => addComponent("prohibition")}
             onRemove={(index) => removeComponent("prohibition", index)}
-            onUpdateAction={(index, value) =>
-              updateField("prohibition", index, value)
-            }
+            onUpdateAction={(index, value) => updateField("prohibition", index, value)}
             onAddConstraint={(index) => addConstraint("prohibition", index)}
             onRemoveConstraint={(itemIndex, constraintIndex) =>
               removeConstraint("prohibition", itemIndex, constraintIndex)

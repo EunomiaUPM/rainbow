@@ -74,9 +74,7 @@ const TRANSFER_PROTOCOLS = ["http", "kafka", "ftp"] as const;
  * - Protocol selection (HTTP/Kafka/FTP)
  * - Agreement information display
  */
-export const TransferProcessRequestDialog = ({
-  agreement,
-}: TransferProcessRequestDialogProps) => {
+export const TransferProcessRequestDialog = ({ agreement }: TransferProcessRequestDialogProps) => {
   const { mutateAsync: requestAsync } = usePostTransferRPCRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 

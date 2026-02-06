@@ -1,15 +1,18 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {
+  CatalogEntityService,
+  DataServiceEntityService,
+  DatasetEntityService,
+  DistributionEntityService,
+} from "./api/entities";
 
 /**
  *  GET /catalogs
  * */
 export const getCatalogs = async (api_gateway: string, mainCatalog: boolean = true) => {
-  const catalogs: Catalog[] = await (
-    await fetch(api_gateway + "/catalogs?with_main_catalog=" + mainCatalog)
-  ).json();
-  return catalogs;
+  return CatalogEntityService.getCatalogs({ api_gateway }, mainCatalog);
 };
 
 export const getCatalogsOptions = (api_gateway: string, mainCatalog: boolean = true) =>
@@ -30,8 +33,7 @@ export const useGetCatalogs = (mainCatalog: boolean = true) => {
  *  GET /catalogs/main
  * */
 export const getMainCatalogs = async (api_gateway: string) => {
-  const catalogs: Catalog = await (await fetch(api_gateway + "/catalogs/main")).json();
-  return catalogs;
+  return CatalogEntityService.getMainCatalogs({ api_gateway });
 };
 
 export const getMainCatalogsOptions = (api_gateway: string) =>
@@ -50,8 +52,7 @@ export const useGetMainCatalogs = () => {
  *  GET /catalogs/{catalogId}
  * */
 export const getCatalogsById = async (api_gateway: string, catalogId: UUID) => {
-  const catalog: Catalog = await (await fetch(api_gateway + `/catalogs/${catalogId}`)).json();
-  return catalog;
+  return CatalogEntityService.getCatalogById({ api_gateway }, catalogId);
 };
 
 export const getCatalogsByIdOptions = (api_gateway: string, catalogId: UUID) =>
@@ -73,10 +74,7 @@ export const useGetCatalogsById = (catalogId: UUID) => {
  *  GET /catalogs/{catalogId}/datasets
  * */
 export const getDatasetsByCatalogId = async (api_gateway: string, catalogId: UUID) => {
-  const catalog: Dataset[] = await (
-    await fetch(api_gateway + `/datasets/catalog/${catalogId}`)
-  ).json();
-  return catalog;
+  return DatasetEntityService.getDatasetsByCatalogId({ api_gateway }, catalogId);
 };
 
 export const getDatasetsByCatalogIdOptions = (api_gateway: string, catalogId: UUID) =>
@@ -98,10 +96,7 @@ export const useGetDatasetsByCatalogId = (catalogId: UUID) => {
  *  GET /catalogs/{catalogId}/data-services
  * */
 export const getDataServicesByCatalogId = async (api_gateway: string, catalogId: UUID) => {
-  const catalog: DataService[] = await (
-    await fetch(api_gateway + `/data-services/catalog/${catalogId}`)
-  ).json();
-  return catalog;
+  return DataServiceEntityService.getDataServicesByCatalogId({ api_gateway }, catalogId);
 };
 
 export const getDataServicesByCatalogIdOptions = (api_gateway: string, catalogId: UUID) =>
@@ -123,8 +118,7 @@ export const useGetDataServicesByCatalogId = (catalogId: UUID) => {
  *  GET /datasets/{datasetId}
  * */
 export const getDatasetById = async (api_gateway: string, datasetId: UUID) => {
-  const catalog: Dataset = await (await fetch(api_gateway + `/datasets/${datasetId}`)).json();
-  return catalog;
+  return DatasetEntityService.getDatasetById({ api_gateway }, datasetId);
 };
 
 export const getDatasetByIdOptions = (api_gateway: string, datasetId: UUID) =>
@@ -146,10 +140,7 @@ export const useGetDatasetById = (datasetId: UUID) => {
  *  GET /datasets/{catalogId}/distributions
  * */
 export const getDistributionsByDatasetId = async (api_gateway: string, datasetId: UUID) => {
-  const catalog: Distribution[] = await (
-    await fetch(api_gateway + `/distributions/dataset/${datasetId}`)
-  ).json();
-  return catalog;
+  return DistributionEntityService.getDistributionsByDatasetId({ api_gateway }, datasetId);
 };
 
 export const getDistributionsByDatasetIdOptions = (api_gateway: string, datasetId: UUID) =>
@@ -171,8 +162,7 @@ export const useGetDistributionsByDatasetId = (datasetId: UUID) => {
  *  GET /datasets/{catalogId}/distributions
  * */
 export const getDistributionById = async (api_gateway: string, id: UUID) => {
-  const catalog: Distribution = await (await fetch(api_gateway + `/distributions/${id}`)).json();
-  return catalog;
+  return DistributionEntityService.getDistributionById({ api_gateway }, id);
 };
 
 export const getDistributionByIdOptions = (api_gateway: string, id: UUID) =>
@@ -194,10 +184,7 @@ export const useGetDistributionById = (id: UUID) => {
  *  GET /data-services/{dataServiceId}
  * */
 export const getDataServiceById = async (api_gateway: string, dataServiceId: UUID) => {
-  const catalog: DataService = await (
-    await fetch(api_gateway + `/data-services/${dataServiceId}`)
-  ).json();
-  return catalog;
+  return DataServiceEntityService.getDataServiceById({ api_gateway }, dataServiceId);
 };
 
 export const getDataServiceByIdOptions = (api_gateway: string, dataServiceId: UUID) =>

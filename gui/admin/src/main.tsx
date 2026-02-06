@@ -5,7 +5,10 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { AuthContextProvider } from "shared/src/context/AuthContext.tsx";
-import { GlobalInfoContextProvider, GlobalInfoContext } from "shared/src/context/GlobalInfoContext.tsx";
+import {
+  GlobalInfoContextProvider,
+  GlobalInfoContext,
+} from "shared/src/context/GlobalInfoContext.tsx";
 
 /**
  * Global QueryClient instance.
@@ -25,8 +28,8 @@ const router = createRouter({
 
 const App = () => {
   const globalInfo = useContext(GlobalInfoContext);
-  return <RouterProvider router={router} context={{ api_gateway: globalInfo!.api_gateway }} />
-}
+  return <RouterProvider router={router} context={{ api_gateway: globalInfo!.api_gateway }} />;
+};
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <GlobalInfoContextProvider>

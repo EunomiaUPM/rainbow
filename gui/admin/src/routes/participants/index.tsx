@@ -131,10 +131,7 @@ function RouteComponent() {
           {
             header: "Link",
             cell: (p) => (
-              <Link
-                to="/participants/$participantId"
-                params={{ participantId: p.participant_id }}
-              >
+              <Link to="/participants/$participantId" params={{ participantId: p.participant_id }}>
                 <Button variant="link">
                   See details
                   <ArrowRight />

@@ -13,7 +13,15 @@
  * - React Query cache invalidation for real-time UI updates
  */
 
-import { createContext, ReactNode, useContext, useEffect, useState, useCallback, useRef } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { useGetSubscriptionByCallbackAddress } from "../data/pubsub-queries";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
@@ -72,7 +80,7 @@ const WS_RECONNECT_INTERVAL_MS = 1000;
 function upsertInList<T>(
   oldData: T[] | undefined,
   newItem: T,
-  matchFn: (item: T) => boolean
+  matchFn: (item: T) => boolean,
 ): T[] | undefined {
   if (!oldData) return undefined;
 
@@ -100,7 +108,7 @@ function upsertInList<T>(
 function updateInList<T>(
   oldData: T[] | undefined,
   newItem: T,
-  matchFn: (item: T) => boolean
+  matchFn: (item: T) => boolean,
 ): T[] | undefined {
   if (!oldData) return undefined;
 
@@ -121,20 +129,15 @@ function updateInList<T>(
 function handleContractNegotiationProcess(
   queryClient: QueryClient,
   process: CNProcess,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   // Update the list view cache
-  queryClient.setQueryData(
-    [QUERY_KEYS.CN_PROCESSES],
-    (oldData: CNProcess[] | undefined) =>
-      updateInList(oldData, process, (d) => d.provider_id === process.provider_id)
+  queryClient.setQueryData([QUERY_KEYS.CN_PROCESSES], (oldData: CNProcess[] | undefined) =>
+    updateInList(oldData, process, (d) => d.provider_id === process.provider_id),
   );
 
   // Update the single item cache
-  queryClient.setQueryData(
-    [QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id],
-    process
-  );
+  queryClient.setQueryData([QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id], process);
 
   // Refetch related messages to show new activity
   queryClient.refetchQueries({
@@ -151,19 +154,14 @@ function handleContractNegotiationProcess(
 function handleContractRequestMessage(
   queryClient: QueryClient,
   process: CNProcess,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   // Contract requests may create new processes, so we use upsert
-  queryClient.setQueryData(
-    [QUERY_KEYS.CN_PROCESSES],
-    (oldData: CNProcess[] | undefined) =>
-      upsertInList(oldData, process, (d) => d.provider_id === process.provider_id)
+  queryClient.setQueryData([QUERY_KEYS.CN_PROCESSES], (oldData: CNProcess[] | undefined) =>
+    upsertInList(oldData, process, (d) => d.provider_id === process.provider_id),
   );
 
-  queryClient.setQueryData(
-    [QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id],
-    process
-  );
+  queryClient.setQueryData([QUERY_KEYS.CN_PROCESS_BY_ID, process.cn_process_id], process);
 
   queryClient.refetchQueries({
     queryKey: [QUERY_KEYS.CN_MESSAGES_BY_ID, process.cn_process_id],
@@ -179,20 +177,17 @@ function handleContractRequestMessage(
 function handleTransferProcess(
   queryClient: QueryClient,
   process: TransferProcess,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   // Update the list view cache
   queryClient.setQueryData(
     [QUERY_KEYS.TRANSFER_PROCESSES],
     (oldData: TransferProcess[] | undefined) =>
-      updateInList(oldData, process, (d) => d.provider_pid === process.provider_pid)
+      updateInList(oldData, process, (d) => d.provider_pid === process.provider_pid),
   );
 
   // Update the single item cache
-  queryClient.setQueryData(
-    [QUERY_KEYS.TRANSFER_PROCESS_BY_ID, process.provider_pid],
-    process
-  );
+  queryClient.setQueryData([QUERY_KEYS.TRANSFER_PROCESS_BY_ID, process.provider_pid], process);
 
   // Refetch related messages
   queryClient.refetchQueries({
@@ -209,15 +204,12 @@ function handleTransferProcess(
 function handleParticipantCreation(
   queryClient: QueryClient,
   participant: Participant,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
-  queryClient.setQueryData(
-    [QUERY_KEYS.PARTICIPANTS],
-    (oldData: Participant[] | undefined) => {
-      if (!oldData) return undefined;
-      return [...oldData, participant];
-    }
-  );
+  queryClient.setQueryData([QUERY_KEYS.PARTICIPANTS], (oldData: Participant[] | undefined) => {
+    if (!oldData) return undefined;
+    return [...oldData, participant];
+  });
 
   setHighlight(participant.participant_id);
 }
@@ -261,7 +253,7 @@ const TRANSFER_PROCESS_SUBCATEGORIES = new Set([
 function dispatchNotification(
   notification: NotificationSub,
   queryClient: QueryClient,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   const { category, subcategory, messageOperation, messageContent } = notification;
 
@@ -272,7 +264,7 @@ function dispatchNotification(
         messageOperation,
         messageContent,
         queryClient,
-        setHighlight
+        setHighlight,
       );
       break;
 
@@ -281,12 +273,7 @@ function dispatchNotification(
       break;
 
     case "TransferProcess":
-      handleTransferProcessCategory(
-        subcategory,
-        messageContent,
-        queryClient,
-        setHighlight
-      );
+      handleTransferProcessCategory(subcategory, messageContent, queryClient, setHighlight);
       break;
 
     default:
@@ -302,7 +289,7 @@ function handleContractNegotiationCategory(
   messageOperation: string,
   messageContent: any,
   queryClient: QueryClient,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   // Handle Participant subcategory separately
   if (subcategory === "Participant") {
@@ -324,7 +311,11 @@ function handleContractNegotiationCategory(
 
   // Handle all other CN process subcategories with unified logic
   if (CN_PROCESS_SUBCATEGORIES.has(subcategory)) {
-    handleContractNegotiationProcess(queryClient, messageContent.process as CNProcess, setHighlight);
+    handleContractNegotiationProcess(
+      queryClient,
+      messageContent.process as CNProcess,
+      setHighlight,
+    );
     console.log(`${subcategory} Notification:`, messageContent);
     return;
   }
@@ -336,11 +327,14 @@ function handleContractNegotiationCategory(
  * Handles all Catalog category notifications.
  * Currently just logs them - extend as needed.
  */
-function handleCatalogCategory(
-  subcategory: string,
-  notification: NotificationSub
-): void {
-  const catalogSubcategories = ["Catalog", "Dataset", "DataService", "Distribution", "DatasetPolicies"];
+function handleCatalogCategory(subcategory: string, notification: NotificationSub): void {
+  const catalogSubcategories = [
+    "Catalog",
+    "Dataset",
+    "DataService",
+    "Distribution",
+    "DatasetPolicies",
+  ];
 
   if (catalogSubcategories.includes(subcategory)) {
     console.log(`${subcategory} Notification:`, notification);
@@ -356,7 +350,7 @@ function handleTransferProcessCategory(
   subcategory: string,
   messageContent: any,
   queryClient: QueryClient,
-  setHighlight: (id: UUID) => void
+  setHighlight: (id: UUID) => void,
 ): void {
   if (TRANSFER_PROCESS_SUBCATEGORIES.has(subcategory)) {
     handleTransferProcess(queryClient, messageContent.process as TransferProcess, setHighlight);
@@ -495,7 +489,7 @@ export const PubSubContextProvider = ({ children }: { children: ReactNode }) => 
     websocket,
     connected: wsConnected,
     connectionError: wsConnectionError,
-    subscriptionId: isDataSubscriptionError ? null : dataSubscriptions?.subscriptionId ?? null,
+    subscriptionId: isDataSubscriptionError ? null : (dataSubscriptions?.subscriptionId ?? null),
     lastHighLightedNotification,
   };
 

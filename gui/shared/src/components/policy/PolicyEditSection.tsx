@@ -72,11 +72,7 @@ export interface PolicyEditSectionProps {
   onAddConstraint: (type: ComponentType, index: number) => void;
 
   /** Callback when a constraint is removed from a policy item */
-  onRemoveConstraint: (
-    type: ComponentType,
-    index: number,
-    constraintIndex: number
-  ) => void;
+  onRemoveConstraint: (type: ComponentType, index: number, constraintIndex: number) => void;
 
   /** Callback when a constraint's operand value changes */
   onOperandChange: (
@@ -84,7 +80,7 @@ export interface PolicyEditSectionProps {
     index: number,
     constraintIndex: number,
     operand: OperandType,
-    value: string
+    value: string,
   ) => void;
 }
 

@@ -124,10 +124,8 @@ export const BusinessRequestAccessDialog = ({
       description={
         <span className="max-w-full flex flex-col gap-1">
           You are about to request access to dataset{" "}
-          <Badge variant="infoLighter">{datasetName}</Badge>
-          {" "}in catalog{" "}
-          <Badge variant="infoLighter">{formatUrn(catalogId)}</Badge>
-          {" "}under policy{" "}
+          <Badge variant="infoLighter">{datasetName}</Badge> in catalog{" "}
+          <Badge variant="infoLighter">{formatUrn(catalogId)}</Badge> under policy{" "}
           <Badge variant="infoLighter">{formatUrn(policy["@id"])}</Badge>
         </span>
       }

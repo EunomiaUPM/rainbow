@@ -1,15 +1,13 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import { TransferEntityService } from "./api/entities/transfer";
 
 /**
  *  GET /transfers
  * */
 export const getTransferProcesses = async (api_gateway: string) => {
-  const catalog: TransferProcess[] = await (
-    await fetch(api_gateway + `/transfers/transfer-processes`)
-  ).json();
-  return catalog;
+  return TransferEntityService.getTransferProcesses({ api_gateway });
 };
 
 export const getTransferProcessesOptions = (api_gateway: string) =>
@@ -30,10 +28,7 @@ export const useGetTransferProcesses = () => {
  *  GET /transfers/{transferProcessId}
  * */
 export const getTransferProcessById = async (api_gateway: string, transferProcessId: UUID) => {
-  const catalog: TransferProcess = await (
-    await fetch(api_gateway + `/transfers/transfer-processes/${transferProcessId}`)
-  ).json();
-  return catalog;
+  return TransferEntityService.getTransferProcessById({ api_gateway }, transferProcessId);
 };
 
 export const getTransferProcessByIdOptions = (api_gateway: string, transferProcessId: UUID) =>
@@ -58,10 +53,7 @@ export const getTransferMessagesByProviderPid = async (
   api_gateway: string,
   transferProcessId: UUID,
 ) => {
-  const catalog: TransferMessage[] = await (
-    await fetch(api_gateway + `/transfers/${transferProcessId}/messages`)
-  ).json();
-  return catalog;
+  return TransferEntityService.getMessagesByProcessId({ api_gateway }, transferProcessId);
 };
 
 export const getTransferMessagesByProviderPidOptions = (
@@ -90,10 +82,7 @@ export const getTransferMessageById = async (
   transferProcessId: UUID,
   messageId: UUID,
 ) => {
-  const catalog: TransferMessage = await (
-    await fetch(api_gateway + `/transfers/${transferProcessId}/messages/${messageId}`)
-  ).json();
-  return catalog;
+  return TransferEntityService.getMessageById({ api_gateway }, transferProcessId, messageId);
 };
 
 export const getTransferMessageByIdOptions = (
@@ -119,10 +108,7 @@ export const useGetTransferMessageById = (transferProcessId: UUID, messageId: UU
  *  GET /dataplane/{sessionId}
  * */
 export const getDataplaneProcessById = async (api_gateway: string, sessionId: UUID) => {
-  const dataplane: DataplaneSession = await (
-    await fetch(api_gateway + `/dataplane/${sessionId}`)
-  ).json();
-  return dataplane;
+  return TransferEntityService.getDataplaneSession({ api_gateway }, sessionId);
 };
 
 export const getDataplaneProcessByIdOptions = (api_gateway: string, sessionId: UUID) =>

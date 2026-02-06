@@ -16,7 +16,11 @@ const RouteComponent = () => {
       <PageHeader
         className="mb-6"
         title="Transfer Process"
-        badge={<Badge variant="info" size="lg">{formatUrn(transferProcessId)}</Badge>}
+        badge={
+          <Badge variant="info" size="lg">
+            {formatUrn(transferProcessId)}
+          </Badge>
+        }
       />
       <Outlet />
     </div>
@@ -31,6 +35,8 @@ export const Route = createFileRoute("/transfer-process/$transferProcessId")({
   notFoundComponent: NotFound,
   loader: ({ context: { queryClient, api_gateway }, params: { transferProcessId } }) => {
     if (!api_gateway) return;
-    return queryClient.ensureQueryData(getTransferProcessByIdOptions(api_gateway, transferProcessId));
+    return queryClient.ensureQueryData(
+      getTransferProcessByIdOptions(api_gateway, transferProcessId),
+    );
   },
 });

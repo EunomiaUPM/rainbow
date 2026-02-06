@@ -1,9 +1,7 @@
 import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations.ts";
 import { Dispatch, SetStateAction, useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
-import {
-  Form,
-} from "shared/src/components/ui/form.tsx";
+import { Form } from "shared/src/components/ui/form.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { ConsumerParticipantSelector } from "../routes/contract-negotiation/../../components/form/ConsumerParticipantSelector";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -42,8 +40,7 @@ export const OfferDrawer = ({
   // --- State Management ---
   // Consumer Participant
   const [consumerParticipantOpen, setConsumerParticipantOpen] = useState(false);
-  const [_, setConsumerSelectedParticipant] =
-    useState<Participant | null>(null);
+  const [_, setConsumerSelectedParticipant] = useState<Participant | null>(null);
   const [consumerParticipants, setConsumerParticipants] = useState<Participant[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<OdrlOffer | null>(null);
 
@@ -116,7 +113,6 @@ export const OfferDrawer = ({
           <p className="text-sm text-gray-200 mb-1"> Selected dataset</p>
           <Badge variant="info">{datasetInfo.name}</Badge>
         </div>
-
       </div>
       <div className="h-5"></div>
       <Form {...form}>

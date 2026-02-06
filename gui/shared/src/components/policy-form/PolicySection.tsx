@@ -77,7 +77,7 @@ export interface PolicySectionProps {
     itemIndex: number,
     constraintIndex: number,
     operand: OperandType,
-    value: string
+    value: string,
   ) => void;
 }
 
@@ -124,12 +124,7 @@ export const PolicySection: FC<PolicySectionProps> = ({
       {/* Accordion content with items list */}
       <AccordionContent className="relative">
         {/* Add new item button */}
-        <Button
-          className="border-b border-white/15"
-          variant="outline"
-          size="xs"
-          onClick={onAdd}
-        >
+        <Button className="border-b border-white/15" variant="outline" size="xs" onClick={onAdd}>
           <Plus />
           Add {type}
         </Button>
@@ -143,9 +138,7 @@ export const PolicySection: FC<PolicySectionProps> = ({
             onRemove={() => onRemove(i)}
             onUpdateAction={(value) => onUpdateAction(i, value)}
             onAddConstraint={() => onAddConstraint(i)}
-            onRemoveConstraint={(constraintIndex) =>
-              onRemoveConstraint(i, constraintIndex)
-            }
+            onRemoveConstraint={(constraintIndex) => onRemoveConstraint(i, constraintIndex)}
             onUpdateConstraint={(constraintIndex, operand, value) =>
               onUpdateConstraint(i, constraintIndex, operand, value)
             }

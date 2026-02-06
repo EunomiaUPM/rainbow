@@ -48,24 +48,32 @@ function RouteComponent() {
               <InfoList
                 items={[
                   { label: "Process pid", value: { type: "urn", value: transferProcess.id } },
-                  { label: "Agreement id", value: { type: "urn", value: transferProcess.agreementId } },
+                  {
+                    label: "Agreement id",
+                    value: { type: "urn", value: transferProcess.agreementId },
+                  },
                   {
                     label: "Transfer Process State",
                     value: { type: "status", value: transferProcess.state },
                   },
                   {
                     label: "Created at",
-                    value: { type: "custom", content: <FormatDate date={transferProcess.createdAt} /> },
+                    value: {
+                      type: "custom",
+                      content: <FormatDate date={transferProcess.createdAt} />,
+                    },
                   },
                   {
                     label: "Updated at",
-                    value: { type: "custom", content: <FormatDate date={transferProcess.updatedAt} /> },
+                    value: {
+                      type: "custom",
+                      content: <FormatDate date={transferProcess.updatedAt} />,
+                    },
                   },
                 ]}
               />
             </InfoGrid>
           </PageSection>
-
           <PageSection>
             {/* DRAWER */}
             <Drawer direction={"right"}>

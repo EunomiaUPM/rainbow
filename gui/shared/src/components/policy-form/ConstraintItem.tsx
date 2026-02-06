@@ -64,11 +64,7 @@ export interface ConstraintItemProps {
  * @param props - ConstraintItem properties
  * @returns An editable constraint row
  */
-export const ConstraintItem: FC<ConstraintItemProps> = ({
-  constraint,
-  onUpdate,
-  onRemove,
-}) => {
+export const ConstraintItem: FC<ConstraintItemProps> = ({ constraint, onUpdate, onRemove }) => {
   return (
     <div className="flex flex-col gap-2">
       <div className="constraint-create mb-2 flex gap-3 justify-end items-end">

@@ -20,7 +20,11 @@ function RouteComponent() {
     <PageLayout>
       <PageHeader
         title="Distribution info with id"
-        badge={<Badge variant="info" size="lg">{formatUrn(distribution?.id)}</Badge>}
+        badge={
+          <Badge variant="info" size="lg">
+            {formatUrn(distribution?.id)}
+          </Badge>
+        }
       />
       <PageSection>
         <InfoList

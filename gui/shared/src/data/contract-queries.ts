@@ -1,16 +1,14 @@
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { NotFoundError } from "./index";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import { NegotiationEntityService } from "./api/entities/negotiation";
+import { ApiError } from "./index";
 
 /**
  * GET /contract-negotiation/processes
  * */
 export const getContractNegotiationProcesses = async (api_gateway: string) => {
-  const cnProcesses: NegotiationProcessDto[] = await (
-    await fetch(api_gateway + "/negotiations/negotiation-processes")
-  ).json();
-  return cnProcesses;
+  return NegotiationEntityService.getNegotiationProcesses({ api_gateway });
 };
 
 export const getContractNegotiationProcessesOptions = (api_gateway: string) =>
@@ -34,10 +32,10 @@ export const getContractNegotiationProcessesByCNID = async (
   api_gateway: string,
   contractNegotiationProcess: UUID,
 ) => {
-  const cnProcess: NegotiationProcessDto = await (
-    await fetch(api_gateway + `/negotiations/negotiation-processes/${contractNegotiationProcess}`)
-  ).json();
-  return cnProcess;
+  return NegotiationEntityService.getNegotiationProcessById(
+    { api_gateway },
+    contractNegotiationProcess,
+  );
 };
 
 export const getContractNegotiationProcessesByCNIDOptions = (
@@ -65,12 +63,10 @@ export const getContractNegotiationMessagesByCNID = async (
   api_gateway: string,
   contractNegotiationProcess: UUID,
 ) => {
-  const cnMessages: NegotiationMessage[] = await (
-    await fetch(
-      api_gateway + `/negotiations/negotiation-messages/process/${contractNegotiationProcess}`,
-    )
-  ).json();
-  return cnMessages;
+  return NegotiationEntityService.getMessagesByProcessId(
+    { api_gateway },
+    contractNegotiationProcess,
+  );
 };
 
 export const getContractNegotiationMessagesByCNIDOptions = (
@@ -98,10 +94,7 @@ export const getContractNegotiationMessageById = async (
   api_gateway: string,
   contractNegotiationMessage: UUID,
 ) => {
-  const cnMessage: NegotiationOffer = await (
-    await fetch(api_gateway + `/contract-negotiation/messages/${contractNegotiationMessage}`)
-  ).json();
-  return cnMessage;
+  return NegotiationEntityService.getMessageById({ api_gateway }, contractNegotiationMessage);
 };
 export const getContractNegotiationMessageByIdOptions = (
   api_gateway: string,
@@ -128,14 +121,7 @@ export const getContractNegotiationOfferByCNMessageId = async (
   api_gateway: string,
   contractNegotiationMessage: UUID,
 ) => {
-  const response = await fetch(
-    api_gateway + `/contract-negotiation/messages/${contractNegotiationMessage}/offer`,
-  );
-  if (response.status === 404) {
-    throw new NotFoundError(`Offer not found for message ID: ${contractNegotiationMessage}`);
-  }
-  const cnOffer: CNOffer = await response.json();
-  return cnOffer;
+  return NegotiationEntityService.getOfferByMessageId({ api_gateway }, contractNegotiationMessage);
 };
 
 export const getContractNegotiationOfferByCNMessageIdOptions = (
@@ -148,7 +134,7 @@ export const getContractNegotiationOfferByCNMessageIdOptions = (
       getContractNegotiationOfferByCNMessageId(api_gateway, contractNegotiationMessage),
     enabled: !!contractNegotiationMessage,
     retry: (failureCount, error) => {
-      if (error instanceof NotFoundError) {
+      if (error instanceof ApiError && error.status === 404) {
         return false;
       }
       return failureCount < 3;
@@ -170,14 +156,7 @@ export const getLastContractNegotiationOfferByCNMessageId = async (
   api_gateway: string,
   contractProcess: UUID,
 ) => {
-  const response = await fetch(
-    api_gateway + `/contract-negotiation/processes/${contractProcess}/offers/last`,
-  );
-  if (response.status === 404) {
-    throw new NotFoundError(`Offer not found for message ID: ${contractProcess}`);
-  }
-  const cnOffer: NegotiationOffer = await response.json();
-  return cnOffer;
+  return NegotiationEntityService.getLastOfferByProcessId({ api_gateway }, contractProcess);
 };
 
 export const getLastContractNegotiationOfferByCNMessageIdOptions = (
@@ -189,7 +168,7 @@ export const getLastContractNegotiationOfferByCNMessageIdOptions = (
     queryFn: () => getLastContractNegotiationOfferByCNMessageId(api_gateway, contractProcess),
     enabled: !!contractProcess,
     retry: (failureCount, error) => {
-      if (error instanceof NotFoundError) {
+      if (error instanceof ApiError && error.status === 404) {
         return false;
       }
       return failureCount < 3;
@@ -211,14 +190,10 @@ export const getAgreementByCNMessageId = async (
   api_gateway: string,
   contractNegotiationMessage: UUID,
 ) => {
-  const response = await fetch(
-    api_gateway + `/contract-negotiation/messages/${contractNegotiationMessage}/agreement`,
+  return NegotiationEntityService.getAgreementByMessageId(
+    { api_gateway },
+    contractNegotiationMessage,
   );
-  if (response.status === 404) {
-    throw new NotFoundError(`Agreement not found for message ID: ${contractNegotiationMessage}`);
-  }
-  const cnAgreement: NegotiationMessage = await response.json();
-  return cnAgreement;
 };
 
 export const getAgreementByCNMessageIdOptions = (
@@ -230,7 +205,7 @@ export const getAgreementByCNMessageIdOptions = (
     queryFn: () => getAgreementByCNMessageId(api_gateway, contractNegotiationMessage),
     enabled: !!contractNegotiationMessage,
     retry: (failureCount, error) => {
-      if (error instanceof NotFoundError) {
+      if (error instanceof ApiError && error.status === 404) {
         return false;
       }
       return failureCount < 3;

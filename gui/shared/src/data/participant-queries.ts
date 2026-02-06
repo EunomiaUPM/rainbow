@@ -1,13 +1,13 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import { AgreementEntityService, ParticipantEntityService } from "./api/entities";
 
 /**
  *  GET /participants
  * */
 export const getParticipants = async (api_gateway: string) => {
-  const catalogs: Participant[] = await (await fetch(api_gateway + "/mates/all")).json();
-  return catalogs;
+  return ParticipantEntityService.getAllParticipants({ api_gateway });
 };
 
 export const getParticipantsOptions = (api_gateway: string) =>
@@ -26,8 +26,7 @@ export const useGetParticipants = () => {
  *  GET /participants/{participantId}
  * */
 export const getParticipantById = async (api_gateway: string, participantId: UUID) => {
-  const catalogs: Participant = await (await fetch(api_gateway + `/mates/${participantId}`)).json();
-  return catalogs;
+  return ParticipantEntityService.getParticipantById({ api_gateway }, participantId);
 };
 
 export const getParticipantByIdOptions = (api_gateway: string, participantId: UUID) =>
@@ -49,10 +48,7 @@ export const useGetParticipantById = (participantId: UUID) => {
  *  GET /contract-negotiation/agreements/participant/{participantId}
  * */
 export const getAgreementsByParticipantId = async (api_gateway: string, participantId: UUID) => {
-  const catalogs: Agreement[] = await (
-    await fetch(api_gateway + `/contract-negotiation/agreements/participant/${participantId}`)
-  ).json();
-  return catalogs;
+  return AgreementEntityService.getAgreementsByParticipantId({ api_gateway }, participantId);
 };
 
 export const getAgreementsByParticipantIdOptions = (api_gateway: string, participantId: UUID) =>

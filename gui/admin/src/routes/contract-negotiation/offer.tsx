@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Form,
-} from "shared/src/components/ui/form";
+import { Form } from "shared/src/components/ui/form";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { useContext, useEffect, useState } from "react"; // Import useEffect
@@ -25,7 +23,7 @@ type Inputs = {
 /**
  * Component for creating a new contract negotiation offer.
  */
-export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset: Dataset }) => {
+export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog; dataset: Dataset }) => {
   const { mutateAsync: sendOfferAsync, isPending } = usePostContractNegotiationRPCOffer();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
@@ -188,7 +186,6 @@ export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset
     }
   };
 
-
   return (
     <div className="max-w-[500px] w-full m-auto">
       {/* <Heading level="h3">New Contract Negotiation Offer</Heading> */}
@@ -197,11 +194,8 @@ export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset
           {/* Catalog Field */}
           <div>
             {" "}
-            <p>{catalog.title}</p>{" "}
-            <Badge variant="info">{formatUrn(catalog["@id"])}</Badge>
+            <p>{catalog.title}</p> <Badge variant="info">{formatUrn(catalog["@id"])}</Badge>
           </div>
-
-
 
           {/* Dataset Field (mapped to 'id' in Inputs) */}
 
@@ -238,7 +232,6 @@ export const RouteComponent = ({ catalog, dataset }: { catalog: Catalog, dataset
               </div>
             ))}
           {/* Policy Target Field was here - removed commented code */}
-
 
           <Button type="submit" disabled={isPending} className="w-full">
             Submit Offer {isPending && <span className="ml-2">...</span>}
