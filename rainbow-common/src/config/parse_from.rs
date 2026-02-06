@@ -40,6 +40,7 @@ impl From<SsiAuthConfig> for BasicVerifierConfig {
             .is_local(value.common().is_local())
             .requested_vcs(value.verify_req_config().vcs_requested)
             .api_path(api_path)
+            .vc_config(value.vc_config())
             .build()
     }
 }

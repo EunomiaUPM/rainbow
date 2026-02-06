@@ -39,7 +39,7 @@ ssi_auth:
     display: null
   vc_config:
     vc_model: JwtVc
-    w3c_data_model: V1
+    w3c_data_model: V2
   verify_req_config:
     is_cert_allowed: false
     vcs_requested: [DataspaceParticipant]

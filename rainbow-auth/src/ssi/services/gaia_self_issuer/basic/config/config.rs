@@ -19,8 +19,7 @@ use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::ClientConfig;
 use ymir::config::traits::{ApiConfigTrait, ConnectionConfigTrait};
-use ymir::config::types::{CommonHostsConfig, HostConfig};
-use ymir::types::dids::did_config::DidConfig;
+use ymir::config::types::{CommonHostsConfig, DidConfig, HostConfig};
 use ymir::types::vcs::W3cDataModelVersion;
 
 use super::GaiaGaiaSelfIssuerConfigTrait;
