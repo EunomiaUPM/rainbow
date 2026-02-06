@@ -17,7 +17,7 @@ function Invoke-Curl {
         [string]$Description
     )
 
-    Write-Host "--- $Description ---" -ForegroundColor Green
+    Write-Host "--- $Description ---"
     Write-Host "Request: $Method $Url"
 
     $Headers = @{ "Content-Type" = "application/json" }
@@ -29,14 +29,14 @@ function Invoke-Curl {
             $Response = Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -ErrorAction Stop
         }
         
-        # Convert response to JSON string for preview and return
+        # Preview response
         $ResponseJson = $Response | ConvertTo-Json -Depth 10 -Compress
         Write-Host "Response (preview): $($ResponseJson.Substring(0, [math]::Min(100, $ResponseJson.Length)))..."
         Write-Host "---------------------------------------------------"
         
         return $Response
     } catch {
-        Write-Host "Error: $_" -ForegroundColor Red
+        Write-Host "Error: $_"
         return $null
     }
 }
@@ -154,43 +154,43 @@ function Create-Agreement {
 # SCENARIO SIMULATIONS
 # ==========================================
 
-# SCENARIO A: HAPPY PATH (Complete Success)
+# SCENARIO A: SUCCESSFUL
 function Simulate-Successful-Negotiation {
     param ($Consumer, $Dataset, $Label)
 
-    Write-Host ">>> Starting Scenario: SUCCESSFUL ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Scenario: SUCCESSFUL ($Label)"
 
-    # 1. State: REQUESTED (Start)
+    # 1. State: REQUESTED
     $PID_PROC = Create-Process -ConsumerDid $Consumer -State "REQUESTED"
     Create-Message -ProcessId $PID_PROC -Type "CONTRACT_REQUEST" -FromState "INITIAL" -ToState "REQUESTED" | Out-Null
 
-    # 2. State: OFFERED (Provider sends Offer)
+    # 2. State: OFFERED
     Update-Process-State -ProcessId $PID_PROC -NewState "OFFERED"
     $MID_OFFER = Create-Message -ProcessId $PID_PROC -Type "CONTRACT_OFFER" -FromState "REQUESTED" -ToState "OFFERED"
     Create-Offer -ProcessId $PID_PROC -MessageId $MID_OFFER -TargetId $Dataset | Out-Null
 
-    # 3. State: ACCEPTED (Consumer Accepts)
+    # 3. State: ACCEPTED
     Update-Process-State -ProcessId $PID_PROC -NewState "ACCEPTED"
     Create-Message -ProcessId $PID_PROC -Type "CONTRACT_NEGOTIATION_EVENT" -FromState "OFFERED" -ToState "ACCEPTED" | Out-Null
 
-    # 4. State: AGREED (Provider creates Agreement)
+    # 4. State: AGREED
     Update-Process-State -ProcessId $PID_PROC -NewState "AGREED"
     $MID_AGREE = Create-Message -ProcessId $PID_PROC -Type "CONTRACT_AGREEMENT" -FromState "ACCEPTED" -ToState "AGREED"
-    # Provider DID is hardcoded mock for simplicity
+    # Mock provider DID
     Create-Agreement -ProcessId $PID_PROC -MessageId $MID_AGREE -Consumer $Consumer -Provider "did:web:provider:mock" -Target $Dataset | Out-Null
 
-    # 5. State: FINALIZED (Protocol finishes)
+    # 5. State: FINALIZED
     Update-Process-State -ProcessId $PID_PROC -NewState "FINALIZED"
     Create-Message -ProcessId $PID_PROC -Type "CONTRACT_NEGOTIATION_EVENT" -FromState "AGREED" -ToState "FINALIZED" | Out-Null
 
-    Write-Host ">>> Finished Scenario: SUCCESSFUL (Process: $PID_PROC)`n" -ForegroundColor Green
+    Write-Host ">>> Finished Scenario: SUCCESSFUL (Process: $PID_PROC)`n"
 }
 
-# SCENARIO B: TERMINATED (Failed Negotiation)
+# SCENARIO B: TERMINATED
 function Simulate-Terminated-Negotiation {
     param ($Consumer, $Dataset, $Label)
 
-    Write-Host ">>> Starting Scenario: TERMINATED ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Scenario: TERMINATED ($Label)"
 
     # 1. State: REQUESTED
     $PID_PROC = Create-Process -ConsumerDid $Consumer -State "REQUESTED"
@@ -206,14 +206,14 @@ function Simulate-Terminated-Negotiation {
     # Event Message for termination
     Create-Message -ProcessId $PID_PROC -Type "CONTRACT_NEGOTIATION_EVENT" -FromState "OFFERED" -ToState "TERMINATED" | Out-Null
 
-    Write-Host ">>> Finished Scenario: TERMINATED (Process: $PID_PROC)`n" -ForegroundColor Red
+    Write-Host ">>> Finished Scenario: TERMINATED (Process: $PID_PROC)`n"
 }
 
-# SCENARIO C: PENDING (In Progress)
+# SCENARIO C: PENDING
 function Simulate-Pending-Negotiation {
     param ($Consumer, $Dataset, $Label)
 
-    Write-Host ">>> Starting Scenario: PENDING ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Scenario: PENDING ($Label)"
 
     # 1. State: REQUESTED
     $PID_PROC = Create-Process -ConsumerDid $Consumer -State "REQUESTED"
@@ -224,7 +224,7 @@ function Simulate-Pending-Negotiation {
     $MID_OFFER = Create-Message -ProcessId $PID_PROC -Type "CONTRACT_OFFER" -FromState "REQUESTED" -ToState "OFFERED"
     Create-Offer -ProcessId $PID_PROC -MessageId $MID_OFFER -TargetId $Dataset | Out-Null
 
-    Write-Host ">>> Finished Scenario: PENDING (Process: $PID_PROC)`n" -ForegroundColor Green
+    Write-Host ">>> Finished Scenario: PENDING (Process: $PID_PROC)`n"
 }
 
 # ==========================================
@@ -232,10 +232,9 @@ function Simulate-Pending-Negotiation {
 # ==========================================
 
 function Main {
-    Write-Host "=== GENERATING MOCK NEGOTIATION DATA ===" -ForegroundColor Green
+    Write-Host "=== GENERATING MOCK NEGOTIATION DATA ==="
 
     # MOCK DATASETS & PARTICIPANTS
-    # In a real script, get these from the previous catalog steps
     $CONSUMER_A = "did:web:consumer:company-a"
     $CONSUMER_B = "did:web:consumer:company-b"
     $DS_WEATHER = "urn:dataset:weather-2024"
@@ -253,7 +252,7 @@ function Main {
     # --- BATCH 3: Ongoing / Pending ---
     Simulate-Pending-Negotiation -Consumer $CONSUMER_A -Dataset $DS_SENSITIVE -Label "Sensitive Data Access - Waiting for Approval"
 
-    Write-Host "=== DONE. GENERATED 5 NEGOTIATION PROCESSES ===" -ForegroundColor Green
+    Write-Host "=== DONE. GENERATED 5 NEGOTIATION PROCESSES ==="
 }
 
 Main

@@ -5,11 +5,6 @@
 # ==========================================
 AGENT_URL="http://127.0.0.1:1200"
 
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-NC='\033[0m'
 
 # ==========================================
 # HELPER: CURL & LOGGING
@@ -21,7 +16,8 @@ invoke_curl() {
     local description="$4"
 
     # Log header to STDERR
-    echo -e "${GREEN}--- $description ---${NC}" >&2
+    # Log header to STDERR
+    echo "--- $description ---" >&2
     echo "Request: $method $url" >&2
 
     if [[ -n "$body" ]]; then
@@ -169,32 +165,33 @@ simulate_successful_negotiation() {
     local dataset="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Scenario: SUCCESSFUL ($label)${NC}" >&2
+    echo ">>> Starting Scenario: SUCCESSFUL ($label)" >&2
 
-    # 1. State: REQUESTED (Start)
+    # 1. State: REQUESTED
     local PID=$(create_process "$consumer" "REQUESTED")
     create_message "$PID" "CONTRACT_REQUEST" "INITIAL" "REQUESTED" >/dev/null
 
-    # 2. State: OFFERED (Provider sends Offer)
+    # 2. State: OFFERED
     update_process_state "$PID" "OFFERED"
     local MID_OFFER=$(create_message "$PID" "CONTRACT_OFFER" "REQUESTED" "OFFERED")
     create_offer "$PID" "$MID_OFFER" "$dataset" >/dev/null
 
-    # 3. State: ACCEPTED (Consumer Accepts)
+    # 3. State: ACCEPTED
     update_process_state "$PID" "ACCEPTED"
     create_message "$PID" "CONTRACT_NEGOTIATION_EVENT" "OFFERED" "ACCEPTED" >/dev/null
 
-    # 4. State: AGREED (Provider creates Agreement)
+    # 4. State: AGREED
     update_process_state "$PID" "AGREED"
     local MID_AGREE=$(create_message "$PID" "CONTRACT_AGREEMENT" "ACCEPTED" "AGREED")
     # Provider DID is hardcoded mock for simplicity
     create_agreement "$PID" "$MID_AGREE" "$consumer" "did:web:provider:mock" "$dataset" >/dev/null
 
-    # 5. State: FINALIZED (Protocol finishes)
+    # 5. State: FINALIZED
     update_process_state "$PID" "FINALIZED"
     create_message "$PID" "CONTRACT_NEGOTIATION_EVENT" "AGREED" "FINALIZED" >/dev/null
 
-    echo -e "${GREEN}>>> Finished Scenario: SUCCESSFUL (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Scenario: SUCCESSFUL (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # SCENARIO B: TERMINATED (Failed Negotiation)
@@ -204,7 +201,7 @@ simulate_terminated_negotiation() {
     local dataset="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Scenario: TERMINATED ($label)${NC}" >&2
+    echo ">>> Starting Scenario: TERMINATED ($label)" >&2
 
     # 1. State: REQUESTED
     local PID=$(create_process "$consumer" "REQUESTED")
@@ -220,7 +217,8 @@ simulate_terminated_negotiation() {
     # Event Message for termination
     create_message "$PID" "CONTRACT_NEGOTIATION_EVENT" "OFFERED" "TERMINATED" >/dev/null
 
-    echo -e "${RED}>>> Finished Scenario: TERMINATED (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Scenario: TERMINATED (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # SCENARIO C: PENDING (In Progress)
@@ -230,7 +228,7 @@ simulate_pending_negotiation() {
     local dataset="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Scenario: PENDING ($label)${NC}" >&2
+    echo ">>> Starting Scenario: PENDING ($label)" >&2
 
     # 1. State: REQUESTED
     local PID=$(create_process "$consumer" "REQUESTED")
@@ -241,7 +239,8 @@ simulate_pending_negotiation() {
     local MID_OFFER=$(create_message "$PID" "CONTRACT_OFFER" "REQUESTED" "OFFERED")
     create_offer "$PID" "$MID_OFFER" "$dataset" >/dev/null
 
-    echo -e "${GREEN}>>> Finished Scenario: PENDING (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Scenario: PENDING (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # ==========================================
@@ -249,7 +248,7 @@ simulate_pending_negotiation() {
 # ==========================================
 
 main() {
-    echo -e "${GREEN}=== GENERATING MOCK NEGOTIATION DATA ===${NC}" >&2
+    echo "=== GENERATING MOCK NEGOTIATION DATA ===" >&2
 
     # MOCK DATASETS & PARTICIPANTS
     # In a real script, get these from the previous catalog steps
@@ -261,7 +260,6 @@ main() {
 
     # --- BATCH 1: Successful Agreements ---
     simulate_successful_negotiation "$CONSUMER_A" "$DS_WEATHER" "Weather Data Purchase - Completed"
-    [Image of Dataspace Protocol Negotiation State Machine]
     simulate_successful_negotiation "$CONSUMER_B" "$DS_TRAFFIC" "Traffic Data Access - Completed"
     simulate_successful_negotiation "$CONSUMER_A" "$DS_TRAFFIC" "Traffic Data Access (Repeated) - Completed"
 
@@ -271,7 +269,7 @@ main() {
     # --- BATCH 3: Ongoing / Pending ---
     simulate_pending_negotiation "$CONSUMER_A" "$DS_SENSITIVE" "Sensitive Data Access - Waiting for Approval"
 
-    echo -e "${GREEN}=== DONE. GENERATED 5 NEGOTIATION PROCESSES ===${NC}" >&2
+    echo "=== DONE. GENERATED 5 NEGOTIATION PROCESSES ===" >&2
 }
 
 main "$@"

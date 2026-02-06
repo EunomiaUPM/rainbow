@@ -5,9 +5,6 @@
 # ==========================================
 AGENT_URL="http://127.0.0.1:1200"
 
-# Colors for logging
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
 
 # ==========================================
 # HELPER FUNCTIONS
@@ -22,8 +19,8 @@ invoke_curl() {
     local body="$3"
     local description="$4"
 
-    # LOGS a stderr (para no ensuciar el stdout)
-    echo -e "${GREEN}--- $description ---${NC}" >&2
+    # LOGS to stderr (to keep stdout clean)
+    echo "--- $description ---" >&2
     echo "Request: $method $url" >&2
 
     if [[ -n "$body" ]]; then
@@ -32,11 +29,11 @@ invoke_curl() {
         response=$(curl -s -X "$method" "$url")
     fi
 
-    # LOG preview a stderr
+    # LOG preview to stderr
     echo "Response (preview): ${response:0:100}..." >&2
     echo "---------------------------------------------------" >&2
 
-    # El JSON puro va a stdout para ser capturado por jq
+    # Raw JSON goes to stdout to be captured by jq
     echo "$response"
 }
 
@@ -77,7 +74,7 @@ get_dids() {
 # 2. Create Catalog
 # Returns: Catalog ID (stdout)
 create_catalog() {
-    # Check existance
+    # Check existence
     local check=$(curl -s "$AGENT_URL/api/v1/catalog-agent/catalogs/main")
     local existing_id=$(echo "$check" | jq -r 'if type=="object" and .error_code == 3120 then "null" else (.id // "null") end' 2>/dev/null)
 
@@ -88,16 +85,16 @@ create_catalog() {
     fi
 
     local body=$(jq -n '{ "foafHomePage": "superfoaf" }')
-    # invoke_curl manda logs a stderr y json a stdout.
-    # Capturamos el json en resp.
+    # invoke_curl sends logs to stderr and json to stdout.
+    # We capture the json in resp.
     local resp=$(invoke_curl "POST" "$AGENT_URL/api/v1/catalog-agent/catalogs" "$body" "Creating Catalog")
 
-    # Imprimimos solo el ID a stdout
+    # Output only the ID to stdout
     echo "$resp" | jq -r '.id // empty'
 }
 
 get_main_catalog() {
-    # Check existance
+    # Check existence
     local check=$(curl -s "$AGENT_URL/api/v1/catalog-agent/catalogs/main")
     local existing_id=$(echo "$check" | jq -r 'if type=="object" and .error_code == 3120 then "null" else (.id // "null") end' 2>/dev/null)
 
@@ -106,7 +103,7 @@ get_main_catalog() {
         echo "$existing_id"
         return
     fi
-    # Imprimimos solo el ID a stdout
+    # Output only the ID to stdout
     echo "$check" | jq -r '.id // empty'
 }
 
@@ -243,7 +240,7 @@ create_policy() {
 # ==========================================
 
 main() {
-    echo -e "${GREEN}=== STARTING MOCK DATA POPULATION ===${NC}" >&2
+    echo "=== STARTING MOCK DATA POPULATION ===" >&2
 
     # 1. Retrieve DIDs
     get_dids
@@ -283,7 +280,7 @@ main() {
     BP_ID=$(echo "$BP_DATA" | jq -r '.id')
     echo ">> Blueprint Created: $BP_NAME v$BP_VER (ID: $BP_ID)" >&2
 
-    # 7. Create Connector Instances (Pasando nombre y versión dinámicamente)
+    # 7. Create Connector Instances (Passing name and version dynamically)
     if [[ -n "$DI1_ID" ]]; then
         CI1=$(create_connector_instance "$DI1_ID" "https://jsonplaceholder.typicode.com/posts" "$BP_NAME" "$BP_VER")
         echo ">> Connector Instance for DI1: $CI1" >&2
@@ -317,7 +314,7 @@ main() {
     POLICY_ID3=$(create_policy "$DS3_ID")
     echo ">> Policy for DS3: $POLICY_ID3" >&2
 
-    echo -e "${GREEN}=== MOCK DATA POPULATION FINISHED ===${NC}" >&2
+    echo "=== MOCK DATA POPULATION FINISHED ===" >&2
 }
 
 # Run Main

@@ -17,7 +17,7 @@ function Invoke-Curl {
         [string]$Description
     )
 
-    Write-Host "--- $Description ---" -ForegroundColor Green
+    Write-Host "--- $Description ---"
     Write-Host "Request: $Method $Url"
 
     $Headers = @{ "Content-Type" = "application/json" }
@@ -29,14 +29,14 @@ function Invoke-Curl {
             $Response = Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -ErrorAction Stop
         }
         
-        # Convert response to JSON string for preview and return
+        # Preview response
         $ResponseJson = $Response | ConvertTo-Json -Depth 10 -Compress
         Write-Host "Response (preview): $($ResponseJson.Substring(0, [math]::Min(100, $ResponseJson.Length)))..."
         Write-Host "---------------------------------------------------"
         
         return $Response
     } catch {
-        Write-Host "Error: $_" -ForegroundColor Red
+        Write-Host "Error: $_"
         return $null
     }
 }
@@ -109,11 +109,11 @@ function Create-Transfer-Message {
 # SIMULATION SCENARIOS
 # ==========================================
 
-# SCENARIO A: HAPPY PATH (Completed Successfully)
+# SCENARIO A: SUCCESSFUL
 function Simulate-Successful-Transfer {
     param ($Consumer, $Agreement, $Label)
 
-    Write-Host ">>> Starting Transfer Scenario: SUCCESSFUL ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Transfer Scenario: SUCCESSFUL ($Label)"
 
     # 1. REQUESTED (Consumer asks for data)
     $PID_PROC = Create-Transfer-Process -ConsumerDid $Consumer -AgreementId $Agreement -State "REQUESTED"
@@ -127,14 +127,14 @@ function Simulate-Successful-Transfer {
     Update-Transfer-State -ProcessId $PID_PROC -NewState "COMPLETED"
     Create-Transfer-Message -ProcessId $PID_PROC -Type "TRANSFER_COMPLETION" -FromState "STARTED" -ToState "COMPLETED" | Out-Null
 
-    Write-Host ">>> Finished Transfer: SUCCESSFUL (Process: $PID_PROC)`n" -ForegroundColor Green
+    Write-Host ">>> Finished Transfer: SUCCESSFUL (Process: $PID_PROC)`n"
 }
 
-# SCENARIO B: TERMINATED (Failed/Cancelled)
+# SCENARIO B: TERMINATED
 function Simulate-Terminated-Transfer {
     param ($Consumer, $Agreement, $Label)
 
-    Write-Host ">>> Starting Transfer Scenario: TERMINATED ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Transfer Scenario: TERMINATED ($Label)"
 
     # 1. REQUESTED
     $PID_PROC = Create-Transfer-Process -ConsumerDid $Consumer -AgreementId $Agreement -State "REQUESTED"
@@ -148,21 +148,21 @@ function Simulate-Terminated-Transfer {
     Update-Transfer-State -ProcessId $PID_PROC -NewState "TERMINATED"
     Create-Transfer-Message -ProcessId $PID_PROC -Type "TRANSFER_TERMINATION" -FromState "STARTED" -ToState "TERMINATED" | Out-Null
 
-    Write-Host ">>> Finished Transfer: TERMINATED (Process: $PID_PROC)`n" -ForegroundColor Red
+    Write-Host ">>> Finished Transfer: TERMINATED (Process: $PID_PROC)`n"
 }
 
-# SCENARIO C: SUSPENDED (Paused)
+# SCENARIO C: SUSPENDED
 function Simulate-Suspended-Transfer {
     param ($Consumer, $Agreement, $Label)
 
-    Write-Host ">>> Starting Transfer Scenario: SUSPENDED ($Label)" -ForegroundColor Yellow
+    Write-Host ">>> Starting Transfer Scenario: SUSPENDED ($Label)"
 
     $PID_PROC = Create-Transfer-Process -ConsumerDid $Consumer -AgreementId $Agreement -State "STARTED"
     Create-Transfer-Message -ProcessId $PID_PROC -Type "TRANSFER_START" -FromState "REQUESTED" -ToState "STARTED" | Out-Null
 
     Update-Transfer-State -ProcessId $PID_PROC -NewState "SUSPENDED"
 
-    Write-Host ">>> Finished Transfer: SUSPENDED (Process: $PID_PROC)`n" -ForegroundColor Green
+    Write-Host ">>> Finished Transfer: SUSPENDED (Process: $PID_PROC)`n"
 }
 
 # ==========================================
@@ -172,7 +172,7 @@ function Simulate-Suspended-Transfer {
 function Main {
     param ($AgreementId)
 
-    Write-Host "=== GENERATING MOCK TRANSFER DATA ===" -ForegroundColor Green
+    Write-Host "=== GENERATING MOCK TRANSFER DATA ==="
 
     # --- MOCK DATA ---
     $CONSUMER_A = "did:web:consumer:company-a"
@@ -184,16 +184,16 @@ function Main {
 
     # --- EXECUTE SCENARIOS ---
 
-    # 1. Transferencia Completada (Happy Path)
+    # 1. Successful Transfer
     Simulate-Successful-Transfer -Consumer $CONSUMER_A -Agreement $AgreementId -Label "Daily Batch Download"
 
-    # 2. Transferencia Fallida (Error de Red simulado)
+    # 2. Failed Transfer
     Simulate-Terminated-Transfer -Consumer $CONSUMER_A -Agreement $AgreementId -Label "Real-time Stream (Failed)"
 
-    # 3. Transferencia Suspendida
+    # 3. Suspended Transfer
     Simulate-Suspended-Transfer -Consumer $CONSUMER_A -Agreement $AgreementId -Label "Large File Upload (Paused)"
 
-    Write-Host "=== DONE. GENERATED TRANSFER PROCESSES ===" -ForegroundColor Green
+    Write-Host "=== DONE. GENERATED TRANSFER PROCESSES ==="
 }
 
 # Use arguments if provided

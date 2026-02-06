@@ -5,11 +5,6 @@
 # ==========================================
 AGENT_URL="http://127.0.0.1:1200"
 
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-NC='\033[0m'
 
 # ==========================================
 # HELPER FUNCTIONS
@@ -20,7 +15,7 @@ invoke_curl() {
     local body="$3"
     local description="$4"
 
-    echo -e "${GREEN}--- $description ---${NC}" >&2
+    echo "--- $description ---" >&2
     echo "Request: $method $url" >&2
 
     if [[ -n "$body" ]]; then
@@ -122,21 +117,22 @@ simulate_successful_transfer() {
     local agreement="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Transfer Scenario: SUCCESSFUL ($label)${NC}" >&2
+    echo ">>> Starting Transfer Scenario: SUCCESSFUL ($label)" >&2
 
-    # 1. REQUESTED (Consumer asks for data)
+    # 1. REQUESTED
     local PID=$(create_transfer_process "$consumer" "$agreement" "REQUESTED")
     create_transfer_message "$PID" "TRANSFER_REQUEST" "INITIAL" "REQUESTED" >/dev/null
 
-    # 2. STARTED (Provider starts sending data)
+    # 2. STARTED
     update_transfer_state "$PID" "STARTED"
     create_transfer_message "$PID" "TRANSFER_START" "REQUESTED" "STARTED" >/dev/null
 
-    # 3. COMPLETED (Data transfer finished)
+    # 3. COMPLETED
     update_transfer_state "$PID" "COMPLETED"
     create_transfer_message "$PID" "TRANSFER_COMPLETION" "STARTED" "COMPLETED" >/dev/null
 
-    echo -e "${GREEN}>>> Finished Transfer: SUCCESSFUL (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Transfer: SUCCESSFUL (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # SCENARIO B: TERMINATED (Failed/Cancelled)
@@ -146,7 +142,7 @@ simulate_terminated_transfer() {
     local agreement="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Transfer Scenario: TERMINATED ($label)${NC}" >&2
+    echo ">>> Starting Transfer Scenario: TERMINATED ($label)" >&2
 
     # 1. REQUESTED
     local PID=$(create_transfer_process "$consumer" "$agreement" "REQUESTED")
@@ -160,7 +156,8 @@ simulate_terminated_transfer() {
     update_transfer_state "$PID" "TERMINATED"
     create_transfer_message "$PID" "TRANSFER_TERMINATION" "STARTED" "TERMINATED" >/dev/null
 
-    echo -e "${RED}>>> Finished Transfer: TERMINATED (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Transfer: TERMINATED (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # SCENARIO C: SUSPENDED (Paused)
@@ -169,7 +166,7 @@ simulate_suspended_transfer() {
     local agreement="$2"
     local label="$3"
 
-    echo -e "${YELLOW}>>> Starting Transfer Scenario: SUSPENDED ($label)${NC}" >&2
+    echo ">>> Starting Transfer Scenario: SUSPENDED ($label)" >&2
 
     local PID=$(create_transfer_process "$consumer" "$agreement" "STARTED")
     create_transfer_message "$PID" "TRANSFER_START" "REQUESTED" "STARTED" >/dev/null
@@ -179,7 +176,8 @@ simulate_suspended_transfer() {
     # but strictly speaking simple suspension is often internal state.
     # We leave it without message or invent a status message.
 
-    echo -e "${GREEN}>>> Finished Transfer: SUSPENDED (Process: $PID)${NC}\n" >&2
+    echo ">>> Finished Transfer: SUSPENDED (Process: $PID)" >&2
+    echo "" >&2
 }
 
 # ==========================================
@@ -187,11 +185,11 @@ simulate_suspended_transfer() {
 # ==========================================
 
 main() {
-    echo -e "${GREEN}=== GENERATING MOCK TRANSFER DATA ===${NC}" >&2
+    echo "=== GENERATING MOCK TRANSFER DATA ===" >&2
 
     # --- MOCK DATA ---
-    # En un flujo real, usarías el Agreement ID retornado por el script de Negociación.
-    # Aquí usamos uno falso si no pasas uno como argumento.
+    # In a real flow, use the Agreement ID returned by the Negotiation script.
+    # Here we use a fake one if not passed as an argument.
     CONSUMER_A="did:web:consumer:company-a"
     AGREEMENT_ID=${1:-"urn:agreement:mock-agreement-001"}
 
@@ -199,16 +197,16 @@ main() {
 
     # --- EXECUTE SCENARIOS ---
 
-    # 1. Transferencia Completada (Happy Path)
+    # 1. Successful Transfer
     simulate_successful_transfer "$CONSUMER_A" "$AGREEMENT_ID" "Daily Batch Download"
 
-    # 2. Transferencia Fallida (Error de Red simulado)
+    # 2. Failed Transfer
     simulate_terminated_transfer "$CONSUMER_A" "$AGREEMENT_ID" "Real-time Stream (Failed)"
 
-    # 3. Transferencia Suspendida
+    # 3. Suspended Transfer
     simulate_suspended_transfer "$CONSUMER_A" "$AGREEMENT_ID" "Large File Upload (Paused)"
 
-    echo -e "${GREEN}=== DONE. GENERATED TRANSFER PROCESSES ===${NC}" >&2
+    echo "=== DONE. GENERATED TRANSFER PROCESSES ===" >&2
 }
 
 # Pass Agreement ID as argument if available

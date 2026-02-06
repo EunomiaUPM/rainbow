@@ -17,7 +17,7 @@ function Invoke-Curl {
         [string]$Description
     )
 
-    Write-Host "--- $Description ---" -ForegroundColor Green
+    Write-Host "--- $Description ---"
     Write-Host "Request: $Method $Url"
 
     $Headers = @{ "Content-Type" = "application/json" }
@@ -29,14 +29,14 @@ function Invoke-Curl {
             $Response = Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -ErrorAction Stop
         }
         
-        # Convert response to JSON string for preview and return
+        # Preview response
         $ResponseJson = $Response | ConvertTo-Json -Depth 10 -Compress
         Write-Host "Response (preview): $($ResponseJson.Substring(0, [math]::Min(100, $ResponseJson.Length)))..."
         Write-Host "---------------------------------------------------"
         
         return $Response
     } catch {
-        Write-Host "Error: $_" -ForegroundColor Red
+        Write-Host "Error: $_"
         return $null
     }
 }
@@ -79,7 +79,7 @@ function Get-Dids {
         }
 
         if ([string]::IsNullOrEmpty($script:PROVIDER_DID) -or [string]::IsNullOrEmpty($script:CONSUMER_DID)) {
-            Write-Host "Warning: Could not retrieve DIDs. Using placeholders." -ForegroundColor Yellow
+            Write-Host "Warning: Could not retrieve DIDs. Using placeholders."
             $script:PROVIDER_DID = "urn:did:provider:placeholder"
             $script:CONSUMER_DID = "urn:did:consumer:placeholder"
         }
@@ -87,7 +87,7 @@ function Get-Dids {
         Write-Host "Provider DID: $script:PROVIDER_DID"
         Write-Host "Consumer DID: $script:CONSUMER_DID"
     } catch {
-        Write-Host "Error retrieving DIDs: $_" -ForegroundColor Red
+        Write-Host "Error retrieving DIDs: $_"
     }
 }
 
@@ -231,7 +231,7 @@ function Create-Policy {
 # ==========================================
 
 function Main {
-    Write-Host "=== STARTING MOCK DATA POPULATION ===" -ForegroundColor Green
+    Write-Host "=== STARTING MOCK DATA POPULATION ==="
 
     # 1. Retrieve DIDs
     Get-Dids
@@ -243,7 +243,7 @@ function Main {
     }
     
     if (-not $CATALOG_ID) {
-        Write-Host "Error: Failed to get or create Catalog ID." -ForegroundColor Red
+        Write-Host "Error: Failed to get or create Catalog ID."
         exit 1
     }
     Write-Host ">> Catalog ID: $CATALOG_ID"
@@ -308,7 +308,7 @@ function Main {
     $POLICY_ID3 = Create-Policy -EntityId $DS3_ID
     Write-Host ">> Policy for DS3: $POLICY_ID3"
 
-    Write-Host "=== MOCK DATA POPULATION FINISHED ===" -ForegroundColor Green
+    Write-Host "=== MOCK DATA POPULATION FINISHED ==="
 }
 
 Main

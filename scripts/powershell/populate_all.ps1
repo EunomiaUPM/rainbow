@@ -1,4 +1,4 @@
-# PowerShell Script: populate_all.ps1
+# Populate all mock data
 
 ./populate_mock_data.ps1
 ./populate_mock_contracts.ps1
