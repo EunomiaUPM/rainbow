@@ -22,10 +22,10 @@ use rainbow_catalog_agent::get_catalog_migrations;
 use rainbow_connector::get_connector_migrations;
 use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_events::data::migrations::get_events_migrations;
+use rainbow_negotiation_agent::get_negotiation_agent_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_negotiation_agent::get_negotiation_agent_migrations;
 
 pub struct CoreProviderMigration;
 

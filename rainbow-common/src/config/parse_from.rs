@@ -24,7 +24,10 @@ use ymir::services::wallet::walt_id::config::{WaltIdConfig, WaltIdConfigBuilder}
 
 impl From<SsiAuthConfig> for WaltIdConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        WaltIdConfigBuilder::new().ssi_wallet_config(value.wallet_config()).did_config(value.did()).build()
+        WaltIdConfigBuilder::new()
+            .ssi_wallet_config(value.wallet_config())
+            .did_config(value.did())
+            .build()
     }
 }
 

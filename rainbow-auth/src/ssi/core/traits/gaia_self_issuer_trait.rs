@@ -24,7 +24,7 @@ use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::issuer::IssuerTrait;
 use ymir::services::wallet::WalletTrait;
 use ymir::types::issuing::{
-    AuthServerMetadata, CredentialRequest, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer
+    AuthServerMetadata, CredentialRequest, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer,
 };
 use ymir::types::wallet::OidcUri;
 
@@ -50,7 +50,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
                 wallet.use_offer_req(&payload, &cred_offer).await?;
                 Ok(None)
             }
-            None => Ok(Some(OidcUri { uri }))
+            None => Ok(Some(OidcUri { uri })),
         }
     }
     async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<VCCredOffer> {
@@ -65,7 +65,9 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
 
         Ok(data)
     }
-    fn get_issuer_data(&self) -> IssuerMetadata { self.issuer().get_issuer_data(Some("gaia")) }
+    fn get_issuer_data(&self) -> IssuerMetadata {
+        self.issuer().get_issuer_data(Some("gaia"))
+    }
     fn get_oauth_server_data(&self) -> AuthServerMetadata {
         self.issuer().get_oauth_server_data(Some("gaia"))
     }
@@ -81,7 +83,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     async fn issue_cred(&self, payload: CredentialRequest, token: String) -> anyhow::Result<Value> {
         let did = match self.wallet() {
             Some(wallet) => wallet.get_did().await?,
-            None => self.gaia().get_did()
+            None => self.gaia().get_did(),
         };
 
         let mut iss_model = self.repo().issuing().get_by_token(&token).await?;
@@ -95,7 +97,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
         let wallet = self.wallet().ok_or_else(|| {
             let error = Errors::not_impl_new(
                 "Not implemented if wallet is not connected",
-                "Not implemented if wallet is not connected"
+                "Not implemented if wallet is not connected",
             );
             error!("{}", error.log());
             error

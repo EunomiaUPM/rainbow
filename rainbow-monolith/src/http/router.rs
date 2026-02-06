@@ -26,11 +26,11 @@ use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
 
 use rainbow_fe_gateway::create_gateway_http_router;
+use rainbow_negotiation_agent::create_negotiations_http_router;
 use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
 use ymir::services::vault::vault_rs::VaultService;
-use rainbow_negotiation_agent::create_negotiations_http_router;
 
 pub async fn create_core_provider_router(
     config: &ApplicationConfig,
@@ -39,7 +39,8 @@ pub async fn create_core_provider_router(
     let well_known_root_dspace =
         WellKnownRoot::get_well_known_router(&config.into()).expect("Failed to well known router");
     let auth_router = AuthApplication::create_router(&config.ssi_auth(), vault.clone()).await;
-    let negotiation_agent_router = create_negotiations_http_router(&config.contracts(), vault.clone()).await;
+    let negotiation_agent_router =
+        create_negotiations_http_router(&config.contracts(), vault.clone()).await;
     let transfer_agent_router = create_root_http_router(&config.transfer(), vault.clone())
         .await
         .expect("Failed to create transfer agent router");

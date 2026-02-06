@@ -50,14 +50,14 @@ use super::config::{GaiaGaiaSelfIssuerConfigTrait, GaiaSelfIssuerConfig};
 pub struct BasicGaiaSelfIssuer {
     vault: Arc<VaultService>,
     client: Arc<dyn ClientTrait>,
-    config: GaiaSelfIssuerConfig
+    config: GaiaSelfIssuerConfig,
 }
 
 impl BasicGaiaSelfIssuer {
     pub fn new(
         vault: Arc<VaultService>,
         client: Arc<dyn ClientTrait>,
-        config: GaiaSelfIssuerConfig
+        config: GaiaSelfIssuerConfig,
     ) -> BasicGaiaSelfIssuer {
         BasicGaiaSelfIssuer { vault, client, config }
     }
@@ -75,7 +75,7 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
         );
         let aud = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host
+            false => host,
         };
 
         let vc_type = format!("{}&{}", VcType::LegalPerson, VcType::TermsAndConditions);
@@ -83,7 +83,7 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
             id,
             name: self.config.get_client_config().class_id.clone(),
             vc_type,
-            aud
+            aud,
         }
     }
 
@@ -92,7 +92,9 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
         IssuingToken::default()
     }
 
-    fn get_did(&self) -> String { self.config.get_did() }
+    fn get_did(&self) -> String {
+        self.config.get_did()
+    }
 
     async fn issue_cred(&self, did: &str) -> anyhow::Result<Value> {
         info!("Issuing cred");
@@ -120,8 +122,8 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
                     credential_subject: legal_person_subj,
                     issuer: VCIssuer { id: did.to_string(), name: None },
                     valid_from: Some(now),
-                    valid_until: Some(now + Duration::days(365))
-                }
+                    valid_until: Some(now + Duration::days(365)),
+                },
             })?,
             W3cDataModelVersion::V2 => serde_json::to_value(VCClaimsV2 {
                 exp: None,
@@ -134,8 +136,8 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
                 credential_subject: legal_person_subj,
                 issuer: VCIssuer { id: did.to_string(), name: None },
                 valid_from: Some(now),
-                valid_until: Some(now + Duration::days(365))
-            })?
+                valid_until: Some(now + Duration::days(365)),
+            })?,
         };
 
         let terms_vc = match self.config.get_data_model_version() {
@@ -154,8 +156,8 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
                     credential_subject: terms_subj,
                     issuer: VCIssuer { id: did.to_string(), name: None },
                     valid_from: Some(now),
-                    valid_until: Some(now + Duration::days(365))
-                }
+                    valid_until: Some(now + Duration::days(365)),
+                },
             })?,
             W3cDataModelVersion::V2 => serde_json::to_value(VCClaimsV2 {
                 exp: None,
@@ -171,8 +173,8 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
                 credential_subject: terms_subj,
                 issuer: VCIssuer { id: did.to_string(), name: None },
                 valid_from: Some(now),
-                valid_until: Some(now + Duration::days(365))
-            })?
+                valid_until: Some(now + Duration::days(365)),
+            })?,
         };
 
         let mut header = Header::new(Algorithm::RS256);
@@ -204,7 +206,7 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
     async fn build_vp(
         &self,
         vcs: Vec<WalletCredentials>,
-        did: Option<String>
+        did: Option<String>,
     ) -> anyhow::Result<String> {
         info!("Building VP 4 GAIA");
 
@@ -225,7 +227,7 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
             verifiable_credential: vec![],
             issuer: did,
             valid_from: Some(now),
-            valid_until: Some(now + Duration::days(1))
+            valid_until: Some(now + Duration::days(1)),
         };
 
         let context;
@@ -276,7 +278,7 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
                     &url,
                     "POST",
                     Some(res.status().as_u16()),
-                    "Petition to retrieve gaia vc failed"
+                    "Petition to retrieve gaia vc failed",
                 );
                 error!("{}", error.log());
                 bail!(error);

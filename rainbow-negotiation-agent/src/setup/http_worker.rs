@@ -87,10 +87,8 @@ impl NegotiationHttpWorker {
         config: &ContractsConfig,
         vault: Arc<VaultService>,
     ) -> anyhow::Result<Router> {
-        let router = create_root_http_router(config, vault.clone())
-            .await
-            .fallback(Self::handler_404)
-            .layer(
+        let router =
+            create_root_http_router(config, vault.clone()).await.fallback(Self::handler_404).layer(
                 TraceLayer::new_for_http()
                     .make_span_with(
                         |_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()),

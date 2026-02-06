@@ -25,7 +25,7 @@ use crate::ssi::services::gatekeeper::gnap::config::GnapGateKeeperConfigTrait;
 pub struct GnapGateKeeperConfig {
     hosts: CommonHostsConfig,
     is_local: bool,
-    api_path: String
+    api_path: String,
 }
 
 impl From<SsiAuthConfig> for GnapGateKeeperConfig {
@@ -33,13 +33,19 @@ impl From<SsiAuthConfig> for GnapGateKeeperConfig {
         Self {
             hosts: value.common().hosts.clone(),
             is_local: value.common().is_local,
-            api_path: value.common().get_api_version()
+            api_path: value.common().get_api_version(),
         }
     }
 }
 
 impl GnapGateKeeperConfigTrait for GnapGateKeeperConfig {
-    fn hosts(&self) -> &CommonHostsConfig { &self.hosts }
-    fn is_local(&self) -> bool { self.is_local }
-    fn get_api_path(&self) -> String { self.api_path.clone() }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
+    }
+    fn is_local(&self) -> bool {
+        self.is_local
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
+    }
 }

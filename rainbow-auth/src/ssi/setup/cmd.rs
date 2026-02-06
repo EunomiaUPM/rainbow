@@ -36,20 +36,20 @@ use crate::ssi::setup::migrations::AuthMigrator;
 #[command(version = "0.1")]
 struct AuthCli {
     #[command(subcommand)]
-    command: AuthCliCommands
+    command: AuthCliCommands,
 }
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum AuthCliCommands {
     Start(AuthCliArgs),
     Setup(AuthCliArgs),
-    Vault
+    Vault,
 }
 
 #[derive(Parser, Debug, PartialEq)]
 pub struct AuthCliArgs {
     #[arg(short, long)]
-    env_file: String
+    env_file: String,
 }
 
 pub struct AuthCommands;

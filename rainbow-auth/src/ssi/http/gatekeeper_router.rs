@@ -32,11 +32,13 @@ use ymir::utils::extract_gnap_token;
 use crate::ssi::core::traits::CoreGateKeeperTrait;
 
 pub struct GateKeeperRouter {
-    gatekeeper: Arc<dyn CoreGateKeeperTrait>
+    gatekeeper: Arc<dyn CoreGateKeeperTrait>,
 }
 
 impl GateKeeperRouter {
-    pub fn new(gatekeeper: Arc<dyn CoreGateKeeperTrait>) -> Self { GateKeeperRouter { gatekeeper } }
+    pub fn new(gatekeeper: Arc<dyn CoreGateKeeperTrait>) -> Self {
+        GateKeeperRouter { gatekeeper }
+    }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -47,7 +49,7 @@ impl GateKeeperRouter {
 
     async fn manage_req(
         State(gatekeeper): State<Arc<dyn CoreGateKeeperTrait>>,
-        payload: Result<Json<GrantRequest>, JsonRejection>
+        payload: Result<Json<GrantRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
@@ -59,7 +61,7 @@ impl GateKeeperRouter {
 
         match gatekeeper.manage_req(payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
@@ -67,7 +69,7 @@ impl GateKeeperRouter {
         State(gatekeeper): State<Arc<dyn CoreGateKeeperTrait>>,
         headers: HeaderMap,
         Path(id): Path<String>,
-        Json(payload): Json<RefBody>
+        Json(payload): Json<RefBody>,
     ) -> impl IntoResponse {
         let token = match extract_gnap_token(headers) {
             Some(token) => token,
@@ -80,7 +82,7 @@ impl GateKeeperRouter {
 
         match gatekeeper.continue_req(id, payload, token).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 }

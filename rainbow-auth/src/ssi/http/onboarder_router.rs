@@ -33,11 +33,13 @@ use crate::ssi::core::traits::CoreOnboarderTrait;
 use crate::ssi::types::entities::ReachProvider;
 
 pub struct OnboarderRouter {
-    onboarder: Arc<dyn CoreOnboarderTrait>
+    onboarder: Arc<dyn CoreOnboarderTrait>,
 }
 
 impl OnboarderRouter {
-    pub fn new(onboarder: Arc<dyn CoreOnboarderTrait>) -> Self { Self { onboarder } }
+    pub fn new(onboarder: Arc<dyn CoreOnboarderTrait>) -> Self {
+        Self { onboarder }
+    }
 
     pub fn router(self) -> Router {
         Router::new()
@@ -49,25 +51,25 @@ impl OnboarderRouter {
 
     async fn onboard(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
-        Json(payload): Json<ReachProvider>
+        Json(payload): Json<ReachProvider>,
     ) -> impl IntoResponse {
         match onboarder.onboard_req(payload).await {
             Ok(uri) => uri.into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn get_callback(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
-        Query(params): Query<HashMap<String, String>>
+        Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
         let hash = match params.get("hash") {
             Some(hash) => hash.clone(),
             None => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    "Unable to retrieve hash from callback"
+                    "Unable to retrieve hash from callback",
                 );
                 error!("{}", error.log());
                 return error.into_response();
@@ -79,7 +81,7 @@ impl OnboarderRouter {
             None => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    "Unable to retrieve interact reference"
+                    "Unable to retrieve interact reference",
                 );
                 error!("{}", error.log());
                 return error.into_response();
@@ -89,23 +91,23 @@ impl OnboarderRouter {
         let payload = ApprovedCallbackBody { interact_ref, hash };
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 
     async fn post_callback(
         State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
-        payload: Result<Json<ApprovedCallbackBody>, JsonRejection>
+        payload: Result<Json<ApprovedCallbackBody>, JsonRejection>,
     ) -> impl IntoResponse {
         let payload = match payload {
             Ok(Json(data)) => data,
-            Err(e) => return e.into_response()
+            Err(e) => return e.into_response(),
         };
 
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
-            Err(e) => e.to_response()
+            Err(e) => e.to_response(),
         }
     }
 }
