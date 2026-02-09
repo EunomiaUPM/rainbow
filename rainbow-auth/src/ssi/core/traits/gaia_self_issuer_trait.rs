@@ -23,9 +23,7 @@ use tracing::error;
 use ymir::errors::{ErrorLogTrait, Errors};
 use ymir::services::issuer::IssuerTrait;
 use ymir::services::wallet::WalletTrait;
-use ymir::types::issuing::{
-    AuthServerMetadata, CredentialRequest, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer
-};
+use ymir::types::issuing::{AuthServerMetadata, CredentialRequest, CredentialRequestsss, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer};
 use ymir::types::wallet::OidcUri;
 
 use crate::ssi::services::gaia_self_issuer::GaiaOwnIssuerTrait;
@@ -40,7 +38,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     async fn generate_gaia_vcs(&self) -> anyhow::Result<Option<OidcUri>> {
         let model = self.gaia().start_basic_vcs();
         let model = self.repo().issuing().create(model).await?;
-        let uri = self.issuer().generate_issuing_uri(&model.id);
+        let uri = self.issuer().generate_issuing_uri(&model.id, Some("gaia"));
 
         match self.wallet() {
             Some(wallet) => {
@@ -56,7 +54,7 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<VCCredOffer> {
         let mut model = self.repo().issuing().get_by_id(&id).await?;
 
-        let data = self.issuer().get_cred_offer_data(&model)?;
+        let data = self.issuer().get_cred_offer_data(&model, Some("gaia"))?;
 
         if model.step {
             model.step = false;
@@ -90,6 +88,20 @@ pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
 
         self.gaia().issue_cred(&did).await
     }
+
+    async fn issue_some_cred(&self, _payload: CredentialRequestsss, _token: String) -> anyhow::Result<Value> {
+        let did = match self.wallet() {
+            Some(wallet) => wallet.get_did().await?,
+            None => self.gaia().get_did()
+        };
+
+        // let mut iss_model = self.repo().issuing().get_by_token(&token).await?;
+        // self.issuer().validate_cred_req(&mut iss_model, &payload, &token, Some(did.clone())).await?;
+        // self.repo().issuing().update(iss_model).await?;
+
+        self.gaia().issue_cred(&did).await
+    }
+
 
     async fn request_gaia_vc(&self) -> anyhow::Result<()> {
         let wallet = self.wallet().ok_or_else(|| {
