@@ -29,6 +29,6 @@ pub trait DataServiceFacadeTrait: Send + Sync {
     async fn resolve_data_service_by_agreement_id(
         &self,
         agreement_id: &Urn,
-        formats: Option<&DctFormats>,
+        formats: Option<&String>,
     ) -> anyhow::Result<DataServiceDto>;
 }

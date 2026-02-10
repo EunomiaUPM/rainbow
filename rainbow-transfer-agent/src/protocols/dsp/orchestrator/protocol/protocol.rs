@@ -72,7 +72,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         // resolve data service
         let agreement_id = input.dto.get_agreement_id().ok_or(anyhow!("no agreement id"))?;
         dbg!("2.");
-        let dct_formats = input.dto.format.parse::<DctFormats>()?;
+        //let dct_formats = input.dto.format.parse::<DctFormats>()?;
+        let dct_formats = input.dto.format.clone();
         dbg!("3.");
         let data_service = self
             .facades
@@ -100,7 +101,6 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         }
         dbg!("5.");
 
-
         // persist and send
         let transfer_process = self
             .persistence_service
@@ -114,7 +114,6 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             )
             .await?;
         dbg!("6.");
-
 
         // // data plane hook
         // let id = Urn::from_str(transfer_process.inner.id.as_str())?;

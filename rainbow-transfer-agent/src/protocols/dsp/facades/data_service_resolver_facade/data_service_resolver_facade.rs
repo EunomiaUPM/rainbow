@@ -50,7 +50,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
     async fn resolve_data_service_by_agreement_id(
         &self,
         agreement_id: &Urn,
-        formats: Option<&DctFormats>,
+        formats: Option<&String>,
     ) -> anyhow::Result<DataServiceDto> {
         let contracts_url = self.config.contracts().get_host(HostType::Http);
         let catalog_url = self.config.catalog().get_host(HostType::Http);

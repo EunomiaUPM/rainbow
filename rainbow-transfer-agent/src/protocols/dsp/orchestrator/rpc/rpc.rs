@@ -347,8 +347,6 @@ impl RPCOrchestratorService {
     where
         T: TransferProcessMessageTrait + Clone + serde::Serialize + 'static,
     {
-        // self.state_machine_service.validate_transition(None, payload.clone()).await?;
-        // self.validator_service.validate(None, payload.clone()).await?;
         // where to send
         let callback_url =
             transfer_process.inner.callback_address.clone().unwrap_or("".to_string());

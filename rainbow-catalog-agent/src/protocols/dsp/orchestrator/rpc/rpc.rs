@@ -75,7 +75,6 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .resolve_dataspace_current_path(&WellKnownRPCRequest { participant_id })
             .await?;
 
-
         // send dsp message to peer to fetch catalog
         let peer_url = format!("{}/catalog/request", provider_address);
         let request_body: CatalogMessageWrapper<CatalogRequestMessageDto> = input.clone().into();
