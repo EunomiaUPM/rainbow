@@ -134,13 +134,29 @@ pub async fn create_root_http_router(config: &ContractsConfig, vault: Arc<VaultS
     let agreement_router =
         NegotiationAgentAgreementsRouter::new(agreement_controller_service.clone(), config.clone());
 
+    use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
+    use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
+    use rainbow_common::http_client::HttpClient;
+
     // dsp
+    let http_client = Arc::new(HttpClient::new(10, 10));
+    let ssi_auth_config = Arc::new(config.ssi_auth());
+
+    let ssi_auth_service = Arc::new(SSIAuthFacadeService::new(
+        ssi_auth_config.clone(),
+        http_client.clone(),
+    ));
+    let mates_service =
+        Arc::new(MatesFacadeService::new(ssi_auth_config.clone(), http_client.clone()));
+
     let dsp_router = NegotiationDSP::new(
         entities_controller_service.clone(),
         messages_controller_service.clone(),
         offer_controller_service.clone(),
         agreement_controller_service.clone(),
         config.clone(),
+        ssi_auth_service,
+        mates_service,
     )
     .build_router()
     .await

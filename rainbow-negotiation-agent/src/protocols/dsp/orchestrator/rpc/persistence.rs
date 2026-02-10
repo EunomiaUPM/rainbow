@@ -170,6 +170,7 @@ impl OrchestrationPersistenceForRpc {
         response: &dyn NegotiationProcessMessageTrait,
     ) -> anyhow::Result<NegotiationProcessDto> {
         let id = self.create_entity_urn("negotiation-process")?;
+        let agent_peer = message.get_associated_agent_peer().unwrap_or("".to_string());
         let message_type = self.get_rpc_message_safely(message)?;
         let state: NegotiationProcessState = message_type.clone().into();
         let callback = self.get_rpc_provider_address_safely(message)?;
@@ -203,8 +204,6 @@ impl OrchestrationPersistenceForRpc {
             }
         };
         let mut identifiers = HashMap::new();
-        // identifiers.insert(key_identifier.to_string(), identifier.to_string());
-        // identifiers.insert(not_key_identifier.to_string(), self.create_entity_urn(not_key_identifier_id)?.to_string());
         identifiers.insert(
             "consumerPid".to_string(),
             self.get_dsp_consumer_pid_safely(response)?.to_string(),
@@ -220,7 +219,7 @@ impl OrchestrationPersistenceForRpc {
                 id: Some(id),
                 state: state.to_string(),
                 state_attribute: None,
-                associated_agent_peer: "".to_string(),
+                associated_agent_peer: agent_peer,
                 protocol: "DSP".to_string(),
                 callback_address: Some(callback),
                 role: role.to_string(),
@@ -303,8 +302,8 @@ impl OrchestrationPersistenceForRpc {
                 id: Some(id),
                 negotiation_agent_process_id: pid.clone(),
                 negotiation_agent_message_id: mid.clone(),
-                consumer_participant_id: "".to_string(),
-                provider_participant_id: peer.to_string(),
+                consumer_participant_id: agreement.assignee.clone(),
+                provider_participant_id: agreement.assigner.clone(),
                 agreement_content: serde_json::to_value(agreement).unwrap(),
                 target,
             })
