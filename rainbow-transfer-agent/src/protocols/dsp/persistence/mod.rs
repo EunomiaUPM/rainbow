@@ -40,6 +40,7 @@ pub trait TransferPersistenceTrait: Send + Sync {
         &self,
         protocol: &str,
         direction: &str,
+        associated_agent_peer: &str,
         provider_pid: Option<Urn>,
         provider_address: Option<String>,
         payload_dto: Arc<dyn TransferProcessMessageTrait>,

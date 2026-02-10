@@ -30,6 +30,8 @@ use axum::{serve, Router};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
+use rainbow_common::http_client::HttpClient;
 use rainbow_common::well_known::WellKnownRoot;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -113,6 +115,12 @@ pub async fn create_root_http_router(
     let config = Arc::new(config.clone());
     let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
+    // facades
+    let ssi_auth_config = Arc::new(config.ssi_auth().clone());
+    let http_client = Arc::new(HttpClient::new(10, 10));
+    let mates_facade =
+        Arc::new(MatesFacadeService::new(ssi_auth_config.clone(), http_client.clone()));
+
     // entities
     let messages_controller_service =
         Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));
@@ -129,6 +137,7 @@ pub async fn create_root_http_router(
         entities_controller_service.clone(),
         config.clone(),
         vault.clone(),
+        mates_facade.clone(),
     )
     .build_router()
     .await?;

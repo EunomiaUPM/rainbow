@@ -43,9 +43,12 @@ use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps
 use crate::protocols::dsp::validator::validators::rpc::validate_state_transition::ValidatedStateTransitionServiceForRcp;
 use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
+
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::services::TransferConfig;
+use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use rainbow_common::http_client::HttpClient;
 use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
@@ -58,6 +61,7 @@ pub struct TransferDSP {
     transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
     config: Arc<TransferConfig>,
     vault: Arc<VaultService>,
+    mates_facade: Arc<dyn MatesFacadeTrait>,
 }
 
 impl TransferDSP {
@@ -66,8 +70,15 @@ impl TransferDSP {
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
         config: Arc<TransferConfig>,
         vault: Arc<VaultService>,
+        mates_facade: Arc<dyn MatesFacadeTrait>,
     ) -> Self {
-        Self { transfer_agent_message_service, transfer_agent_process_entities, config, vault }
+        Self {
+            transfer_agent_message_service,
+            transfer_agent_process_entities,
+            config,
+            vault,
+            mates_facade,
+        }
     }
 }
 
@@ -152,6 +163,7 @@ impl ProtocolPluginTrait for TransferDSP {
             persistence_rpc_service,
             http_client.clone(),
             facades.clone(),
+            self.mates_facade.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(
             http_orchestator.clone(),
@@ -159,7 +171,13 @@ impl ProtocolPluginTrait for TransferDSP {
         ));
 
         // router
-        let dsp_router = DspRouter::new(orchestrator_service.clone());
+        // ssi auth
+        let ssi_auth = Arc::new(SSIAuthFacadeService::new(
+            Arc::new(self.config.ssi_auth().clone()),
+            http_client,
+        ));
+        let dsp_router =
+            DspRouter::new(orchestrator_service.clone(), self.config.clone(), ssi_auth);
         let rcp_router = RpcRouter::new(orchestrator_service.clone());
 
         Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))

@@ -14,6 +14,7 @@ use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDs
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use anyhow::anyhow;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::well_known::rpc::WellKnownRPCRequest;
 use std::marker::PhantomData;
@@ -25,6 +26,7 @@ pub struct RPCOrchestratorService {
     http_client: Arc<HttpClient>,
     facades: Arc<dyn FacadeTrait>,
     persistence: Arc<OrchestrationPersistenceForProtocolForRPC>,
+    mates_facade: Arc<dyn MatesFacadeTrait>,
 }
 
 impl RPCOrchestratorService {
@@ -33,8 +35,9 @@ impl RPCOrchestratorService {
         http_client: Arc<HttpClient>,
         facades: Arc<dyn FacadeTrait>,
         persistence: Arc<OrchestrationPersistenceForProtocolForRPC>,
+        mates_facade: Arc<dyn MatesFacadeTrait>,
     ) -> RPCOrchestratorService {
-        Self { validator, http_client, facades, persistence }
+        Self { validator, http_client, facades, persistence, mates_facade }
     }
 }
 
@@ -78,7 +81,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // send dsp message to peer to fetch catalog
         let peer_url = format!("{}/catalog/request", provider_address);
         let request_body: CatalogMessageWrapper<CatalogRequestMessageDto> = input.clone().into();
-        self.http_client.set_auth_token("blabla".to_string()).await;
+        if let Ok(mate) = self.mates_facade.get_mate_by_id(agent_peer.clone()).await {
+            if let Some(token) = mate.token {
+                self.http_client.set_auth_token(token).await;
+            }
+        }
         let response = self
             .http_client
             .post_json::<CatalogMessageWrapper<CatalogRequestMessageDto>, Catalog>(
@@ -115,7 +122,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let dataset = input.get_dataset_id().unwrap_or("".to_string());
         let peer_url = format!("{}/catalog/datasets/{}", provider_address, dataset);
         let request_body: CatalogMessageWrapper<DatasetRequestMessage> = input.clone().into();
-        self.http_client.set_auth_token("blabla".to_string()).await;
+        let peer_id = input.get_associated_agent_peer().unwrap_or_default();
+        if let Ok(mate) = self.mates_facade.get_mate_by_id(peer_id).await {
+            if let Some(token) = mate.token {
+                self.http_client.set_auth_token(token).await;
+            }
+        }
         let response: Dataset =
             self.http_client.get_json_with_payload(peer_url.as_str(), &request_body).await?;
 

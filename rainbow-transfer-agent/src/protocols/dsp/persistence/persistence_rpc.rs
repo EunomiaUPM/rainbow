@@ -86,6 +86,7 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
         &self,
         protocol: &str,
         direction: &str,
+        associated_agent_peer: &str,
         provider_pid: Option<Urn>,
         provider_address: Option<String>,
         payload_dto: Arc<dyn TransferProcessMessageTrait>,
@@ -118,7 +119,7 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
             .create_transfer_process(&NewTransferProcessDto {
                 id: Some(transfer_process_id.clone()),
                 state: TransferState::REQUESTED.to_string(),
-                associated_agent_peer: "".to_string(),
+                associated_agent_peer: associated_agent_peer.to_string(),
                 protocol: protocol.to_string(),
                 transfer_direction: format,
                 agreement_id,

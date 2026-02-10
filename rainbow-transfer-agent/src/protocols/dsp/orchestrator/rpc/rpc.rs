@@ -20,8 +20,9 @@
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto,
-    RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
+    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferProcessMessageTrait,
+    RpcTransferRequestMessageDto, RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto,
+    RpcTransferTerminationMessageDto,
 };
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
@@ -33,6 +34,7 @@ use crate::protocols::dsp::protocol_types::{
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use rainbow_common::http_client::HttpClient;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -44,6 +46,7 @@ pub struct RPCOrchestratorService {
     persistence_service: Arc<dyn TransferPersistenceTrait>,
     http_client: Arc<HttpClient>,
     facades: Arc<dyn FacadeTrait>,
+    mates_facade: Arc<dyn MatesFacadeTrait>,
 }
 
 impl RPCOrchestratorService {
@@ -52,8 +55,15 @@ impl RPCOrchestratorService {
         persistence_service: Arc<dyn TransferPersistenceTrait>,
         http_client: Arc<HttpClient>,
         facades: Arc<dyn FacadeTrait>,
+        mates_facade: Arc<dyn MatesFacadeTrait>,
     ) -> RPCOrchestratorService {
-        RPCOrchestratorService { validator, persistence_service, http_client, facades }
+        RPCOrchestratorService {
+            validator,
+            persistence_service,
+            http_client,
+            facades,
+            mates_facade,
+        }
     }
 }
 
@@ -71,6 +81,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // create url
         let peer_url = format!("{}/transfers/request", provider_address);
         // request
+        let associated_peer = input.get_associated_agent_peer().unwrap_or("".to_string());
+        if let Ok(mate) = self.mates_facade.get_mate_by_id(associated_peer.clone()).await {
+            if let Some(token) = mate.token {
+                self.http_client.set_auth_token(token).await;
+            }
+        }
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
         // persist
@@ -79,6 +95,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .create_process(
                 "DSP",
                 "OUTBOUND",
+                &associated_peer,
                 Some(response.dto.provider_pid.clone()),
                 Some(provider_address),
                 Arc::new(request_body.clone().dto),
@@ -358,6 +375,12 @@ impl RPCOrchestratorService {
             dto: payload.as_ref().clone(),
         };
         // send message to peer url
+        let associated_peer = transfer_process.inner.associated_agent_peer.clone();
+        if let Ok(mate) = self.mates_facade.get_mate_by_id(associated_peer).await {
+            if let Some(token) = mate.token {
+                self.http_client.set_auth_token(token).await;
+            }
+        }
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
             self.http_client.post_json(peer_url.as_str(), &message).await?;
         // persist

@@ -63,6 +63,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_transfer_request(
         &self,
         input: &TransferProcessMessageWrapper<TransferRequestMessageDto>,
+        associated_agent_peer: &str,
     ) -> anyhow::Result<(TransferProcessMessageWrapper<TransferProcessAckDto>, bool)> {
         // transform and validate
         let input = Arc::new(input.clone());
@@ -107,6 +108,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .create_process(
                 "DSP",
                 "INBOUND",
+                associated_agent_peer,
                 None,
                 None,
                 Arc::new(input.dto.clone()),
