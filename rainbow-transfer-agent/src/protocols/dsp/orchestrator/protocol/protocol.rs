@@ -67,16 +67,20 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         // transform and validate
         let input = Arc::new(input.clone());
         self.validator.on_transfer_request(&input).await?;
+        dbg!("1.");
 
         // resolve data service
         let agreement_id = input.dto.get_agreement_id().ok_or(anyhow!("no agreement id"))?;
+        dbg!("2.");
         let dct_formats = input.dto.format.parse::<DctFormats>()?;
+        dbg!("3.");
         let data_service = self
             .facades
             .get_data_service_facade()
             .await
             .resolve_data_service_by_agreement_id(&agreement_id, Option::from(&dct_formats))
             .await?;
+        dbg!("4.");
 
         // check idempotency
         let consumer_pid = input.dto.get_consumer_pid().ok_or(anyhow!("no consumer id"))?;
@@ -94,6 +98,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             }
             _ => {}
         }
+        dbg!("5.");
+
 
         // persist and send
         let transfer_process = self
@@ -107,19 +113,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(&input).unwrap(),
             )
             .await?;
+        dbg!("6.");
 
-        // data plane hook
-        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_request_post(
-                &id,
-                &dct_formats,
-                &Some(data_service),
-                &input.dto.data_address,
-            )
-            .await?;
+
+        // // data plane hook
+        // let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_request_post(
+        //         &id,
+        //         &dct_formats,
+        //         &Some(data_service),
+        //         &input.dto.data_address,
+        //     )
+        //     .await?;
+
+        dbg!("7.");
 
         // notify
 
@@ -141,11 +151,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .get_transfer_process_by_key_value(&dpid)
             .await?;
         let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_start_pre(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_start_pre(&transfer_process_id)
+        //     .await?;
         // persist and send
         let transfer_process = self
             .persistence_service
@@ -153,11 +163,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await?;
 
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_start_post(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_start_post(&transfer_process_id)
+        //     .await?;
         // notify
 
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
@@ -178,11 +188,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .get_transfer_process_by_key_value(&dpid)
             .await?;
         let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_suspension_pre(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_suspension_pre(&transfer_process_id)
+        //     .await?;
 
         // persist and send
         let transfer_process = self
@@ -191,11 +201,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await?;
 
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_suspension_post(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_suspension_post(&transfer_process_id)
+        //     .await?;
 
         // notify
 
@@ -217,11 +227,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .get_transfer_process_by_key_value(&dpid)
             .await?;
         let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_completion_pre(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_completion_pre(&transfer_process_id)
+        //     .await?;
 
         // persist and send
         let transfer_process = self
@@ -230,11 +240,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await?;
 
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_completion_post(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_completion_post(&transfer_process_id)
+        //     .await?;
 
         // notify
 
@@ -256,11 +266,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .get_transfer_process_by_key_value(&dpid)
             .await?;
         let transfer_process_id = Urn::from_str(transfer_process.inner.id.as_str())?;
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_termination_pre(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_termination_pre(&transfer_process_id)
+        //     .await?;
 
         // persist and send
         let transfer_process = self
@@ -269,11 +279,11 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await?;
 
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_termination_post(&transfer_process_id)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_termination_post(&transfer_process_id)
+        //     .await?;
 
         // notify
 

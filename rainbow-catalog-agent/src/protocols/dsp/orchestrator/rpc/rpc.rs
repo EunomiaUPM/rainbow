@@ -54,12 +54,14 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // validation
         self.validator.on_catalog_request(input).await?;
 
-        // hit caché and return guard
-        let catalog_in_cache = self.persistence.get_catalog(&agent_peer).await?;
-        if let Some(catalog) = catalog_in_cache {
-            let response =
-                RpcCatalogResponseMessageDto { request: input.clone(), response: catalog };
-            return Ok(response);
+        if input.no_cache == false {
+            // hit caché and return guard
+            let catalog_in_cache = self.persistence.get_catalog(&agent_peer).await?;
+            if let Some(catalog) = catalog_in_cache {
+                let response =
+                    RpcCatalogResponseMessageDto { request: input.clone(), response: catalog };
+                return Ok(response);
+            }
         }
 
         // send message to peer
@@ -73,6 +75,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .resolve_dataspace_current_path(&WellKnownRPCRequest { participant_id })
             .await?;
 
+
         // send dsp message to peer to fetch catalog
         let peer_url = format!("{}/catalog/request", provider_address);
         let request_body: CatalogMessageWrapper<CatalogRequestMessageDto> = input.clone().into();
@@ -85,8 +88,10 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
 
-        // hydrate cache
-        let _ = self.persistence.set_catalog(&agent_peer, &response).await?;
+        if input.no_cache == false {
+            // hydrate cache
+            let _ = self.persistence.set_catalog(&agent_peer, &response).await?;
+        }
 
         // return response
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };

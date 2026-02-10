@@ -58,10 +58,10 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             "{}/api/v1/negotiation-agent/agreements/{}",
             contracts_url, agreement_id
         );
-        let data_service_url = format!("{}/api/v1/catalog-agent/data-services", catalog_url);
 
         // resolve agreement
         let agreement = self.client.get_json::<AgreementDto>(agreement_url.as_str()).await?;
+        dbg!("3.1");
         let agreement_target = get_urn_from_string(&agreement.inner.target)?;
 
         // resolve dataset entity
@@ -71,6 +71,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             agreement_target.clone()
         );
         let dataset = self.client.get_json::<DatasetDto>(datasets_url.as_str()).await?;
+        dbg!("3.2");
         let dataset_id = get_urn_from_string(&dataset.inner.id)?;
 
         // resolve distribution entity
@@ -82,11 +83,17 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         );
         let distribution =
             self.client.get_json::<DistributionDto>(distribution_url.as_str()).await?;
-        let access_service_id = Urn::from_str(distribution.inner.id.as_str())?;
+        dbg!("3.3");
+        let access_service_id = Urn::from_str(distribution.inner.dcat_access_service.as_str())?;
 
         // resolve Data service entity
+        let data_service_url = format!(
+            "{}/api/v1/catalog-agent/data-services/{}",
+            catalog_url, access_service_id
+        );
         let data_service =
             self.client.get_json::<DataServiceDto>(data_service_url.as_str()).await?;
+        dbg!("3.4");
 
         Ok(data_service)
     }

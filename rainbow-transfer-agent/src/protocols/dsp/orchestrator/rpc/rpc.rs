@@ -87,16 +87,16 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .await?;
 
         // data plane post hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_request_post(
-                &Urn::from_str(transfer_process.inner.id.as_str())?,
-                &request_body.dto.format.parse::<DctFormats>()?,
-                &None,
-                &request_body.dto.data_address,
-            )
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_request_post(
+        //         &Urn::from_str(transfer_process.inner.id.as_str())?,
+        //         &request_body.dto.format.parse::<DctFormats>()?,
+        //         &None,
+        //         &request_body.dto.data_address,
+        //     )
+        //     .await?;
 
         let response = RpcTransferMessageDto {
             request: input.clone(),
@@ -133,11 +133,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_start_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_start_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -148,11 +148,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_start_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_start_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // bye!
         let response = RpcTransferMessageDto {
             request: input.clone(),
@@ -191,11 +191,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_suspension_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_suspension_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -206,11 +206,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_suspension_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_suspension_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // bye!
         let response = RpcTransferMessageDto {
             request: input.clone(),
@@ -245,11 +245,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_completion_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_completion_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -260,11 +260,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_completion_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_completion_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // bye!
         let response = RpcTransferMessageDto {
             request: input.clone(),
@@ -303,11 +303,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         let peer_url_id = transfer_process.identifiers.get(identifier_key).unwrap();
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_termination_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_termination_pre(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // validate, send and persist
         let (response, transfer_process) = self
             .validate_and_send(
@@ -318,11 +318,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             )
             .await?;
         // data plane hook
-        self.facades
-            .get_data_plane_facade()
-            .await
-            .on_transfer_termination_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
-            .await?;
+        // self.facades
+        //     .get_data_plane_facade()
+        //     .await
+        //     .on_transfer_termination_post(&Urn::from_str(transfer_process.inner.id.as_str())?)
+        //     .await?;
         // bye!
         let response = RpcTransferMessageDto {
             request: input.clone(),
