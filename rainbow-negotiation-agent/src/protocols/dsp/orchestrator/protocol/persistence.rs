@@ -57,7 +57,7 @@ impl OrchestrationPersistenceForProtocol {
     ) -> anyhow::Result<NegotiationProcessDto> {
         let mut process = self.create_process(payload, mate).await?;
         let process_id = self.convert_string_to_urn(&process.inner.id)?;
-        let message = self.create_message(&process_id, payload, &process).await?;
+        let message = self.create_message_with_old_state(&process_id, payload, &process, "-").await?;
         let message_id = self.convert_string_to_urn(&message.inner.id)?;
         let offer = self.create_offer(&process_id, &message_id, payload).await?;
         process.messages.push(message.inner);
@@ -232,11 +232,33 @@ impl OrchestrationPersistenceForProtocol {
         message: &dyn NegotiationProcessMessageTrait,
         process: &NegotiationProcessDto,
     ) -> anyhow::Result<NegotiationMessageDto> {
+        let old_state = process.inner.state.clone();
+        self.create_message_with_old_state(process_id, message, process, &old_state).await
+    }
+
+    async fn create_message_with_old_state(
+        &self,
+        process_id: &Urn,
+        message: &dyn NegotiationProcessMessageTrait,
+        _process: &NegotiationProcessDto,
+        old_state: &str,
+    ) -> anyhow::Result<NegotiationMessageDto> {
         let id = self.create_entity_urn("negotiation-message")?;
         let message_type = self.get_dsp_message_safely(message)?;
-        let old_state = process.inner.state.parse::<NegotiationProcessState>().unwrap();
         let state: NegotiationProcessState = message_type.clone().into();
-        let payload_json = message.as_json();
+        let mut payload_json = message.as_json();
+
+        // Wrap with DSP envelope (@context and @type)
+        if let serde_json::Value::Object(ref mut map) = payload_json {
+            map.insert(
+                "@context".to_string(),
+                serde_json::json!(["https://w3id.org/dspace/2025/1/context.jsonld"]),
+            );
+            map.insert(
+                "@type".to_string(),
+                serde_json::Value::String(message_type.to_string()),
+            );
+        }
 
         let new_message = self
             .negotiation_messages_service
