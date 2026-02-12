@@ -1518,6 +1518,64 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
+  /odrl-policies:
+    get:
+      tags:
+        - OdrlPolicies
+      summary: Get all ODRL policies
+      operationId: getAllOdrlPolicies
+      responses:
+        "200":
+          description: List of ODRL policies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OdrlPolicyDto"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorInfo"
+    post:
+      tags:
+        - OdrlPolicies
+      summary: Create ODRL policy
+      operationId: createOdrlPolicy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOdrlPolicyDto"
+            example:
+              entityId: "urn:uuid:my-dataset-id"
+              entityType: "Dataset"
+              odrlOffer:
+                profile: ["http://www.w3.org/ns/odrl/2/"]
+                permission:
+                  - action: "http://www.w3.org/ns/odrl/2/use"
+      responses:
+        "200":
+          description: ODRL policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OdrlPolicyDto"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorInfo"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorInfo"
+
   /odrl-policies/entity/{entityId}:
     get:
       operationId: getPoliciesByEntityId
@@ -6238,6 +6296,7 @@ components:
                   - leftOperand: bla
                     operator: eq
                     rightOperand: hola
+
     LocalizedText:
       type: object
       additionalProperties:

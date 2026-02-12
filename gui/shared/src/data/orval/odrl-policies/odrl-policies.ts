@@ -11,6 +11,7 @@ corresponding microservice (catalog-agent, negotiation-agent, transfer-agent, au
  */
 import {
   useInfiniteQuery,
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
@@ -19,23 +20,27 @@ import type {
   DefinedUseInfiniteQueryResult,
   DefinedUseQueryResult,
   InfiniteData,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
   UseInfiniteQueryOptions,
   UseInfiniteQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ErrorInfo,
+  NewOdrlPolicyDto,
   OdrlPolicyDto
 } from '.././model';
 
 import { customInstance } from '../../orval-mutator';
-import type { ErrorType } from '../../orval-mutator';
+import type { ErrorType , BodyType } from '../../orval-mutator';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -43,6 +48,288 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * @summary Get all ODRL policies
+ */
+export type getAllOdrlPoliciesResponse200 = {
+  data: OdrlPolicyDto[]
+  status: 200
+}
+
+export type getAllOdrlPoliciesResponse500 = {
+  data: ErrorInfo
+  status: 500
+}
+    
+export type getAllOdrlPoliciesResponseSuccess = (getAllOdrlPoliciesResponse200) & {
+  headers: Headers;
+};
+export type getAllOdrlPoliciesResponseError = (getAllOdrlPoliciesResponse500) & {
+  headers: Headers;
+};
+
+export type getAllOdrlPoliciesResponse = (getAllOdrlPoliciesResponseSuccess | getAllOdrlPoliciesResponseError)
+
+export const getGetAllOdrlPoliciesUrl = () => {
+
+
+  
+
+  return `/odrl-policies`
+}
+
+export const getAllOdrlPolicies = async ( options?: RequestInit): Promise<getAllOdrlPoliciesResponse> => {
+  
+  return customInstance<getAllOdrlPoliciesResponse>(getGetAllOdrlPoliciesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetAllOdrlPoliciesInfiniteQueryKey = () => {
+    return [
+    'infinite', `/odrl-policies`
+    ] as const;
+    }
+
+export const getGetAllOdrlPoliciesQueryKey = () => {
+    return [
+    `/odrl-policies`
+    ] as const;
+    }
+
+    
+export const getGetAllOdrlPoliciesInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getAllOdrlPolicies>>>, TError = ErrorType<ErrorInfo>>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllOdrlPoliciesInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOdrlPolicies>>> = ({ signal }) => getAllOdrlPolicies({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn,   ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData> & { queryKey: DataTag<QueryKey, TData> }
+}
+
+export type GetAllOdrlPoliciesInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getAllOdrlPolicies>>>
+export type GetAllOdrlPoliciesInfiniteQueryError = ErrorType<ErrorInfo>
+
+
+export function useGetAllOdrlPoliciesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getAllOdrlPolicies>>>, TError = ErrorType<ErrorInfo>>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetAllOdrlPoliciesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getAllOdrlPolicies>>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetAllOdrlPoliciesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getAllOdrlPolicies>>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+/**
+ * @summary Get all ODRL policies
+ */
+
+export function useGetAllOdrlPoliciesInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getAllOdrlPolicies>>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> } {
+
+  const queryOptions = getGetAllOdrlPoliciesInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getGetAllOdrlPoliciesQueryOptions = <TData = Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError = ErrorType<ErrorInfo>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllOdrlPoliciesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOdrlPolicies>>> = ({ signal }) => getAllOdrlPolicies({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn,   ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData> & { queryKey: DataTag<QueryKey, TData> }
+}
+
+export type GetAllOdrlPoliciesQueryResult = NonNullable<Awaited<ReturnType<typeof getAllOdrlPolicies>>>
+export type GetAllOdrlPoliciesQueryError = ErrorType<ErrorInfo>
+
+
+export function useGetAllOdrlPolicies<TData = Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError = ErrorType<ErrorInfo>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetAllOdrlPolicies<TData = Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOdrlPolicies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetAllOdrlPolicies<TData = Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+/**
+ * @summary Get all ODRL policies
+ */
+
+export function useGetAllOdrlPolicies<TData = Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError = ErrorType<ErrorInfo>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOdrlPolicies>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> } {
+
+  const queryOptions = getGetAllOdrlPoliciesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Create ODRL policy
+ */
+export type createOdrlPolicyResponse200 = {
+  data: OdrlPolicyDto
+  status: 200
+}
+
+export type createOdrlPolicyResponse400 = {
+  data: ErrorInfo
+  status: 400
+}
+
+export type createOdrlPolicyResponse500 = {
+  data: ErrorInfo
+  status: 500
+}
+    
+export type createOdrlPolicyResponseSuccess = (createOdrlPolicyResponse200) & {
+  headers: Headers;
+};
+export type createOdrlPolicyResponseError = (createOdrlPolicyResponse400 | createOdrlPolicyResponse500) & {
+  headers: Headers;
+};
+
+export type createOdrlPolicyResponse = (createOdrlPolicyResponseSuccess | createOdrlPolicyResponseError)
+
+export const getCreateOdrlPolicyUrl = () => {
+
+
+  
+
+  return `/odrl-policies`
+}
+
+export const createOdrlPolicy = async (newOdrlPolicyDto: NewOdrlPolicyDto, options?: RequestInit): Promise<createOdrlPolicyResponse> => {
+  
+  return customInstance<createOdrlPolicyResponse>(getCreateOdrlPolicyUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      newOdrlPolicyDto,)
+  }
+);}
+
+
+
+
+export const getCreateOdrlPolicyMutationOptions = <TError = ErrorType<ErrorInfo>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOdrlPolicy>>, TError,{data: BodyType<NewOdrlPolicyDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createOdrlPolicy>>, TError,{data: BodyType<NewOdrlPolicyDto>}, TContext> => {
+
+const mutationKey = ['createOdrlPolicy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createOdrlPolicy>>, {data: BodyType<NewOdrlPolicyDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createOdrlPolicy(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateOdrlPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof createOdrlPolicy>>>
+    export type CreateOdrlPolicyMutationBody = BodyType<NewOdrlPolicyDto>
+    export type CreateOdrlPolicyMutationError = ErrorType<ErrorInfo>
+
+    /**
+ * @summary Create ODRL policy
+ */
+export const useCreateOdrlPolicy = <TError = ErrorType<ErrorInfo>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOdrlPolicy>>, TError,{data: BodyType<NewOdrlPolicyDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createOdrlPolicy>>,
+        TError,
+        {data: BodyType<NewOdrlPolicyDto>},
+        TContext
+      > => {
+      return useMutation(getCreateOdrlPolicyMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Get ODRL policies by entity ID
  */
 export type getPoliciesByEntityIdResponse200 = {

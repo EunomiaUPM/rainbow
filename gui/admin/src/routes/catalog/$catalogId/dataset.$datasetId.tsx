@@ -11,7 +11,8 @@ import {
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { ArrowRight, Plus } from "lucide-react";
-import { useGetPoliciesByEntityId } from "shared/src/data/orval/odrl-policies/odrl-policies";
+import { useCreateOdrlPolicy, useGetPoliciesByEntityId } from "shared/src/data/orval/odrl-policies/odrl-policies";
+import { OdrlPolicyInfo } from "shared/src/data/orval/model/odrlPolicyInfo";
 import { SubmitHandler } from "react-hook-form";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { formatUrn } from "shared/src/lib/utils";
@@ -33,29 +34,29 @@ import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
 import { useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 
-type Inputs = {
-  odrl: string;
-};
-
 function RouteComponent() {
   const { catalogId, datasetId } = Route.useParams();
   const { data: datasetData } = useGetDatasetById(datasetId);
   const { data: distributionsData } = useGetDistributionsByDatasetId(datasetId);
-  const { data: policiesData } = useGetPoliciesByEntityId(datasetId);
+  const { data: policiesData, refetch: refetchPolicies } = useGetPoliciesByEntityId(datasetId);
   const [open, setOpen] = useState(false);
-  const { mutateAsync: createPolicyAsync } = useAddPolicyToDataset();
+  const { mutateAsync: createPolicyAsync } = useCreateOdrlPolicy();
   // const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!; // No longer needed
 
   const dataset = datasetData?.status === 200 ? datasetData.data : undefined;
   const distributions = distributionsData?.status === 200 ? distributionsData.data : [];
   const policies = policiesData?.status === 200 ? policiesData.data : [];
 
-  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+  const onSubmit: SubmitHandler<OdrlPolicyInfo> = async (data) => {
     await createPolicyAsync({
-      datasetId,
-      data: data.odrl, // Assuming data.odrl is the policy string expected by the API
+      data: {
+        entityId: datasetId,
+        entityType: "Dataset",
+        odrlOffer: data,
+      }
     });
     setOpen(false);
+    refetchPolicies();
   };
 
   if (!dataset) return null;
