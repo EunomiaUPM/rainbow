@@ -7,12 +7,13 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostContractNegotiationRPCFinalization } from "../../data/contract-mutations";
 import { BaseProcessDialog, mapCNProcessToInfoItemsForProvider } from "./base";
+import { useRpcSetupFinalization } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { NegotiationProcessDto } from "../../data/orval/model";
 
-export const ContractNegotiationFinalizationDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationFinalizationDialog = ({ process }: { process: NegotiationProcessDto }) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: finalizeAsync } = usePostContractNegotiationRPCFinalization();
+  const { mutateAsync: finalizeAsync } = useRpcSetupFinalization();
 
   /**
    * Handles the finalization submission.
@@ -20,12 +21,10 @@ export const ContractNegotiationFinalizationDialog = ({ process }: { process: CN
    */
   const handleSubmit = async () => {
     await finalizeAsync({
-      api_gateway,
-      content: {
-        consumerParticipantId: process.associated_consumer!,
-        consumerPid: process.consumer_id,
-        providerPid: process.provider_id,
-      },
+      data: {
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
+      }
     });
   };
 

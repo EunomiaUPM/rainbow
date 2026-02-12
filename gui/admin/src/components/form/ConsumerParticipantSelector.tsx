@@ -18,14 +18,15 @@ import {
   CommandItem,
   CommandList,
 } from "shared/src/components/ui/command";
+import { ParticipantDto } from "shared/src/data/orval/model/participantDto";
 
 interface ConsumerParticipantSelectorProps {
   control: Control<any>;
   name: string;
-  participants: Participant[];
+  participants: ParticipantDto[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (participant: Participant) => void;
+  onSelect: (participant: ParticipantDto) => void;
   isLoading?: boolean;
 }
 
@@ -55,7 +56,7 @@ export const ConsumerParticipantSelector = ({
                     className="w-full justify-between font-normal text-gray-300 transition-colors"
                   >
                     {field.value
-                      ? participants.find((p) => p.participant_id === field.value)?.participant_id
+                      ? participants.find((p) => p.id === field.value)?.id
                       : "Select participant..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
                   </Button>
@@ -68,21 +69,21 @@ export const ConsumerParticipantSelector = ({
                       <CommandGroup>
                         {participants.map((consumerParticipant) => (
                           <CommandItem
-                            key={consumerParticipant.participant_id}
-                            value={consumerParticipant.participant_id}
+                            key={consumerParticipant.id}
+                            value={consumerParticipant.id}
                             onSelect={() => {
-                              field.onChange(consumerParticipant.participant_id);
+                              field.onChange(consumerParticipant.id);
                               onSelect(consumerParticipant);
                             }}
                             className={
-                              field.value === consumerParticipant.participant_id
+                              field.value === consumerParticipant.id
                                 ? "text-role-consumer font-medium"
                                 : ""
                             }
                           >
-                            {consumerParticipant.participant_id}
+                            {consumerParticipant.id}
                             <span className="text-gray-400 ml-2 text-sm">
-                              ({consumerParticipant.base_url})
+                              ({consumerParticipant.agent_address})
                             </span>
                           </CommandItem>
                         ))}

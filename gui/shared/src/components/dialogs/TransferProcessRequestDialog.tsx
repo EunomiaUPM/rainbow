@@ -26,11 +26,12 @@ import {
   FormMessage,
 } from "shared/src/components/ui/form";
 import { useForm } from "react-hook-form";
-import { usePostTransferRPCRequest } from "shared/src/data/transfer-mutations";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { BaseProcessDialog } from "./base";
 import { urnInfoItem } from "./base/infoItemMappers";
 import { InfoItemProps } from "../ui/info-list";
+import { AgreementDto } from "../../data/orval/model";
+import { useSetupTransferRequest } from "../../data/orval/transfer-rp-c/transfer-rp-c";
 
 // =============================================================================
 // TYPES
@@ -49,7 +50,7 @@ type TransferRequestInputs = {
  */
 export interface TransferProcessRequestDialogProps {
   /** The agreement to start a transfer for */
-  agreement: Agreement;
+  agreement: AgreementDto;
 }
 
 // =============================================================================
@@ -75,7 +76,7 @@ const TRANSFER_PROTOCOLS = ["http", "kafka", "ftp"] as const;
  * - Agreement information display
  */
 export const TransferProcessRequestDialog = ({ agreement }: TransferProcessRequestDialogProps) => {
-  const { mutateAsync: requestAsync } = usePostTransferRPCRequest();
+  const { mutateAsync } = useSetupTransferRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   // Form with default values
@@ -91,9 +92,9 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
   // ---------------------------------------------------------------------------
 
   const infoItems: InfoItemProps[] = [
-    urnInfoItem("Agreement ID", agreement.agreement_id),
-    urnInfoItem("Provider", agreement.provider_participant_id),
-    urnInfoItem("Consumer", agreement.consumer_participant_id),
+    urnInfoItem("Agreement ID", agreement.id),
+    urnInfoItem("Provider", agreement.providerParticipantId),
+    urnInfoItem("Consumer", agreement.consumerParticipantId),
   ].filter((item): item is InfoItemProps => item !== undefined);
 
   // ---------------------------------------------------------------------------
@@ -101,11 +102,12 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async (data: TransferRequestInputs) => {
-    await requestAsync({
-      api_gateway,
-      content: {
-        providerParticipantId: agreement.provider_participant_id,
-        agreementId: agreement.agreement_id,
+    await mutateAsync({
+      data: {
+        associatedAgentPeer: agreement.providerParticipantId,
+        callbackAddress: api_gateway, // TODO: get callback address from agreement
+        providerAddress: api_gateway, // TODO: get provider address from agreement
+        agreementId: agreement.id,
         format: `${data.transfer_protocol}+${data.method}`.toLowerCase(),
       },
     });
@@ -195,7 +197,7 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
       description={
         <span className="max-w-full flex flex-wrap gap-1">
           Start transfer process for Agreement{" "}
-          <Badge variant="info">{formatUrn(agreement.agreement_id)}</Badge>
+          <Badge variant="info">{formatUrn(agreement.id)}</Badge>
         </span>
       }
       infoItems={infoItems}

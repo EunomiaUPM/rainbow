@@ -15,7 +15,7 @@
 
 import React, { useContext, useRef } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { usePostNewBusinessRequest } from "shared/src/data/business-mutations";
+//import { usePostNewBusinessRequest } from "shared/src/data/business-mutations";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow";
 import { BaseProcessDialog } from "./base";
@@ -65,7 +65,7 @@ export const BusinessRequestAccessDialog = ({
   datasetName,
 }: BusinessRequestAccessDialogProps) => {
   const closeDialogRef = useRef<HTMLButtonElement>(null);
-  const { mutateAsync: requestAsync } = usePostNewBusinessRequest();
+  //const { mutateAsync: requestAsync } = usePostNewBusinessRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { participant } = useContext<AuthContextType | null>(AuthContext)!;
 
@@ -84,16 +84,16 @@ export const BusinessRequestAccessDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    await requestAsync({
-      api_gateway,
-      content: {
-        consumerParticipantId: participant?.participant_id!,
-        offer: {
-          "@id": policy["@id"],
-        },
-      },
-    });
-    closeDialogRef.current?.click();
+    // await requestAsync({
+    //   api_gateway,
+    //   content: {
+    //     consumerParticipantId: participant?.participant_id!,
+    //     offer: {
+    //       "@id": policy["@id"],
+    //     },
+    //   },
+    // });
+    // closeDialogRef.current?.click();
   };
 
   // ---------------------------------------------------------------------------

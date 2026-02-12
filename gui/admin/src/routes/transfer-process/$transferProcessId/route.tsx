@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
-import { getTransferProcessByIdOptions } from "shared/src/data/transfer-queries.ts";
+import { getGetTransferProcessByIdQueryOptions } from "shared/src/data/orval/transfers/transfers";
 import { formatUrn } from "shared/src/lib/utils.ts";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 
@@ -33,10 +33,9 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/transfer-process/$transferProcessId")({
   component: RouteComponent,
   notFoundComponent: NotFound,
-  loader: ({ context: { queryClient, api_gateway }, params: { transferProcessId } }) => {
-    if (!api_gateway) return;
+  loader: ({ context: { queryClient }, params: { transferProcessId } }) => {
     return queryClient.ensureQueryData(
-      getTransferProcessByIdOptions(api_gateway, transferProcessId),
+      getGetTransferProcessByIdQueryOptions(transferProcessId),
     );
   },
 });

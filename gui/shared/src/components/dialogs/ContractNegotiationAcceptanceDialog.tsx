@@ -7,12 +7,13 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostContractNegotiationRPCAcceptance } from "../../data/contract-mutations";
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
+import { NegotiationProcessDto } from "../../data/orval/model";
+import { useRpcSetupAcceptance } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 
-export const ContractNegotiationAcceptanceDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationAcceptanceDialog = ({ process }: { process: NegotiationProcessDto }) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: acceptAsync } = usePostContractNegotiationRPCAcceptance();
+  const { mutateAsync: acceptAsync } = useRpcSetupAcceptance();
 
   /**
    * Handles the acceptance submission.
@@ -20,11 +21,9 @@ export const ContractNegotiationAcceptanceDialog = ({ process }: { process: CNPr
    */
   const handleSubmit = async () => {
     await acceptAsync({
-      api_gateway,
-      content: {
-        providerParticipantId: process.associated_provider!,
-        consumerPid: process.consumer_id,
-        providerPid: process.provider_id,
+      data: {
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
       },
     });
   };

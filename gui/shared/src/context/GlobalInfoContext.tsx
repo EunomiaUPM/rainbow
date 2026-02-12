@@ -1,3 +1,5 @@
+import { setApiGatewayBase as setOrvalApiGatewayBase } from "../data/orval-mutator";
+
 import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
 import React from "react";
 
@@ -66,16 +68,34 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
     initConfig();
   }, []);
 
+
+
+  // ... existing code ...
+
+  /**
+   * Memoized context value
+   */
+  /**
+   * Update global configuration for Orval when gateway changes
+   */
+  useEffect(() => {
+    const prefix = apiGatewayBase === "/" ? "" : apiGatewayBase;
+    const gateway = `${prefix}/admin/api`;
+    setOrvalApiGatewayBase(gateway);
+  }, [apiGatewayBase]);
+
   /**
    * Memoized context value
    */
   const contextValue = useMemo<GlobalInfoContextType>(() => {
     const prefix = apiGatewayBase === "/" ? "" : apiGatewayBase;
+    const gateway = `${prefix}/admin/api`;
+
     return {
       catalog_type: catalogType,
       dsrole: configRole,
       api_gateway_base: prefix,
-      api_gateway: `${prefix}/admin/api`,
+      api_gateway: gateway,
       api_gateway_callback_address: `${prefix}/admin/api/incoming-notification`,
     };
   }, [catalogType, configRole, apiGatewayBase]);

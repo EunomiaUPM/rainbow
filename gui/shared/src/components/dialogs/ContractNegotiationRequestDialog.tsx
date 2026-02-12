@@ -10,12 +10,12 @@
 
 import React, { useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { usePostContractNegotiationRPCRequest } from "shared/src/data/contract-mutations";
-import { useGetLastContractNegotiationOfferByCNMessageId } from "shared/src/data/contract-queries";
 import { PolicyWrapperEdit } from "../PolicyWrapperEdit";
 import { BaseProcessDialog } from "./base";
 import { mapCNProcessToInfoItemsForConsumer } from "./base/infoItemMappers";
 import Heading from "../ui/heading";
+import { OdrlInfo, NegotiationProcessDto } from "../../data/orval/model";
+import { useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 
 // =============================================================================
 // TYPES
@@ -26,7 +26,7 @@ import Heading from "../ui/heading";
  */
 export interface ContractNegotiationRequestDialogProps {
   /** The contract negotiation process */
-  process: CNProcess;
+  process: NegotiationProcessDto;
 }
 
 // =============================================================================
@@ -49,11 +49,11 @@ export const ContractNegotiationRequestDialog = ({
   // ---------------------------------------------------------------------------
 
   /** Current edited policy state (declarative pattern) */
+
   const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null);
 
-  const { mutateAsync: dataRequestAsync } = usePostContractNegotiationRPCRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { data: lastOffer } = useGetLastContractNegotiationOfferByCNMessageId(process.consumer_id);
+  const { mutateAsync: dataRequestAsync } = useRpcSetupRequestInit();
 
   // ---------------------------------------------------------------------------
   // Info Items
@@ -66,47 +66,29 @@ export const ContractNegotiationRequestDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    if (currentPolicy && lastOffer) {
-      const outputOffer = {
-        ...lastOffer.offer_content,
-        prohibition:
-          currentPolicy.prohibition && currentPolicy.prohibition.length > 0
-            ? currentPolicy.prohibition
-            : undefined,
-        permission:
-          currentPolicy.permission && currentPolicy.permission.length > 0
-            ? currentPolicy.permission
-            : undefined,
-        obligation:
-          currentPolicy.obligation && currentPolicy.obligation.length > 0
-            ? currentPolicy.obligation
-            : undefined,
-      };
+    await dataRequestAsync({
+      data: {
+        associatedAgentPeer: process.associatedAgentPeer,
+        providerAddress: "process.providerAddress", // TODO: get from process
+        callbackAddress: "process.callbackAddress", // TODO: get from process
+        offer: currentPolicy,
+      },
+    });
 
-      await dataRequestAsync({
-        api_gateway,
-        content: {
-          providerParticipantId: process.associated_provider!,
-          offer: outputOffer,
-          consumerPid: process.consumer_id,
-          providerPid: process.provider_id,
-        },
-      });
-    }
   };
 
   // ---------------------------------------------------------------------------
   // After Info Content (Policy Editor)
   // ---------------------------------------------------------------------------
 
-  const policyEditorContent = lastOffer ? (
-    <div className="pt-4">
-      <Heading level="h6" className="mb-2">
-        New Policy Request
-      </Heading>
-      <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
-    </div>
-  ) : null;
+  // const policyEditorContent = lastOffer ? (
+  //   <div className="pt-4">
+  //     <Heading level="h6" className="mb-2">
+  //       New Policy Request
+  //     </Heading>
+  //     <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
+  //   </div>
+  // ) : null;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -117,7 +99,7 @@ export const ContractNegotiationRequestDialog = ({
       title="Contract Negotiation Request"
       description="Make changes to the Contract Negotiation Request and submit a counter-request."
       infoItems={infoItems}
-      afterInfoContent={policyEditorContent}
+      afterInfoContent={null}
       submitLabel="Request"
       submitVariant="outline"
       onSubmit={handleSubmit}

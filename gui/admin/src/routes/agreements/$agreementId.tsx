@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useGetAgreementById, getAgreementByIdOptions } from "shared/src/data/agreement-queries";
+import { useGetAgreementByIdS, getGetAgreementByIdSQueryOptions } from "shared/src/data/orval/negotiations/negotiations";
 import { InfoList } from "shared/src/components/ui/info-list";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { Badge } from "shared/src/components/ui/badge.tsx";
@@ -16,9 +16,8 @@ import { PolicyWrapperShow } from "shared/components/PolicyWrapperShow";
  */
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
-  loader: ({ context: { queryClient, api_gateway }, params: { agreementId } }) => {
-    if (!api_gateway) return;
-    return queryClient.ensureQueryData(getAgreementByIdOptions(api_gateway, agreementId));
+  loader: ({ context: { queryClient }, params: { agreementId } }) => {
+    return queryClient.ensureQueryData(getGetAgreementByIdSQueryOptions(agreementId));
   },
 });
 
@@ -27,7 +26,10 @@ function RouteComponent() {
     return text.replace(/[()[]{}"]/g, " ");
   };
   const { agreementId } = Route.useParams();
-  const { data: agreement } = useGetAgreementById(agreementId);
+  const { data: response } = useGetAgreementByIdS(agreementId);
+  const agreement = response?.status === 200 ? response.data : undefined;
+
+  if (!agreement) return null; // Handle loading/error state if needed
   return (
     <PageLayout>
       <PageHeader
@@ -75,12 +77,11 @@ function RouteComponent() {
         </PageSection>
 
         <PolicyWrapperShow
-          key={agreement.agreementContent["@id"]}
-          policy={agreement.agreementContent}
-          participant={{ participant_type: "Consumer" }}
-          datasetId={agreement.agreementContent.target}
+          key={(agreement.agreementContent as any)["@id"]}
+          policy={agreement.agreementContent as any}
+          datasetId={(agreement.agreementContent as any).target}
           catalogId={undefined}
-          datasetName={agreement.agreementContent.target}
+          datasetName={(agreement.agreementContent as any).target}
         />
       </InfoGrid>
     </PageLayout>

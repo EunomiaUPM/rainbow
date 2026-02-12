@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
-import { useGetAgreements } from "shared/src/data/agreement-queries";
+import { useGetAgreements } from "shared/src/data/orval/negotiations/negotiations";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
@@ -19,7 +19,8 @@ export const Route = createFileRoute("/agreements/")({
 });
 
 function RouteComponent() {
-  const { data: agreements } = useGetAgreements();
+  const { data: response } = useGetAgreements();
+  const agreements = response?.status === 200 ? response.data : [];
 
   return (
     <PageLayout>

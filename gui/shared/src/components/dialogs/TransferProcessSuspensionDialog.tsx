@@ -7,40 +7,26 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostTransferRPCSuspension } from "../../data/transfer-mutations";
 import { BaseProcessDialog, mapTransferProcessToInfoItems } from "./base";
+import { TransferProcessDto } from "../../data/orval/model";
+import { useSetupTransferSuspension } from "../../data/orval/transfer-rp-c/transfer-rp-c";
 
-export const TransferProcessSuspensionDialog = ({ process }: { process: TransferProcess }) => {
+export const TransferProcessSuspensionDialog = ({ process }: { process: TransferProcessDto }) => {
   const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: suspendAsync } = usePostTransferRPCSuspension();
+  const { mutateAsync: suspendAsync } = useSetupTransferSuspension();
 
   /**
    * Handles the suspension submission.
-   * Payload structure differs based on the user's role.
    */
   const handleSubmit = async () => {
-    const p = process as any;
-
-    if (dsrole === "provider") {
-      await suspendAsync({
-        api_gateway,
-        content: {
-          consumerParticipantId: p.associated_consumer,
-          consumerCallbackAddress: p.data_plane_id,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    } else if (dsrole === "consumer") {
-      await suspendAsync({
-        api_gateway,
-        content: {
-          providerParticipantId: p.associated_provider,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    }
+    await suspendAsync({
+      data: {
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
+        code: "SUSPENDED",
+        reason: ["Suspended from GUI"],
+      }
+    })
   };
 
   return (

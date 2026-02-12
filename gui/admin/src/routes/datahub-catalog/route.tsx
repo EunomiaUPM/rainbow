@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { getDatahubCatalogsOptions } from "shared/src/data/datahub-catalog-queries.ts";
+import { getGetDatahubDomainsQueryOptions } from "shared/src/data/orval/datahub/datahub";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -19,8 +19,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/datahub-catalog")({
   component: RouteComponent,
   notFoundComponent: NotFound,
-  loader: ({ context: { queryClient, api_gateway } }) => {
-    if (!api_gateway) return;
-    return queryClient.ensureQueryData(getDatahubCatalogsOptions(api_gateway));
+  loader: ({ context: { queryClient } }) => {
+    return queryClient.ensureQueryData(getGetDatahubDomainsQueryOptions());
   },
 });

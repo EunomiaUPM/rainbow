@@ -7,24 +7,23 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostContractNegotiationRPCVerification } from "../../data/contract-mutations";
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
+import { useRpcSetupVerification } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { NegotiationProcessDto } from "../../data/orval/model";
 
-export const ContractNegotiationVerificationDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationVerificationDialog = ({ process }: { process: NegotiationProcessDto }) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: verifyAsync } = usePostContractNegotiationRPCVerification();
+  const { mutateAsync: verifyAsync } = useRpcSetupVerification();
 
   /**
    * Handles the verification submission.
    * Sends verification message to the provider.
    */
   const handleSubmit = async () => {
-    await verifyAsync({
-      api_gateway,
-      content: {
-        providerParticipantId: process.associated_provider!,
-        consumerPid: process.consumer_id,
-        providerPid: process.provider_id,
+    verifyAsync({
+      data: {
+        providerPid: process.identifiers.providerPid,
+        consumerPid: process.identifiers.consumerPid,
       },
     });
   };

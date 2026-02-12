@@ -11,12 +11,14 @@ import {
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { useGetDatahubCatalogs } from "../../../../shared/src/data/datahub-catalog-queries.ts";
+import { useGetDatahubDomains } from "../../../../shared/src/data/orval/datahub/datahub";
 import { Badge } from "shared/src/components/ui/badge";
 import { formatUrn } from "shared/src/lib/utils.ts";
 
 const RouteComponent = () => {
-  const { data: datahubCatalogs } = useGetDatahubCatalogs();
+  const { data: response } = useGetDatahubDomains();
+  const datahubCatalogs = response?.status === 200 ? response.data : [];
+
   return (
     <div className="space-y-4 pb-4">
       <div>
@@ -36,13 +38,13 @@ const RouteComponent = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {datahubCatalogs.map((datahubCatalog) => (
+            {datahubCatalogs?.map((datahubCatalog) => (
               <TableRow key={datahubCatalog.urn}>
                 <TableCell>
                   <Badge variant="info">{formatUrn(datahubCatalog.urn)}</Badge>
                 </TableCell>
-                <TableCell>{datahubCatalog.properties.name}</TableCell>
-                <TableCell>{datahubCatalog.properties.description}</TableCell>
+                <TableCell>{datahubCatalog.name}</TableCell>
+                <TableCell>{datahubCatalog.description}</TableCell>
                 <TableCell>
                   <Link to="/datahub-catalog/$catalogId" params={{ catalogId: datahubCatalog.urn }}>
                     <Button variant="link">

@@ -5,7 +5,7 @@ import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { useGetContractNegotiationProcesses } from "shared/src/data/contract-queries.ts";
+import { useGetNegotiationProcesses } from "shared/src/data/orval/negotiations/negotiations";
 import { ContractNegotiationActions } from "shared/src/components/actions/ContractNegotiationActions";
 import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
@@ -14,10 +14,14 @@ import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 
 const RouteComponent = () => {
-  const { data: cnProcesses } = useGetContractNegotiationProcesses();
+  const { data: cnProcessesData } = useGetNegotiationProcesses();
+
+  const cnProcesses = cnProcessesData?.status === 200 ? cnProcessesData.data : [];
+
   const cnProcessesSorted = useMemo(() => {
     if (!cnProcesses) return [];
     return [...cnProcesses].sort((a, b) => {
+      // @ts-ignore
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [cnProcesses]);

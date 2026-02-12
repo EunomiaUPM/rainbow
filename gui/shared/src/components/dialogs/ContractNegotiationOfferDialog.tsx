@@ -10,8 +10,11 @@
 
 import React, { useContext, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations";
-import { useGetLastContractNegotiationOfferByCNMessageId } from "shared/src/data/contract-queries";
+import { useRpcSetupOffer } from "shared/src/data/orval/negotiation-rp-c/negotiation-rp-c";
+import { useGetOffersByProcessId } from "shared/src/data/orval/negotiations/negotiations";
+import { NegotiationProcessDto } from "shared/src/data/orval/model/negotiationProcessDto";
+import { OdrlOffer } from "shared/src/data/orval/model/odrlOffer";
+import { OdrlInfo } from "shared/src/data/orval/model/odrlInfo";
 import { PolicyWrapperEdit } from "../PolicyWrapperEdit";
 import { BaseProcessDialog } from "./base";
 import { mapCNProcessToInfoItemsForProvider } from "./base/infoItemMappers";
@@ -26,7 +29,7 @@ import Heading from "../ui/heading";
  */
 export interface ContractNegotiationOfferDialogProps {
   /** The contract negotiation process */
-  process: CNProcess;
+  process: NegotiationProcessDto;
 }
 
 // =============================================================================
@@ -49,11 +52,11 @@ export const ContractNegotiationOfferDialog = ({
   // ---------------------------------------------------------------------------
 
   /** Current edited policy state (declarative pattern) */
-  const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null);
+  const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null); // OdrlInfo matches OdrlOffer structure roughly
 
-  const { mutateAsync: dataOfferAsync } = usePostContractNegotiationRPCOffer();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { data: lastOffer } = useGetLastContractNegotiationOfferByCNMessageId(process.provider_id);
+  const { mutateAsync: setupOffer } = useRpcSetupOffer();
+  const { data: offersData } = useGetOffersByProcessId(process.id);
+  const lastOffer = offersData?.status === 200 ? offersData.data.at(-1) : undefined;
 
   // ---------------------------------------------------------------------------
   // Info Items
@@ -67,8 +70,10 @@ export const ContractNegotiationOfferDialog = ({
 
   const handleSubmit = async () => {
     if (currentPolicy && lastOffer) {
-      const outputOffer = {
-        ...lastOffer.offer_content,
+      // Construct the new offer based on the last offer and edits
+      const outputOffer: OdrlOffer = {
+        ...lastOffer, // Keep other properties from last offer
+        // Overwrite policy parts
         prohibition:
           currentPolicy.prohibition && currentPolicy.prohibition.length > 0
             ? currentPolicy.prohibition
@@ -83,13 +88,10 @@ export const ContractNegotiationOfferDialog = ({
             : undefined,
       };
 
-      await dataOfferAsync({
-        api_gateway,
-        content: {
-          consumerParticipantId: process.associated_consumer!,
+      await setupOffer({
+        data: {
+          processId: process.id,
           offer: outputOffer,
-          consumerPid: process.consumer_id,
-          providerPid: process.provider_id,
         },
       });
     }
@@ -104,7 +106,8 @@ export const ContractNegotiationOfferDialog = ({
       <Heading level="h6" className="mb-2">
         Counter Offer Policy
       </Heading>
-      <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
+      {/* Ensure lastOffer satisfies OdrlInfo/OdrlOffer which PolicyWrapperEdit expects */}
+      <PolicyWrapperEdit policy={lastOffer as unknown as OdrlInfo} onChange={setCurrentPolicy} />
     </div>
   ) : null;
 
@@ -125,3 +128,4 @@ export const ContractNegotiationOfferDialog = ({
     />
   );
 };
+

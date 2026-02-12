@@ -7,8 +7,9 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostContractNegotiationRPCTermination } from "../../data/contract-mutations";
 import { BaseProcessDialog, mapCNProcessToFullInfoItems } from "./base";
+import { NegotiationProcessDto } from "../../data/orval/model";
+import { useRpcSetupFinalization, useRpcSetupTermination } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 
 export const ContractNegotiationTerminationDialog = ({
   process,
@@ -16,32 +17,21 @@ export const ContractNegotiationTerminationDialog = ({
   process: NegotiationProcessDto;
 }) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: terminateAsync } = usePostContractNegotiationRPCTermination();
+  const { mutateAsync: terminateAsync } = useRpcSetupTermination();
 
   /**
    * Handles the termination submission.
    * The payload differs based on whether the user is a provider or consumer.
    */
   const handleSubmit = async () => {
-    if (process.role === "Consumer") {
-      await terminateAsync({
-        api_gateway,
-        content: {
-          providerParticipantId: process.associatedAgentPeer!,
-          consumerPid: process.identifiers.consumer_id,
-          providerPid: process.identifiers.provider_id,
-        },
-      });
-    } else if (process.role === "Provider") {
-      await terminateAsync({
-        api_gateway,
-        content: {
-          consumerParticipantId: process.associatedAgentPeer!,
-          consumerPid: process.identifiers.consumer_id,
-          providerPid: process.identifiers.provider_id,
-        },
-      });
-    }
+    await terminateAsync({
+      data: {
+        consumerPid: process.identifiers.consumer_id,
+        providerPid: process.identifiers.provider_id,
+        code: "TERMINATED",
+        reason: ["Terminated from GUI"],
+      },
+    });
   };
 
   return (

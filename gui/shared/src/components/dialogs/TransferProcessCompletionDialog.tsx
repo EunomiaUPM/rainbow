@@ -7,40 +7,25 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostTransferRPCCompletion } from "../../data/transfer-mutations";
 import { BaseProcessDialog, mapTransferProcessToInfoItems } from "./base";
+import { TransferProcessDto } from "../../data/orval/model";
+import { useSetupTransferCompletion } from "../../data/orval/transfer-rp-c/transfer-rp-c";
 
-export const TransferProcessCompletionDialog = ({ process }: { process: TransferProcess }) => {
+export const TransferProcessCompletionDialog = ({ process }: { process: TransferProcessDto }) => {
   const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: completeAsync } = usePostTransferRPCCompletion();
+  const { mutateAsync: completeAsync } = useSetupTransferCompletion();
 
   /**
    * Handles the completion submission.
    * Payload structure differs based on the user's role.
    */
   const handleSubmit = async () => {
-    const p = process as any;
-
-    if (dsrole === "provider") {
-      await completeAsync({
-        api_gateway,
-        content: {
-          consumerParticipantId: p.associated_consumer,
-          consumerCallbackAddress: p.data_plane_id,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    } else if (dsrole === "consumer") {
-      await completeAsync({
-        api_gateway,
-        content: {
-          providerParticipantId: p.associated_provider,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    }
+    await completeAsync({
+      data: {
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
+      }
+    })
   };
 
   return (

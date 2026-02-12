@@ -1,17 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useGetDatasetById,
+  getGetDatasetByIdQueryOptions,
+  useAddPolicyToDataset,
+} from "shared/src/data/orval/datasets/datasets";
+import {
   useGetDistributionsByDatasetId,
-  getDatasetByIdOptions,
-  getDistributionsByDatasetIdOptions,
-} from "shared/src/data/catalog-queries.ts";
+  getGetDistributionsByDatasetIdQueryOptions,
+} from "shared/src/data/orval/distributions/distributions";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { ArrowRight, Plus } from "lucide-react";
-import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
+import { useGetPoliciesByEntityId } from "shared/src/data/orval/odrl-policies/odrl-policies";
 import { SubmitHandler } from "react-hook-form";
 import { Button } from "shared/src/components/ui/button.tsx";
-import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
 import { formatUrn } from "shared/src/lib/utils";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
@@ -37,23 +39,26 @@ type Inputs = {
 
 function RouteComponent() {
   const { catalogId, datasetId } = Route.useParams();
-  const { data: dataset } = useGetDatasetById(datasetId);
-  const { data: distributions } = useGetDistributionsByDatasetId(datasetId);
-  const { data: policies } = useGetPoliciesByDatasetId(datasetId);
+  const { data: datasetData } = useGetDatasetById(datasetId);
+  const { data: distributionsData } = useGetDistributionsByDatasetId(datasetId);
+  const { data: policiesData } = useGetPoliciesByEntityId(datasetId);
   const [open, setOpen] = useState(false);
-  const { mutateAsync: createPolicyAsync } = usePostNewPolicyInDataset();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const { mutateAsync: createPolicyAsync } = useAddPolicyToDataset();
+  // const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!; // No longer needed
+
+  const dataset = datasetData?.status === 200 ? datasetData.data : undefined;
+  const distributions = distributionsData?.status === 200 ? distributionsData.data : [];
+  const policies = policiesData?.status === 200 ? policiesData.data : [];
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     await createPolicyAsync({
-      api_gateway,
       datasetId,
-      content: {
-        offer: JSON.stringify(data),
-      },
+      data: data.odrl, // Assuming data.odrl is the policy string expected by the API
     });
     setOpen(false);
   };
+
+  if (!dataset) return null;
 
   return (
     <PageLayout>
@@ -61,7 +66,7 @@ function RouteComponent() {
         title="Dataset with id"
         badge={
           <Badge variant="info" size="lg">
-            {formatUrn(dataset.id)}
+            {formatUrn(dataset.id!)}
           </Badge>
         }
       />
@@ -72,7 +77,7 @@ function RouteComponent() {
               { label: "Dataset title", value: dataset.dctTitle },
               {
                 label: "Catalog creation date",
-                value: { type: "custom", content: <FormatDate date={dataset.dctIssued} /> },
+                value: { type: "custom", content: <FormatDate date={dataset.dctIssued!} /> },
               },
             ]}
           />
@@ -82,12 +87,12 @@ function RouteComponent() {
       <PageSection title="Distributions">
         <DataTable
           className="text-sm"
-          data={distributions}
-          keyExtractor={(d) => d.id}
+          data={distributions ?? []}
+          keyExtractor={(d) => d.id!}
           columns={[
             {
               header: "Distribution Id",
-              cell: (d) => <Badge variant="info">{formatUrn(d.id)}</Badge>,
+              cell: (d) => <Badge variant="info">{formatUrn(d.id!)}</Badge>,
             },
             {
               header: "Distribution Title",
@@ -96,7 +101,7 @@ function RouteComponent() {
             },
             {
               header: "Created at",
-              cell: (d) => <FormatDate date={d.dctIssued} />,
+              cell: (d) => <FormatDate date={d.dctIssued!} />,
             },
             {
               header: "Associated Data service",
@@ -106,7 +111,7 @@ function RouteComponent() {
                     to="/catalog/$catalogId/distribution-connector/$distributionId"
                     params={{
                       catalogId: catalogId,
-                      distributionId: d.id,
+                      distributionId: d.id!,
                     }}
                   >
                     <Button variant="link" size="sm" className="h-auto p-0 text-xs">
@@ -118,7 +123,7 @@ function RouteComponent() {
                     to="/catalog/$catalogId/data-service/$dataserviceId"
                     params={{
                       catalogId: catalogId,
-                      dataserviceId: d.dcatAccessService,
+                      dataserviceId: d.dcatAccessService!,
                     }}
                   >
                     <Button
@@ -159,7 +164,7 @@ function RouteComponent() {
                   <div className="flex items-center text-sm font-normal text-muted-foreground">
                     for Dataset
                     <Badge variant="info" size="sm" className="ml-2 font-mono">
-                      {formatUrn(dataset.id)}
+                      {formatUrn(dataset.id!)}
                     </Badge>
                   </div>
                 </DrawerTitle>
@@ -175,7 +180,7 @@ function RouteComponent() {
               <PolicyWrapperShow
                 key={policy.id}
                 policy={policy}
-                datasetId={dataset.id}
+                datasetId={dataset.id!}
                 catalogId={undefined}
                 datasetName={dataset.dctTitle}
               />
@@ -192,9 +197,8 @@ function RouteComponent() {
 export const Route = createFileRoute("/catalog/$catalogId/dataset/$datasetId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
-  loader: async ({ context: { queryClient, api_gateway }, params: { datasetId } }) => {
-    if (!api_gateway) return;
-    await queryClient.ensureQueryData(getDatasetByIdOptions(api_gateway, datasetId));
-    return queryClient.ensureQueryData(getDistributionsByDatasetIdOptions(api_gateway, datasetId));
+  loader: async ({ context: { queryClient }, params: { datasetId } }) => {
+    await queryClient.ensureQueryData(getGetDatasetByIdQueryOptions(datasetId));
+    return queryClient.ensureQueryData(getGetDistributionsByDatasetIdQueryOptions(datasetId));
   },
 });

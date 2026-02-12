@@ -7,40 +7,27 @@
 
 import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
-import { usePostTransferRPCTermination } from "../../data/transfer-mutations";
 import { BaseProcessDialog, mapTransferProcessToInfoItems } from "./base";
+import { TransferProcessDto } from "../../data/orval/model";
+import { useSetupTransferTermination } from "../../data/orval/transfer-rp-c/transfer-rp-c";
 
-export const TransferProcessTerminationDialog = ({ process }: { process: TransferProcess }) => {
+export const TransferProcessTerminationDialog = ({ process }: { process: TransferProcessDto }) => {
   const { api_gateway, dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: terminateAsync } = usePostTransferRPCTermination();
+  const { mutateAsync: terminateAsync } = useSetupTransferTermination();
 
   /**
    * Handles the termination submission.
    * Payload structure differs based on the user's role.
    */
   const handleSubmit = async () => {
-    const p = process as any;
-
-    if (dsrole === "provider") {
-      await terminateAsync({
-        api_gateway,
-        content: {
-          consumerParticipantId: p.associated_consumer,
-          consumerCallbackAddress: p.data_plane_id,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    } else if (dsrole === "consumer") {
-      await terminateAsync({
-        api_gateway,
-        content: {
-          providerParticipantId: p.associated_provider,
-          consumerPid: p.consumer_pid,
-          providerPid: p.provider_pid,
-        },
-      });
-    }
+    await terminateAsync({
+      data: {
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
+        code: "TERMINATED",
+        reason: ["Terminated from GUI"],
+      }
+    })
   };
 
   return (

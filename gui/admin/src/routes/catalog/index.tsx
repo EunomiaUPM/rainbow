@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import { ArrowRight } from "lucide-react";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
-import { useGetCatalogs, useGetMainCatalogs } from "shared/src/data/catalog-queries.ts";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { InfoList } from "shared/src/components/ui/info-list";
 import { Button } from "shared/src/components/ui/button.tsx";
@@ -14,17 +13,20 @@ import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
+import { useGetCatalogs, useGetMainCatalogs } from "shared/data/orval/catalogs/catalogs";
 
 const RouteComponent = () => {
   const { data: mainCatalog } = useGetMainCatalogs();
-  const { data: catalogs } = useGetCatalogs(false);
+  const { data: catalogs } = useGetCatalogs();
+
+  if (!mainCatalog?.data || mainCatalog.status !== 200) return null;
   return (
     <PageLayout>
       <PageHeader
         title="Main Catalog with id"
         badge={
           <Badge variant="info" size="lg">
-            {formatUrn(mainCatalog.id)}
+            {formatUrn(mainCatalog.data.id)}
           </Badge>
         }
       />
@@ -32,15 +34,15 @@ const RouteComponent = () => {
         <PageSection title="Main Catalog info: ">
           <InfoList
             items={[
-              { label: "Catalog title", value: mainCatalog?.dctTitle },
+              { label: "Catalog title", value: mainCatalog.data?.dctTitle },
               {
                 label: "Catalog participant id",
-                value: { type: "urn", value: mainCatalog.dspaceParticipantId },
+                value: { type: "urn", value: mainCatalog.data.dspaceParticipantId },
               },
-              { label: "Catalog homepage", value: mainCatalog.foafHomePage },
+              { label: "Catalog homepage", value: mainCatalog.data.foafHomePage },
               {
                 label: "Catalog creation date",
-                value: { type: "custom", content: <FormatDate date={mainCatalog.dctIssued} /> },
+                value: { type: "custom", content: <FormatDate date={mainCatalog.data.dctIssued} /> },
               },
             ]}
           />
@@ -53,8 +55,8 @@ const RouteComponent = () => {
         </div>
         <DataTable
           className="text-sm"
-          data={catalogs ?? []}
-          keyExtractor={(c) => c.id}
+          data={Array.isArray(catalogs?.data) ? catalogs.data : []}
+          keyExtractor={(c) => c.id!}
           columns={[
             {
               header: "Title",

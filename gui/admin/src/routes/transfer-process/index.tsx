@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatUrn } from "shared/src/lib/utils";
-import { useGetTransferProcesses } from "shared/src/data/transfer-queries.ts";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { Button } from "shared/src/components/ui/button.tsx";
@@ -13,6 +12,8 @@ import { mergeStateAndAttribute } from "shared/src/lib/utils.ts";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
+import { useGetTransferProcesses } from "shared/src/data/orval/transfers/transfers";
+import { Skeleton } from "shared/components/ui/skeleton";
 
 /**
  * Route for listing transfer processes.
@@ -22,13 +23,26 @@ export const Route = createFileRoute("/transfer-process/")({
 });
 
 function RouteComponent() {
-  const { data: transferProcesses } = useGetTransferProcesses();
+  const { data: transferProcessesResponse, isLoading: isTransferProcessesLoading } = useGetTransferProcesses();
+  const transferProcesses = transferProcessesResponse?.status === 200 ? transferProcessesResponse.data : undefined;
   const transferProcessesSorted = useMemo(() => {
     if (!transferProcesses) return [];
     return [...transferProcesses].sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
     });
   }, [transferProcesses]);
+
+  if (isTransferProcessesLoading) {
+    return (
+      <PageLayout>
+        <PageHeader
+          title="Transfer Processes"
+          badge={<Skeleton className="h-8 w-48" />}
+        />
+        <div>Loading...</div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -40,7 +54,7 @@ function RouteComponent() {
         <DataTable
           className="text-sm"
           data={transferProcessesSorted ?? []}
-          keyExtractor={(tp) => tp.id}
+          keyExtractor={(tp) => tp.id!}
           columns={[
             {
               header: "Provider pid",
@@ -50,7 +64,7 @@ function RouteComponent() {
               header: "State",
               cell: (tp) => (
                 <Badge variant={"status"} state={tp.state as BadgeState}>
-                  {mergeStateAndAttribute(tp.state, tp.stateAttribute)}
+                  {mergeStateAndAttribute(tp.state ?? "", tp.stateAttribute ?? "")}
                 </Badge>
               ),
             },
@@ -71,7 +85,7 @@ function RouteComponent() {
               cell: (tp) => (
                 <Link
                   to="/transfer-process/$transferProcessId"
-                  params={{ transferProcessId: tp.id }}
+                  params={{ transferProcessId: tp.id! }}
                 >
                   <Button variant="link">
                     See details

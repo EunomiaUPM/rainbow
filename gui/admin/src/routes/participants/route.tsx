@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
-import { getParticipantsOptions } from "shared/src/data/participant-queries.ts";
+import { getGetAllParticipantsQueryOptions } from "shared/src/data/orval/participants/participants";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -28,8 +28,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/participants")({
   component: RouteComponent,
   notFoundComponent: NotFound,
-  loader: ({ context: { queryClient, api_gateway } }) => {
-    if (!api_gateway) return;
-    return queryClient.ensureQueryData(getParticipantsOptions(api_gateway));
+  loader: ({ context: { queryClient } }) => {
+    return queryClient.ensureQueryData(getGetAllParticipantsQueryOptions());
   },
 });

@@ -11,6 +11,7 @@ import { ContractNegotiationAcceptanceDialog } from "../dialogs/ContractNegotiat
 import { ContractNegotiationVerificationDialog } from "../dialogs/ContractNegotiationVerificationDialog";
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "./ProcessActionDialog";
+import { NegotiationProcessDto } from "shared/src/data/orval/model/negotiationProcessDto";
 
 /**
  * Actions available for a contract negotiation process.
@@ -144,8 +145,8 @@ export const ContractNegotiationActions = ({
       <div
         className={
           process.state === "OFFERED" ||
-          process.state === "ACCEPTED" ||
-          process.state === "VERIFIED"
+            process.state === "ACCEPTED" ||
+            process.state === "VERIFIED"
             ? "flex justify-end flex-row-reverse gap-2"
             : process.state === "REQUESTED"
               ? "space-x-2 min-w-[260px]"
