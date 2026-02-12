@@ -33,7 +33,7 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   const localConfig = {
     config_role: "Agent",
     gateway_host: "http://127.0.0.1",
-    gateway_port: "1200",
+    gateway_port: import.meta.env.VITE_GATEWAY_PORT || "1200",
   };
 
   /**
