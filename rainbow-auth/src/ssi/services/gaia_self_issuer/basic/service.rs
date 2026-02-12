@@ -287,4 +287,8 @@ impl GaiaOwnIssuerTrait for BasicGaiaSelfIssuer {
             }
         }
     }
+
+    fn get_vc_types(&self) -> Vec<VcType> {
+        vec![VcType::LegalPerson, VcType::TermsAndConditions]
+    }
 }
