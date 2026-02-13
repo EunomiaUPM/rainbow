@@ -20,4 +20,5 @@ export interface Dataset {
   hasPolicy?: OdrlOffer[];
   distribution?: Distribution[] | DistributionMinimized[];
   conformsTo?: string;
+  title?: string;
 }

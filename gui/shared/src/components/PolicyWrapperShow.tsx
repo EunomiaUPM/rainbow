@@ -32,7 +32,7 @@ import { Button } from "./ui/button";
 import { useRouterState } from "@tanstack/react-router";
 import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog";
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
-import { BusinessRequestAccessDialog } from "./dialogs/BusinessRequestAccessDialog";
+import { ContractNegotiationNewRequestDialog } from "./dialogs/ContractNegotiationNewRequestDialog";
 
 // =============================================================================
 // TYPES
@@ -172,11 +172,11 @@ export const PolicyWrapperShow = ({
                   Request Access
                 </Button>
               </DialogTrigger>
-              <BusinessRequestAccessDialog
+              <ContractNegotiationNewRequestDialog
                 policy={policy}
                 catalogId={catalogId}
                 datasetId={datasetId}
-                datasetName={datasetName}
+                participantId=""
               />
             </Dialog>
           </div>

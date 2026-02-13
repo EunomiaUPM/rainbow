@@ -9,9 +9,10 @@ corresponding microservice (catalog-agent, negotiation-agent, transfer-agent, au
 
  * OpenAPI spec version: 1.0.0
  */
+import type { Catalog } from './catalog';
+import type { RpcCatalogRequestMessageDto } from './rpcCatalogRequestMessageDto';
 
-export interface RpcCatalogRequestMessageDto {
-  associatedAgentPeer?: string;
-  noCache?: boolean;
-  filter?: string[];
+export interface RpcCatalogResponseMessageDto {
+  request?: RpcCatalogRequestMessageDto;
+  response?: Catalog;
 }

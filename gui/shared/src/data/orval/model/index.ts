@@ -190,6 +190,7 @@ export * from './pushLifecycleSubscribe';
 export * from './pushLifecycleUnsubscribe';
 export * from './rpcCatalogRequestMessageDto';
 export * from './rpcCatalogRequestMessageDtoFilter';
+export * from './rpcCatalogResponseMessageDto';
 export * from './rpcDatasetRequestMessageDto';
 export * from './rpcNegotiationAgreementMessageDto';
 export * from './rpcNegotiationEventAcceptedMessageDto';

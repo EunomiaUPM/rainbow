@@ -21,6 +21,13 @@ pub trait GatewayServiceTrait: Send + Sync {
         req: Request<Body>,
     ) -> Response;
 
+    async fn proxy_dsp_request(
+        &self,
+        service_prefix: String,
+        extra_opt: Option<String>,
+        req: Request<Body>,
+    ) -> Response;
+
     fn get_notification_sender(&self) -> broadcast::Sender<String>;
     fn get_config(&self) -> GatewayConfig;
 }
@@ -75,10 +82,57 @@ impl GatewayServiceTrait for GatewayService {
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 
+        let microservice_api_path = match service_prefix.as_str() {
+            "catalogs" => "api/v1/catalog-agent/catalogs",
+            "datasets" => "api/v1/catalog-agent/datasets",
+            "data-services" => "api/v1/catalog-agent/data-services",
+            "distributions" => "api/v1/catalog-agent/distributions",
+            "odrl-policies" => "api/v1/catalog-agent/odrl-policies",
+            "connector" => "api/v1/connector",
+            "datahub" => "api/v1/catalog-agent/datahub",
+            "negotiations" => "api/v1/negotiation-agent",
+            "transfers" => "api/v1/transfer-agent",
+            "dataplane" => "api/v1/dataplane",
+            "mates" => "api/v1/mates",
+            "notifications" => "api/v1/contract-negotiation/notifications",
+            "subscriptions" => "api/v1/contract-negotiation/subscriptions",
+            _ => return (StatusCode::NOT_FOUND, "prefix not found in microservice").into_response(),
+        };
+
         execute_proxy(
             self.client.clone(),
             microservice_base_url,
-            service_prefix,
+            microservice_api_path.to_string(),
+            extra_opt,
+            req,
+        )
+        .await
+    }
+
+    async fn proxy_dsp_request(
+        &self,
+        service_prefix: String,
+        extra_opt: Option<String>,
+        req: Request<Body>,
+    ) -> Response {
+        let microservice_base_url = match service_prefix.as_str() {
+            "catalogs" => self.config.catalog().get_host(HostType::Http),
+            "negotiations" => self.config.contracts().get_host(HostType::Http),
+            "transfers" => self.config.transfer().get_host(HostType::Http),
+            _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
+        };
+
+        let microservice_api_path = match service_prefix.as_str() {
+            "catalogs" => "dsp/current/catalog",
+            "negotiations" => "dsp/current/negotiations",
+            "transfers" => "dsp/current/transfers",
+            _ => return (StatusCode::NOT_FOUND, "prefix not found in microservice").into_response(),
+        };
+
+        execute_proxy(
+            self.client.clone(),
+            microservice_base_url,
+            microservice_api_path.to_string(),
             extra_opt,
             req,
         )
@@ -86,10 +140,11 @@ impl GatewayServiceTrait for GatewayService {
     }
 }
 
+
 pub async fn execute_proxy(
     client: Client,
     microservice_base_url: String,
-    service_prefix: String,
+    microservice_api_path: String,
     extra_opt: Option<String>,
     req: Request<Body>,
 ) -> Response {
@@ -97,23 +152,6 @@ pub async fn execute_proxy(
     let path = req.uri().path();
     let query = req.uri().query(); // Get the raw query string
     info!("{} {}", method, path);
-
-    let microservice_api_path = match service_prefix.as_str() {
-        "catalogs" => "api/v1/catalog-agent/catalogs",
-        "datasets" => "api/v1/catalog-agent/datasets",
-        "data-services" => "api/v1/catalog-agent/data-services",
-        "distributions" => "api/v1/catalog-agent/distributions",
-        "odrl-policies" => "api/v1/catalog-agent/odrl-policies",
-        "connector" => "api/v1/connector",
-        "datahub" => "api/v1/catalog-agent/datahub",
-        "negotiations" => "api/v1/negotiation-agent",
-        "transfers" => "api/v1/transfer-agent",
-        "dataplane" => "api/v1/dataplane",
-        "mates" => "api/v1/mates",
-        "notifications" => "api/v1/contract-negotiation/notifications",
-        "subscriptions" => "api/v1/contract-negotiation/subscriptions",
-        _ => return (StatusCode::NOT_FOUND, "prefix not found in microservice").into_response(),
-    };
 
     // Prepare target url
     let mut target_url_str = format!(

@@ -1,48 +1,49 @@
 /**
- * ContractNegotiationNewRequestDialog.tsx
+ * BusinessRequestAccessDialog.tsx
  *
- * Dialog for creating a new contract negotiation request.
- * Displays policy information and initiates a new CN process.
+ * Dialog for requesting access to a dataset through a business request.
+ * Displays dataset and policy information before submission.
  *
  * @example
- * <ContractNegotiationNewRequestDialog
+ * <BusinessRequestAccessDialog
  *   policy={policyData}
  *   catalogId="catalog-123"
  *   datasetId="dataset-456"
- *   participantId="provider-participant-id"
+ *   datasetName="My Dataset"
  * />
  */
 
 import React, { useContext, useRef } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+//import { usePostNewBusinessRequest } from "shared/src/data/business-mutations";
+import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow";
 import { BaseProcessDialog } from "./base";
-import { urnInfoItem } from "./base/infoItemMappers";
+import { urnInfoItem, textInfoItem } from "./base/infoItemMappers";
 import { InfoItemProps } from "../ui/info-list";
+import { Badge } from "../ui/badge";
+import { formatUrn } from "shared/src/lib/utils";
 import { DialogClose } from "../ui/dialog";
-import { useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
-import { useNavigate } from "@tanstack/react-router";
-import { useGetMyself } from "../../data/orval/participants/participants";
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 /**
- * Props for the ContractNegotiationNewRequestDialog component.
+ * Props for the BusinessRequestAccessDialog component.
  */
-export interface ContractNegotiationNewRequestDialogProps {
-  /** The ODRL policy to negotiate */
+export interface BusinessRequestAccessDialogProps {
+  /** The ODRL policy to request access under */
   policy: OdrlOffer;
 
   /** ID of the parent catalog */
-  catalogId: UUID;
+  catalogId?: UUID;
 
-  /** ID of the dataset */
-  datasetId: UUID;
+  /** ID of the dataset to request access to */
+  datasetId?: UUID;
 
-  /** Provider participant ID to negotiate with */
-  participantId: string;
+  /** Display name of the dataset */
+  datasetName?: string;
 }
 
 // =============================================================================
@@ -50,34 +51,32 @@ export interface ContractNegotiationNewRequestDialogProps {
 // =============================================================================
 
 /**
- * Dialog for initiating a new contract negotiation request.
+ * Dialog for requesting dataset access through a business request.
  *
  * Features:
- * - Displays catalog and dataset information
+ * - Displays dataset and catalog information
  * - Shows policy details via PolicyWrapperShow
- * - Initiates CN request with provider
+ * - Handles business request submission
  */
-export const ContractNegotiationNewRequestDialog = ({
+export const BusinessRequestAccessDialog = ({
   policy,
   catalogId,
   datasetId,
-  participantId,
-}: ContractNegotiationNewRequestDialogProps) => {
-  const navigate = useNavigate();
+  datasetName,
+}: BusinessRequestAccessDialogProps) => {
   const closeDialogRef = useRef<HTMLButtonElement>(null);
-  const { mutateAsync: requestAsync } = useRpcSetupRequestInit();
+  //const { mutateAsync: requestAsync } = usePostNewBusinessRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  // use hooks to get myself, and paths
-  const { data: myself } = useGetMyself();
+  const { participant } = useContext<AuthContextType | null>(AuthContext)!;
 
   // ---------------------------------------------------------------------------
   // Info Items
   // ---------------------------------------------------------------------------
 
   const infoItems: InfoItemProps[] = [
+    textInfoItem("Dataset", datasetName),
     urnInfoItem("Catalog ID", catalogId),
-    urnInfoItem("Dataset ID", datasetId),
-    urnInfoItem("Provider", participantId),
+    urnInfoItem("Policy ID", policy["@id"]),
   ].filter((item): item is InfoItemProps => item !== undefined);
 
   // ---------------------------------------------------------------------------
@@ -85,35 +84,16 @@ export const ContractNegotiationNewRequestDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    console.log({
-      associatedAgentPeer: myself?.data!.participant_id,
-      providerAddress: "http://127.0.0.1:1200/dsp/current",
-      callbackAddress: "http://127.0.0.1:1100/dsp/current",
-      offer: {
-        ...policy,
-        target: datasetId,
-      },
-    })
-
-
-    const res = await requestAsync({
-      data: {
-        associatedAgentPeer: "did:jwk:provider",
-        providerAddress: "http://127.0.0.1:1200/dsp/current",
-        callbackAddress: "http://127.0.0.1:1100/dsp/current",
-        offer: {
-          ...policy,
-          target: datasetId,
-        },
-      },
-    });
-    // @ts-ignore
-    if (res.status === 201) {
-      closeDialogRef.current?.click();
-      navigate({
-        to: "/contract-negotiation",
-      });
-    }
+    // await requestAsync({
+    //   api_gateway,
+    //   content: {
+    //     consumerParticipantId: participant?.participant_id!,
+    //     offer: {
+    //       "@id": policy["@id"],
+    //     },
+    //   },
+    // });
+    // closeDialogRef.current?.click();
   };
 
   // ---------------------------------------------------------------------------
@@ -124,9 +104,9 @@ export const ContractNegotiationNewRequestDialog = ({
     <div className="pt-4">
       <PolicyWrapperShow
         policy={policy}
-        datasetId={datasetId}
-        catalogId={catalogId}
-        participant={participantId}
+        datasetId={undefined}
+        catalogId={undefined}
+        participant={undefined}
         datasetName=""
       />
       {/* Hidden close button for programmatic dialog close */}
@@ -140,11 +120,18 @@ export const ContractNegotiationNewRequestDialog = ({
 
   return (
     <BaseProcessDialog
-      title="Contract Negotiation Request"
-      description="You are about to request a contract negotiation for the selected dataset and policy."
+      title="Request Dataset Access"
+      description={
+        <span className="max-w-full flex flex-col gap-1">
+          You are about to request access to dataset{" "}
+          <Badge variant="infoLighter">{datasetName}</Badge> in catalog{" "}
+          <Badge variant="infoLighter">{formatUrn(catalogId)}</Badge> under policy{" "}
+          <Badge variant="infoLighter">{formatUrn(policy["@id"])}</Badge>
+        </span>
+      }
       infoItems={infoItems}
       afterInfoContent={policyContent}
-      submitLabel="Request Contract Negotiation"
+      submitLabel="Request Access"
       submitVariant="default"
       onSubmit={handleSubmit}
       scrollable

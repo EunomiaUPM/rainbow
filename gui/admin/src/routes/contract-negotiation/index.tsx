@@ -44,7 +44,10 @@ const RouteComponent = () => {
               header: "id",
               cell: (p) => <Badge variant={"info"}>{formatUrn(p.id)}</Badge>,
             },
-
+            {
+              header: "Role",
+              cell: (p) => <Badge variant={"info"}>{p.role}</Badge>,
+            },
             {
               header: "State",
               cell: (p) => (

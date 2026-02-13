@@ -89,7 +89,7 @@ export const getRpcSetupRequestInitUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-request-init`
+  return `/dsp/current/negotiations/rpc/setup-request-init`
 }
 
 export const rpcSetupRequestInit = async (rpcNegotiationRequestInitMessageDto: RpcNegotiationRequestInitMessageDto, options?: RequestInit): Promise<rpcSetupRequestInitResponse> => {
@@ -198,7 +198,7 @@ export const getRpcSetupOfferInitUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-offer-init`
+  return `/dsp/current/negotiations/rpc/setup-offer-init`
 }
 
 export const rpcSetupOfferInit = async (rpcNegotiationOfferInitMessageDto: RpcNegotiationOfferInitMessageDto, options?: RequestInit): Promise<rpcSetupOfferInitResponse> => {
@@ -307,7 +307,7 @@ export const getRpcSetupRequestUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-request`
+  return `/dsp/current/negotiations/rpc/setup-request`
 }
 
 export const rpcSetupRequest = async (negotiationRPCRequestBody: NegotiationRPCRequestBody, options?: RequestInit): Promise<rpcSetupRequestResponse> => {
@@ -416,7 +416,7 @@ export const getRpcSetupOfferUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-offer`
+  return `/dsp/current/negotiations/rpc/setup-offer`
 }
 
 export const rpcSetupOffer = async (negotiationRPCOfferBody: NegotiationRPCOfferBody, options?: RequestInit): Promise<rpcSetupOfferResponse> => {
@@ -525,7 +525,7 @@ export const getRpcSetupAcceptanceUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-acceptance`
+  return `/dsp/current/negotiations/rpc/setup-acceptance`
 }
 
 export const rpcSetupAcceptance = async (negotiationRPCAcceptanceBody: NegotiationRPCAcceptanceBody, options?: RequestInit): Promise<rpcSetupAcceptanceResponse> => {
@@ -634,7 +634,7 @@ export const getRpcSetupAgreementUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-agreement`
+  return `/dsp/current/negotiations/rpc/setup-agreement`
 }
 
 export const rpcSetupAgreement = async (negotiationRPCAgreementBody: NegotiationRPCAgreementBody, options?: RequestInit): Promise<rpcSetupAgreementResponse> => {
@@ -743,7 +743,7 @@ export const getRpcSetupVerificationUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-verification`
+  return `/dsp/current/negotiations/rpc/setup-verification`
 }
 
 export const rpcSetupVerification = async (negotiationRPCVerificationBody: NegotiationRPCVerificationBody, options?: RequestInit): Promise<rpcSetupVerificationResponse> => {
@@ -852,7 +852,7 @@ export const getRpcSetupFinalizationUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-finalization`
+  return `/dsp/current/negotiations/rpc/setup-finalization`
 }
 
 export const rpcSetupFinalization = async (negotiationRPCFinalizationBody: NegotiationRPCFinalizationBody, options?: RequestInit): Promise<rpcSetupFinalizationResponse> => {
@@ -961,7 +961,7 @@ export const getRpcSetupTerminationUrl = () => {
 
   
 
-  return `/negotiations/rpc/setup-termination`
+  return `/dsp/current/negotiations/rpc/setup-termination`
 }
 
 export const rpcSetupTermination = async (negotiationRPCTerminationBody: NegotiationRPCTerminationBody, options?: RequestInit): Promise<rpcSetupTerminationResponse> => {

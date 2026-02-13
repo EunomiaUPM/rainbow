@@ -604,7 +604,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /catalogs/rpc/setup-catalog-request:
+  /dsp/current/catalogs/rpc/setup-catalog-request:
     post:
       operationId: rpcSetupCatalogRequest
       summary: Request catalog from peer (RPC)
@@ -622,7 +622,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Catalog"
+                $ref: "#/components/schemas/RpcCatalogResponseMessageDto"
         "400":
           description: Bad Request
           content:
@@ -653,7 +653,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /catalogs/rpc/setup-dataset-request:
+  /dsp/current/catalogs/rpc/setup-dataset-request:
     post:
       operationId: rpcSetupDatasetRequest
       summary: Request dataset from peer (RPC)
@@ -3144,7 +3144,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-request-init:
+  /dsp/current/negotiations/rpc/setup-request-init:
     post:
       operationId: rpcSetupRequestInit
       summary: Initiate a negotiation request (consumer)
@@ -3193,7 +3193,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-offer-init:
+  /dsp/current/negotiations/rpc/setup-offer-init:
     post:
       operationId: rpcSetupOfferInit
       summary: Initiate a negotiation offer (provider)
@@ -3242,7 +3242,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-request:
+  /dsp/current/negotiations/rpc/setup-request:
     post:
       operationId: rpcSetupRequest
       summary: Initiate a contract negotiation request
@@ -3291,7 +3291,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-offer:
+  /dsp/current/negotiations/rpc/setup-offer:
     post:
       operationId: rpcSetupOffer
       summary: Send a counter-offer in a negotiation
@@ -3340,7 +3340,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-acceptance:
+  /dsp/current/negotiations/rpc/setup-acceptance:
     post:
       operationId: rpcSetupAcceptance
       summary: Accept a negotiation
@@ -3389,7 +3389,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-agreement:
+  /dsp/current/negotiations/rpc/setup-agreement:
     post:
       operationId: rpcSetupAgreement
       summary: Finalize agreement for a negotiation
@@ -3438,7 +3438,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-verification:
+  /dsp/current/negotiations/rpc/setup-verification:
     post:
       operationId: rpcSetupVerification
       summary: Verify a negotiation agreement
@@ -3487,7 +3487,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-finalization:
+  /dsp/current/negotiations/rpc/setup-finalization:
     post:
       operationId: rpcSetupFinalization
       summary: Finalize a negotiation
@@ -3536,7 +3536,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /negotiations/rpc/setup-termination:
+  /dsp/current/negotiations/rpc/setup-termination:
     post:
       operationId: rpcSetupTermination
       summary: Terminate a negotiation
@@ -5495,6 +5495,8 @@ components:
                 $ref: "#/components/schemas/DistributionMinimized"
         conformsTo:
           type: string
+        title:
+          type: string
       examples:
         - "@context":
             - https://w3id.org/dspace/2025/1/context.jsonld
@@ -5936,11 +5938,22 @@ components:
       properties:
         associatedAgentPeer:
           type: string
+        noCache:
+          type: boolean
         filter:
-          type: object
+          type: array
+          items:
+            type: string
       examples:
         - associatedAgentPeer: did:jwk:eyJrdHkiOiJSU0Ei...
           filter: []
+    RpcCatalogResponseMessageDto:
+      type: object
+      properties:
+        request:
+          $ref: "#/components/schemas/RpcCatalogRequestMessageDto"
+        response:
+          $ref: "#/components/schemas/Catalog"
     RpcDatasetRequestMessageDto:
       type: object
       properties:

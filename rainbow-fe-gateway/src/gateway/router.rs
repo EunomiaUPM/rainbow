@@ -46,6 +46,7 @@ impl GatewayHttpRouter {
 
         Router::new()
             .route("/api/{service_prefix}/{*extra}", any(Self::proxy_handler_with_extra))
+            .route("/api/dsp/current/{service_prefix}/{*extra}", any(Self::proxy_dsp_handler))
             .route("/api/{service_prefix}", any(Self::proxy_handler_without_extra))
             .route("/api/ws", get(Self::websocket_handler))
             .route("/api/incoming-notification", post(Self::incoming_notification))
@@ -109,6 +110,14 @@ impl GatewayHttpRouter {
         req: Request<Body>,
     ) -> impl IntoResponse {
         service.proxy_request(service_prefix, None, req).await
+    }
+
+    async fn proxy_dsp_handler(
+        State(service): State<Arc<dyn GatewayServiceTrait>>,
+        Path((service_prefix, extra)): Path<(String, String)>,
+        req: Request<Body>,
+    ) -> impl IntoResponse {
+        service.proxy_dsp_request(service_prefix, Some(extra), req).await
     }
 
     async fn websocket_handler(

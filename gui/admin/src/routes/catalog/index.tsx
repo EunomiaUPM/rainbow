@@ -8,16 +8,18 @@ import Heading from "shared/src/components/ui/heading.tsx";
 import { InfoList } from "shared/src/components/ui/info-list";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { Badge } from "shared/src/components/ui/badge";
+import { Badge, BadgeRole } from "shared/src/components/ui/badge";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 import { useGetCatalogs, useGetMainCatalogs } from "shared/data/orval/catalogs/catalogs";
+import { useGetAllParticipants } from "shared/data/orval/participants/participants";
 
 const RouteComponent = () => {
   const { data: mainCatalog } = useGetMainCatalogs();
   const { data: catalogs } = useGetCatalogs();
+  const { data: participants } = useGetAllParticipants();
 
   if (!mainCatalog?.data || mainCatalog.status !== 200) return null;
   return (
@@ -81,6 +83,43 @@ const RouteComponent = () => {
                 <Link to="/catalog/$catalogId" params={{ catalogId: c.id }}>
                   <Button variant={"link"}>
                     See catalog
+                    <ArrowRight />
+                  </Button>
+                </Link>
+              ),
+            },
+          ]}
+        />
+      </PageSection>
+
+      <PageSection title="Catalogs from other participants">
+        <DataTable
+          className="text-sm"
+          data={Array.isArray(participants?.data) ? participants.data.filter(p => !p.is_me && p.participant_type === "Agent") : []}
+          keyExtractor={(c) => c.participant_id!}
+          columns={[
+            {
+              header: "Participant ID",
+              cell: (p) => <Badge variant={"info"}>{formatUrn(p.participant_id)}</Badge>,
+            },
+            {
+              header: "Participant Type",
+              cell: (p) => (
+                <Badge variant={"role"} dsrole={p.participant_type as BadgeRole}>
+                  {p.participant_type}
+                </Badge>
+              ),
+            },
+            {
+              header: "Base URL",
+              cell: (p) => <Badge variant={"info"}>{p.base_url}</Badge>,
+            },
+            {
+              header: "Link",
+              cell: (p) => (
+                <Link to="/catalog/participant/$participantId" params={{ participantId: p.participant_id }}>
+                  <Button variant="link">
+                    Fetch catalog
                     <ArrowRight />
                   </Button>
                 </Link>

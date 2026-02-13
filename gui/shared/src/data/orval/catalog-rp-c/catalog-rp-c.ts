@@ -20,10 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  Catalog,
   Dataset,
   ErrorInfo,
   RpcCatalogRequestMessageDto,
+  RpcCatalogResponseMessageDto,
   RpcDatasetRequestMessageDto
 } from '.././model';
 
@@ -39,7 +39,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Request catalog from peer (RPC)
  */
 export type rpcSetupCatalogRequestResponse200 = {
-  data: Catalog
+  data: RpcCatalogResponseMessageDto
   status: 200
 }
 
@@ -82,7 +82,7 @@ export const getRpcSetupCatalogRequestUrl = () => {
 
   
 
-  return `/catalogs/rpc/setup-catalog-request`
+  return `/dsp/current/catalogs/rpc/setup-catalog-request`
 }
 
 export const rpcSetupCatalogRequest = async (rpcCatalogRequestMessageDto: RpcCatalogRequestMessageDto, options?: RequestInit): Promise<rpcSetupCatalogRequestResponse> => {
@@ -191,7 +191,7 @@ export const getRpcSetupDatasetRequestUrl = () => {
 
   
 
-  return `/catalogs/rpc/setup-dataset-request`
+  return `/dsp/current/catalogs/rpc/setup-dataset-request`
 }
 
 export const rpcSetupDatasetRequest = async (rpcDatasetRequestMessageDto: RpcDatasetRequestMessageDto, options?: RequestInit): Promise<rpcSetupDatasetRequestResponse> => {
