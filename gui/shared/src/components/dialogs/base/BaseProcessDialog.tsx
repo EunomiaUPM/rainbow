@@ -170,7 +170,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
                   {cancelLabel}
                 </Button>
               </DialogClose>
-              <Button type="submit" variant={submitVariant}>
+              <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting}>
                 {submitLabel}
               </Button>
             </DialogFooter>
@@ -203,7 +203,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
                 {cancelLabel}
               </Button>
             </DialogClose>
-            <Button type="submit" variant={submitVariant}>
+            <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting}>
               {submitLabel}
             </Button>
           </DialogFooter>

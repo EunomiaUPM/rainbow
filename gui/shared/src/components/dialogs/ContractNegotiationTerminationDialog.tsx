@@ -5,19 +5,25 @@
  * Uses the base dialog component for consistent structure.
  */
 
-import React, { useContext } from "react";
+
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
 import { BaseProcessDialog, mapCNProcessToFullInfoItems } from "./base";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useRpcSetupFinalization, useRpcSetupTermination } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
-
+import { useRouter } from "@tanstack/react-router";
+import React, { useContext } from "react";
+import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 export const ContractNegotiationTerminationDialog = ({
   process,
+  onClose,
 }: {
   process: NegotiationProcessDto;
+  onClose?: () => void;
 }) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: terminateAsync } = useRpcSetupTermination();
+  const { mutateAsync: terminateAsync, reset } = useRpcSetupTermination();
+  const { refetch } = useGetNegotiationProcesses();
+  const router = useRouter();
 
   /**
    * Handles the termination submission.
@@ -26,12 +32,17 @@ export const ContractNegotiationTerminationDialog = ({
   const handleSubmit = async () => {
     await terminateAsync({
       data: {
-        consumerPid: process.identifiers.consumer_id,
-        providerPid: process.identifiers.provider_id,
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
         code: "TERMINATED",
         reason: ["Terminated from GUI"],
       },
     });
+    await refetch();
+    router.invalidate();
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
@@ -47,6 +58,7 @@ export const ContractNegotiationTerminationDialog = ({
       infoItems={mapCNProcessToFullInfoItems(process)}
       submitLabel="Terminate"
       submitVariant="destructive"
+
       onSubmit={handleSubmit}
     />
   );

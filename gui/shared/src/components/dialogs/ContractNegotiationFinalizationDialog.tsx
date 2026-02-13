@@ -10,10 +10,20 @@ import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalIn
 import { BaseProcessDialog, mapCNProcessToInfoItemsForProvider } from "./base";
 import { useRpcSetupFinalization } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { NegotiationProcessDto } from "../../data/orval/model";
+import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import { useRouter } from "@tanstack/react-router";
 
-export const ContractNegotiationFinalizationDialog = ({ process }: { process: NegotiationProcessDto }) => {
+export const ContractNegotiationFinalizationDialog = ({
+  process,
+  onClose,
+}: {
+  process: NegotiationProcessDto;
+  onClose?: () => void;
+}) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: finalizeAsync } = useRpcSetupFinalization();
+  const { refetch } = useGetNegotiationProcesses();
+  const router = useRouter();
 
   /**
    * Handles the finalization submission.
@@ -26,6 +36,11 @@ export const ContractNegotiationFinalizationDialog = ({ process }: { process: Ne
         providerPid: process.identifiers.providerPid,
       }
     });
+    await refetch();
+    router.invalidate();
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (

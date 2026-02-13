@@ -10,10 +10,20 @@ import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalIn
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useRpcSetupAcceptance } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import { useRouter } from "@tanstack/react-router";
 
-export const ContractNegotiationAcceptanceDialog = ({ process }: { process: NegotiationProcessDto }) => {
+export const ContractNegotiationAcceptanceDialog = ({
+  process,
+  onClose,
+}: {
+  process: NegotiationProcessDto;
+  onClose?: () => void;
+}) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: acceptAsync } = useRpcSetupAcceptance();
+  const { refetch } = useGetNegotiationProcesses();
+  const router = useRouter();
 
   /**
    * Handles the acceptance submission.
@@ -26,6 +36,11 @@ export const ContractNegotiationAcceptanceDialog = ({ process }: { process: Nego
         providerPid: process.identifiers.providerPid,
       },
     });
+    await refetch();
+    router.invalidate();
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (

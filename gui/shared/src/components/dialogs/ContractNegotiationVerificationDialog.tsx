@@ -10,22 +10,37 @@ import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalIn
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { useRpcSetupVerification } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { NegotiationProcessDto } from "../../data/orval/model";
+import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import { useRouter } from "@tanstack/react-router";
 
-export const ContractNegotiationVerificationDialog = ({ process }: { process: NegotiationProcessDto }) => {
+export const ContractNegotiationVerificationDialog = ({
+  process,
+  onClose,
+}: {
+  process: NegotiationProcessDto;
+  onClose?: () => void;
+}) => {
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: verifyAsync } = useRpcSetupVerification();
+  const { refetch } = useGetNegotiationProcesses();
+  const router = useRouter();
 
   /**
    * Handles the verification submission.
    * Sends verification message to the provider.
    */
   const handleSubmit = async () => {
-    verifyAsync({
+    await verifyAsync({
       data: {
         providerPid: process.identifiers.providerPid,
         consumerPid: process.identifiers.consumerPid,
       },
     });
+    await refetch();
+    router.invalidate();
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
