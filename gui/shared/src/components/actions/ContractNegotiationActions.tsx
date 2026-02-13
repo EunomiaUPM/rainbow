@@ -29,7 +29,7 @@ export const ContractNegotiationActions = ({
       tiny: {
         true: "inline-flex items-center ",
         false:
-          " w-full p-6 fixed bottom-0 left-0 bg-background/80 backdrop-blur-sm border border-t-stroke [&>*>button]:min-w-20",
+          "w-[calc(100%_+_2px_-_var(--sidebar-width))] p-6 fixed bottom-0 -right-px bg-background/80 backdrop-blur-sm border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });

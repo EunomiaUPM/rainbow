@@ -12,6 +12,7 @@ import { NegotiationProcessDto } from "../../data/orval/model";
 import { useRpcSetupAgreement } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
+import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
 export const ContractNegotiationAgreementDialog = ({
   process,
@@ -57,6 +58,16 @@ export const ContractNegotiationAgreementDialog = ({
       submitLabel="Agree"
       submitVariant="default"
       onSubmit={handleSubmit}
+      scrollable={true}
+      afterInfoContent={
+        <div className="pt-4">
+          <PolicyWrapperShow
+            policy={process.offers.at(-1)!.offerContent}
+            datasetId={process.identifiers.datasetId}
+            catalogId={process.identifiers.catalogId}
+          />
+        </div>
+      }
     />
   );
 };
