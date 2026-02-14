@@ -33,7 +33,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog";
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { ContractNegotiationNewRequestDialog } from "./dialogs/ContractNegotiationNewRequestDialog";
-import { OdrlOffer } from "../data/orval/model";
+import { OdrlOffer, OdrlPolicyDto } from "../data/orval/model";
 import { ContractNegotiationNewOfferDialog } from "./dialogs/ContractNegotiationNewOfferDialog";
 
 // =============================================================================
@@ -45,7 +45,7 @@ import { ContractNegotiationNewOfferDialog } from "./dialogs/ContractNegotiation
  */
 export interface PolicyWrapperShowProps {
   /** The ODRL policy offer to display */
-  policy: OdrlOffer;
+  policy: OdrlOffer | OdrlPolicyDto;
 
   /** ID of the parent dataset (for actions) */
   datasetId?: string;
@@ -99,6 +99,11 @@ export const PolicyWrapperShow = ({
     routerState.location.pathname.includes("datahub-catalog") &&
     routerState.location.pathname.includes("dataset");
 
+  const policyId = "id" in policy ? policy.id : policy["@id"];
+  const odrlOffer = "odrlOffer" in policy ? policy.odrlOffer : (policy as OdrlOffer);
+  const entityType = "entityType" in policy ? policy.entityType : (policy as any).entityType; // Fallback for flexibility
+  const entity = "entity" in policy ? policy.entity : (policy as any).entity || (policy as any).target;
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -113,7 +118,7 @@ export const PolicyWrapperShow = ({
               Policy ID
             </span>
             <Badge variant="info" className="font-mono text-[10px]">
-              {formatUrn(policy["@id"] || "")}
+              {formatUrn(policyId || "")}
             </Badge>
           </div>
 
@@ -130,7 +135,7 @@ export const PolicyWrapperShow = ({
                 </Button>
               </DialogTrigger>
               <BusinessRemovePolicyDialog
-                policy={policy}
+                policy={policy as any} // Cast as any for now, or ensure compatibility
                 catalogId={catalogId}
                 datasetId={datasetId}
               />
@@ -142,12 +147,10 @@ export const PolicyWrapperShow = ({
         <InfoList
           className="w-full mb-3"
           items={[
-            { label: "Policy Target", value: (policy as any).entityType || "Agreement" },
+            { label: "Policy Target", value: entityType || "Agreement" },
             {
               label: "Target",
-              value: (policy as any).entity
-                ? (policy as any).entity.slice(9)
-                : (policy as any).target || "",
+              value: entity ? entity.slice(9) : "",
             },
           ]}
         />
@@ -159,22 +162,22 @@ export const PolicyWrapperShow = ({
           </Heading>
           <div className="flex flex-col gap-2 w-full">
             <PolicyComponent
-              policyItem={(policy as any).odrlOffer?.permission || (policy as any).permission}
+              policyItem={odrlOffer?.permission || (policy as any).permission}
               variant="permission"
             />
             <PolicyComponent
-              policyItem={(policy as any).odrlOffer?.prohibition || (policy as any).prohibition}
+              policyItem={odrlOffer?.prohibition || (policy as any).prohibition}
               variant="prohibition"
             />
             <PolicyComponent
-              policyItem={(policy as any).odrlOffer?.obligation || (policy as any).obligation}
+              policyItem={odrlOffer?.obligation || (policy as any).obligation}
               variant="obligation"
             />
           </div>
         </div>
 
         {/* Consumer action: Request access */}
-        {showRequestAccess && (
+        {showRequestAccess && odrlOffer && (
           <div className="mt-4 w-full flex justify-end">
             <Dialog>
               <DialogTrigger asChild>
@@ -183,7 +186,7 @@ export const PolicyWrapperShow = ({
                 </Button>
               </DialogTrigger>
               <ContractNegotiationNewRequestDialog
-                policy={policy}
+                policy={odrlOffer}
                 catalogId={catalogId || ""}
                 datasetId={datasetId || ""}
                 participantId={participant || ""}
@@ -193,7 +196,7 @@ export const PolicyWrapperShow = ({
         )}
 
         {/* Consumer action: Request access */}
-        {showOfferAccess && (
+        {showOfferAccess && odrlOffer && (
           <div className="mt-4 w-full flex justify-end">
             <Dialog>
               <DialogTrigger asChild>
@@ -202,7 +205,7 @@ export const PolicyWrapperShow = ({
                 </Button>
               </DialogTrigger>
               <ContractNegotiationNewOfferDialog
-                policy={policy}
+                policy={policy as OdrlPolicyDto}
                 catalogId={catalogId || ""}
                 datasetId={datasetId || ""}
               />

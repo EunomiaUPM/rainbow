@@ -19,12 +19,12 @@ import { PolicyWrapperEdit } from "../PolicyWrapperEdit";
 import { BaseProcessDialog } from "./base";
 import { mapCNProcessToInfoItemsForProvider, urnInfoItem } from "./base/infoItemMappers";
 import Heading from "../ui/heading";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
 import { InfoItemProps } from "../ui/info-list";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useGetAllParticipants } from "../../data/orval/participants/participants";
-import { ParticipantDto } from "../../data/orval/model";
+import { OdrlPolicyDto, ParticipantDto } from "../../data/orval/model";
 import { useMyWellKnownDSPPath, useParticipantDSPPath } from "../../hooks/useWellKnownUrl";
 
 // =============================================================================
@@ -36,7 +36,7 @@ import { useMyWellKnownDSPPath, useParticipantDSPPath } from "../../hooks/useWel
  */
 export interface ContractNegotiationNewOfferDialogProps {
   /** The ODRL policy to negotiate */
-  policy: OdrlOffer;
+  policy: OdrlPolicyDto;
 
   /** ID of the parent catalog */
   catalogId: string;
@@ -71,6 +71,7 @@ export const ContractNegotiationNewOfferDialog = ({
   // ---------------------------------------------------------------------------
 
   /** Current edited policy state (declarative pattern) */
+  const navigate = useNavigate();
   const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null); // OdrlInfo matches OdrlOffer structure roughly
   const { refetch } = useGetNegotiationProcesses();
   const router = useRouter();
@@ -110,20 +111,23 @@ export const ContractNegotiationNewOfferDialog = ({
       ? await resolveProviderDspPath(selectedParticipant.participant_id)
       : null;
 
-    await setupOffer({
+    console.log("policy", policy);
+
+    const res = await setupOffer({
       data: {
         associatedAgentPeer: selectedParticipant?.participant_id,
         providerAddress: resolvedPath || "", // Use resolved path
         callbackAddress: myDspPath,
         offer: {
-          "@id": policy["@id"]
+          "@id": policy.id
         }
       },
     });
-    await refetch();
-    router.invalidate();
-    if (onClose) {
-      onClose();
+    if (res.status === 201) {
+      // closeDialogRef.current?.click();
+      navigate({
+        to: "/contract-negotiation",
+      });
     }
 
   };
@@ -152,7 +156,6 @@ export const ContractNegotiationNewOfferDialog = ({
 
   const policyContent = (
     <div>
-      {console.log(policy)}
       <div className="pt-4">
         <Heading level="h6" className="mb-2">
           Select an authenticated peer to send the offer to.

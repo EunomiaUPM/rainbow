@@ -180,7 +180,7 @@ function RouteComponent() {
             policies.map((policy) => (
               <PolicyWrapperShow
                 key={policy.id}
-                policy={policy.odrlOffer!}
+                policy={policy}
                 datasetId={dataset.id!}
                 catalogId={undefined}
                 datasetName={dataset.dctTitle}
