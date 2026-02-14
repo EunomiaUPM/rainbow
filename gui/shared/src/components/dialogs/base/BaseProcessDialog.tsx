@@ -86,6 +86,9 @@ export interface BaseProcessDialogProps<TFormValues extends FieldValues = FieldV
 
   /** Whether to hide the info list entirely */
   hideInfoList?: boolean;
+
+  /** Whether to disable the submit button */
+  disabledSubmit?: boolean;
 }
 
 // =============================================================================
@@ -115,6 +118,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
   scrollable = false,
   cancelLabel = "Cancel",
   hideInfoList = false,
+  disabledSubmit = false,
 }: BaseProcessDialogProps<TFormValues>) {
   // Initialize form with optional default values
   const form = useForm<TFormValues>({
@@ -170,7 +174,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
                   {cancelLabel}
                 </Button>
               </DialogClose>
-              <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting}>
+              <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting} disabled={disabledSubmit}>
                 {submitLabel}
               </Button>
             </DialogFooter>
@@ -203,7 +207,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
                 {cancelLabel}
               </Button>
             </DialogClose>
-            <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting}>
+            <Button type="submit" variant={submitVariant} isLoading={form.formState.isSubmitting} disabled={disabledSubmit}>
               {submitLabel}
             </Button>
           </DialogFooter>

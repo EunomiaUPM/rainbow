@@ -3206,7 +3206,7 @@ paths:
             schema:
               $ref: "#/components/schemas/RpcNegotiationOfferInitMessageDto"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:

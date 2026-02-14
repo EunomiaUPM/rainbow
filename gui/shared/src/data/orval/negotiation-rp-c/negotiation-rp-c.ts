@@ -154,9 +154,9 @@ export const useRpcSetupRequestInit = <TError = ErrorType<ErrorInfo>,
     /**
  * @summary Initiate a negotiation offer (provider)
  */
-export type rpcSetupOfferInitResponse200 = {
+export type rpcSetupOfferInitResponse201 = {
   data: NegotiationProcessDto
-  status: 200
+  status: 201
 }
 
 export type rpcSetupOfferInitResponse400 = {
@@ -184,7 +184,7 @@ export type rpcSetupOfferInitResponse500 = {
   status: 500
 }
     
-export type rpcSetupOfferInitResponseSuccess = (rpcSetupOfferInitResponse200) & {
+export type rpcSetupOfferInitResponseSuccess = (rpcSetupOfferInitResponse201) & {
   headers: Headers;
 };
 export type rpcSetupOfferInitResponseError = (rpcSetupOfferInitResponse400 | rpcSetupOfferInitResponse401 | rpcSetupOfferInitResponse403 | rpcSetupOfferInitResponse404 | rpcSetupOfferInitResponse500) & {

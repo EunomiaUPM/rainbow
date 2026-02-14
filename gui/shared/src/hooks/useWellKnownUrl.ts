@@ -1,7 +1,8 @@
 import { useContext, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGetWellKnownDSpaceVersion } from "../data/orval/well-known/well-known";
 import { useFetchDataspaceVersionFromParticipant } from "../data/orval/well-known-rp-c/well-known-rp-c";
-import { useGetParticipantById } from "../data/orval/participants/participants";
+import { useGetParticipantById, getGetParticipantByIdQueryOptions } from "../data/orval/participants/participants";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 
 /**
@@ -42,14 +43,15 @@ export const useMyWellKnownDSPPath = (version = "2025-1"): string | null => {
  * @param version - The protocol version to look for (default: "2025-1")
  * @returns The full URL or null if still loading / not found.
  */
-export const useParticipantDSPPath = (participantId: string | undefined, version = "2025-1"): string | null => {
+export const useParticipantDSPPath = (participantId: string | undefined, version = "2025-1") => {
+  const queryClient = useQueryClient();
   const { data: participantData } = useGetParticipantById(participantId as string, {
     query: {
         enabled: !!participantId
     }
   });
 
-  const { mutate: fetchVersion, data: participantVersion } = useFetchDataspaceVersionFromParticipant();
+  const { mutateAsync: fetchVersionAsync, mutate: fetchVersion, data: participantVersion } = useFetchDataspaceVersionFromParticipant();
 
   useEffect(() => {
     if (participantId) {
@@ -57,17 +59,28 @@ export const useParticipantDSPPath = (participantId: string | undefined, version
     }
   }, [participantId, fetchVersion]);
 
+  const resolve = async (id: string, ver = version): Promise<string | null> => {
+      // Fetch participant
+      const pData = await queryClient.fetchQuery(getGetParticipantByIdQueryOptions(id));
+       if (pData.status !== 200 || !pData.data.base_url) return null;
+
+      // Fetch version
+      const vData = await fetchVersionAsync({ data: { participant_id: id } });
+      if (!vData || !vData.data || !("protocolVersions" in vData.data)) return null;
+
+      const protocolVersion = vData.data.protocolVersions.find((p: any) => p.version === ver);
+      return protocolVersion ? `${pData.data.base_url}${protocolVersion.path}` : null;
+  }
+
   // Ensure we have both participant data (for base_url) and version data (for path)
-  if (!participantData || participantData.status !== 200 || !participantData.data.base_url || !participantVersion?.data || !("protocolVersions" in participantVersion.data)) {
-    return null;
+  let path: string | null = null;
+  if (participantData && participantData.status === 200 && participantData.data.base_url && participantVersion?.data && ("protocolVersions" in participantVersion.data)) {
+      const { base_url } = participantData.data;
+      const protocolVersion = participantVersion.data.protocolVersions.find((p) => p.version === version);
+      if (protocolVersion) {
+          path = `${base_url}${protocolVersion.path}`;
+      }
   }
 
-  const { base_url } = participantData.data;
-  const protocolVersion = participantVersion.data.protocolVersions.find((p) => p.version === version);
-
-  if (!protocolVersion) {
-    return null;
-  }
-
-  return `${base_url}${protocolVersion.path}`;
+  return { path, resolve };
 };

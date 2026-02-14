@@ -65,7 +65,7 @@ export const ContractNegotiationNewRequestDialog = ({
   const navigate = useNavigate();
   const { mutateAsync: requestAsync } = useRpcSetupRequestInit();
   const myDspPath = useMyWellKnownDSPPath();
-  const providerDspPath = useParticipantDSPPath(participantId);
+  const { path: providerDspPath } = useParticipantDSPPath(participantId);
 
   // ---------------------------------------------------------------------------
   // Info Items

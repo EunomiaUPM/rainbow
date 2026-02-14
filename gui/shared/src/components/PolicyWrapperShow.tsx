@@ -34,6 +34,7 @@ import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { ContractNegotiationNewRequestDialog } from "./dialogs/ContractNegotiationNewRequestDialog";
 import { OdrlOffer } from "../data/orval/model";
+import { ContractNegotiationNewOfferDialog } from "./dialogs/ContractNegotiationNewOfferDialog";
 
 // =============================================================================
 // TYPES
@@ -58,6 +59,9 @@ export interface PolicyWrapperShowProps {
   /** Whether to show the Request Access button (default: false) */
   showRequestAccess?: boolean;
 
+  /** Whether to show the Offer Access button (default: false) */
+  showOfferAccess?: boolean;
+
   /** The participant ID of the provider (for negotiation request) */
   participant?: string;
 }
@@ -81,6 +85,7 @@ export const PolicyWrapperShow = ({
   catalogId,
   datasetName,
   showRequestAccess = false,
+  showOfferAccess = false,
   participant,
 }: PolicyWrapperShowProps) => {
   const routerState = useRouterState();
@@ -182,6 +187,24 @@ export const PolicyWrapperShow = ({
                 catalogId={catalogId || ""}
                 datasetId={datasetId || ""}
                 participantId={participant || ""}
+              />
+            </Dialog>
+          </div>
+        )}
+
+        {/* Consumer action: Request access */}
+        {showOfferAccess && (
+          <div className="mt-4 w-full flex justify-end">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="default" className="w-full sm:w-auto">
+                  Offer Access
+                </Button>
+              </DialogTrigger>
+              <ContractNegotiationNewOfferDialog
+                policy={policy}
+                catalogId={catalogId || ""}
+                datasetId={datasetId || ""}
               />
             </Dialog>
           </div>
