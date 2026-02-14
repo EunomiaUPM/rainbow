@@ -28,6 +28,7 @@ import {
   OperandType,
   PolicyEditSection,
 } from "shared/src/components/policy/PolicyEditSection";
+import { OdrlInfo, OdrlOffer, OdrlPermission } from "shared/src/data/orval/model";
 
 // =============================================================================
 // TYPES
@@ -86,8 +87,20 @@ export const PolicyWrapperEdit = ({ policy, onChange }: PolicyWrapperEditProps) 
       prohibition: policy.prohibition || [],
     };
     setEditedPolicy(initialPolicy);
+
+    const policyToEmit = { ...initialPolicy };
+    if (policyToEmit.permission && policyToEmit.permission.length === 0) {
+      policyToEmit.permission = undefined;
+    }
+    if (policyToEmit.obligation && policyToEmit.obligation.length === 0) {
+      policyToEmit.obligation = undefined;
+    }
+    if (policyToEmit.prohibition && policyToEmit.prohibition.length === 0) {
+      policyToEmit.prohibition = undefined;
+    }
+
     // Also notify parent of initial state
-    onChange?.(initialPolicy);
+    onChange?.(policyToEmit);
   }, [policy]);
 
   /** Notify parent when policy changes */
@@ -95,7 +108,20 @@ export const PolicyWrapperEdit = ({ policy, onChange }: PolicyWrapperEditProps) 
     (updater: (prev: OdrlInfo) => OdrlInfo) => {
       setEditedPolicy((prev) => {
         const newPolicy = updater(prev);
-        onChange?.(newPolicy);
+        const policyToEmit = { ...newPolicy };
+
+        // Filter out empty arrays for onChange
+        if (policyToEmit.permission && policyToEmit.permission.length === 0) {
+          policyToEmit.permission = undefined;
+        }
+        if (policyToEmit.obligation && policyToEmit.obligation.length === 0) {
+          policyToEmit.obligation = undefined;
+        }
+        if (policyToEmit.prohibition && policyToEmit.prohibition.length === 0) {
+          policyToEmit.prohibition = undefined;
+        }
+
+        onChange?.(policyToEmit);
         return newPolicy;
       });
     },
@@ -224,7 +250,6 @@ export const PolicyWrapperEdit = ({ policy, onChange }: PolicyWrapperEditProps) 
         <InfoList
           items={[
             { label: "Policy Target", value: policy["@type"] },
-            { label: "Profile", value: JSON.stringify(policy.profile) },
             { label: "Target", value: policy.target?.slice(9) },
           ]}
         />

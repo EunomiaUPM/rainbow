@@ -30,11 +30,6 @@ const RouteComponent = () => {
     <PageLayout>
       <PageHeader title="Contract Negotiations" />
       <PageSection>
-        <div className=" pb-3 flex justify-between items-start">
-          <div className=" basis-3/5">
-            <Input type="search"></Input>
-          </div>
-        </div>
         <DataTable
           className="text-sm"
           data={cnProcessesSorted ?? []}

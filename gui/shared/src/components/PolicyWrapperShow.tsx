@@ -176,7 +176,6 @@ export const PolicyWrapperShow = ({
                 policy={policy}
                 catalogId={catalogId}
                 datasetId={datasetId}
-                participantId=""
               />
             </Dialog>
           </div>

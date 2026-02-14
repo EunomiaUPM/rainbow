@@ -69,9 +69,6 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
   }, []);
 
 
-
-  // ... existing code ...
-
   /**
    * Memoized context value
    */
@@ -104,7 +101,7 @@ export const GlobalInfoContextProvider = ({ children }: { children: ReactNode })
    * Render when config is loaded
    */
   if (!isConfigLoaded) {
-    return <div>Cargando...</div>;
+    return <div>Loading...</div>;
   }
 
   return <GlobalInfoContext.Provider value={contextValue}>{children}</GlobalInfoContext.Provider>;

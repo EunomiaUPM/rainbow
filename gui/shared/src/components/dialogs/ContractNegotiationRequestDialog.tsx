@@ -8,14 +8,17 @@
  * <ContractNegotiationRequestDialog process={cnProcess} />
  */
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { PolicyWrapperEdit } from "../PolicyWrapperEdit";
 import { BaseProcessDialog } from "./base";
 import { mapCNProcessToInfoItemsForConsumer } from "./base/infoItemMappers";
 import Heading from "../ui/heading";
 import { OdrlInfo, NegotiationProcessDto } from "../../data/orval/model";
-import { useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { useRpcSetupRequest, useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import { useRouter } from "@tanstack/react-router";
+import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
 // =============================================================================
 // TYPES
@@ -27,6 +30,8 @@ import { useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negoti
 export interface ContractNegotiationRequestDialogProps {
   /** The contract negotiation process */
   process: NegotiationProcessDto;
+  /** Callback when the dialog is closed */
+  onClose?: () => void;
 }
 
 // =============================================================================
@@ -43,17 +48,20 @@ export interface ContractNegotiationRequestDialogProps {
  */
 export const ContractNegotiationRequestDialog = ({
   process,
+  onClose,
 }: ContractNegotiationRequestDialogProps) => {
   // ---------------------------------------------------------------------------
   // State & Hooks
   // ---------------------------------------------------------------------------
 
   /** Current edited policy state (declarative pattern) */
-
+  const { refetch } = useGetNegotiationProcesses();
+  const router = useRouter();
   const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null);
-
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: dataRequestAsync } = useRpcSetupRequestInit();
+  const { mutateAsync: dataRequestAsync } = useRpcSetupRequest();
+  const lastOffer = useMemo(() => {
+    return process.offers.at(-1);
+  }, [process]);
 
   // ---------------------------------------------------------------------------
   // Info Items
@@ -68,12 +76,21 @@ export const ContractNegotiationRequestDialog = ({
   const handleSubmit = async () => {
     await dataRequestAsync({
       data: {
-        associatedAgentPeer: process.associatedAgentPeer,
-        providerAddress: "process.providerAddress", // TODO: get from process
-        callbackAddress: "process.callbackAddress", // TODO: get from process
-        offer: currentPolicy,
+        consumerPid: process.identifiers.consumerPid,
+        providerPid: process.identifiers.providerPid,
+        offer: {
+          "@id": lastOffer.offerContent["@id"],
+          "@type": lastOffer.offerContent["@type"],
+          target: lastOffer.offerContent.target,
+          ...currentPolicy
+        },
       },
     });
+    await refetch();
+    router.invalidate();
+    if (onClose) {
+      onClose();
+    }
 
   };
 
@@ -81,14 +98,22 @@ export const ContractNegotiationRequestDialog = ({
   // After Info Content (Policy Editor)
   // ---------------------------------------------------------------------------
 
-  // const policyEditorContent = lastOffer ? (
-  //   <div className="pt-4">
-  //     <Heading level="h6" className="mb-2">
-  //       New Policy Request
-  //     </Heading>
-  //     <PolicyWrapperEdit policy={lastOffer.offer_content} onChange={setCurrentPolicy} />
-  //   </div>
-  // ) : null;
+  const policyEditorContent = lastOffer ? (
+    <div className="pt-4 flex gap-2">
+      <div className="w-1/2">
+        <Heading level="h6" className="mb-2">
+          Current Policy
+        </Heading>
+        <PolicyWrapperShow policy={lastOffer.offerContent} />
+      </div>
+      <div className="w-1/2">
+        <Heading level="h6" className="mb-2">
+          New Policy Request
+        </Heading>
+        <PolicyWrapperEdit policy={lastOffer.offerContent} onChange={setCurrentPolicy} />
+      </div>
+    </div>
+  ) : null;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -99,11 +124,12 @@ export const ContractNegotiationRequestDialog = ({
       title="Contract Negotiation Request"
       description="Make changes to the Contract Negotiation Request and submit a counter-request."
       infoItems={infoItems}
-      afterInfoContent={null}
+      afterInfoContent={policyEditorContent}
       submitLabel="Request"
       submitVariant="outline"
       onSubmit={handleSubmit}
       scrollable
+      contentClassName="w-[75vw] max-w-[960px]"
     />
   );
 };

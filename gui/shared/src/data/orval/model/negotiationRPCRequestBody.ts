@@ -13,6 +13,7 @@ import type { OdrlOffer } from './odrlOffer';
 
 export interface NegotiationRPCRequestBody {
   providerPid: string;
+  consumerPid: string;
   offer: OdrlOffer;
   datasetId?: string;
 }

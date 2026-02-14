@@ -6003,9 +6003,12 @@ components:
       type: object
       required:
         - providerPid
+        - consumerPid
         - offer
       properties:
         providerPid:
+          type: string
+        consumerPid:
           type: string
         offer:
           $ref: "#/components/schemas/OdrlOffer"

@@ -142,7 +142,7 @@ export function BaseProcessDialog<TFormValues extends FieldValues = FieldValues>
   // Scrollable layout for dialogs with lots of content
   if (scrollable) {
     return (
-      <DialogContent className="p-0">
+      <DialogContent className={`p-0 ${contentClassName}`}>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
