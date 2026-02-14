@@ -10,6 +10,7 @@ import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
 import { InfoGrid } from "shared/src/components/layout/InfoGrid";
 import { PolicyWrapperShow } from "shared/components/PolicyWrapperShow";
+import { AgreementActions } from "shared/components/actions/AgreementActions";
 
 /**
  * Route for displaying agreement details.
@@ -84,6 +85,9 @@ function RouteComponent() {
           datasetName={(agreement.agreementContent as any).target}
         />
       </InfoGrid>
+
+      {/* ACTIONS */}
+      <AgreementActions process={agreement} tiny={false} />
     </PageLayout>
   );
 }

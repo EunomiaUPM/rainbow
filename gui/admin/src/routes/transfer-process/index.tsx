@@ -48,9 +48,6 @@ function RouteComponent() {
     <PageLayout>
       <PageHeader title="Transfer Processes" />
       <PageSection>
-        <div className="pb-3 w-3/5">
-          <Input type="search"></Input>
-        </div>
         <DataTable
           className="text-sm"
           data={transferProcessesSorted ?? []}

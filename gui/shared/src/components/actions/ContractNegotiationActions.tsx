@@ -1,4 +1,4 @@
-import { ButtonSizes } from "../ui/button";
+import { Button, ButtonSizes } from "../ui/button";
 import React, { useContext } from "react";
 import { cva } from "class-variance-authority";
 import { ContractNegotiationOfferDialog } from "../dialogs/ContractNegotiationOfferDialog";
@@ -12,7 +12,8 @@ import { ContractNegotiationVerificationDialog } from "../dialogs/ContractNegoti
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "./ProcessActionDialog";
 import { NegotiationProcessDto } from "shared/src/data/orval/model/negotiationProcessDto";
-
+import { Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 /**
  * Actions available for a contract negotiation process.
  */
@@ -132,12 +133,17 @@ export const ContractNegotiationActions = ({
 
   // Determine if no further actions are available
   const showNoFurtherActions = () => {
-    if (process.state === "FINALIZED" || process.state === "TERMINATED") return true;
+    if (process.state === "TERMINATED") return true;
     if (process.role === "Consumer") {
       if (process.state === "ACCEPTED") return true;
       if (process.state === "VERIFIED") return true;
     }
     return false;
+  };
+
+  // Determine if agreement can be viewed
+  const showGoToAgreement = () => {
+    return process.state === "FINALIZED" && !!process.agreement;
   };
 
   return (
@@ -164,6 +170,11 @@ export const ContractNegotiationActions = ({
           />
         ))}
         {showNoFurtherActions() && <NoFurtherActions />}
+        {showGoToAgreement() && (
+          <Link to="/agreements/$agreementId" params={{ agreementId: process.agreement!.id }}>
+            <Button variant="link">See agreement <ArrowRight /></Button>
+          </Link>
+        )}
       </div>
     </div>
   );

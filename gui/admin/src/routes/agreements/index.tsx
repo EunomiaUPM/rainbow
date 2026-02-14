@@ -10,6 +10,7 @@ import { ArrowRight } from "lucide-react";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
+import { AgreementActions } from "shared/src/components/actions/AgreementActions"
 
 /**
  * Route for listing all agreements.
@@ -26,9 +27,6 @@ function RouteComponent() {
     <PageLayout>
       <PageHeader title="Agreements" />
       <PageSection>
-        <div className="pb-3 w-3/5">
-          <Input type="search"></Input>
-        </div>
         <DataTable
           className="text-sm"
           data={agreements ?? []}
@@ -65,6 +63,10 @@ function RouteComponent() {
             {
               header: "Created at",
               cell: (a) => <FormatDate date={a.createdAt} />,
+            },
+            {
+              header: "Actions",
+              cell: (p) => <AgreementActions process={p} tiny={true} />,
             },
             {
               header: "Link",

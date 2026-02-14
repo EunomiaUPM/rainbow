@@ -50,18 +50,9 @@ type TransferRequestInputs = {
  */
 export interface TransferProcessRequestDialogProps {
   /** The agreement to start a transfer for */
-  agreement: AgreementDto;
+  process: AgreementDto;
+  onClose?: () => void;
 }
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-/** Available transfer methods */
-const TRANSFER_METHODS = ["PULL", "PUSH"] as const;
-
-/** Available transfer protocols */
-const TRANSFER_PROTOCOLS = ["http", "kafka", "ftp"] as const;
 
 // =============================================================================
 // COMPONENT
@@ -75,7 +66,7 @@ const TRANSFER_PROTOCOLS = ["http", "kafka", "ftp"] as const;
  * - Protocol selection (HTTP/Kafka/FTP)
  * - Agreement information display
  */
-export const TransferProcessRequestDialog = ({ agreement }: TransferProcessRequestDialogProps) => {
+export const TransferProcessRequestDialog = ({ process, onClose }: TransferProcessRequestDialogProps) => {
   const { mutateAsync } = useSetupTransferRequest();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
@@ -92,9 +83,11 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
   // ---------------------------------------------------------------------------
 
   const infoItems: InfoItemProps[] = [
-    urnInfoItem("Agreement ID", agreement.id),
-    urnInfoItem("Provider", agreement.providerParticipantId),
-    urnInfoItem("Consumer", agreement.consumerParticipantId),
+    urnInfoItem("Agreement ID", process.id),
+    //@ts-ignore
+    urnInfoItem("Provider", process.agreementContent.assigner),
+    //@ts-ignore
+    urnInfoItem("Consumer", process.agreementContent.assignee),
   ].filter((item): item is InfoItemProps => item !== undefined);
 
   // ---------------------------------------------------------------------------
@@ -104,10 +97,10 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
   const handleSubmit = async (data: TransferRequestInputs) => {
     await mutateAsync({
       data: {
-        associatedAgentPeer: agreement.providerParticipantId,
+        associatedAgentPeer: process.providerParticipantId,
         callbackAddress: api_gateway, // TODO: get callback address from agreement
         providerAddress: api_gateway, // TODO: get provider address from agreement
-        agreementId: agreement.id,
+        agreementId: process.id,
         format: `${data.transfer_protocol}+${data.method}`.toLowerCase(),
       },
     });
@@ -119,71 +112,7 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
 
   const formFieldsContent = (
     <div className="grid grid-cols-2 gap-4 py-4">
-      {/* Method Select */}
-      <FormField
-        control={form.control}
-        name="method"
-        render={({ field }) => (
-          <FormItem>
-            <label htmlFor="method" className="text-sm mb-1 text-inherit">
-              Method
-            </label>
-            <FormControl>
-              <Select
-                value={field.value}
-                defaultValue={TRANSFER_METHODS[0]}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select method" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSFER_METHODS.map((method) => (
-                    <SelectItem value={method} key={method}>
-                      {method}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormDescription>Transfer direction</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Protocol Select */}
-      <FormField
-        control={form.control}
-        name="transfer_protocol"
-        render={({ field }) => (
-          <FormItem>
-            <label htmlFor="transfer_protocol" className="text-sm mb-1">
-              Protocol
-            </label>
-            <FormControl>
-              <Select
-                value={field.value}
-                defaultValue={TRANSFER_PROTOCOLS[0]}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select protocol" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSFER_PROTOCOLS.map((protocol) => (
-                    <SelectItem value={protocol} key={protocol}>
-                      {protocol.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormDescription>Transfer protocol</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      still to be implemented
     </div>
   );
 
@@ -197,7 +126,7 @@ export const TransferProcessRequestDialog = ({ agreement }: TransferProcessReque
       description={
         <span className="max-w-full flex flex-wrap gap-1">
           Start transfer process for Agreement{" "}
-          <Badge variant="info">{formatUrn(agreement.id)}</Badge>
+          <Badge variant="info">{formatUrn(process.id)}</Badge>
         </span>
       }
       infoItems={infoItems}

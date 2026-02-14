@@ -301,7 +301,7 @@ export const Header = () => {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="bg-background w-full border-b border-white/5 py-1 z-50 h-9 px-3 flex justify-between items-center gap-4">
+    <div className="bg-background w-full border-b border-white/5 py-1 z-50 h-9 px-3 flex justify-between items-center gap-4 sticky top-0">
       {/* Left section: Sidebar trigger and breadcrumbs */}
       <div className="flex items-center gap-2 overflow-hidden min-w-0">
         <SidebarTrigger className="h-6 w-6 shrink-0" />

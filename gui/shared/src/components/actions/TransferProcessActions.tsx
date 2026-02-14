@@ -7,12 +7,13 @@ import NoFurtherActions from "../ui/noFurtherActions";
 import { TransferProcessSuspensionDialog } from "shared/src/components/dialogs/TransferProcessSuspensionDialog";
 import { TransferProcessCompletionDialog } from "shared/src/components/dialogs/TransferProcessCompletionDialog";
 import { ProcessActionDialog } from "./ProcessActionDialog";
+import { TransferProcessDto } from "../../data/orval/model";
 
 /**
  * Actions available for a transfer process.
  */
 export const TransferProcessActions: FC<{
-  process: TransferProcess;
+  process: TransferProcessDto;
   tiny: boolean;
 }> = ({ process, tiny = false }) => {
   const { dsrole } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
