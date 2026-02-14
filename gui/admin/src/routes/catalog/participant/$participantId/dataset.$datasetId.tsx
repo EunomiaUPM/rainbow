@@ -119,6 +119,7 @@ function RouteComponent() {
                 catalogId={undefined}
                 datasetName={currentDataset.title!}
                 showRequestAccess={true}
+                participant={participantId}
               />
             ))}
         </div>

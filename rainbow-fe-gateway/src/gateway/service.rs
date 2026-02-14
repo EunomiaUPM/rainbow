@@ -10,7 +10,9 @@ use reqwest::Client;
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tracing::{debug, error, info, warn};
+use ymir::config::traits::SingleHostTrait;
 use ymir::config::types::HostType;
+use rainbow_common::config::traits::CommonConfigTrait;
 
 #[async_trait::async_trait]
 pub trait GatewayServiceTrait: Send + Sync {
@@ -25,6 +27,12 @@ pub trait GatewayServiceTrait: Send + Sync {
         &self,
         service_prefix: String,
         extra_opt: Option<String>,
+        req: Request<Body>,
+    ) -> Response;
+
+    async fn proxy_well_known_rpc_request(
+        &self,
+        extra: String,
         req: Request<Body>,
     ) -> Response;
 
@@ -79,6 +87,7 @@ impl GatewayServiceTrait for GatewayService {
             "mates" => self.config.ssi_auth().get_host(HostType::Http),
             "subscriptions" => self.config.transfer().get_host(HostType::Http),
             "notifications" => self.config.transfer().get_host(HostType::Http),
+            "well-known" => self.config.common().hosts.http.get_host(),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 
@@ -96,6 +105,7 @@ impl GatewayServiceTrait for GatewayService {
             "mates" => "api/v1/mates",
             "notifications" => "api/v1/contract-negotiation/notifications",
             "subscriptions" => "api/v1/contract-negotiation/subscriptions",
+            "well-known" => ".well-known",
             _ => return (StatusCode::NOT_FOUND, "prefix not found in microservice").into_response(),
         };
 
@@ -134,6 +144,24 @@ impl GatewayServiceTrait for GatewayService {
             microservice_base_url,
             microservice_api_path.to_string(),
             extra_opt,
+            req,
+        )
+        .await
+    }
+
+    async fn proxy_well_known_rpc_request(
+        &self,
+        extra: String,
+        req: Request<Body>,
+    ) -> Response {
+        let microservice_base_url = self.config.common().hosts.http.get_host();
+        let microservice_api_path = format!("rpc/.well-known/{}", extra);
+
+        execute_proxy(
+            self.client.clone(),
+            microservice_base_url,
+            microservice_api_path,
+            None,
             req,
         )
         .await

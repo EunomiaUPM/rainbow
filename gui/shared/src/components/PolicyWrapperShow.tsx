@@ -33,6 +33,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { BusinessRemovePolicyDialog } from "./dialogs/BusinessRemovePolicyDialog";
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { ContractNegotiationNewRequestDialog } from "./dialogs/ContractNegotiationNewRequestDialog";
+import { OdrlOffer } from "../data/orval/model";
 
 // =============================================================================
 // TYPES
@@ -56,6 +57,9 @@ export interface PolicyWrapperShowProps {
 
   /** Whether to show the Request Access button (default: false) */
   showRequestAccess?: boolean;
+
+  /** The participant ID of the provider (for negotiation request) */
+  participant?: string;
 }
 
 // =============================================================================
@@ -77,6 +81,7 @@ export const PolicyWrapperShow = ({
   catalogId,
   datasetName,
   showRequestAccess = false,
+  participant,
 }: PolicyWrapperShowProps) => {
   const routerState = useRouterState();
 
@@ -103,7 +108,7 @@ export const PolicyWrapperShow = ({
               Policy ID
             </span>
             <Badge variant="info" className="font-mono text-[10px]">
-              {formatUrn(policy.id)}
+              {formatUrn(policy["@id"] || "")}
             </Badge>
           </div>
 
@@ -174,8 +179,9 @@ export const PolicyWrapperShow = ({
               </DialogTrigger>
               <ContractNegotiationNewRequestDialog
                 policy={policy}
-                catalogId={catalogId}
-                datasetId={datasetId}
+                catalogId={catalogId || ""}
+                datasetId={datasetId || ""}
+                participantId={participant || ""}
               />
             </Dialog>
           </div>

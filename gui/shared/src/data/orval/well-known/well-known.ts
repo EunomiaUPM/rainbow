@@ -90,7 +90,7 @@ export const getGetWellKnownDSpaceVersionUrl = () => {
 
   
 
-  return `/.well-known/dspace-version`
+  return `/well-known/dspace-version`
 }
 
 export const getWellKnownDSpaceVersion = async ( options?: RequestInit): Promise<getWellKnownDSpaceVersionResponse> => {
@@ -110,13 +110,13 @@ export const getWellKnownDSpaceVersion = async ( options?: RequestInit): Promise
 
 export const getGetWellKnownDSpaceVersionInfiniteQueryKey = () => {
     return [
-    'infinite', `/.well-known/dspace-version`
+    'infinite', `/well-known/dspace-version`
     ] as const;
     }
 
 export const getGetWellKnownDSpaceVersionQueryKey = () => {
     return [
-    `/.well-known/dspace-version`
+    `/well-known/dspace-version`
     ] as const;
     }
 

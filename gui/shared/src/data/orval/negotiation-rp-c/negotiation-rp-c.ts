@@ -45,9 +45,9 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * @summary Initiate a negotiation request (consumer)
  */
-export type rpcSetupRequestInitResponse200 = {
+export type rpcSetupRequestInitResponse201 = {
   data: NegotiationProcessDto
-  status: 200
+  status: 201
 }
 
 export type rpcSetupRequestInitResponse400 = {
@@ -75,7 +75,7 @@ export type rpcSetupRequestInitResponse500 = {
   status: 500
 }
     
-export type rpcSetupRequestInitResponseSuccess = (rpcSetupRequestInitResponse200) & {
+export type rpcSetupRequestInitResponseSuccess = (rpcSetupRequestInitResponse201) & {
   headers: Headers;
 };
 export type rpcSetupRequestInitResponseError = (rpcSetupRequestInitResponse400 | rpcSetupRequestInitResponse401 | rpcSetupRequestInitResponse403 | rpcSetupRequestInitResponse404 | rpcSetupRequestInitResponse500) & {

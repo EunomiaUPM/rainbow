@@ -47,6 +47,7 @@ impl GatewayHttpRouter {
         Router::new()
             .route("/api/{service_prefix}/{*extra}", any(Self::proxy_handler_with_extra))
             .route("/api/dsp/current/{service_prefix}/{*extra}", any(Self::proxy_dsp_handler))
+            .route("/api/well-known/rpc/{*extra}", any(Self::proxy_well_known_rpc_handler))
             .route("/api/{service_prefix}", any(Self::proxy_handler_without_extra))
             .route("/api/ws", get(Self::websocket_handler))
             .route("/api/incoming-notification", post(Self::incoming_notification))
@@ -118,6 +119,14 @@ impl GatewayHttpRouter {
         req: Request<Body>,
     ) -> impl IntoResponse {
         service.proxy_dsp_request(service_prefix, Some(extra), req).await
+    }
+
+    async fn proxy_well_known_rpc_handler(
+        State(service): State<Arc<dyn GatewayServiceTrait>>,
+        Path(extra): Path<String>,
+        req: Request<Body>,
+    ) -> impl IntoResponse {
+        service.proxy_well_known_rpc_request(extra, req).await
     }
 
     async fn websocket_handler(

@@ -81,7 +81,7 @@ export const getFetchDataspaceVersionFromParticipantUrl = () => {
 
   
 
-  return `/rpc/.well-known/dspace-version`
+  return `/well-known/rpc/dspace-version`
 }
 
 export const fetchDataspaceVersionFromParticipant = async (wellKnownRPCRequest: WellKnownRPCRequest, options?: RequestInit): Promise<fetchDataspaceVersionFromParticipantResponse> => {
@@ -190,7 +190,7 @@ export const getFetchDataspaceCurrentPathUrl = () => {
 
   
 
-  return `/rpc/.well-known/dspace-version/path`
+  return `/well-known/rpc/dspace-version/path`
 }
 
 export const fetchDataspaceCurrentPath = async (wellKnownRPCRequest: WellKnownRPCRequest, options?: RequestInit): Promise<fetchDataspaceCurrentPathResponse> => {

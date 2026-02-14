@@ -185,7 +185,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /.well-known/dspace-version:
+  /well-known/dspace-version:
     get:
       operationId: getWellKnownDSpaceVersion
       summary: Get dataspace version
@@ -229,7 +229,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /rpc/.well-known/dspace-version:
+  /well-known/rpc/dspace-version:
     post:
       operationId: fetchDataspaceVersionFromParticipant
       summary: Fetch dataspace version from participant (RPC)
@@ -278,7 +278,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorInfo"
-  /rpc/.well-known/dspace-version/path:
+  /well-known/rpc/dspace-version/path:
     post:
       operationId: fetchDataspaceCurrentPath
       summary: Fetch dataspace current path from participant (RPC)
@@ -3157,7 +3157,7 @@ paths:
             schema:
               $ref: "#/components/schemas/RpcNegotiationRequestInitMessageDto"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
