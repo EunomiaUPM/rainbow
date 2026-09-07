@@ -19,10 +19,16 @@ use sea_orm_migration::prelude::MigrationTrait;
 
 mod m20260514_000001_users;
 mod m20260514_000002_tokens;
+mod m20260514_000003_clients;
+mod m20260514_000004_auth_codes;
+mod m20260514_000005_pats;
 
 pub fn get_oauth_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20260514_000001_users::Migration),
         Box::new(m20260514_000002_tokens::Migration),
+        Box::new(m20260514_000003_clients::Migration),
+        Box::new(m20260514_000004_auth_codes::Migration),
+        Box::new(m20260514_000005_pats::Migration),
     ]
 }

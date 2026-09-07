@@ -17,10 +17,16 @@
 
 use std::sync::Arc;
 
+use crate::data::repositories::auth_code::AuthCodeRepository;
+use crate::data::repositories::client::ClientRepository;
+use crate::data::repositories::pat::PatRepository;
 use crate::data::repositories::token::TokenRepository;
 use crate::data::repositories::user::UserRepository;
 
 pub(crate) trait OAuthDataFactory: Send + Sync {
     fn user_repository(&self) -> Arc<dyn UserRepository>;
     fn token_repository(&self) -> Arc<dyn TokenRepository>;
+    fn client_repository(&self) -> Arc<dyn ClientRepository>;
+    fn auth_code_repository(&self) -> Arc<dyn AuthCodeRepository>;
+    fn pat_repository(&self) -> Arc<dyn PatRepository>;
 }

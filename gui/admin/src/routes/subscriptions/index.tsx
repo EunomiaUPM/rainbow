@@ -1,24 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 // import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
-import { useContext } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table";
-import dayjs from "dayjs";
-import {
-  useGetSubscriptions,
   useGetSubscriptionById,
   useGetNotificationsBySubscriptionId,
 } from "shared/src/data/orval/subscriptions/subscriptions";
 import { GeneralErrorComponent } from "@/components/GeneralErrorComponent";
 import { formatUrn } from "shared/lib/utils";
+import { DataTable } from "shared/src/components/DataTable";
+import { FormatDate } from "shared/src/components/ui/format-date";
+import { Badge } from "shared/src/components/ui/badge";
 import { PageLayout } from "shared/components/layout/PageLayout";
 import { PageHeader } from "shared/components/layout/PageHeader";
+import { PageSection } from "shared/components/layout/PageSection";
 import { Skeleton } from "shared/components/ui/skeleton";
 
 const RouteComponent = () => {
@@ -49,71 +42,81 @@ const RouteComponent = () => {
     return <GeneralErrorComponent error={new Error("Notifications not found")} reset={() => {}} />;
   }
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-bold">Subscription</h1>
-      <div>Subscription with id : {subscription.data.id}</div>
-      <div>
-        <h2>Main Catalog info: </h2>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>Subscription callback address</TableCell>
-              <TableCell>{subscription.data.callbackAddress}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Subscription creation date</TableCell>
-              <TableCell>
-                {dayjs(subscription.data.createdAt).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+  const subscriptionInfo = [
+    { key: "Subscription id", value: subscription.data.id },
+    { key: "Subscription callback address", value: subscription.data.callbackAddress },
+    {
+      key: "Subscription creation date",
+      value: <FormatDate date={subscription.data.createdAt} />,
+    },
+  ];
 
-      <div>
-        <h2>Notifications</h2>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Notification Id</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Subcategory</TableHead>
-              <TableHead>Message Type</TableHead>
-              <TableHead>Message operation</TableHead>
-              <TableHead>Message content</TableHead>
-              <TableHead>Message timestamp</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {notifications?.data.map((notification) => (
-              <TableRow key={formatUrn(notification.id)}>
-                <TableCell>{formatUrn(notification.id)}</TableCell>
-                <TableCell>
-                  {notification.event ? (notification.event.category as string) : ""}
-                </TableCell>
-                <TableCell>
-                  {notification.event ? (notification.event.subcategory as string) : ""}
-                </TableCell>
-                <TableCell>
-                  {notification.event ? (notification.event.messageType as string) : ""}
-                </TableCell>
-                <TableCell>
-                  {notification.event ? (notification.event.messageOperation as string) : ""}
-                </TableCell>
-                <TableCell>{dayjs(notification.createdAt).format("DD/MM/YYYY - HH:mm")}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+  return (
+    <PageLayout>
+      <PageHeader title="Subscription" />
+
+      <PageSection title="Main catalog info">
+        <DataTable
+          className="text-sm"
+          data={subscriptionInfo}
+          keyExtractor={(row) => row.key}
+          hideToolbar
+          columns={[
+            { header: "Key", accessorKey: "key" },
+            { header: "Value", sortable: false, cell: (row) => row.value },
+          ]}
+        />
+      </PageSection>
+
+      <PageSection title="Notifications">
+        <DataTable
+          className="text-sm"
+          data={notifications.data}
+          keyExtractor={(n) => n.id!}
+          searchPlaceholder="Filter notifications by id, category, or message type..."
+          emptyMessage="No notifications received for this subscription"
+          defaultSortKey="createdAt"
+          defaultSortDirection="desc"
+          columns={[
+            {
+              header: "Notification Id",
+              accessorKey: "id",
+              cell: (n) => <Badge variant="info">{formatUrn(n.id)}</Badge>,
+            },
+            {
+              header: "Category",
+              searchValue: (n) => (n.event?.category as string) ?? "",
+              sortValue: (n) => (n.event?.category as string) ?? "",
+              cell: (n) => (n.event?.category as string) ?? "",
+            },
+            {
+              header: "Subcategory",
+              searchValue: (n) => (n.event?.subcategory as string) ?? "",
+              sortValue: (n) => (n.event?.subcategory as string) ?? "",
+              cell: (n) => (n.event?.subcategory as string) ?? "",
+            },
+            {
+              header: "Message Type",
+              searchValue: (n) => (n.event?.messageType as string) ?? "",
+              sortValue: (n) => (n.event?.messageType as string) ?? "",
+              cell: (n) => (n.event?.messageType as string) ?? "",
+            },
+            {
+              header: "Message operation",
+              searchValue: (n) => (n.event?.messageOperation as string) ?? "",
+              sortValue: (n) => (n.event?.messageOperation as string) ?? "",
+              cell: (n) => (n.event?.messageOperation as string) ?? "",
+            },
+            {
+              header: "Message timestamp",
+              accessorKey: "createdAt",
+              sortValue: (n) => new Date(n.createdAt!).getTime(),
+              cell: (n) => <FormatDate date={n.createdAt} />,
+            },
+          ]}
+        />
+      </PageSection>
+    </PageLayout>
   );
 };
 

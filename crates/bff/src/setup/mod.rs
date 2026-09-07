@@ -17,4 +17,10 @@
 
 pub(crate) mod boot;
 pub(crate) mod cmd;
+pub mod composition;
+pub mod context;
 pub(crate) mod http_worker;
+
+pub use composition::BffModule;
+pub use context::AppContext;
+

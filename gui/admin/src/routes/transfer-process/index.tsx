@@ -2,9 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatIdentifier } from "shared/src/lib/utils";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
+import { Button } from "shared/src/components/ui/button";
+import { Badge } from "shared/src/components/ui/badge";
 import { TransferProcessActions } from "shared/src/components/actions/TransferProcessActions.tsx";
 import { TransferProcessBusinessActions } from "shared/src/components/actions/TransferProcessBusinessActions.tsx";
 import { ArrowRight } from "lucide-react";
@@ -50,13 +49,13 @@ function RouteComponent() {
   return (
     <PageLayout>
       <PageHeader title="Transfer Processes" className="flex items-center justify-between">
-        <div className="flex gap-1 mt-2 p-0.5 rounded-md bg-white/5 w-fit text-xs">
+        <div className="flex gap-1 mt-2 p-0.5 rounded-md bg-ink/5 w-fit text-xs">
           <button
             onClick={() => setMode("business")}
             className={`px-3 py-1 rounded transition-colors ${
               mode === "business"
-                ? "bg-white/15 text-white font-medium"
-                : "text-white/50 hover:text-white/80"
+                ? "bg-ink/15 text-ink font-medium"
+                : "text-ink/50 hover:text-ink/80"
             }`}
           >
             Business
@@ -65,8 +64,8 @@ function RouteComponent() {
             onClick={() => setMode("standard")}
             className={`px-3 py-1 rounded transition-colors ${
               mode === "standard"
-                ? "bg-white/15 text-white font-medium"
-                : "text-white/50 hover:text-white/80"
+                ? "bg-ink/15 text-ink font-medium"
+                : "text-ink/50 hover:text-ink/80"
             }`}
           >
             Standard
@@ -78,33 +77,43 @@ function RouteComponent() {
           className="text-sm"
           data={transferProcesses ?? []}
           keyExtractor={(tp) => tp.id!}
+          searchPlaceholder="Filter transfers by process ID, role, or state..."
           columns={[
             {
-              header: "Provider pid",
-              cell: (tp) => <Badge variant={"info"}>{formatIdentifier(tp.id)}</Badge>,
+              header: "Process ID",
+              accessorKey: "id",
+              cell: (tp) => <Badge variant="info">{formatIdentifier(tp.id)}</Badge>,
             },
             {
               header: "State",
+              accessorKey: "state",
               cell: (tp) => (
-                <Badge variant={"status"} state={tp.state}>
+                <Badge variant="status" state={tp.state}>
                   {mergeStateAndAttribute(tp.state ?? "", tp.stateAttribute ?? "")}
                 </Badge>
               ),
             },
             {
               header: "Role",
-              cell: (tp) => <Badge variant={"info"}>{tp.role}</Badge>,
+              accessorKey: "role",
+              cell: (tp) => <Badge variant="info">{tp.role}</Badge>,
             },
             {
               header: "Created at",
+              accessorKey: "createdAt",
+              sortValue: (tp) => new Date(tp.createdAt!).getTime(),
               cell: (tp) => <FormatDate date={tp.createdAt} />,
             },
             {
               header: "Updated at",
+              accessorKey: "updatedAt",
+              sortValue: (tp) => new Date(tp.updatedAt!).getTime(),
               cell: (tp) => <FormatDate date={tp.updatedAt} />,
             },
             {
               header: "Actions",
+              sortable: false,
+              searchable: false,
               cell: (tp) =>
                 mode === "business" ? (
                   <TransferProcessBusinessActions process={tp} tiny={true} />
@@ -114,6 +123,8 @@ function RouteComponent() {
             },
             {
               header: "Link",
+              sortable: false,
+              searchable: false,
               cell: (tp) => (
                 <Link
                   to="/transfer-process/$transferProcessId"

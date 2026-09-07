@@ -104,7 +104,7 @@ function RouteComponent() {
                 value: {
                   type: "custom",
                   content: (
-                    <div className="bg-background-200/15  border rounded-md border-white/5 flex flex-col p-3 gap-1">
+                    <div className="bg-background-200/15  border rounded-md border-ink/5 flex flex-col p-3 gap-1">
                       <Link
                         to="/catalog/participant/$participantId"
                         params={{ participantId: participantId }}

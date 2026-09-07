@@ -15,5 +15,33 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod dlq_router;
+pub mod events_router;
 pub mod notification;
 pub mod subscription;
+pub mod subscriptions_router;
+
+use std::sync::Arc;
+use axum::Router;
+
+pub use dlq_router::DeadLetterRouter;
+pub use events_router::EventsRouter;
+pub use subscriptions_router::SubscriptionsRouter;
+
+use crate::bus::EventBus;
+
+/// Combine all event bus HTTP sub-routers into a unified root router.
+pub struct EventsHttpRouter;
+
+impl EventsHttpRouter {
+    /// Construct the unified events HTTP router nesting events, subscriptions, and DLQ.
+    pub fn build(bus: Arc<EventBus>) -> Router {
+        Router::new()
+            .nest("/events", EventsRouter::new(bus.clone()).router())
+            .nest(
+                "/subscriptions",
+                SubscriptionsRouter::new(bus.subscription_repo()).router(),
+            )
+            .nest("/dlq", DeadLetterRouter::new(bus).router())
+    }
+}

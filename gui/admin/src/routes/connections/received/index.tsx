@@ -75,10 +75,11 @@ function ReceivedConnectionsPage() {
         Connection requests sent to this agent by external peers.
       </p>
       <DataTable
-        className="text-sm text-white"
+        className="text-sm text-ink"
         data={requests}
         keyExtractor={(r) => r.id}
         emptyMessage="No incoming connections yet"
+        searchPlaceholder="Filter connections by peer, ID, or status..."
         columns={[
           {
             header: (
@@ -89,11 +90,13 @@ function ReceivedConnectionsPage() {
                 onSort={handleSort}
               />
             ),
+            accessorKey: "participant_nick",
             cell: (r) => r.participant_nick || "-",
           },
           {
             header: "Request ID",
-            cell: (r) => <Badge variant={"info"}>{formatUrn(r.id)}</Badge>,
+            accessorKey: "id",
+            cell: (r) => <Badge variant="info">{formatUrn(r.id)}</Badge>,
           },
           {
             header: (
@@ -104,8 +107,9 @@ function ReceivedConnectionsPage() {
                 onSort={handleSort}
               />
             ),
+            accessorKey: "status",
             cell: (r) => (
-              <Badge variant={"status"} state={r.status}>
+              <Badge variant="status" state={r.status}>
                 {r.status || "-"}
               </Badge>
             ),
@@ -119,10 +123,13 @@ function ReceivedConnectionsPage() {
                 onSort={handleSort}
               />
             ),
+            accessorKey: "created_at",
             cell: (r) => (r.created_at ? <FormatDate date={r.created_at} /> : "-"),
           },
           {
             header: "Details",
+            sortable: false,
+            searchable: false,
             cell: (r) => (
               // @ts-ignore
               <Link to="/connections/received/request-details" search={{ requestId: r.id }}>

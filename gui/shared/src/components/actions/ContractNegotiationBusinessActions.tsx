@@ -123,7 +123,7 @@ export const ContractNegotiationBusinessActions = ({
           </Link>
         )}
         {showSwitchToStandard() && (
-          <span className="text-xs text-white/40 italic">
+          <span className="text-xs text-ink/40 italic">
             This step is only visible in Standard mode
           </span>
         )}

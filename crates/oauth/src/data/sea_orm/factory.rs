@@ -20,8 +20,14 @@ use std::sync::Arc;
 use sea_orm::DatabaseConnection;
 
 use crate::data::factory::OAuthDataFactory;
+use crate::data::repositories::auth_code::AuthCodeRepository;
+use crate::data::repositories::client::ClientRepository;
+use crate::data::repositories::pat::PatRepository;
 use crate::data::repositories::token::TokenRepository;
 use crate::data::repositories::user::UserRepository;
+use crate::data::sea_orm::repos::auth_code::SeaOrmAuthCodeRepository;
+use crate::data::sea_orm::repos::client::SeaOrmClientRepository;
+use crate::data::sea_orm::repos::pat::SeaOrmPatRepository;
 use crate::data::sea_orm::repos::token::SeaOrmTokenRepository;
 use crate::data::sea_orm::repos::user::SeaOrmUserRepository;
 
@@ -42,5 +48,17 @@ impl OAuthDataFactory for SeaOrmDataFactory {
 
     fn token_repository(&self) -> Arc<dyn TokenRepository> {
         Arc::new(SeaOrmTokenRepository::new(self.db.clone()))
+    }
+
+    fn client_repository(&self) -> Arc<dyn ClientRepository> {
+        Arc::new(SeaOrmClientRepository::new(self.db.clone()))
+    }
+
+    fn auth_code_repository(&self) -> Arc<dyn AuthCodeRepository> {
+        Arc::new(SeaOrmAuthCodeRepository::new(self.db.clone()))
+    }
+
+    fn pat_repository(&self) -> Arc<dyn PatRepository> {
+        Arc::new(SeaOrmPatRepository::new(self.db.clone()))
     }
 }

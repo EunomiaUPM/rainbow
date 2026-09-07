@@ -10,10 +10,10 @@ const ConfigSection = ({ title, data }: { title: string; data: unknown }) => {
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-ink/[0.03] border border-ink/10 rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-ink/5 transition-colors"
       >
         <span className="text-xs font-bold uppercase tracking-widest text-foreground/70 flex items-center gap-2">
           <Settings2 className="h-3.5 w-3.5" />
@@ -31,7 +31,7 @@ const ConfigSection = ({ title, data }: { title: string; data: unknown }) => {
         )}
       >
         <div className="overflow-hidden">
-          <pre className="px-4 pb-4 text-[11px] font-mono text-muted-foreground/80 bg-black/20 whitespace-pre-wrap break-all leading-relaxed border-t border-white/5">
+          <pre className="px-4 pb-4 text-xs font-mono text-muted-foreground/80 bg-sunken/20 whitespace-pre-wrap break-all leading-relaxed border-t border-ink/5">
             {JSON.stringify(data, null, 2)}
           </pre>
         </div>

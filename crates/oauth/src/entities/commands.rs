@@ -36,3 +36,23 @@ pub(crate) struct PatchUserCommand {
     pub role: Option<RbacRole>,
     pub extra_fields: Option<serde_json::Value>,
 }
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CreateClientCommand {
+    pub client_id: String,
+    pub client_secret: String,
+    pub client_name: String,
+    pub role: RbacRole,
+    #[serde(default)]
+    pub scopes: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CreatePatCommand {
+    pub name: String,
+    #[serde(default)]
+    pub scopes: Vec<String>,
+    pub expires_at: Option<chrono::DateTime<chrono::Utc>>,
+}

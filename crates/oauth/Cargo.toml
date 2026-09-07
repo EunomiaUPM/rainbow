@@ -27,3 +27,6 @@ rand = { workspace = true }
 base64 = { workspace = true }
 mockall = { workspace = true }
 ymir = { workspace = true }
+serde_urlencoded = { workspace = true }
+tower = { workspace = true }
+http-body-util = { workspace = true }

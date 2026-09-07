@@ -23,6 +23,10 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
     pub callback_address: String,
+    pub topic_pattern: Option<String>,
+    pub secret: Option<String>,
+    pub headers: Option<serde_json::Value>,
+    pub retry_limit: Option<i32>,
     pub transfer_process: bool,
     pub contract_negotiation_process: bool,
     pub catalog: bool,
@@ -37,11 +41,19 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::notification::Entity")]
     Notifications,
+    #[sea_orm(has_many = "super::delivery::Entity")]
+    Deliveries,
 }
 
 impl Related<super::notification::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Notifications.def()
+    }
+}
+
+impl Related<super::delivery::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Deliveries.def()
     }
 }
 

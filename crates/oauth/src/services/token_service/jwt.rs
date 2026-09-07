@@ -19,15 +19,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::role::RbacRole;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct AccessClaims {
     pub sub: String,
     pub role: RbacRole,
     pub iat: i64,
     pub exp: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct RefreshClaims {
     pub sub: String,
     pub role: RbacRole,
@@ -36,7 +40,7 @@ pub(crate) struct RefreshClaims {
     pub exp: i64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct IdTokenClaims {
     pub iss: String,
     pub sub: String,
@@ -47,6 +51,21 @@ pub(crate) struct IdTokenClaims {
     pub role: RbacRole,
     #[serde(flatten)]
     pub extra: serde_json::Map<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct JwtAssertionClaims {
+    pub iss: String,
+    pub sub: String,
+    #[serde(default)]
+    pub aud: Option<serde_json::Value>,
+    pub exp: i64,
+    #[serde(default)]
+    pub iat: Option<i64>,
+    #[serde(default)]
+    pub jti: Option<String>,
+    #[serde(default)]
+    pub scope: Option<String>,
 }
 
 pub(crate) fn as_map(v: serde_json::Value) -> serde_json::Map<String, serde_json::Value> {

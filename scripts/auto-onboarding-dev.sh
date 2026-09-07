@@ -22,14 +22,32 @@ log_info()    { echo -e "\033[33m$1\033[0m" >&2; }
 # ----------------------------
 # CURL
 # ----------------------------
+CURL_TIMEOUT="${CURL_TIMEOUT:-60}"
+
+# Human-readable reason for the curl exit codes seen when a service is down or
+# is not speaking HTTP at all (e.g. a Postgres port).
+curl_reason() {
+    case "$1" in
+        6)  echo "no se resuelve el host" ;;
+        7)  echo "conexión rechazada, no hay nada escuchando" ;;
+        28) echo "timeout tras ${CURL_TIMEOUT}s" ;;
+        35) echo "fallo de TLS" ;;
+        52) echo "respuesta vacía: el puerto responde pero no habla HTTP" ;;
+        56) echo "conexión cortada por el otro extremo" ;;
+        *)  echo "error de curl" ;;
+    esac
+}
+
 curl_raw() {
     local method=${1:-GET}
     local url=$2
     local body=${3:-}
     if [ -n "$body" ]; then
-        curl -s -X "$method" "$url" -H "Content-Type: application/json" -d "$body"
+        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" \
+            -H "Content-Type: application/json" -d "$body"
     else
-        curl -s -X "$method" "$url" -H "Content-Type: application/json"
+        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" \
+            -H "Content-Type: application/json"
     fi
 }
 
@@ -40,21 +58,53 @@ curl_checked() {
     local method=${1:-GET}
     local url=$2
     local body=${3:-}
-    local out code
+    local out code rc
     out=$(mktemp)
+    # `code=$(curl ...)` alone would abort the script under `set -e` before the
+    # HTTP check runs, losing the reason. Capture curl's exit status instead.
     if [ -n "$body" ]; then
-        code=$(curl -s -o "$out" -w '%{http_code}' -X "$method" "$url" \
-            -H "Content-Type: application/json" -d "$body")
+        code=$(curl -s -o "$out" -w '%{http_code}' --max-time "$CURL_TIMEOUT" \
+            -X "$method" "$url" -H "Content-Type: application/json" -d "$body") \
+            && rc=0 || rc=$?
     else
-        code=$(curl -s -o "$out" -w '%{http_code}' -X "$method" "$url" \
-            -H "Content-Type: application/json")
+        code=$(curl -s -o "$out" -w '%{http_code}' --max-time "$CURL_TIMEOUT" \
+            -X "$method" "$url" -H "Content-Type: application/json") \
+            && rc=0 || rc=$?
+    fi
+    if [ "$rc" -ne 0 ]; then
+        rm -f "$out"
+        log_error "$method $url -> $(curl_reason "$rc") (curl exit $rc)"
     fi
     if [[ ! "$code" =~ ^2 ]]; then
+        local snippet
+        snippet=$(head -c 400 "$out")
+        rm -f "$out"
         log_error "$method $url -> HTTP $code
-$(head -c 400 "$out")"
+$snippet"
     fi
     cat "$out"
     rm -f "$out"
+}
+
+# Fails with the full list of unreachable services instead of dying on the
+# first one, so a broken dev environment is diagnosed in a single run.
+preflight() {
+    local failed=0 name url rc
+    for entry in "authority|$AUTHORITY_URL" "consumer|$CONSUMER_URL" "provider|$PROVIDER_URL"; do
+        name=${entry%%|*}
+        url=${entry#*|}
+        curl -s -o /dev/null --max-time 10 "$url/api/v1/wallet/is-linked" && rc=0 || rc=$?
+        if [ "$rc" -ne 0 ]; then
+            log_info "  $name ($url) -> $(curl_reason "$rc") (curl exit $rc)"
+            failed=1
+        else
+            log_success "  $name ($url) -> OK"
+        fi
+    done
+    if [ "$failed" -ne 0 ]; then
+        log_error "Hay servicios inalcanzables. Arráncalos o apunta a los suyos con
+AUTHORITY_URL / CONSUMER_URL / PROVIDER_URL antes de relanzar el onboarding."
+    fi
 }
 
 # ----------------------------
@@ -65,6 +115,12 @@ echo "      AUTO ONBOARDING (DEV)"
 echo "======================================"
 
 VC_TYPE="DataSpaceParticipant_jwt_vc_json"
+
+# ----------------------------
+# STEP 0 - Reachability
+# ----------------------------
+log_step "STEP 0 - Comprobando servicios"
+preflight
 
 # ----------------------------
 # STEP 1 - Link wallets

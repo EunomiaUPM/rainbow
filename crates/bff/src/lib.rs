@@ -15,9 +15,19 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod auth;
+pub mod events;
 pub(crate) mod gateway;
-pub(crate) mod setup;
+pub mod proxy;
+pub mod setup;
 pub(crate) mod subscriptions;
 
+pub use gateway::GatewayHttpRouter;
+pub use proxy::HttpProxyDispatcher;
 pub use setup::cmd::GatewayCommands;
-pub use setup::http_worker::create_gateway_http_router;
+pub use setup::composition::BffModule;
+pub use setup::context::AppContext;
+pub use setup::http_worker::{
+    create_gateway_http_router, create_gateway_http_router_with_context,
+};
+

@@ -139,6 +139,10 @@ impl SubscriptionRepo for EventsRepoForSql {
         let model = subscription::ActiveModel {
             id: ActiveValue::Set(get_urn(None).to_string()),
             callback_address: ActiveValue::Set(new_subscription.callback_address),
+            topic_pattern: ActiveValue::NotSet,
+            secret: ActiveValue::NotSet,
+            headers: ActiveValue::NotSet,
+            retry_limit: ActiveValue::NotSet,
             transfer_process: ActiveValue::Set(new_subscription.transfer_process),
             contract_negotiation_process: ActiveValue::Set(
                 new_subscription.contract_negotiation_process,

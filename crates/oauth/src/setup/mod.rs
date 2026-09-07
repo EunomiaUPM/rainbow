@@ -25,16 +25,21 @@ use sea_orm_migration::MigrationTrait;
 use crate::config::OAuthConfig;
 use crate::data::factory::OAuthDataFactory;
 use crate::data::sea_orm::factory::SeaOrmDataFactory;
+use crate::http::clients_router::ClientsRouter;
+use crate::http::pats_router::PatsRouter;
 use crate::http::token_router::TokenRouter;
 use crate::http::users_router::UsersRouter;
+use crate::services::client_service::ClientServiceTrait;
+use crate::services::client_service::service::ClientService;
+use crate::services::pat_service::PatServiceTrait;
+use crate::services::pat_service::service::PatService;
+use crate::services::token_service::TokenServiceTrait;
 use crate::services::token_service::service::TokenService;
-use crate::services::token_service::{OauthTokenValidator, TokenServiceTrait};
 use crate::services::user_service::UserServiceTrait;
 use crate::services::user_service::service::UserService;
 
-/// OAuth as a composable service module: `/oauth` endpoints (login / token /
-/// refresh / users) plus the users tables. Construct it with the config and
-/// DB connection it should serve from.
+/// OAuth as a composable service module: `/oauth` endpoints (token, refresh,
+/// revoke, introspect, users, clients). Construct it with config and DB connection.
 pub struct OAuthModule {
     config: OAuthConfig,
     db: DatabaseConnection,
@@ -61,6 +66,7 @@ impl ServiceModuleTrait for OAuthModule {
     }
 }
 
+#[derive(Default)]
 pub struct OAuthSetup {}
 
 impl OAuthSetup {
@@ -78,11 +84,14 @@ impl OAuthSetup {
         Arc::new(TokenService::new(
             factory.user_repository(),
             factory.token_repository(),
+            factory.client_repository(),
+            factory.auth_code_repository(),
+            factory.pat_repository(),
             config,
         ))
     }
 
-    /// Builds the full OAuth router (token, users)
+    /// Builds the full OAuth router (token, users, clients, pats)
     /// Mount this under an appropriate prefix (e.g. `/oauth`) in the host service.
     pub fn build_router(&self, config: OAuthConfig, db: DatabaseConnection) -> Router {
         let factory = SeaOrmDataFactory::new(db.clone());
@@ -90,12 +99,20 @@ impl OAuthSetup {
             self.build_token_service(config.clone(), db.clone());
         let user_svc: Arc<dyn UserServiceTrait> =
             Arc::new(UserService::new(factory.user_repository()));
+        let client_svc: Arc<dyn ClientServiceTrait> =
+            Arc::new(ClientService::new(factory.client_repository()));
+        let pat_svc: Arc<dyn PatServiceTrait> =
+            Arc::new(PatService::new(factory.pat_repository()));
         let issuer = config.issuer.clone();
         let token_router = TokenRouter::new(token_svc.clone(), user_svc.clone(), issuer).router();
-        let users_router = UsersRouter::new(token_svc, user_svc).router();
+        let users_router = UsersRouter::new(token_svc.clone(), user_svc).router();
+        let clients_router = ClientsRouter::new(token_svc.clone(), client_svc).router();
+        let pats_router = PatsRouter::new(token_svc, pat_svc).router();
 
         Router::new()
             .merge(token_router)
             .nest("/users", users_router)
+            .nest("/clients", clients_router)
+            .nest("/pats", pats_router)
     }
 }

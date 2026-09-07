@@ -143,19 +143,19 @@ function RouteComponent() {
             <CardContent>
               <div className="flex justify-between flex-wrap gap-8 mt-2">
                 <div className="space-y-1">
-                  <p className="text-[10px] text-muted-foreground uppercase">DID Identifier</p>
+                  <p className="text-xs text-muted-foreground uppercase">DID Identifier</p>
                   <Badge variant="info">
                     {formatIdentifier(myAgent.participant_id, 0, true, 40)}
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] text-muted-foreground uppercase">System Role</p>
+                  <p className="text-xs text-muted-foreground uppercase">System Role</p>
                   <Badge variant="role" dsrole={myAgent.participant_type as BadgeRole}>
                     {myAgent.participant_type}
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] text-muted-foreground uppercase">Base URL</p>
+                  <p className="text-xs text-muted-foreground uppercase">Base URL</p>
                   <Badge variant="info">{myAgent.base_url}</Badge>
                 </div>
                 <div className="flex-1 flex items-end justify-end">

@@ -23,8 +23,14 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 use ymir::errors::{Outcome, RepoIntoErrors};
 
+use crate::data::repositories::auth_code::AuthCodeRepository;
+use crate::data::repositories::client::{ClientRepository, ClientRepositoryError};
+use crate::data::repositories::pat::PatRepository;
 use crate::data::repositories::token::TokenRepository;
 use crate::data::repositories::user::{UserRepository, UserRepositoryError};
+use crate::entities::auth_code::AuthCode;
+use crate::entities::client::Client;
+use crate::entities::pat::PersonalAccessToken;
 use crate::entities::query::{Page, Sort, UserFilter};
 use crate::entities::refresh_token::RefreshToken;
 use crate::entities::role::RbacRole;
@@ -208,6 +214,140 @@ impl TokenRepository for InMemoryRefreshTokenRepository {
             .for_each(|t| {
                 t.revoked = true;
             });
+        Ok(())
+    }
+}
+
+// Client ────────────────────────────────────────────────────────────────────
+
+pub(crate) struct InMemoryClientRepository {
+    store: Arc<Mutex<HashMap<String, Client>>>,
+}
+
+impl InMemoryClientRepository {
+    pub fn new() -> Self {
+        Self {
+            store: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl ClientRepository for InMemoryClientRepository {
+    async fn get_all(&self) -> Outcome<Vec<Client>> {
+        let store = self.store.lock().unwrap();
+        Ok(store.values().cloned().collect())
+    }
+
+    async fn get_by_client_id(&self, client_id: &str) -> Outcome<Option<Client>> {
+        Ok(self.store.lock().unwrap().get(client_id).cloned())
+    }
+
+    async fn create(&self, client: &Client) -> Outcome<Client> {
+        let mut store = self.store.lock().unwrap();
+        if store.contains_key(&client.client_id) {
+            return Err(ClientRepositoryError::AlreadyExists.into_errors());
+        }
+        store.insert(client.client_id.clone(), client.clone());
+        Ok(client.clone())
+    }
+
+    async fn delete(&self, client_id: &str) -> Outcome<()> {
+        self.store.lock().unwrap().remove(client_id);
+        Ok(())
+    }
+}
+
+// AuthCode ──────────────────────────────────────────────────────────────────
+
+pub(crate) struct InMemoryAuthCodeRepository {
+    store: Arc<Mutex<HashMap<String, AuthCode>>>,
+}
+
+impl InMemoryAuthCodeRepository {
+    pub fn new() -> Self {
+        Self {
+            store: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl AuthCodeRepository for InMemoryAuthCodeRepository {
+    async fn save(&self, auth_code: &AuthCode) -> Outcome<AuthCode> {
+        let mut store = self.store.lock().unwrap();
+        store.insert(auth_code.code.clone(), auth_code.clone());
+        Ok(auth_code.clone())
+    }
+
+    async fn get_by_code(&self, code: &str) -> Outcome<Option<AuthCode>> {
+        Ok(self.store.lock().unwrap().get(code).cloned())
+    }
+
+    async fn mark_used(&self, code: &str) -> Outcome<()> {
+        if let Some(entry) = self.store.lock().unwrap().get_mut(code) {
+            entry.used = true;
+        }
+        Ok(())
+    }
+}
+
+// Personal Access Token ─────────────────────────────────────────────────────
+
+pub(crate) struct InMemoryPatRepository {
+    store: Arc<Mutex<HashMap<Uuid, PersonalAccessToken>>>,
+}
+
+impl InMemoryPatRepository {
+    pub fn new() -> Self {
+        Self {
+            store: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl PatRepository for InMemoryPatRepository {
+    async fn create(&self, pat: &PersonalAccessToken) -> Outcome<PersonalAccessToken> {
+        let mut store = self.store.lock().unwrap();
+        store.insert(pat.id, pat.clone());
+        Ok(pat.clone())
+    }
+
+    async fn get_by_id(&self, id: Uuid) -> Outcome<Option<PersonalAccessToken>> {
+        Ok(self.store.lock().unwrap().get(&id).cloned())
+    }
+
+    async fn get_by_hash(&self, token_hash: &str) -> Outcome<Option<PersonalAccessToken>> {
+        Ok(self
+            .store
+            .lock()
+            .unwrap()
+            .values()
+            .find(|p| p.token_hash == token_hash)
+            .cloned())
+    }
+
+    async fn list_by_tenant(&self, tenant_id: &str) -> Outcome<Vec<PersonalAccessToken>> {
+        let store = self.store.lock().unwrap();
+        Ok(store
+            .values()
+            .filter(|p| p.tenant_id == tenant_id)
+            .cloned()
+            .collect())
+    }
+
+    async fn revoke(&self, id: Uuid) -> Outcome<()> {
+        if let Some(p) = self.store.lock().unwrap().get_mut(&id) {
+            p.revoked = true;
+        }
+        Ok(())
+    }
+
+    async fn update_last_used(&self, id: Uuid) -> Outcome<()> {
+        if let Some(p) = self.store.lock().unwrap().get_mut(&id) {
+            p.last_used_at = Some(Utc::now());
+        }
         Ok(())
     }
 }

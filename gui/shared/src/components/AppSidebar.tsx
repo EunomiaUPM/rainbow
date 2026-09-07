@@ -27,6 +27,8 @@ import {
   Wallet,
   ShieldCheck,
   KeyRound,
+  Lock,
+  Radio,
 } from "lucide-react";
 import React, { useContext } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -41,7 +43,10 @@ import {
   SidebarGroupLabel,
 } from "./ui/sidebar";
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
+import logoImgDark from "./../img/eunomia_logo_lg_dark.svg";
 import dsLogoImg from "./../img/dsagent_logo_light.svg";
+import dsLogoImgDark from "./../img/dsagent_logo_dark.svg";
+import { useTheme } from "shared/src/hooks/useTheme";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 
 // =============================================================================
@@ -85,6 +90,8 @@ interface NavItem {
  */
 export function AppSidebar() {
   const routerState = useRouterState();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const { catalog_type } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   // ---------------------------------------------------------------------------
@@ -159,6 +166,16 @@ export function AppSidebar() {
           url: "/admin/my-catalog",
           icon: Archive,
         },
+        {
+          title: "OAuth & Security",
+          url: "/admin/oauth/clients",
+          icon: Lock,
+        },
+        {
+          title: "Events & Bus",
+          url: "/admin/events/feed",
+          icon: Radio,
+        },
       ],
     },
   ];
@@ -188,12 +205,12 @@ export function AppSidebar() {
         {/* Logo */}
         <Link to="/admin/">
           <img
-            src={dsLogoImg}
+            src={isDark ? dsLogoImg : dsLogoImgDark}
             className="hidden opacity-80 max-h-6 pl-6 pt-2 pr-12 mx-auto object-contain"
             alt="ds-agent logo"
           />
           <img
-            src={logoImg}
+            src={isDark ? logoImg : logoImgDark}
             className="pl-3 pt-2 pr-6 mt-2 mb-2 mr-1 ml-1 object-contain"
             alt="Eunomia Logo"
           />
@@ -212,7 +229,7 @@ export function AppSidebar() {
                             to={item.url}
                             className={
                               routerState.location.pathname === item.url
-                                ? "bg-white/10 text-white"
+                                ? "bg-ink/10 text-ink"
                                 : ""
                             }
                           >
@@ -229,7 +246,7 @@ export function AppSidebar() {
                             to={item.url}
                             className={
                               routerState.location.pathname === item.url
-                                ? "bg-white/10 text-white"
+                                ? "bg-ink/10 text-ink"
                                 : ""
                             }
                           >

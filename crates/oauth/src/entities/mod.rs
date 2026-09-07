@@ -15,7 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod auth_code;
+pub mod client;
 pub(crate) mod commands;
+pub mod pat;
 pub(crate) mod query;
 pub(crate) mod refresh_token;
 pub mod role;

@@ -79,11 +79,9 @@ export const TransferProcessBusinessActions = ({
 
   const actions = getActions();
 
-  const isTerminalState = () =>
-    process.state === "COMPLETED" || process.state === "TERMINATED";
+  const isTerminalState = () => process.state === "COMPLETED" || process.state === "TERMINATED";
 
-  const showSwitchToStandard = () =>
-    actions.length === 0 && !isTerminalState();
+  const showSwitchToStandard = () => actions.length === 0 && !isTerminalState();
 
   return (
     <div className={containerClassName({ tiny })}>
@@ -100,7 +98,7 @@ export const TransferProcessBusinessActions = ({
         ))}
         {isTerminalState() && <NoFurtherActions />}
         {showSwitchToStandard() && (
-          <span className="text-xs text-white/40 italic">
+          <span className="text-xs text-ink/40 italic">
             This step is only visible in Standard mode
           </span>
         )}

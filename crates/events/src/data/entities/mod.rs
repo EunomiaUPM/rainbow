@@ -15,5 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod dead_letter;
+pub mod delivery;
+pub mod event;
 pub mod notification;
 pub mod subscription;

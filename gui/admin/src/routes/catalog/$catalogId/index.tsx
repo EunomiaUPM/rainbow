@@ -66,7 +66,7 @@ const RouteComponent = () => {
             {catalog.dctTitle ? catalog.dctTitle : `${myAgentSlug}'s Catalog`}
           </Heading>
 
-          <Badge variant="detail" size="lg" className="uppercase text-blue-300 font-semibold mb-3">
+          <Badge variant="detail" size="lg" className="uppercase text-blue-700 dark:text-blue-300 font-semibold mb-3">
             My own catalog
           </Badge>
           <p className="text-sm mb-2">
@@ -101,7 +101,7 @@ const RouteComponent = () => {
           />
 
           <div className="h-1"></div>
-          <div className="border-t border-white/10"></div>
+          <div className="border-t border-ink/10"></div>
           <div className="h-2"></div>
 
           <>

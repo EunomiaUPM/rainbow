@@ -24,11 +24,5 @@ pub(crate) fn bearer(headers: &HeaderMap) -> Outcome<&str> {
         .get(axum::http::header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
-        .ok_or_else(|| {
-            Errors::format(
-                BadFormat::Received,
-                "missing or malformed Authorization header",
-                None,
-            )
-        })
+        .ok_or_else(|| Errors::unauthorized("missing or malformed Authorization header", None))
 }

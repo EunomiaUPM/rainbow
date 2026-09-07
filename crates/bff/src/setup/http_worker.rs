@@ -102,3 +102,11 @@ pub async fn create_gateway_http_router(config: &GatewayConfig) -> Router {
     let gateway_router = GatewayHttpRouter::new(config.clone()).router();
     Router::new().nest("/admin", gateway_router)
 }
+
+pub async fn create_gateway_http_router_with_context(
+    ctx: std::sync::Arc<crate::setup::context::AppContext>,
+) -> Router {
+    let gateway_router = GatewayHttpRouter::with_context(ctx).router();
+    Router::new().nest("/admin", gateway_router)
+}
+

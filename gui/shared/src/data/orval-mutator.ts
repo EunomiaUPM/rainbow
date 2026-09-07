@@ -14,10 +14,20 @@ export const customInstance = <T>(
 ): Promise<T> => {
   const { method, headers, params, data, ...rest } = options || {};
 
+  const token =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("eunomia_token") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("pat_token")
+      : null;
+
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const config: RequestConfig = {
     ...rest,
     headers: {
       "Content-Type": "application/json",
+      ...authHeader,
       ...headers,
       ...(rest as any)?.headers,
     },

@@ -117,8 +117,6 @@ export const ContractNegotiationNewOfferDialog = ({
       ? await resolveProviderDspPath(selectedParticipant.participant_id)
       : null;
 
-    console.log("policy", policy);
-
     const res = await setupOffer({
       data: {
         associatedAgentPeer: selectedParticipant?.participant_id || "",

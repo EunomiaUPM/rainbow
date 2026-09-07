@@ -23,3 +23,6 @@ pub mod services;
 pub mod setup;
 
 pub use data::sea_orm::migrations::get_oauth_migrations;
+
+#[cfg(test)]
+mod tests;

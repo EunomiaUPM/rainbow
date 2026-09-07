@@ -32,5 +32,11 @@ rust-embed = { workspace = true }
 ymir = { workspace = true }
 tokio-util = { workspace = true }
 uuid = { workspace = true }
+events = { version = "0.4.0", path = "../events" }
+oauth = { version = "0.4.0", path = "../oauth" }
+serde = { workspace = true }
+sea-orm = { workspace = true }
+sea-orm-migration = { workspace = true }
 async-trait = { workspace = true }
 json_to_table = { workspace = true }
+urn = { workspace = true }

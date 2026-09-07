@@ -15,6 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod dataset_offering;
 pub mod router;
 pub mod service;
 

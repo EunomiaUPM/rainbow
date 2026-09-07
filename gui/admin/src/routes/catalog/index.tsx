@@ -10,8 +10,11 @@ import WizardDialog from "shared/src/components/WizardDialog";
 import { useRef, useState } from "react";
 import { Card, CardContent } from "shared/components/ui/card";
 import logoImg from "./../../../../shared/src/img/eunomia_logo_lg_light.svg";
+import logoImgDark from "./../../../../shared/src/img/eunomia_logo_lg_dark.svg";
+import { useTheme } from "shared/src/hooks/useTheme";
 
 const RouteComponent = () => {
+  const { resolvedTheme } = useTheme();
   const federated = useFederatedCatalog();
   const { data: participantsResponse } = useGetAllParticipants();
   const localParticipants = participantsResponse?.status === 200 ? participantsResponse.data : [];
@@ -37,7 +40,7 @@ const RouteComponent = () => {
       <PageLayout className="overlayContainer">
         <Card className="overlayContent h-fit">
           <div className="contentLogo">
-            <img src={logoImg} alt="Eunomia Logo" />
+            <img src={resolvedTheme === "dark" ? logoImg : logoImgDark} alt="Eunomia Logo" />
           </div>
           <CardContent className="contentMessage">
             <div className="messageGroup">
@@ -117,6 +120,7 @@ const RouteComponent = () => {
 
           return (
             <div
+              key={p.participant_id}
               className={
                 firstAgentWithUnauth
                   ? "ring-2 ring-secondary-400 shadow-md animate-pulse rounded-md"
@@ -125,7 +129,6 @@ const RouteComponent = () => {
               onClick={() => setWizardCatalogOpen(false)}
             >
               <CatalogItem
-                key={p.participant_id}
                 datasetNumber={0}
                 organizationName={p.participant_nick ?? "Unknown"}
                 id={p.participant_id ?? null}

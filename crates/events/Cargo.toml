@@ -26,3 +26,12 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 async-trait = { workspace = true }
 ymir = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+uuid = { workspace = true }
+hmac = "0.12"
+futures-util = { workspace = true }
+url = { workspace = true }
+bytes = { workspace = true }

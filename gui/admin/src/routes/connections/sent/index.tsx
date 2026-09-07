@@ -119,10 +119,11 @@ function SentConnectionsPage() {
         }
       >
         <DataTable
-          className="text-sm text-white"
+          className="text-sm text-ink"
           data={requests}
           keyExtractor={(r) => r.id}
           emptyMessage="No outgoing connections yet"
+          searchPlaceholder="Filter connections by peer, ID, or status..."
           columns={[
             {
               header: (
@@ -133,21 +134,24 @@ function SentConnectionsPage() {
                   onSort={handleSort}
                 />
               ),
+              accessorKey: "participant_nick",
               cell: (r) => r.participant_nick || "-",
             },
             {
               header: "Request ID",
-              cell: (r) => <Badge variant={"info"}>{formatUrn(r.id)}</Badge>,
+              accessorKey: "id",
+              cell: (r) => <Badge variant="info">{formatUrn(r.id)}</Badge>,
             },
             {
               header: "Auto",
+              accessorKey: "auto",
               cell: (r) =>
                 r.auto ? (
-                  <Badge variant="default" className="text-[10px]">
+                  <Badge variant="default" className="text-xs">
                     ON
                   </Badge>
                 ) : (
-                  <Badge variant="info" className="text-[10px]">
+                  <Badge variant="info" className="text-xs">
                     OFF
                   </Badge>
                 ),
@@ -161,8 +165,9 @@ function SentConnectionsPage() {
                   onSort={handleSort}
                 />
               ),
+              accessorKey: "status",
               cell: (r) => (
-                <Badge variant={"status"} state={r.status}>
+                <Badge variant="status" state={r.status}>
                   {r.status || "-"}
                 </Badge>
               ),
@@ -176,10 +181,13 @@ function SentConnectionsPage() {
                   onSort={handleSort}
                 />
               ),
+              accessorKey: "created_at",
               cell: (r) => (r.created_at ? <FormatDate date={r.created_at} /> : "-"),
             },
             {
               header: "Details",
+              sortable: false,
+              searchable: false,
               cell: (r) => (
                 // @ts-ignore
                 <Link to="/connections/sent/request-details" search={{ requestId: r.id }}>
