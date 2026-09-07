@@ -17,7 +17,6 @@ import { Button } from "shared/src/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { clearSession, isSessionActive, loginWithOAuth, logoutOAuth } from "../lib/session";
 import eunomiaLogo from "shared/src/img/eunomia_logo_lg_light.svg";
-import { DevMode } from "shared/src/components/DevMode";
 import { Toaster } from "shared/src/components/ui/sonner";
 import { BubbleBackground } from "shared/src/components/ui/bubble-background";
 
@@ -52,7 +51,6 @@ function RootComponent() {
   return (
     <>
       <SidebarProvider>
-        <DevMode />
         <AppSidebar />
         <SidebarInset>
           <Header

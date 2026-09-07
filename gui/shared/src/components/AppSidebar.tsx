@@ -41,13 +41,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarFooter,
 } from "./ui/sidebar";
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
 import logoImgDark from "./../img/eunomia_logo_lg_dark.svg";
-import dsLogoImg from "./../img/dsagent_logo_light.svg";
-import dsLogoImgDark from "./../img/dsagent_logo_dark.svg";
 import { useTheme } from "shared/src/hooks/useTheme";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+import { DevMode } from "./DevMode";
 
 // =============================================================================
 // TYPES
@@ -81,10 +82,11 @@ interface NavItem {
  * Provider/Admin sidebar navigation component.
  *
  * Features:
- * - Logo display at the top
+ * - Logo display at the top with DS-Agent tagline
  * - Navigation menu with icons
  * - Active state highlighting based on current route
  * - Dynamic filtering based on catalog type configuration
+ * - DevMode widget in the sidebar footer above TanStackRouterDevtools
  *
  * @returns The sidebar navigation component
  */
@@ -200,24 +202,31 @@ export function AppSidebar() {
   // ---------------------------------------------------------------------------
 
   return (
-    <Sidebar className="bg-base-sidebar z-50 pt-4">
-      <SidebarContent>
-        {/* Logo */}
-        <Link to="/admin/">
-          <img
-            src={isDark ? dsLogoImg : dsLogoImgDark}
-            className="hidden opacity-80 max-h-6 pl-6 pt-2 pr-12 mx-auto object-contain"
-            alt="ds-agent logo"
-          />
+    <Sidebar className="bg-base-sidebar z-40">
+      {/* Sidebar Header with Eunomia Logo & DS-Agent Tagline */}
+      <SidebarHeader className="px-3 pt-3 pb-2.5 border-b border-sidebar-border/40">
+        <Link
+          to="/admin/"
+          className="block group p-1 rounded-xl hover:bg-ink/[0.03] transition-colors"
+        >
           <img
             src={isDark ? logoImg : logoImgDark}
-            className="pl-3 pt-2 pr-6 mt-2 mb-2 mr-1 ml-1 object-contain"
+            className="w-full h-auto object-contain pl-1 pr-3 pt-1 pb-1 transition-opacity group-hover:opacity-90"
             alt="Eunomia Logo"
           />
+          <div className="flex items-center gap-2 mt-2 px-1 group-data-[collapsible=icon]:hidden">
+            <span className="text-xs font-black tracking-widest uppercase font-mono text-slate-900 dark:text-white">
+              DS-Agent
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
         </Link>
+      </SidebarHeader>
+
+      {/* Main Navigation Menu */}
+      <SidebarContent className="overflow-y-auto">
         {navGroups.map((group) => (
           <SidebarGroup key={group.title}>
-            {/* Navigation Menu */}
             <SidebarGroupContent>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarMenu>
@@ -261,6 +270,11 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
+      {/* Sidebar Footer with DevMode widget positioned above TanStackRouterDevtools */}
+      <SidebarFooter className="p-3 pb-14 border-t border-sidebar-border/40">
+        <DevMode />
+      </SidebarFooter>
     </Sidebar>
   );
 }
