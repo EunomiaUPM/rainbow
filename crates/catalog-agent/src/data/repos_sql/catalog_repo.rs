@@ -23,7 +23,6 @@ use crate::data::repo_traits::catalog_repo::CatalogRepositoryTrait;
 use crate::entities::filters::CatalogFilter;
 use common::paginated_spec::{Page, SelectCursorExt, Sort};
 use common::query::FilterApplier;
-use sea_orm::QueryTrait;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait,
     QueryFilter, Select,

@@ -25,7 +25,6 @@ use crate::data::repo_traits::dataset_repo::DatasetRepositoryTrait;
 use crate::entities::filters::DatasetFilter;
 use common::paginated_spec::{Page, SelectCursorExt, Sort};
 use common::query::FilterApplier;
-use sea_orm::QueryTrait;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait,
     QueryFilter,

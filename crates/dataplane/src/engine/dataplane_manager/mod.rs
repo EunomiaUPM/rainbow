@@ -15,12 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use common::config::services::TransferConfig;
-use common::config::types::traits::CommonConfigTrait;
 use common::dsp_common::data_address::{DataAddress, EndpointProperty};
-use std::sync::Arc;
-use ymir::config::traits::HostsConfigTrait;
-use ymir::config::types::HostType;
 
 pub mod dataplane_commands;
 pub mod dataplane_context;
@@ -92,9 +87,4 @@ impl From<DataplaneAddress> for DataAddress {
             endpoint_properties,
         }
     }
-}
-
-pub fn conform_dataplane_forward_url(config: Arc<TransferConfig>, url: String) -> String {
-    let base = config.common().get_host(HostType::Http);
-    format!("{base}{url}")
 }

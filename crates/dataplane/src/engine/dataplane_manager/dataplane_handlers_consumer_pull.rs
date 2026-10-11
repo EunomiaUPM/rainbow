@@ -16,7 +16,7 @@
  */
 
 use crate::engine::dataplane_manager::dataplane_commands::{
-    set_configuring_helper, DataplaneCommandStateMachine,
+    DataplaneCommandStateMachine,
 };
 use crate::engine::dataplane_manager::dataplane_context::DataplaneContext;
 use crate::services::dataplane_transfers::DataplaneTransferServiceTrait;
@@ -73,12 +73,7 @@ impl DataplaneCommandStateMachine for DataplaneHandlerConsumerPull {
     }
     #[tracing::instrument(level = "info", skip_all, err, fields(handler = self.handler_name()))]
     async fn set_configuring(&self, context: DataplaneContext) -> Outcome<DataplaneContext> {
-        let ctx = set_configuring_helper(
-            self.dataplane_service(),
-            self.driver_factory().as_ref(),
-            context,
-        )
-        .await?;
+        let ctx = self.configure_driver(context).await?;
         let ctx = self.set_auth(ctx).await?;
         let ctx = self.set_ready(ctx).await?;
         let ctx = self.set_started(ctx).await?;

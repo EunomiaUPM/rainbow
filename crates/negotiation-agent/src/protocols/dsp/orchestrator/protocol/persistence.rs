@@ -43,7 +43,7 @@ use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
 use common::facades::grants_facade::VerifiedPeer;
-use common::oauth::{OwnedTrait, Owner, UserInfo};
+use common::oauth::{OwnedTrait, Owner};
 use ymir::errors::{Errors, Outcome};
 
 pub struct OrchestrationPersistenceForProtocol {

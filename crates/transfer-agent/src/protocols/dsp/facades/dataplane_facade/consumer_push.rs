@@ -102,8 +102,8 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_suspend_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
-        mgr: &DataplaneManager,
+        _ctx: &TransferDSPContextDomain,
+        _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         // noop
         Ok(())
@@ -126,8 +126,8 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_complete_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
-        mgr: &DataplaneManager,
+        _ctx: &TransferDSPContextDomain,
+        _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
     }
@@ -148,8 +148,8 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_terminate_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
-        mgr: &DataplaneManager,
+        _ctx: &TransferDSPContextDomain,
+        _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
     }

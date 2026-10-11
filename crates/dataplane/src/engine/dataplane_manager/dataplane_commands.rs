@@ -128,6 +128,38 @@ pub trait DataplaneCommandStateMachine: Send + Sync {
         Arc::new(DataplaneDriverFactory::new())
     }
 
+    /// Creates the driver, configures its proxy and moves the process to `Configuring`.
+    async fn configure_driver(&self, context: DataplaneContext) -> Outcome<DataplaneContext> {
+        let driver = self.driver_factory().get_or_create_driver(&context)?;
+        let mut context = driver.proxy_configurator.configure_proxy(&context).await?;
+        let runtime = DataplaneRuntime::default();
+        context.set_driver(driver);
+        context.set_runtime(runtime);
+        let dataplane_urn = Urn::from_str(&context.dataplane_process().inner.id)?;
+        let new_state = TransferState::Configuring;
+        let dataplane_process = self
+            .dataplane_service()
+            .edit(
+                &context.engine_actor(),
+                &dataplane_urn,
+                &EditDataplaneTransferDto {
+                    state: Some(new_state),
+                    ingress_config: context
+                        .proxy()
+                        .map(|p| p.ingress().clone())
+                        .and_then(|p| serde_json::to_value(p).ok()),
+                    egress_config: context
+                        .proxy()
+                        .map(|p| p.egress().clone())
+                        .and_then(|p| serde_json::to_value(p).ok()),
+                    ..EditDataplaneTransferDto::default()
+                },
+            )
+            .await?;
+        context.set_dataplane_process(dataplane_process);
+        Ok(context)
+    }
+
     #[tracing::instrument(level = "info", skip_all, err, fields(handler = self.handler_name()))]
     async fn get_associated(&self, mut context: DataplaneContext) -> Outcome<DataplaneContext> {
         context.set_forward_dataplane_address_from_ingress();
@@ -143,12 +175,7 @@ pub trait DataplaneCommandStateMachine: Send + Sync {
     }
     #[tracing::instrument(level = "info", skip_all, err, fields(handler = self.handler_name()))]
     async fn set_configuring(&self, context: DataplaneContext) -> Outcome<DataplaneContext> {
-        set_configuring_helper(
-            self.dataplane_service(),
-            self.driver_factory().as_ref(),
-            context,
-        )
-        .await
+        self.configure_driver(context).await
     }
     #[tracing::instrument(level = "info", skip_all, err, fields(handler = self.handler_name()))]
     async fn set_auth(&self, context: DataplaneContext) -> Outcome<DataplaneContext> {
@@ -368,43 +395,4 @@ pub trait DataplaneCommandStateMachine: Send + Sync {
         }
         Ok(context)
     }
-}
-
-pub async fn set_configuring_helper(
-    dp_trait: Arc<dyn DataplaneTransferServiceTrait>,
-    driver_factory: &dyn DataplaneDriverFactoryTrait,
-    context: DataplaneContext,
-) -> Outcome<DataplaneContext> {
-    // driver
-    let driver = driver_factory.get_or_create_driver(&context)?;
-    // proxy
-    let mut context = driver.proxy_configurator.configure_proxy(&context).await?;
-    // runtime
-    let runtime = DataplaneRuntime::default();
-    // setters
-    context.set_driver(driver);
-    context.set_runtime(runtime);
-    // dataplane
-    let dataplane_urn = Urn::from_str(&context.dataplane_process().inner.id)?;
-    let new_state = TransferState::Configuring;
-    let dataplane_process = dp_trait
-        .edit(
-            &context.engine_actor(),
-            &dataplane_urn,
-            &EditDataplaneTransferDto {
-                state: Some(new_state),
-                ingress_config: context
-                    .proxy()
-                    .map(|p| p.ingress().clone())
-                    .and_then(|p| serde_json::to_value(p).ok()),
-                egress_config: context
-                    .proxy()
-                    .map(|p| p.egress().clone())
-                    .and_then(|p| serde_json::to_value(p).ok()),
-                ..EditDataplaneTransferDto::default()
-            },
-        )
-        .await?;
-    context.set_dataplane_process(dataplane_process);
-    Ok(context)
 }

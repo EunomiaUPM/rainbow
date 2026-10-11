@@ -28,12 +28,14 @@ use crate::entities::dataplane_transfers::{
     DataplaneTransferDto, InteractionMode, NewDataplaneTransferDto, TransferRole, TransferState,
 };
 
-use crate::engine::dataplane_manager::conform_dataplane_forward_url;
 use crate::errors::DataplaneError;
 use crate::services::dataplane_transfers::DataplaneTransferServiceTrait;
 use crate::DataplaneAddress;
 use common::oauth::UserInfo;
 use common::config::services::TransferConfig;
+use common::config::types::traits::CommonConfigTrait;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
 use connector::{ConnectorInstanceDto, ConnectorInstanceFacadeTrait};
 use serde_json::json;
 use std::str::FromStr;
@@ -240,7 +242,7 @@ impl DataplaneContext {
                     token,
                 } => Some(DataplaneAddress {
                     endpoint_type: "HTTP".to_string(),
-                    endpoint: conform_dataplane_forward_url(self.config.clone(), path.to_string()),
+                    endpoint: self.forward_url(path),
                     authorization_type: token_type.clone(),
                     authorization: token.clone(),
                 }),
@@ -248,6 +250,12 @@ impl DataplaneContext {
             None => None,
         };
         self
+    }
+
+    /// Public HTTP address of this dataplane for an ingress path.
+    fn forward_url(&self, path: &str) -> String {
+        let base = self.config.common().get_host(HostType::Http);
+        format!("{base}{path}")
     }
 
     pub fn connector_instance(&self) -> Option<&ConnectorInstanceDto> {

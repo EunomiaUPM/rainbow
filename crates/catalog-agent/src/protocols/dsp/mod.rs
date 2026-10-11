@@ -24,10 +24,6 @@ use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPer
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
 use crate::protocols::dsp::orchestrator::rpc::persistence::OrchestrationPersistenceForProtocolForRPC;
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
-use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
-use crate::protocols::dsp::validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
-use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
-use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use crate::services::catalogs::CatalogServiceTrait;
 use crate::services::data_services::DataServiceServiceTrait;
@@ -51,7 +47,6 @@ pub mod orchestrator;
 pub mod protocol_types;
 pub mod setup;
 pub mod types;
-pub mod validator;
 
 pub struct CatalogDSP {
     pub catalog_entities_service: Arc<dyn CatalogServiceTrait>,
@@ -106,18 +101,6 @@ impl ProtocolPluginTrait for CatalogDSP {
     }
 
     async fn build_router(&self) -> Outcome<Router> {
-        // Validator
-        let validator_helper = Arc::new(ValidationHelperService::new());
-        let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
-        let dsp_validator = Arc::new(ValidationDspStepsService::new(
-            validator_payload.clone(),
-            validator_helper.clone(),
-        ));
-        let rpc_validation = Arc::new(ValidationRpcStepsService::new(
-            validator_payload.clone(),
-            validator_helper.clone(),
-        ));
-
         // facades
         let catalog_well_known_rpc_facade = Arc::new(WellKnownRPCFacadeForDSProtocol::new(
             Arc::new(WellKnownRPCService::new(self.mates_facade.clone())),
@@ -137,13 +120,8 @@ impl ProtocolPluginTrait for CatalogDSP {
         ));
 
         // orchestrators
-        let dsp_orchestator = Arc::new(ProtocolOrchestratorService::new(
-            dsp_validator.clone(),
-            facades.clone(),
-            dsp_persistence.clone(),
-        ));
+        let dsp_orchestator = Arc::new(ProtocolOrchestratorService::new(dsp_persistence.clone()));
         let rpc_orchestrator = Arc::new(RPCOrchestratorService::new(
-            rpc_validation.clone(),
             facades.clone(),
             rpc_persistence.clone(),
             self.grants_facade.clone(),

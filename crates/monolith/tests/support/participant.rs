@@ -59,7 +59,7 @@ impl Participant {
         Self::init_tracing();
         let port = listener.local_addr().unwrap().port();
         let base_url = format!("http://127.0.0.1:{port}");
-        let common = Self::common_config(port, tenant);
+        let common = Self::common_config(port);
         let db = TestDatabase::create().await;
         let root = RootContext {
             vault: Arc::new(Self::vault()),
@@ -194,7 +194,7 @@ impl Participant {
         format!("{}{path}", self.base_url)
     }
 
-    fn common_config(port: u16, tenant: &str) -> CommonConfig {
+    fn common_config(port: u16) -> CommonConfig {
         serde_json::from_value(json!({
             "hosts": {
                 "http": {"protocol": "http", "url": "127.0.0.1", "port": port.to_string(), "internal_port": port.to_string()},

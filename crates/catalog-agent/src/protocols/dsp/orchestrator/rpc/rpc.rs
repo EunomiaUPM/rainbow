@@ -27,7 +27,6 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
-use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use common::facades::grants_facade::{send_with_peer_token, GrantsFacadeTrait};
 use common::oauth::UserInfo;
 use common::well_known::rpc::WellKnownRPCRequest;
@@ -38,7 +37,6 @@ use ymir::types::http::{HttpBody, Method};
 use ymir::utils::http_client;
 
 pub struct RPCOrchestratorService {
-    validator: Arc<dyn ValidationRpcSteps>,
     facades: Arc<dyn FacadeTrait>,
     persistence: Arc<OrchestrationPersistenceForProtocolForRPC>,
     grants_facade: Arc<dyn GrantsFacadeTrait>,
@@ -46,13 +44,11 @@ pub struct RPCOrchestratorService {
 
 impl RPCOrchestratorService {
     pub fn new(
-        validator: Arc<dyn ValidationRpcSteps>,
         facades: Arc<dyn FacadeTrait>,
         persistence: Arc<OrchestrationPersistenceForProtocolForRPC>,
         grants_facade: Arc<dyn GrantsFacadeTrait>,
     ) -> RPCOrchestratorService {
         Self {
-            validator,
             facades,
             persistence,
             grants_facade,
@@ -72,9 +68,6 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let agent_peer = input
             .get_associated_agent_peer()
             .ok_or(Errors::crazy("No associated agent", None))?;
-
-        // validation
-        self.validator.on_catalog_request(input).await?;
 
         if !input.no_cache {
             // hit caché and return guard
@@ -142,9 +135,6 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         user: &UserInfo,
         input: &RpcDatasetRequestMessageDto,
     ) -> Outcome<RpcCatalogResponseMessageDto<RpcDatasetRequestMessageDto, Dataset>> {
-        // validation
-        self.validator.on_dataset_request(input).await?;
-
         let participant_id = input
             .get_associated_agent_peer()
             .ok_or(Errors::crazy("No associated agent", None))?;

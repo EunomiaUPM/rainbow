@@ -15,7 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
@@ -23,28 +22,17 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
-use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use common::oauth::UserInfo;
 use std::sync::Arc;
 use ymir::errors::Outcome;
 
 pub struct ProtocolOrchestratorService {
-    facades: Arc<dyn FacadeTrait>,
-    validator: Arc<dyn ValidationDspSteps>,
     persistence: Arc<OrchestrationPersistenceForProtocol>,
 }
 
 impl ProtocolOrchestratorService {
-    pub fn new(
-        validator: Arc<dyn ValidationDspSteps>,
-        facades: Arc<dyn FacadeTrait>,
-        persistence: Arc<OrchestrationPersistenceForProtocol>,
-    ) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService {
-            validator,
-            facades,
-            persistence,
-        }
+    pub fn new(persistence: Arc<OrchestrationPersistenceForProtocol>) -> ProtocolOrchestratorService {
+        ProtocolOrchestratorService { persistence }
     }
 }
 

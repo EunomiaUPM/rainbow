@@ -30,7 +30,6 @@ use catalog_agent::services::odrl_policies::MockOdrlPolicyServiceTrait;
 use catalog_agent::services::policy_instantiation::service::PolicyInstantiationService;
 use catalog_agent::services::policy_instantiation::PolicyInstantiationServiceTrait;
 use catalog_agent::services::policy_templates::MockPolicyTemplateServiceTrait;
-use common::test_utils::grpc::TENANT;
 use common::test_utils::scopes::TestUsers;
 use serde_json::json;
 use urn::Urn;
