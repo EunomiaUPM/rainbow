@@ -17,9 +17,9 @@
 
 //! What the inbound transfer flow answers once a message is applied.
 
+use common::flow::{IdempotencyKey, IdempotentOutputTrait};
 use serde::{Deserialize, Serialize};
 
-use crate::entities::ids::IdempotencyKey;
 use crate::entities::protocol::TransferRole;
 use crate::protocols::dsp::entities::ack::TransferProcessAck;
 
@@ -35,4 +35,14 @@ pub struct TransferDspReply {
     /// What the process runs under and our side of it, for whoever reacts to the change.
     pub agreement_id: String,
     pub role: TransferRole,
+}
+
+impl IdempotentOutputTrait for TransferDspReply {
+    fn idempotency_key(&self) -> &IdempotencyKey {
+        &self.idempotency_key
+    }
+
+    fn process_version(&self) -> Option<u64> {
+        Some(self.process_version)
+    }
 }

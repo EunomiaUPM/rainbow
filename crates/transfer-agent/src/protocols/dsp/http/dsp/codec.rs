@@ -22,14 +22,9 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use common::flow::{FlowCodecTrait, FlowError};
 use http::StatusCode;
-use ymir::errors::{BadFormat, Errors};
 
 use crate::entities::protocol::ProtocolId;
-use crate::protocols::dsp::entities::auth::TransferDSPAuthn;
-use crate::protocols::dsp::entities::context_common::TransferContextRaw;
-use crate::protocols::dsp::entities::context_dsp::{
-    TransferDSPContextParsed, TransferDSPContextRdf, TransferDSPContextTyped,
-};
+use crate::protocols::dsp::entities::context_dsp::TransferDspInput;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
@@ -42,23 +37,8 @@ pub struct TransferErrorPids {
     provider_pid: String,
 }
 
-/// Reads a DSP 2025-1 transfer message (wire, JSON, RDF, typed fields) and writes the answer.
+/// Reads a DSP 2025-1 transfer message through RDF and writes the answer.
 pub struct TransferDspCodec;
-
-impl TransferDspCodec {
-    async fn read(
-        key: &TransferDSPMessageType,
-        request: Request,
-    ) -> ymir::errors::Outcome<TransferDSPContextTyped> {
-        let raw = TransferContextRaw::<TransferDSPAuthn>::from_request(request).await?;
-        let json: serde_json::Value = serde_json::from_slice(&raw.body_bytes).map_err(|e| {
-            Errors::format(BadFormat::Received, format!("body is not JSON: {e}"), None)
-        })?;
-        let parsed = TransferDSPContextParsed::from_raw(raw, &ProtocolId::Dsp2025_1, key, json)?;
-        let rdf = TransferDSPContextRdf::from_parsed(parsed).await?;
-        TransferDSPContextTyped::from_rdf(rdf)
-    }
-}
 
 #[async_trait::async_trait]
 impl FlowCodecTrait<TransferDspFlow> for TransferDspCodec {
@@ -70,14 +50,16 @@ impl FlowCodecTrait<TransferDspFlow> for TransferDspCodec {
         &self,
         key: &TransferDSPMessageType,
         raw: Request,
-    ) -> Result<TransferDSPContextTyped, FlowError> {
-        Self::read(key, raw).await.map_err(FlowError::from)
+    ) -> Result<TransferDspInput, FlowError> {
+        TransferDspInput::read(&ProtocolId::Dsp2025_1, key, raw)
+            .await
+            .map_err(FlowError::from)
     }
 
-    fn error_context(&self, input: &TransferDSPContextTyped) -> TransferErrorPids {
+    fn error_context(&self, input: &TransferDspInput) -> TransferErrorPids {
         TransferErrorPids {
-            consumer_pid: input.fields.consumer_pid.clone().unwrap_or_default(),
-            provider_pid: input.fields.provider_pid.clone().unwrap_or_default(),
+            consumer_pid: input.body.fields.consumer_pid.clone().unwrap_or_default(),
+            provider_pid: input.body.fields.provider_pid.clone().unwrap_or_default(),
         }
     }
 

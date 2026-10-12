@@ -18,28 +18,43 @@
 //! Reading an outbound transfer RPC body, typed with the eunomia context, off its expansion.
 //! DSP concepts use the DSP vocabulary there, so they are read as the inbound side reads them.
 
-use common::eunomia::{EunomiaProfile, EUNOMIA_NS};
-use common::rdf::RdfNode;
+use common::eunomia::{EunomiaProfile, EUNOMIA_CONTEXT_URL, EUNOMIA_NS};
+use common::rdf::{RdfEngine, RdfNode, RdfProtocolTrait};
+use serde_json::{json, Value};
 use ymir::errors::Outcome;
 
 use crate::protocols::dsp::entities::context_rpc::TransferRpcBody;
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::entities::rdf_extractor_dsp::{DspTransfer, ExtractProtocolFields};
+use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
 
 /// Namespace of the DSP terms the eunomia context reuses.
 const DSPACE: &str = "https://w3id.org/dspace/2025/1/";
 /// `format` is Dublin Core, as in the DSP context.
 const DCT_FORMAT: &str = "http://purl.org/dc/terms/format";
-/// RPC types are the DSP message they send, prefixed: `RpcTransferRequestMessage`.
+/// Prefix of RPC types over the DSP message they send.
 const RPC_PREFIX: &str = "Rpc";
 
 /// The transfer RPC, as an extraction target.
+#[derive(Debug, Clone)]
 pub struct EunomiaTransfer;
 
-impl ExtractProtocolFields for EunomiaTransfer {
+impl RdfProtocolTrait for EunomiaTransfer {
     type MessageType = TransferDSPMessageType;
     type Fields = TransferRpcBody;
+
+    fn engine() -> &'static RdfEngine {
+        EunomiaProfile::shared()
+    }
+
+    fn context() -> Value {
+        json!(EUNOMIA_CONTEXT_URL)
+    }
+
+    /// RPC types are the DSP message they send, prefixed: `RpcTransferRequestMessage`.
+    fn compact_type(message: &TransferDSPMessageType) -> String {
+        format!("{RPC_PREFIX}{message}")
+    }
 
     fn type_iri(message: &TransferDSPMessageType) -> String {
         EunomiaProfile::term(&Self::compact_type(message))
@@ -69,11 +84,6 @@ impl ExtractProtocolFields for EunomiaTransfer {
 }
 
 impl EunomiaTransfer {
-    /// The compact `@type` of the RPC that sends `message`.
-    pub fn compact_type(message: &TransferDSPMessageType) -> String {
-        format!("{RPC_PREFIX}{message}")
-    }
-
     fn dspace(term: &str) -> String {
         format!("{DSPACE}{term}")
     }

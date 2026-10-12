@@ -22,7 +22,7 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use ymir::errors::Outcome;
 
-use crate::data::sea_orm::orm::helpers::{deser_enum, deser_json, ser_enum, ser_json};
+use crate::data::sea_orm::orm::helpers::OrmCodec;
 use crate::entities::commands::NewTransferProcessCommand;
 use crate::entities::ids::TransferProcessId;
 use crate::entities::protocol::{
@@ -59,16 +59,16 @@ impl Model {
     pub fn into_domain(self) -> Outcome<TransferProcess> {
         let id = TransferProcessId::new(parse_urn(&self.id)?);
         let owner = Owner::new(self.user_id, self.user_role, self.visibility);
-        let role = deser_enum::<TransferRole>(&self.role)?;
+        let role = OrmCodec::deser_enum::<TransferRole>(&self.role)?;
         let created_at = self.created_at.with_timezone(&Utc);
         let updated_at = self.updated_at.with_timezone(&Utc);
         let version = u32::try_from(self.version).unwrap_or(0);
-        let protocol = deser_enum::<ProtocolId>(&self.protocol)?;
+        let protocol = OrmCodec::deser_enum::<ProtocolId>(&self.protocol)?;
         let protocol_state = ProtocolState(CompactString::from(self.protocol_state));
         let state_metadata =
-            deser_json::<StateMetadata>(self.state_metadata, "transfer_process.state_metadata")?;
+            OrmCodec::deser_json::<StateMetadata>(self.state_metadata, "transfer_process.state_metadata")?;
         let correlation =
-            deser_json::<TransferCorrelation>(self.correlation, "transfer_process.correlation")?;
+            OrmCodec::deser_json::<TransferCorrelation>(self.correlation, "transfer_process.correlation")?;
 
         Ok(TransferProcess::rehydrate(
             id,
@@ -128,19 +128,19 @@ impl ActiveModel {
             user_id: Set(process.owner().user_id.clone()),
             user_role: Set(process.owner().role.clone()),
             visibility: Set(process.owner().visibility.clone()),
-            role: Set(ser_enum(&process.role())),
+            role: Set(OrmCodec::ser_enum(&process.role())),
             created_at: Set(process.created_at().into()),
             updated_at: Set(process.updated_at().into()),
             version: Set(i32::try_from(process.version()).unwrap_or(i32::MAX)),
-            protocol: Set(ser_enum(process.protocol())),
+            protocol: Set(OrmCodec::ser_enum(process.protocol())),
             protocol_state: Set(process.state().0.to_string()),
-            state_metadata: Set(ser_json(process.state_metadata())),
+            state_metadata: Set(OrmCodec::ser_json(process.state_metadata())),
             agreement_id: Set(correlation.agreement_id.as_ref().map(|u| u.to_string())),
             peer_participant_id: Set(correlation
                 .peer_participant_id
                 .as_ref()
                 .map(|p| p.to_string())),
-            correlation: Set(ser_json(correlation)),
+            correlation: Set(OrmCodec::ser_json(correlation)),
             properties: Set(process.properties().clone()),
             error_details: Set(process.error_details().cloned()),
         }

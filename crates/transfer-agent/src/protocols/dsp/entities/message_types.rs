@@ -15,12 +15,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP transfer message types, and reading one off a message.
+//! The DSP transfer message types.
 
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::str::FromStr;
-use ymir::errors::{BadFormat, Errors, Outcome};
+use ymir::errors::{BadFormat, Errors};
 
 /// DSP transfer messages this agent sends and receives.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
@@ -75,41 +74,6 @@ impl std::str::FromStr for TransferDSPMessageType {
                 format!("unknown DSP message type: {other}"),
                 None,
             )),
-        }
-    }
-}
-
-impl TransferDSPMessageType {
-    /// Message type named by the payload's `@type`, prefixed or not.
-    pub fn from_json_payload(payload: &serde_json::Value) -> Outcome<Self> {
-        if let Some(t) = payload.get("@type").and_then(Self::type_term) {
-            return Self::from_str(&t);
-        }
-        if let Some(nodes) = payload.get("@graph").and_then(serde_json::Value::as_array) {
-            if let Some(found) = nodes
-                .iter()
-                .filter_map(|n| n.get("@type").and_then(Self::type_term))
-                .find_map(|t| Self::from_str(&t).ok())
-            {
-                return Ok(found);
-            }
-        }
-        Err(Errors::format(
-            BadFormat::Received,
-            "message declares no @type",
-            None,
-        ))
-    }
-
-    /// `@type` is a string or an array of them; take the first usable one.
-    fn type_term(value: &serde_json::Value) -> Option<String> {
-        match value {
-            serde_json::Value::String(s) => Some(s.clone()),
-            serde_json::Value::Array(items) => items
-                .iter()
-                .find_map(serde_json::Value::as_str)
-                .map(str::to_string),
-            _ => None,
         }
     }
 }

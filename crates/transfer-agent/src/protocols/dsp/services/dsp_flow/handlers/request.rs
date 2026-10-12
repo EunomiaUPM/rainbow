@@ -32,12 +32,12 @@ use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::context_common::{
     TransferContextConnectorRole, TransferContextProcessSlot,
 };
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::entities::context_dsp::TransferDspFacts;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
 use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
-use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DIRECTION_PROPERTY;
+use crate::protocols::dsp::services::dsp_domain_loader::service::DIRECTION_PROPERTY;
 
 /// Creates the process with a new `providerPid`, records the message and starts the dataplane.
 pub struct RequestHandler;
@@ -46,9 +46,9 @@ impl RequestHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
         deps: &TransferHandlerDeps,
-        mut facts: TransferDSPContextDomain,
+        mut facts: TransferDspFacts,
     ) -> Outcome<TransferDspReply> {
-        let consumer_pid = facts.process_urn("transfer request")?.to_string();
+        let consumer_pid = facts.process_urn()?.to_string();
         let provider_pid = format!("urn:uuid:{}", uuid::Uuid::new_v4());
         let requested = ProtocolState(TransferDSPState::REQUESTED.to_string().into());
 
@@ -62,7 +62,7 @@ impl RequestHandler {
             .await?;
 
         // The provider side of the dataplane needs the stored process, so it runs after the write.
-        facts.process = TransferContextProcessSlot::Existing(process.clone());
+        facts.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
         deps.dataplane
             .on_transfer_request_post(&facts.dataplane_hooks()?)
             .await?;
@@ -71,19 +71,19 @@ impl RequestHandler {
             ack: TransferProcessAck::new(consumer_pid, provider_pid, TransferDSPState::REQUESTED),
             created: true,
             process_version: process.version(),
-            idempotency_key: facts.typed.idempotency_key.clone(),
+            idempotency_key: facts.input.idempotency_key.clone(),
             agreement_id: facts.agreement.id.to_string(),
             role: TransferRole::Provider,
         })
     }
 
     fn command(
-        facts: &TransferDSPContextDomain,
+        facts: &TransferDspFacts,
         consumer_pid: &str,
         provider_pid: &str,
         requested: &ProtocolState,
     ) -> Outcome<NewTransferProcessCommand> {
-        let fields = &facts.typed.fields;
+        let fields = &facts.input.body.fields;
         let identifiers = HashMap::from([
             (CONSUMER_PID_KEY.to_string(), consumer_pid.to_string()),
             (PROVIDER_PID_KEY.to_string(), provider_pid.to_string()),
@@ -111,13 +111,7 @@ impl RequestHandler {
             connector_instance_id,
             agreement_id: facts.agreement.id.clone(),
             peer_participant_id: ParticipantId::new(
-                facts
-                    .typed
-                    .rdf
-                    .parsed
-                    .raw
-                    .authn
-                    .associated_participant
+                facts.input.peer
                     .participant_id
                     .clone(),
             ),

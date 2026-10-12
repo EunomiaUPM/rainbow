@@ -19,7 +19,7 @@ use common::oauth::{OwnedTrait, Owner, OwnerScope};
 use std::sync::Arc;
 
 use crate::data::repo::transfer_message::{TransferMessageRepoErrors, TransferMessageRepoTrait};
-use crate::data::sea_orm::orm::ser_enum;
+use crate::data::sea_orm::orm::OrmCodec;
 use crate::data::sea_orm::orm::transfer_message as orm;
 use crate::entities::commands::NewTransferMessageCommand;
 use crate::entities::filters::TransferMessageFilter;
@@ -65,10 +65,10 @@ impl SeaOrmTransferMessageRepo {
             q = q.filter(orm::Column::UserId.eq(user_id.as_str()));
         }
         if let Some(dir) = &filters.direction {
-            q = q.filter(orm::Column::Direction.eq(ser_enum(dir)));
+            q = q.filter(orm::Column::Direction.eq(OrmCodec::ser_enum(dir)));
         }
         if let Some(protocol) = &filters.protocol {
-            q = q.filter(orm::Column::Protocol.eq(ser_enum(protocol)));
+            q = q.filter(orm::Column::Protocol.eq(OrmCodec::ser_enum(protocol)));
         }
         if let Some(state) = &filters.state_transition_to {
             q = q.filter(orm::Column::StateTransitionTo.eq(state.0.as_str()));

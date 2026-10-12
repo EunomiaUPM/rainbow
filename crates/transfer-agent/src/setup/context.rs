@@ -23,7 +23,7 @@ use crate::data::sea_orm::factory::SeaOrmDataFactory;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
 use crate::protocols::dsp::services::connector_resolver::ConnectorResolverTrait;
-use crate::protocols::dsp::services::connector_resolver::connector_resolver::ConnectorResolver;
+use crate::protocols::dsp::services::connector_resolver::service::ConnectorResolver;
 use crate::services::transfer_message::service::TransferMessageService;
 use crate::services::transfer_process::service::TransferProcessService;
 use crate::setup::ports::TransferPorts;

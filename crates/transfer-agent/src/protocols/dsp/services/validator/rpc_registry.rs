@@ -93,22 +93,22 @@ impl TransferRpcRules {
             .with(
                 TransferStartMessage,
                 Stage::Shape,
-                Self::outgoing(TransferValidators::start_message()),
+                Self::outgoing(TransferValidators::pids_message()),
             )
             .with(
                 TransferCompletionMessage,
                 Stage::Shape,
-                Self::outgoing(TransferValidators::completion_message()),
+                Self::outgoing(TransferValidators::pids_message()),
             )
             .with(
                 TransferSuspensionMessage,
                 Stage::Shape,
-                Self::outgoing(TransferValidators::suspension_message()),
+                Self::outgoing(TransferValidators::pids_message()),
             )
             .with(
                 TransferTerminationMessage,
                 Stage::Shape,
-                Self::outgoing(TransferValidators::termination_message()),
+                Self::outgoing(TransferValidators::pids_message()),
             )
     }
 

@@ -18,6 +18,5 @@
 //! Inbound DSP transfer messages as a flow: the runner validates, this loads and applies.
 
 pub mod handlers;
-pub mod idempotency_guard;
 pub mod service;
 pub mod views;

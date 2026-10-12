@@ -15,6 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use common::rdf::{RdfMessage, RdfProtocolTrait};
 use common::serde_utils::serialize_opt_hash_hex;
 use sea_orm::prelude::Json;
 use serde::{Deserialize, Serialize};
@@ -49,6 +50,14 @@ impl MessageEnvelope {
             canonical_hash,
             payload,
         }
+    }
+
+    /// A message read through RDF, with its canonical form and hash.
+    pub fn from_rdf<P: RdfProtocolTrait>(message: &RdfMessage<P>) -> Self {
+        Self::new(
+            message.json.clone(),
+            Some((message.canonical_n_quads.clone(), message.canonical_hash)),
+        )
     }
 
     /// Builds an envelope hashing the canonical form (SHA-256) when one is given.
@@ -91,11 +100,5 @@ impl TryFrom<MessageEnvelopeInput> for MessageEnvelope {
             canonical_hash,
             payload: v.payload,
         })
-    }
-}
-
-impl MessageEnvelope {
-    pub fn is_canonicalized(&self) -> bool {
-        self.canonical_form.is_some()
     }
 }

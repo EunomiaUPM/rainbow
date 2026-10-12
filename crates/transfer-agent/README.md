@@ -7,9 +7,8 @@ to the `dataplane`, which it registers and drives in-process.
 It runs as its own binary or as a module of the `monolith`. Standalone, it also serves the OAuth
 server its clients authenticate against.
 
-The DSP side is being rebuilt (see `PLAN.md`). The endpoints receive and validate messages, but
-they do not yet load the process from the domain, run the manager, or answer with the DSP ACK.
-The sections below say which parts are wired.
+Every DSP message, inbound or sent through the RPC, runs through a `common::flow` runner:
+decode, shape rules, load, fact rules, (send), apply, commit.
 
 ## Structure
 
@@ -23,23 +22,24 @@ src/
 ├── http/            Management routers
 ├── grpc/            gRPC mirror of the management API
 ├── protocols/dsp/
-│   ├── http/            DSP transfer endpoints and the peer auth middleware
-│   ├── entities/        Message types, states, contexts per stage, ACK, idempotency, RDF extraction
+│   ├── entities/        Message types, states, ACK and error, the inbound input and facts,
+│   │                    the eunomia RPC command and facts, RDF extractors, TCK steps
 │   ├── services/
-│   │   ├── dsp_handler_pipeline/  Inbound stages: raw, parsed, RDF, typed, domain
-│   │   ├── validator/             Payload rules and state transition rules, per message type
+│   │   ├── dsp_flow/              Inbound flow: load, then the request and transition handlers
+│   │   ├── rpc_flow/              Outbound flow: build the DSP message, send it, apply the answer
+│   │   ├── validator/             Shape and fact rules of both flows
 │   │   ├── dsp_domain_loader/     Process, agreement, connector and role of a message
 │   │   ├── connector_resolver/    Agreement to dataset, distribution and connector instance
-│   │   └── manager/               One strategy per message type over a fixed phase order
+│   │   └── tck/                   TCK scenarios and the worker that plays them
+│   ├── http/            DSP routes and RPC routes, each with its codec
 │   └── facades/         Catalog, negotiation and dataplane (one strategy per role and mode)
 └── setup/           TransferAgentModule, admin module, AppContext, ports, boot
 proto/               transfer_process.proto, transfer_messages.proto
-openapi.yaml         Management API description
 tests/
 ├── entities/        Message envelopes
-├── services/        Process and message services, split by operation
-├── protocols/       Contexts, RDF extraction, ACK, idempotency, validators, DSP routes
-└── adapters/        gRPC services with mocked services and a stub validator
+├── services/        Process and message services by operation, agreement resolver, TCK scenarios
+├── protocols/       Inputs, RDF extraction, ACK, idempotency keys, validators, RPC rules
+└── adapters/        gRPC services and the DSP routes over the flow
 ```
 
 ## DSP
@@ -53,29 +53,34 @@ Mounted at `/dsp/current/transfers`:
 | POST | `/{id}/completion` | TransferCompletionMessage |
 | POST | `/{id}/termination` | TransferTerminationMessage |
 | POST | `/{id}/suspension` | TransferSuspensionMessage |
-| GET | `/{id}` | Transfer process; returns a placeholder for now |
+| GET | `/{id}` | The `TransferProcess` of a process the peer takes part in |
 
 The peer's token is checked with the auth agent. A missing or rejected token answers 404, the
 same as a missing process, so probing cannot reveal which processes exist (DSP 10.1.2.3).
 
-Each message goes through `DSPHandlerPipeline`. Every stage consumes the previous context, so
-the order cannot be skipped:
+Each message is read into a `TransferDspInput`: the peer, the route's pid, the body expanded
+and extracted through RDF (`RdfMessage<DspTransfer>`) and an idempotency key. The flow then:
 
-1. **Raw**: body, headers and the authenticated peer.
-2. **Parsed**: JSON, with the protocol version and the message type the route fixes.
-3. **RDF**: JSON-LD expansion and RDFC-1.0 canonical n-quads, through `common::rdf::dsp`.
-4. **Typed**: the DSP 9.2 fields read off the expanded document, and the idempotency key.
-5. Edge validation: payload rules such as pid correlation and when a data address may be sent.
-6. **Domain**: process, agreement, connector instance, role and direction. Today this stage
-   builds a placeholder context; `DspDomainLoader` exists but is not called.
-7. Domain validation: which role may send each message in each state (DSP 9.1), and who may
-   resume a suspension.
+1. Checks the shape: the body's type is the route's, pids and agreement are URNs.
+2. Loads the facts (`DspDomainLoader`): process, agreement, connector, role and direction. An
+   unknown process answers 404.
+3. Replays a repeated message (`common::flow::IdempotencyGuard`): keyed on peer, version, type
+   and pids, guarded by the canonical hash, with the process version telling a restart from a
+   retry.
+4. Checks the facts: state transition and role (DSP 9.1), who may resume a suspension, pid
+   correlation, data address.
+5. Applies: a request opens the process (201 with the `TransferProcess`), any other message
+   moves it (200). The message is kept with its canonical form and the dataplane hooks run.
 
-A message that passes answers 202 with no body; one that fails answers 400. Idempotency is keyed
-by message type and pids, guarded by the canonical hash and the process version, so a restart
-after a suspension is told apart from a retry. `TransferManager` runs one strategy per message
-type over the same phases, and the dataplane facade has one strategy per role and mode. The
-pipeline does not call the manager yet, and the strategies' phases are `todo!()`.
+Failures answer a `TransferError` with every violation.
+
+## RPC
+
+`/dsp/current/transfers/rpc/setup-{request,start,completion,suspension,termination}` make the
+agent send a message. Bodies are JSON-LD in the eunomia context (`common::eunomia`), typed
+`RpcTransfer{Request,Start,…}Message`; the answer is an `RpcTransferResult` with the request, the
+peer's answer and the process. With `DSP_TCK_MAPPING` set, a worker plays the connector's part of
+each TCK scenario and `/tck/transfers/requests` is mounted.
 
 ## Integration
 
@@ -88,8 +93,7 @@ pipeline does not call the manager yet, and the strategies' phases are `todo!()`
 | Catalog | The catalog's dataset, distribution and offer services | Catalog agent API (`catalog`) |
 | Dataplane | Always in-process; connector instances from the catalog module | Same; connector instances over the catalog API |
 
-Remote ports use the service token. In the monolith, cross-tenant lookups run as the service
-client's tenant.
+Remote ports use the service token.
 
 With an event bus, the services publish `transfers:process:{create,edit,delete}` and
 `transfers:message:{create,delete}`.
@@ -122,7 +126,7 @@ Its config section is `transfer`: `common`, `cache`, `contracts`, `catalog`, `ss
 ## HTTP API
 
 Under `{api}/transfer-agent-ref` (also `{api}/transfer-agent`), bearer required. Reads are
-limited to the caller's tenant; lists are paged with `limit` and `cursor`.
+limited to what the caller's owner scope sees; lists are paged with `limit` and `cursor`.
 
 | Resource | Routes |
 |---|---|
@@ -138,9 +142,9 @@ services in `proto/` mirror both resources.
 cargo test -p transfer_agent
 ```
 
-`tests/protocols` covers the DSP layer: raw and RPC contexts, RDF canonicalization and field
-extraction, message types, the ACK shape (DSP 9.3.1), idempotency keys and process versions, the
-payload and transition validators, and the DSP routes with an auth facade that accepts or rejects
-every token. `tests/services` covers both services by operation, including tenant isolation and
-roles. `tests/adapters` covers the gRPC services. No database is needed. There is no DSP
-transfer flow between agents in `crates/monolith/tests/` yet.
+`tests/protocols` covers the DSP layer: inbound inputs and eunomia RPC bodies, RDF extraction,
+message types, the ACK shape (DSP 9.3.1), idempotency keys and process versions, and the
+validation registries. `tests/adapters` runs the DSP routes through the flow over an in-memory
+store, and the gRPC services. `tests/services` covers both services by operation, the agreement
+resolver and the TCK scenarios. No database is needed; `crates/monolith/tests/dsp/transfer.rs`
+runs the DSP and RPC flows between two agents.

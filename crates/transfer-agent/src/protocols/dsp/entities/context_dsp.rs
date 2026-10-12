@@ -15,230 +15,175 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The inbound DSP context, stage by stage: raw, parsed, rdf, typed and domain.
-//! Each stage consumes the previous one, so the order cannot be skipped.
+//! An inbound DSP transfer message, read off the request through RDF, and the facts the
+//! loader resolves for it.
 
-use crate::entities::ids::IdempotencyKey;
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use axum::extract::{FromRequestParts, Path, Request};
+use common::dsp_common::odrl::OdrlAgreement;
+use common::facades::grants_facade::VerifiedPeer;
+use common::flow::{IdempotencyKey, IdempotentFactsTrait};
+use common::oauth::Owner;
+use common::rdf::RdfMessage;
+use sha2::{Digest, Sha256};
+use urn::Urn;
+use ymir::errors::{BadFormat, Errors, Outcome};
+
 use crate::entities::protocol::{ProtocolId, TransferDirection, TransferRole};
-use crate::protocols::dsp::entities::auth::TransferDSPAuthn;
-use crate::protocols::dsp::entities::context_common::{BuildAuthn, TransferContextRaw};
 use crate::protocols::dsp::entities::context_common::{
     TransferContextConnectorRole, TransferContextProcessSlot,
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
-use crate::protocols::dsp::entities::rdf_extractor_dsp::{DspTransfer, ExtractProtocolFields};
+use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
 use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
-use common::dsp_common::data_address::DataAddress;
-use common::oauth::Owner;
-use common::dsp_common::odrl::OdrlAgreement;
-use common::dsp_common::rdf::DspProfile;
-use common::rdf::ExpandedDoc;
-use http::request::Parts;
-use sha2::{Digest, Sha256};
-use std::str::FromStr;
-use urn::Urn;
-use common::facades::grants_facade::VerifiedPeer;
-use ymir::errors::{BadFormat, Errors, Outcome};
 
-impl BuildAuthn for TransferDSPAuthn {
-    fn from_request_parts(parts: &Parts) -> Outcome<Self> {
-        let associated_participant = parts.extensions.get::<VerifiedPeer>().cloned().ok_or_else(|| {
+/// An inbound message as the flow takes it: who sent it, where, and what it says.
+#[derive(Debug)]
+pub struct TransferDspInput {
+    pub peer: VerifiedPeer,
+    /// The message type the route handles; the body's own is `body.message`.
+    pub route: TransferDSPMessageType,
+    /// The pid in the route, on the routes that carry one.
+    pub path_id: Option<String>,
+    pub body: RdfMessage<DspTransfer>,
+    /// Derived from protocol identity, with the peer's `Idempotency-Key` folded in.
+    pub idempotency_key: IdempotencyKey,
+}
+
+impl TransferDspInput {
+    /// Cap on inbound bodies: control-plane messages are tiny, this only bounds a hostile peer.
+    const MAX_BODY_BYTES: usize = 1024 * 1024;
+
+    /// Reads the request: the peer the auth middleware resolved, the route pid, the
+    /// idempotency header and the body through RDF.
+    pub async fn read(
+        version: &ProtocolId,
+        route: &TransferDSPMessageType,
+        request: Request,
+    ) -> Outcome<Self> {
+        let (mut parts, body) = request.into_parts();
+        let peer = parts.extensions.get::<VerifiedPeer>().cloned().ok_or_else(|| {
             Errors::crazy(
                 "auth middleware did not resolve the peer (VerifiedPeer missing)",
                 None,
             )
         })?;
-        let raw = Self::header(&parts.headers, "authorization").unwrap_or_default();
-        let (token_type, token_content) = raw
-            .split_once(' ')
-            .map(|(t, c)| (t.to_string(), c.trim().to_string()))
-            .unwrap_or_else(|| (String::new(), raw.clone()));
-        Ok(TransferDSPAuthn {
-            raw,
-            token_type,
-            token_content,
-            associated_participant,
-        })
-    }
-}
-
-/// Inbound message read as JSON, with the protocol version and message type of its route.
-#[derive(Debug)]
-pub struct TransferDSPContextParsed {
-    pub raw: TransferContextRaw<TransferDSPAuthn>,
-    pub dsp_version: ProtocolId,
-    pub dsp_message_type: TransferDSPMessageType,
-    pub json_value: serde_json::Value,
-}
-
-impl TransferDSPContextParsed {
-    /// Wrap the raw context with what the route already settled: protocol version
-    /// and the message type the endpoint handles.
-    pub fn from_raw(
-        raw: TransferContextRaw<TransferDSPAuthn>,
-        dsp_version: &ProtocolId,
-        dsp_message_type: &TransferDSPMessageType,
-        json_value: serde_json::Value,
-    ) -> Outcome<Self> {
-        Ok(Self {
-            raw,
-            dsp_version: dsp_version.clone(),
-            dsp_message_type: dsp_message_type.clone(),
-            json_value,
-        })
-    }
-}
-
-/// Inbound message expanded to RDF, with its canonical n-quads and hash.
-#[derive(Debug)]
-pub struct TransferDSPContextRdf {
-    pub parsed: TransferDSPContextParsed,
-    /// The form extraction and payload validation read: invariant under the
-    /// aliasing a peer is free to choose.
-    pub expanded: serde_json::Value,
-    /// URDNA2015 / RDFC-1.0 canonical n-quads of the expanded message.
-    pub canonical_n_quads: String,
-    pub canonical_hash: [u8; 32],
-}
-
-impl TransferDSPContextRdf {
-    /// Expand once, keeping both products. `canonical_hash` is a semantic identity,
-    /// not an attestation of the bytes — for that see [`TransferContextRaw::wire_hash`].
-    pub async fn from_parsed(parsed: TransferDSPContextParsed) -> Outcome<Self> {
-        let expansion = DspProfile::shared().expand(&parsed.json_value).await?;
-        let canonical_hash = Sha256::digest(expansion.canonical_n_quads.as_bytes()).into();
-        Ok(Self {
-            parsed,
-            expanded: expansion.expanded,
-            canonical_n_quads: expansion.canonical_n_quads,
-            canonical_hash,
-        })
-    }
-}
-
-/// Inbound message with its DSP fields extracted and its idempotency key derived.
-#[derive(Debug)]
-pub struct TransferDSPContextTyped {
-    pub rdf: TransferDSPContextRdf,
-    /// What the **body** declares. The route's own type stays in
-    /// `rdf.parsed.dsp_message_type`, for the manager to check against this.
-    pub message: TransferDSPMessageType,
-    /// The DSP 9.2 fields, as extracted. Passed on to the domain by itself.
-    pub fields: TransferProtocolFields,
-    /// Always present: derived from protocol identity, with the peer's header
-    /// folded in when it sent one. See [`IdempotencyKey::derive`].
-    pub idempotency_key: IdempotencyKey,
-}
-
-impl TransferDSPContextTyped {
-    /// Build the typed context from the RDF stage. Extraction only: the message
-    /// type comes from the body, and agreeing with the route is the manager's call.
-    pub fn from_rdf(rdf: TransferDSPContextRdf) -> Outcome<Self> {
-        let (message, fields) = {
-            let doc = ExpandedDoc::new(&rdf.expanded).ok_or_else(|| {
-                Errors::format(
-                    BadFormat::Received,
-                    "expanded JSON-LD is not an array of node objects",
-                    None,
-                )
+        let bytes = axum::body::to_bytes(body, Self::MAX_BODY_BYTES)
+            .await
+            .map_err(|_| {
+                Errors::format(BadFormat::Received, "failed to read request body", None)
             })?;
-            let (message, node) = DspTransfer::root_message(&doc)?;
-            (message, DspTransfer::extract(&node)?)
-        };
-
-        let idempotency_key = IdempotencyKey::derive(
-            &rdf.parsed.raw,
-            &rdf.parsed.dsp_version,
-            &message,
-            fields.consumer_pid.as_deref(),
-            fields.provider_pid.as_deref(),
-        );
-
-        Ok(TransferDSPContextTyped {
-            rdf,
-            message,
-            fields,
+        let supplied_key = parts
+            .headers
+            .get("idempotency-key")
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string);
+        let request_path = parts.uri.path().to_string();
+        let path_id = Path::<HashMap<String, String>>::from_request_parts(&mut parts, &())
+            .await
+            .ok()
+            .and_then(|Path(params)| params.get("id").cloned());
+        let json: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| {
+            Errors::format(BadFormat::Received, format!("body is not JSON: {e}"), None)
+        })?;
+        let body = RdfMessage::<DspTransfer>::read(json).await?;
+        let idempotency_key =
+            Self::derive_key(&peer, &request_path, version, &body, supplied_key.as_deref());
+        Ok(Self {
+            peer,
+            route: route.clone(),
+            path_id,
+            body,
             idempotency_key,
         })
     }
+
+    /// Participant, route, version, type, pids and the peer's header, length-prefixed so no
+    /// pid can imitate another tuple; pids are unique per peer, so the participant is in.
+    fn derive_key(
+        peer: &VerifiedPeer,
+        request_path: &str,
+        version: &ProtocolId,
+        body: &RdfMessage<DspTransfer>,
+        supplied_key: Option<&str>,
+    ) -> IdempotencyKey {
+        let mut hasher = Sha256::new();
+        let mut field = |bytes: &[u8]| {
+            hasher.update((bytes.len() as u64).to_be_bytes());
+            hasher.update(bytes);
+        };
+        field(peer.participant_id.as_bytes());
+        field(request_path.as_bytes());
+        // A nested router strips the mount prefix, so the path alone cannot tell versions apart.
+        field(version.to_string().as_bytes());
+        field(body.message.to_string().as_bytes());
+        field(body.fields.consumer_pid.as_deref().unwrap_or_default().as_bytes());
+        field(body.fields.provider_pid.as_deref().unwrap_or_default().as_bytes());
+        field(supplied_key.unwrap_or_default().as_bytes());
+        IdempotencyKey::new(format!("dsp-{}", hex::encode(hasher.finalize())))
+    }
 }
 
-/// Inbound message with the process, agreement, role and connector it refers to.
+/// An inbound message with the process, agreement, role and connector it refers to.
 #[derive(Debug)]
-pub struct TransferDSPContextDomain {
-    pub typed: TransferDSPContextTyped,
+pub struct TransferDspFacts {
+    pub input: TransferDspInput,
     pub process: TransferContextProcessSlot,
     pub agreement: OdrlAgreement,
     pub role: TransferRole,
     pub transfer_direction: TransferDirection,
     pub connector_instance: TransferContextConnectorRole,
     pub is_restart: bool,
-    pub is_idempotent_replay: bool,
-    pub resolved_data_address: Option<DataAddress>,
 }
 
-impl TransferDSPContextDomain {
-    /// Wrap the typed context with the domain facts resolved by the
-    /// `domain_loader` stage: the process slot (loaded or newly minted),
-    /// agreement, role, connector, and the restart / idempotent-replay flags.
-    pub fn from_typed(
-        typed: TransferDSPContextTyped,
-        process: TransferContextProcessSlot,
-        agreement: OdrlAgreement,
-        role: TransferRole,
-        transfer_direction: TransferDirection,
-        connector_instance: TransferContextConnectorRole,
-        is_restart: bool,
-        is_idempotent_replay: bool,
-    ) -> Outcome<Self> {
-        Ok(Self {
-            typed,
-            process,
-            agreement,
-            role,
-            transfer_direction,
-            connector_instance,
-            is_restart,
-            is_idempotent_replay,
-            resolved_data_address: None,
-        })
-    }
-
-    /// Owner of the existing process, or of a new one a peer opens: nobody, handled by the role
-    /// of the peer's grant and seen as the grant says.
+impl TransferDspFacts {
+    /// Owner of the existing process, or of a new one a peer opens: seen as its grant says.
     pub fn owner(&self) -> Owner {
         match &self.process {
             TransferContextProcessSlot::Existing(p) => p.owner().clone(),
-            TransferContextProcessSlot::New { .. } => {
-                self.typed.rdf.parsed.raw.authn.associated_participant.owner()
-            }
+            TransferContextProcessSlot::New { .. } => self.input.peer.owner(),
         }
     }
 
     /// What the dataplane hooks need from this message and the process it refers to.
     pub fn dataplane_hooks(&self) -> Outcome<DataplaneHookContext> {
         Ok(DataplaneHookContext {
-            process_id: self.process_urn("dataplane hooks")?,
+            process_id: self.process_urn()?,
             owner: self.owner(),
             role: self.role,
             transfer_direction: self.transfer_direction,
             connector_instance: self.connector_instance.clone(),
-            data_address: self.typed.fields.data_address.clone(),
-            resolved_data_address: self.resolved_data_address.clone(),
+            data_address: self.input.body.fields.data_address.clone(),
+            resolved_data_address: None,
             is_restart: self.is_restart,
         })
     }
 
-    /// Id of the existing process, or the consumer pid of a new one; `location` names the
-    /// caller in errors.
-    pub fn process_urn(&self, location: &str) -> Outcome<Urn> {
+    /// Id of the existing process, or the consumer pid of a new one.
+    pub fn process_urn(&self) -> Outcome<Urn> {
         match &self.process {
             TransferContextProcessSlot::Existing(p) => Ok(p.id().as_urn().clone()),
             TransferContextProcessSlot::New { consumer_pid } => Urn::from_str(consumer_pid)
-                .map_err(|_| {
-                    Errors::crazy(format!("invalid consumer_pid urn for {location}"), None)
-                }),
+                .map_err(|_| Errors::crazy("invalid consumer_pid urn for a new process", None)),
+        }
+    }
+}
+
+impl IdempotentFactsTrait for TransferDspFacts {
+    fn idempotency_key(&self) -> &IdempotencyKey {
+        &self.input.idempotency_key
+    }
+
+    fn canonical_hash(&self) -> &[u8; 32] {
+        &self.input.body.canonical_hash
+    }
+
+    fn process_version(&self) -> Option<u64> {
+        match &self.process {
+            TransferContextProcessSlot::Existing(p) => Some(p.version()),
+            TransferContextProcessSlot::New { .. } => None,
         }
     }
 }

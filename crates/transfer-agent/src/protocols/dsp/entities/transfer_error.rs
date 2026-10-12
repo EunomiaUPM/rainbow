@@ -18,6 +18,7 @@
 //! The `TransferError` a peer gets when a message is rejected (DSP 9.3.2).
 
 use common::dsp_common::context_field::ContextField;
+use common::dsp_common::DspErrorBody;
 use serde::{Deserialize, Serialize};
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
@@ -32,9 +33,8 @@ pub struct TransferErrorDto {
     pub _type: TransferDSPMessageType,
     pub consumer_pid: String,
     pub provider_pid: String,
-    pub code: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub reason: Vec<String>,
+    #[serde(flatten)]
+    pub error: DspErrorBody,
 }
 
 impl TransferErrorDto {
@@ -49,8 +49,7 @@ impl TransferErrorDto {
             _type: TransferDSPMessageType::TransferError,
             consumer_pid,
             provider_pid,
-            code,
-            reason,
+            error: DspErrorBody { code, reason },
         }
     }
 }

@@ -33,7 +33,7 @@ use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::protocol::{ProtocolId, ProtocolMessageType, ProtocolState};
 use crate::entities::transfer_message::Direction;
 use crate::entities::transfer_process::TransferProcess;
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::entities::context_dsp::TransferDspFacts;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
 use crate::services::transfer_message::TransferMessageServiceTrait;
@@ -71,19 +71,15 @@ impl TransferHandlerDeps {
     async fn record_message(
         &self,
         process: &TransferProcess,
-        facts: &TransferDSPContextDomain,
+        facts: &TransferDspFacts,
         from: &ProtocolState,
         to: &ProtocolState,
     ) -> Outcome<()> {
-        let rdf = &facts.typed.rdf;
         self.record(
             process,
             Direction::Inbound,
-            &facts.typed.message,
-            MessageEnvelope::new(
-                rdf.parsed.json_value.clone(),
-                Some((rdf.canonical_n_quads.clone(), rdf.canonical_hash)),
-            ),
+            &facts.input.body.message,
+            MessageEnvelope::from_rdf(&facts.input.body),
             (from, to),
         )
         .await

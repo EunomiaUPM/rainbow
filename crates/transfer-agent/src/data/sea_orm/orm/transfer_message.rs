@@ -22,7 +22,7 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use ymir::errors::Outcome;
 
-use crate::data::sea_orm::orm::helpers::{deser_enum, deser_json, ser_enum, ser_json};
+use crate::data::sea_orm::orm::helpers::OrmCodec;
 use crate::entities::ids::MessageId;
 use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::protocol::{ProtocolId, ProtocolMessageType};
@@ -54,10 +54,10 @@ impl Model {
         let id = MessageId::new(parse_urn(&self.id)?);
         let transfer_process_id = TransferProcessId::new(parse_urn(&self.transfer_process_id)?);
         let owner = Owner::new(self.user_id, self.user_role, self.visibility);
-        let direction = deser_enum::<Direction>(&self.direction)?;
-        let protocol = deser_enum::<ProtocolId>(&self.protocol)?;
+        let direction = OrmCodec::deser_enum::<Direction>(&self.direction)?;
+        let protocol = OrmCodec::deser_enum::<ProtocolId>(&self.protocol)?;
         let message_type = ProtocolMessageType(CompactString::from(self.message_type));
-        let envelope = deser_json::<MessageEnvelope>(self.envelope, "transfer_message.envelope")?;
+        let envelope = OrmCodec::deser_json::<MessageEnvelope>(self.envelope, "transfer_message.envelope")?;
         let occurred_at = self.occurred_at.with_timezone(&Utc);
 
         Ok(TransferMessage {
@@ -83,12 +83,12 @@ impl ActiveModel {
             user_id: Set(msg.owner().user_id.clone()),
             user_role: Set(msg.owner().role.clone()),
             visibility: Set(msg.owner().visibility.clone()),
-            direction: Set(ser_enum(&msg.direction())),
-            protocol: Set(ser_enum(msg.protocol())),
+            direction: Set(OrmCodec::ser_enum(&msg.direction())),
+            protocol: Set(OrmCodec::ser_enum(msg.protocol())),
             message_type: Set(msg.message_type().0.to_string()),
             state_transition_from: Set(msg.state_transition_from().to_string()),
             state_transition_to: Set(msg.state_transition_to().to_string()),
-            envelope: Set(ser_json(msg.envelope())),
+            envelope: Set(OrmCodec::ser_json(msg.envelope())),
             occurred_at: Set(msg.occurred_at().into()),
         }
     }

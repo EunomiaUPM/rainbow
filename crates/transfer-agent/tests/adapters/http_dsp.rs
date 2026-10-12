@@ -37,20 +37,19 @@ use std::sync::{Arc, Mutex};
 use tower::ServiceExt;
 use transfer_agent::data::repo::transfer_process::MockTransferProcessRepoTrait;
 use transfer_agent::entities::ids::{MessageId, TransferProcessId};
+use common::flow::{IdempotencyGuard, InMemoryIdempotencyStore};
 use transfer_agent::entities::message_envelope::MessageEnvelope;
 use transfer_agent::entities::protocol::{
     ProtocolId, ProtocolMessageType, TransferCorrelation, CONSUMER_PID_KEY, PROVIDER_PID_KEY,
 };
 use transfer_agent::entities::transfer_message::Direction;
 use transfer_agent::entities::transfer_process::TransferProcess;
-use transfer_agent::protocols::dsp::entities::idempotency::InMemoryIdempotencyStore;
 use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
 use transfer_agent::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
-use transfer_agent::protocols::dsp::services::dsp_flow::idempotency_guard::TransferIdempotencyGuard;
 use transfer_agent::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
 use transfer_agent::protocols::dsp::services::connector_resolver::MockConnectorResolverTrait;
-use transfer_agent::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
+use transfer_agent::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
 use transfer_agent::protocols::dsp::services::dsp_domain_loader::MockDspDomainLoaderTrait;
 use transfer_agent::protocols::dsp::services::validator::TransferValidators;
 use transfer_agent::services::transfer_message::views::TransferMessageView;
@@ -239,7 +238,7 @@ fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
             Arc::new(TransferValidators::input_rules()),
             Arc::new(TransferValidators::fact_rules()),
         )
-        .guard(Arc::new(TransferIdempotencyGuard::new(Arc::new(
+        .guard(Arc::new(IdempotencyGuard::new(Arc::new(
             InMemoryIdempotencyStore::new(),
         ))))
         .build(),

@@ -18,18 +18,14 @@
 //! Messages, states, contexts and idempotency of the DSP transfer process.
 
 pub mod ack;
-pub mod auth;
 pub mod context_common;
 pub mod context_dsp;
 pub mod context_rpc;
 pub mod data_address;
-pub mod dataplane_signal;
-pub mod idempotency;
 pub mod message_types;
 pub mod protocol_fields;
 pub mod rdf_extractor_dsp;
 pub mod rdf_extractor_rpc;
-pub mod rdf_message;
 pub mod state;
 pub mod state_metadata;
 pub mod tck;

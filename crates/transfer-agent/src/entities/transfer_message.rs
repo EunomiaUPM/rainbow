@@ -24,10 +24,7 @@ use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::protocol::{ProtocolId, ProtocolMessageType};
 use ymir::errors::{Errors, Outcome};
 
-/// Each `TransferProcess` created by a protocol interaction leaves messages.
-/// For traceability those messages are saved under `TransferMessage`.
-/// Some messages are Inbound (incoming protocol-shaped messages), some are
-/// Outbound (outgoing protocol-shaped messages).
+/// A protocol message of a transfer process, inbound or outbound, kept for traceability.
 #[derive(Clone)]
 pub struct TransferMessage {
     // Common
@@ -98,12 +95,6 @@ impl TransferMessage {
     }
     pub fn occurred_at(&self) -> DateTime<Utc> {
         self.occurred_at
-    }
-    pub fn is_inbound(&self) -> bool {
-        self.direction == Direction::Inbound
-    }
-    pub fn is_outbound(&self) -> bool {
-        self.direction == Direction::Outbound
     }
 }
 

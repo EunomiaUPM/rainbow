@@ -20,7 +20,6 @@ use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
-use crate::protocols::dsp::facades::dataplane_facade::to_dataplane_address;
 use dataplane::{
     DataplaneAddress, DataplaneCommand, DataplaneContinuation, DataplaneInitCommandDirection,
     DataplaneInitCommandTypes, DataplaneManager,
@@ -47,23 +46,21 @@ impl DataPlaneStrategy for ProviderPushStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
-        let id = ctx.process_urn("provider push request_post")?;
+        let id = ctx.process_id.clone();
         let TransferContextConnectorRole::ProviderHavingConnector(connector_instance) =
             &ctx.connector_instance
         else {
             return Err(Errors::crazy("Connector instance should be defined", None));
         };
-        let data_address_dto = ctx
-            .data_address
-            .as_ref()
+        let data_address: DataplaneAddress = ctx
+            .dataplane_address()
             .ok_or_else(|| Errors::crazy("Data address instance should be defined", None))?;
-        let data_address: DataplaneAddress = to_dataplane_address(data_address_dto);
         let _res = mgr
             .execute_command(DataplaneCommand::SetInit(
                 DataplaneInitCommandTypes::AsProvider {
                     transfer_process_id: id,
                     owner: ctx.owner(),
-                    connector_instance: connector_instance.clone(),
+                    connector_instance: connector_instance.as_ref().clone(),
                     direction: DataplaneInitCommandDirection::Push {
                         data_address: Some(data_address),
                     },
@@ -91,7 +88,7 @@ impl DataPlaneStrategy for ProviderPushStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         // in this case restart works same
-        let id = ctx.process_urn("provider push start_pre")?;
+        let id = ctx.process_id.clone();
         mgr.execute_command(DataplaneCommand::SetSubscribing(DataplaneContinuation {
             transfer_dto_urn: id,
         }))
@@ -115,7 +112,7 @@ impl DataPlaneStrategy for ProviderPushStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
-        let id = ctx.process_urn("provider push suspend_post")?;
+        let id = ctx.process_id.clone();
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
             transfer_dto_urn: id,
         }))
@@ -140,7 +137,7 @@ impl DataPlaneStrategy for ProviderPushStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("provider push complete_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -163,7 +160,7 @@ impl DataPlaneStrategy for ProviderPushStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("provider push terminate_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())

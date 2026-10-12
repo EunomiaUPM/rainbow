@@ -23,14 +23,11 @@ use catalog_agent::services::datasets::DatasetServiceTrait;
 use catalog_agent::services::distributions::DistributionServiceTrait;
 use common::config::services::TransferConfig;
 use common::config::services::traits::TransferConfigTrait;
-use common::config::types::traits::CommonConfigTrait;
 use common::facades::AuthPorts;
 use common::module_loader::root_context::RootContext;
 use connector::ConnectorInstanceFacadeTrait;
 use dataplane::setup::{DataplaneModule, DataplanePorts};
 use negotiation_agent::services::agreement::AgreementServiceTrait;
-use ymir::config::traits::HostsConfigTrait;
-use ymir::config::types::HostType;
 use ymir::errors::Outcome;
 
 use crate::protocols::dsp::facades::catalog_facade::CatalogFacadeTrait;
@@ -95,7 +92,6 @@ impl TransferPorts {
     }
 
     /// The dataplane always runs inside transfer; only its connector lookups follow the mode.
-    /// Its proxy is mounted on this process's own HTTP host.
     async fn dataplane(
         config: &TransferConfig,
         root: &RootContext,
@@ -103,10 +99,7 @@ impl TransferPorts {
     ) -> Outcome<DataplanePort> {
         let module = DataplaneModule::compose(config, root, ports).await?;
         Ok(DataplanePort {
-            facade: Arc::new(DataPlaneLocalFacade::new(
-                module.local_manager(),
-                config.common().get_host(HostType::Http),
-            )),
+            facade: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
             module,
         })
     }

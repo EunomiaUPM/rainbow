@@ -18,7 +18,6 @@
 use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
-use crate::protocols::dsp::facades::dataplane_facade::to_dataplane_address;
 use dataplane::{
     DataplaneAddress, DataplaneCommand, DataplaneCommandResponse, DataplaneContinuation,
     DataplaneInitCommandDirection, DataplaneInitCommandTypes, DataplaneManager,
@@ -35,12 +34,10 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        let transfer_id = ctx.process_urn("consumer push request_pre")?;
-        let data_address_dto = ctx
-            .data_address
-            .as_ref()
+        let transfer_id = ctx.process_id.clone();
+        let data_address: DataplaneAddress = ctx
+            .dataplane_address()
             .ok_or_else(|| Errors::crazy("Data address instance should be defined", None))?;
-        let data_address: DataplaneAddress = to_dataplane_address(data_address_dto);
         let res = mgr
             .execute_command(DataplaneCommand::SetInit(
                 DataplaneInitCommandTypes::AsConsumer {
@@ -89,7 +86,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        let id = ctx.process_urn("consumer push start_post")?;
+        let id = ctx.process_id.clone();
         mgr.execute_command(DataplaneCommand::SetSubscribing(DataplaneContinuation {
             transfer_dto_urn: id,
         }))
@@ -113,7 +110,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
-        let id = ctx.process_urn("consumer push suspend_post")?;
+        let id = ctx.process_id.clone();
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
             transfer_dto_urn: id,
         }))
@@ -137,7 +134,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("consumer push complete_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -159,7 +156,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("consumer push terminate_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())

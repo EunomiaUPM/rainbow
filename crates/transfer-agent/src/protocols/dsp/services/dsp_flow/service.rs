@@ -25,13 +25,13 @@ use serde_json::Value;
 use ymir::errors::Outcome;
 
 use crate::protocols::dsp::entities::context_dsp::{
-    TransferDSPContextDomain, TransferDSPContextTyped,
+    TransferDspFacts, TransferDspInput,
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::services::dsp_flow::handlers::request::RequestHandler;
 use crate::protocols::dsp::services::dsp_flow::handlers::transition::TransitionHandler;
 use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
+use crate::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
 use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// The five inbound transfer messages; `apply` picks the handler by message type.
@@ -50,30 +50,30 @@ impl TransferDspFlow {
 impl FlowTrait for TransferDspFlow {
     type Key = TransferDSPMessageType;
     type Caller = VerifiedPeer;
-    type Input = TransferDSPContextTyped;
-    type Facts = TransferDSPContextDomain;
+    type Input = TransferDspInput;
+    type Facts = TransferDspFacts;
     type Output = TransferDspReply;
 
     /// The route's message type; the body's own type is checked against it by a shape rule.
-    fn key(&self, input: &TransferDSPContextTyped) -> TransferDSPMessageType {
-        input.rdf.parsed.dsp_message_type.clone()
+    fn key(&self, input: &TransferDspInput) -> TransferDSPMessageType {
+        input.route.clone()
     }
 
     async fn load(
         &self,
         _cx: &FlowCx<'_, VerifiedPeer>,
-        input: TransferDSPContextTyped,
-    ) -> Outcome<TransferDSPContextDomain> {
+        input: TransferDspInput,
+    ) -> Outcome<TransferDspFacts> {
         self.loader.load(input).await
     }
 
     async fn apply(
         &self,
         _cx: &FlowCx<'_, VerifiedPeer>,
-        facts: TransferDSPContextDomain,
+        facts: TransferDspFacts,
         _reply: Option<Value>,
     ) -> Outcome<TransferDspReply> {
-        match facts.typed.message {
+        match facts.input.body.message {
             TransferDSPMessageType::TransferRequestMessage => {
                 RequestHandler::handle(&self.deps, facts).await
             }

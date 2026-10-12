@@ -48,53 +48,21 @@ pub struct DataplaneHookContext {
 }
 
 impl DataplaneHookContext {
-    /// Process id; `location` names the hook in errors.
-    pub fn process_urn(&self, _location: &str) -> Outcome<Urn> {
-        Ok(self.process_id.clone())
-    }
-
     pub fn owner(&self) -> Owner {
         self.owner.clone()
     }
-}
 
-/// Converts the message's `DataAddress` (common wire type) into a dataplane address. A free
-/// function rather than a `From` impl: both types are foreign, so the orphan rule
-/// forbids the trait impl. Endpoint properties are flattened by name
-/// (`authType`, `authorization`), same as the DTO path.
-pub(super) fn to_dataplane_address(addr: &DataAddress) -> DataplaneAddress {
-    let prop = |name: &str| {
-        addr.endpoint_properties
-            .iter()
-            .find(|p| p.name == name)
-            .map(|p| p.value.clone())
-    };
-    DataplaneAddress {
-        endpoint_type: addr.endpoint_type.clone(),
-        // Optional on the wire (DSP Appendix A), required by the data plane. The
-        // domain rule that demands it for push transfers is what makes this safe.
-        endpoint: addr.endpoint.clone().unwrap_or_default(),
-        authorization_type: prop("authType"),
-        authorization: prop("authorization"),
+    /// The message's data address as the dataplane takes it; the endpoint is required there.
+    pub fn dataplane_address(&self) -> Option<DataplaneAddress> {
+        self.data_address
+            .clone()
+            .map(|address| DataplaneAddress::from(DataAddressDto::from(address)))
     }
 }
 
 impl From<DataAddressDto> for DataplaneAddress {
     fn from(dto: DataAddressDto) -> Self {
-        DataplaneAddress {
-            endpoint_type: dto.endpoint_type,
-            endpoint: dto.endpoint.unwrap_or_default(),
-            authorization_type: dto
-                .endpoint_properties
-                .as_deref()
-                .and_then(|ps| ps.iter().find(|p| p.name == "authType"))
-                .map(|p| p.value.clone()),
-            authorization: dto
-                .endpoint_properties
-                .as_deref()
-                .and_then(|ps| ps.iter().find(|p| p.name == "authorization"))
-                .map(|p| p.value.clone()),
-        }
+        Self::from(&dto)
     }
 }
 

@@ -27,6 +27,7 @@ use common::dsp_common::DspActor;
 use common::facades::grants_facade::{send_with_peer_token, GrantsFacadeTrait};
 use common::flow::{FlowCx, FlowTrait};
 use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::rdf::RdfMessage;
 use serde_json::{json, Map, Value};
 use url::Url;
 use urn::Urn;
@@ -41,6 +42,7 @@ use crate::entities::protocol::{
     ProtocolId, ProtocolState, StateMetadata, TransferDirection, TransferRole, CONSUMER_PID_KEY,
     PROVIDER_PID_KEY,
 };
+use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::transfer_message::Direction;
 use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
@@ -48,8 +50,8 @@ use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
 use crate::protocols::dsp::entities::context_rpc::{TransferRpcCommand, TransferRpcFacts};
-use crate::protocols::dsp::entities::rdf_message::RdfDspMessage;
-use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DIRECTION_PROPERTY;
+use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
+use crate::protocols::dsp::services::dsp_domain_loader::service::DIRECTION_PROPERTY;
 use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
 
 /// Sends the five transfer messages to the peer and moves the local process with them.
@@ -101,7 +103,7 @@ impl TransferRpcFlow {
                 "{}/transfers/request",
                 Self::base(body.provider_address.as_deref().unwrap_or_default())
             ),
-            outgoing: RdfDspMessage::build(&command.message, Map::new()).await?,
+            outgoing: RdfMessage::<DspTransfer>::build(&command.message, Map::new()).await?,
             is_restart: false,
             command: command.clone(),
         };
@@ -114,7 +116,7 @@ impl TransferRpcFlow {
             .await?
             .map(DataAddress::from)
             .or(sink);
-        facts.outgoing = RdfDspMessage::build(
+        facts.outgoing = RdfMessage::<DspTransfer>::build(
             &command.message,
             Self::members(json!({
                 "consumerPid": consumer_pid,
@@ -189,7 +191,7 @@ impl TransferRpcFlow {
             owner: process.owner().clone(),
             role,
             peer_id,
-            outgoing: RdfDspMessage::build(&command.message, Map::new()).await?,
+            outgoing: RdfMessage::<DspTransfer>::build(&command.message, Map::new()).await?,
             is_restart,
             process: Some(process),
             command: command.clone(),
@@ -204,7 +206,7 @@ impl TransferRpcFlow {
                 .map(DataAddress::from),
             _ => None,
         };
-        facts.outgoing = RdfDspMessage::build(
+        facts.outgoing = RdfMessage::<DspTransfer>::build(
             &command.message,
             Self::members(json!({
                 "consumerPid": consumer_pid,
@@ -311,7 +313,7 @@ impl TransferRpcFlow {
                 &process,
                 Direction::Outbound,
                 &facts.command.message,
-                facts.outgoing.envelope(),
+                MessageEnvelope::from_rdf(&facts.outgoing),
                 (&requested, &requested),
             )
             .await?;
@@ -371,7 +373,7 @@ impl TransferRpcFlow {
                 &process,
                 Direction::Outbound,
                 &facts.command.message,
-                facts.outgoing.envelope(),
+                MessageEnvelope::from_rdf(&facts.outgoing),
                 (&from, &to),
             )
             .await?;
@@ -429,7 +431,7 @@ impl FlowTrait for TransferRpcFlow {
         let read = match &raw {
             Value::Null => json!({ "raw": Value::Null }),
             answer => {
-                let message = RdfDspMessage::read(answer.clone()).await?;
+                let message = RdfMessage::<DspTransfer>::read(answer.clone()).await?;
                 json!({ "type": message.message.to_string(), "fields": message.fields, "raw": answer })
             }
         };

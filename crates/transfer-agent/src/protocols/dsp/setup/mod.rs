@@ -20,21 +20,20 @@ use std::sync::{Arc, Mutex};
 use axum::Router;
 use common::boot::workers::BackgroundWorker;
 use common::config::types::traits::CommonConfigTrait;
+use common::flow::{IdempotencyGuard, InMemoryIdempotencyStore};
 use common::flow::{AutocommitUnitOfWorkFactory, FlowRunner};
 use common::module_loader::service_module::ServiceModuleTrait;
 use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
 
-use crate::protocols::dsp::entities::idempotency::InMemoryIdempotencyStore;
 use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::services::dsp_flow::idempotency_guard::TransferIdempotencyGuard;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use crate::protocols::dsp::http::dsp::DspRouter;
 use crate::protocols::dsp::http::rpc::TransferRpcRouter;
 use crate::protocols::dsp::services::validator::rpc_registry::TransferRpcRules;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
 use crate::protocols::dsp::services::dsp_domain_loader::agreement_resolver::NegotiationAgreementResolver;
-use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
+use crate::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
 use crate::protocols::dsp::services::validator::TransferValidators;
 use crate::protocols::dsp::services::tck::guard::TckGuard;
 use crate::protocols::dsp::services::tck::worker::TckWorker;
@@ -96,7 +95,7 @@ impl DspModule {
             Arc::new(TransferValidators::input_rules()),
             Arc::new(TransferValidators::fact_rules()),
         )
-        .guard(Arc::new(TransferIdempotencyGuard::new(Arc::new(
+        .guard(Arc::new(IdempotencyGuard::new(Arc::new(
             InMemoryIdempotencyStore::new(),
         ))));
         if let Some(guard) = &tck_guard {

@@ -19,7 +19,7 @@ use common::oauth::{OwnedTrait, Owner, OwnerScope};
 use std::sync::Arc;
 
 use crate::data::repo::transfer_process::{TransferProcessRepoErrors, TransferProcessRepoTrait};
-use crate::data::sea_orm::orm::ser_enum;
+use crate::data::sea_orm::orm::OrmCodec;
 use crate::data::sea_orm::orm::transfer_process as orm;
 use crate::entities::commands::{EditTransferProcessCommand, NewTransferProcessCommand};
 use crate::entities::filters::TransferProcessFilter;
@@ -66,7 +66,7 @@ impl SeaOrmTransferProcessRepo {
             q = q.filter(orm::Column::UserId.eq(user_id.as_str()));
         }
         if let Some(protocol) = &filters.protocol {
-            q = q.filter(orm::Column::Protocol.eq(ser_enum(protocol)));
+            q = q.filter(orm::Column::Protocol.eq(OrmCodec::ser_enum(protocol)));
         }
         if let Some(state) = &filters.state {
             let state_str = state.0.as_str();
@@ -78,7 +78,7 @@ impl SeaOrmTransferProcessRepo {
             );
         }
         if let Some(role) = &filters.role {
-            q = q.filter(orm::Column::Role.eq(ser_enum(role)));
+            q = q.filter(orm::Column::Role.eq(OrmCodec::ser_enum(role)));
         }
         if let Some(agreement_id) = &filters.agreement_id {
             q = q.filter(orm::Column::AgreementId.eq(agreement_id.to_string()));

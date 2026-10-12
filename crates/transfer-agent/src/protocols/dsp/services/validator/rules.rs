@@ -170,25 +170,6 @@ impl TransferRules {
         Ok(())
     }
 
-    /// Correlate incoming message PIDs with stored process PIDs.
-    pub fn correlation(
-        process_consumer: Option<&str>,
-        process_provider: Option<&str>,
-        message_consumer: Option<&str>,
-        message_provider: Option<&str>,
-        path: impl Into<Path>,
-    ) -> Result<(), Violations> {
-        let p = path.into();
-        if process_consumer != message_consumer || process_provider != message_provider {
-            return Err(violation(
-                p,
-                codes::NOT_ALLOWED,
-                "message pids and process pids are not correlated",
-            ));
-        }
-        Ok(())
-    }
-
     /// Correlate URI path PID with body PID.
     pub fn uri_and_pid(
         uri_id: &str,

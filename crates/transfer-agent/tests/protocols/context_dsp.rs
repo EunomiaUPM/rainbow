@@ -15,19 +15,16 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP request context: reading the raw request, RDF canonicalization and typed field
-//! extraction.
-
-use transfer_agent::entities::protocol::ProtocolId;
-use transfer_agent::protocols::dsp::entities::auth::TransferDSPAuthn;
-use transfer_agent::protocols::dsp::entities::context_common::TransferContextRaw;
-use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use common::facades::grants_facade::VerifiedPeer;
-use common::oauth::RolePath;
+//! The inbound DSP input: reading the request, RDF canonicalization, field extraction and the
+//! idempotency key.
 
 use axum::extract::Request;
-use transfer_agent::entities::transfer_message::Direction;
-use transfer_agent::protocols::dsp::entities::context_dsp::*;
+use common::facades::grants_facade::VerifiedPeer;
+use common::oauth::RolePath;
+use transfer_agent::entities::protocol::ProtocolId;
+use transfer_agent::protocols::dsp::entities::context_dsp::TransferDspInput;
+use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use ymir::errors::Outcome;
 
 fn mate() -> VerifiedPeer {
     VerifiedPeer {
@@ -40,9 +37,7 @@ fn mate() -> VerifiedPeer {
 fn request_with_mate(body: &'static str) -> Request {
     let mut req = Request::builder()
         .method("POST")
-        .uri("/transfers/123/start?x=1")
-        .header("x-request-id", "req-1")
-        .header("authorization", "Bearer eyJabc")
+        .uri("/transfers/123/start")
         .body(axum::body::Body::from(body))
         .unwrap();
     // The auth middleware would have inserted this before we run.
@@ -50,39 +45,44 @@ fn request_with_mate(body: &'static str) -> Request {
     req
 }
 
-/// The raw context reads request id, paths, token and the participant the auth
-/// middleware resolved.
-#[tokio::test]
-async fn from_request_reads_wire_fields_and_resolved_participant() {
-    let raw = TransferContextRaw::<TransferDSPAuthn>::from_request(request_with_mate("{}"))
-        .await
-        .unwrap();
-    assert_eq!(raw.request_id.as_str(), "req-1");
-    assert_eq!(raw.request_path, "/transfers/123/start");
-    assert_eq!(raw.request_full_path, "/transfers/123/start?x=1");
-    assert_eq!(raw.authn.token_type, "Bearer");
-    assert_eq!(raw.authn.token_content, "eyJabc");
-    assert_eq!(
-        raw.authn.associated_participant.participant_id,
-        "did:example:provider"
-    );
-    assert!(matches!(raw.direction, Direction::Inbound));
+async fn try_input(body: &'static str, route: TransferDSPMessageType) -> Outcome<TransferDspInput> {
+    TransferDspInput::read(&ProtocolId::Dsp2025_1, &route, request_with_mate(body)).await
 }
 
-/// Without Mates in the extensions this is a wiring error, not a silent None.
-#[tokio::test]
-async fn from_request_fails_without_auth_middleware() {
-    let req = Request::builder().body(axum::body::Body::empty()).unwrap();
-    assert!(
-        TransferContextRaw::<TransferDSPAuthn>::from_request(req)
-            .await
-            .is_err()
-    );
+async fn rdf_from_typed(body: &'static str, route: TransferDSPMessageType) -> TransferDspInput {
+    try_input(body, route).await.unwrap()
 }
 
-/// Real JSON-LD expansion resolves everything to full IRIs, so the same
-/// TransferStartMessage with fields in different source order canonicalizes
-/// to identical n-quads.
+async fn rdf_from(body: &'static str) -> TransferDspInput {
+    rdf_from_typed(body, TransferDSPMessageType::TransferStartMessage).await
+}
+
+/// The input keeps the peer the auth middleware resolved and the route's message type.
+#[tokio::test]
+async fn read_keeps_the_resolved_peer_and_the_route() {
+    let input = rdf_from(
+        r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"TransferStartMessage","providerPid":"urn:uuid:pp","consumerPid":"urn:uuid:cc"}"#,
+    )
+    .await;
+    assert_eq!(input.peer.participant_id, "did:example:provider");
+    assert_eq!(input.route, TransferDSPMessageType::TransferStartMessage);
+}
+
+/// Without the peer in the extensions this is a wiring error, not a silent default.
+#[tokio::test]
+async fn read_fails_without_auth_middleware() {
+    let req = Request::builder().body(axum::body::Body::from("{}")).unwrap();
+    let read = TransferDspInput::read(
+        &ProtocolId::Dsp2025_1,
+        &TransferDSPMessageType::TransferStartMessage,
+        req,
+    )
+    .await;
+    assert!(read.is_err());
+}
+
+/// Expansion resolves everything to full IRIs, so field order does not change the canonical
+/// hash, and different content does.
 #[tokio::test]
 async fn canonical_hash_is_deterministic_and_key_order_independent() {
     let a = rdf_from(
@@ -94,11 +94,11 @@ async fn canonical_hash_is_deterministic_and_key_order_independent() {
     )
     .await;
     assert!(
-        !a.canonical_n_quads.is_empty(),
+        !a.body.canonical_n_quads.is_empty(),
         "expansion must yield quads"
     );
     assert_eq!(
-        a.canonical_hash, b.canonical_hash,
+        a.body.canonical_hash, b.body.canonical_hash,
         "canonicalization must be key-order independent"
     );
 
@@ -108,7 +108,7 @@ async fn canonical_hash_is_deterministic_and_key_order_independent() {
     )
     .await;
     assert_ne!(
-        a.canonical_hash, c.canonical_hash,
+        a.body.canonical_hash, c.body.canonical_hash,
         "different content must hash differently"
     );
 }
@@ -120,19 +120,19 @@ async fn extractor_pulls_pids_message_and_data_address() {
         r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"TransferStartMessage","providerPid":"urn:uuid:pp","consumerPid":"urn:uuid:cc","dataAddress":{"@type":"DataAddress","endpointType":"HttpData","endpoint":"http://example.com/data","endpointProperties":[]}}"#,
     )
     .await;
-    let typed = TransferDSPContextTyped::from_rdf(rdf).unwrap();
-    assert_eq!(typed.fields.provider_pid.as_deref(), Some("urn:uuid:pp"));
-    assert_eq!(typed.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
+    let typed = rdf;
+    assert_eq!(typed.body.fields.provider_pid.as_deref(), Some("urn:uuid:pp"));
+    assert_eq!(typed.body.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
     assert!(
         !typed.idempotency_key.as_str().is_empty(),
         "the effective key is always derived, never left empty"
     );
     assert_eq!(
-        typed.fields.data_address.unwrap().endpoint.as_deref(),
+        typed.body.fields.data_address.unwrap().endpoint.as_deref(),
         Some("http://example.com/data")
     );
     assert!(matches!(
-        typed.message,
+        typed.body.message,
         TransferDSPMessageType::TransferStartMessage
     ));
 }
@@ -146,19 +146,17 @@ async fn typed_carries_the_request_message_fields() {
         TransferDSPMessageType::TransferRequestMessage,
     )
     .await;
-    let typed = TransferDSPContextTyped::from_rdf(rdf).unwrap();
-    assert_eq!(typed.fields.agreement_id.as_deref(), Some("urn:uuid:ag"));
+    let typed = rdf;
+    assert_eq!(typed.body.fields.agreement_id.as_deref(), Some("urn:uuid:ag"));
     assert_eq!(
-        typed.fields.callback_address.as_deref(),
+        typed.body.fields.callback_address.as_deref(),
         Some("https://example.com/callback")
     );
-    assert_eq!(typed.fields.format.as_deref(), Some("example:HTTP_PUSH"));
+    assert_eq!(typed.body.fields.format.as_deref(), Some("example:HTTP_PUSH"));
 }
 
-/// The same message as one nested object and as an `@graph` of
-/// mutually-referencing nodes. Both expand to the same RDF graph — the
-/// canonicalizer gives them the same hash — so both must extract the same
-/// fields. Requiring the expansion to be a single node rejected the second.
+/// A message as one nested object and as an `@graph` of referencing nodes is the same graph,
+/// so both hash and extract the same.
 #[tokio::test]
 async fn graph_form_extracts_the_same_as_the_nested_form() {
     const NESTED: &str = r#"{
@@ -199,19 +197,16 @@ async fn graph_form_extracts_the_same_as_the_nested_form() {
     let nested = rdf_from_typed(NESTED, TransferDSPMessageType::TransferRequestMessage).await;
     let graph = rdf_from_typed(GRAPH, TransferDSPMessageType::TransferRequestMessage).await;
     assert_eq!(
-        nested.canonical_hash, graph.canonical_hash,
+        nested.body.canonical_hash, graph.body.canonical_hash,
         "the two forms are the same graph"
     );
 
-    let nested = TransferDSPContextTyped::from_rdf(nested).unwrap();
-    let graph = TransferDSPContextTyped::from_rdf(graph).unwrap();
-
-    assert_eq!(graph.fields, nested.fields, "both forms extract the same");
+    assert_eq!(graph.body.fields, nested.body.fields, "both forms extract the same");
     assert_eq!(graph.idempotency_key, nested.idempotency_key);
 
     // The dataAddress arrives as a bare `{"@id": …}` reference in the graph
     // form, so it only resolves if references are followed.
-    let address = graph.fields.data_address.expect("dataAddress must resolve");
+    let address = graph.body.fields.data_address.expect("dataAddress must resolve");
     assert_eq!(address.endpoint.as_deref(), Some("http://example.com"));
     assert_eq!(address.endpoint_type, "https://w3id.org/idsa/v4.1/HTTP");
     let mut properties: Vec<(String, String)> = address
@@ -231,7 +226,7 @@ async fn graph_form_extracts_the_same_as_the_nested_form() {
 }
 
 /// The body's `@type` wins over the route's: extraction reports what arrived,
-/// and disagreeing with the endpoint is the manager's to reject.
+/// and disagreeing with the endpoint is an input rule's to reject.
 #[tokio::test]
 async fn the_body_type_is_read_even_when_the_route_disagrees() {
     let rdf = rdf_from_typed(
@@ -239,25 +234,26 @@ async fn the_body_type_is_read_even_when_the_route_disagrees() {
         TransferDSPMessageType::TransferRequestMessage,
     )
     .await;
-    let typed = TransferDSPContextTyped::from_rdf(rdf).unwrap();
-    assert_eq!(typed.message, TransferDSPMessageType::TransferProcess);
+    let typed = rdf;
+    assert_eq!(typed.body.message, TransferDSPMessageType::TransferProcess);
     assert_eq!(
-        typed.rdf.parsed.dsp_message_type,
+        typed.route,
         TransferDSPMessageType::TransferRequestMessage,
         "the route's own type stays available to compare against"
     );
-    assert_eq!(typed.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
+    assert_eq!(typed.body.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
 }
 
 /// The one thing extraction still cannot do: build fields out of a body that
 /// declares no DSP message type at all.
 #[tokio::test]
 async fn a_body_declaring_no_message_type_is_rejected() {
-    let rdf = rdf_from(
+    let read = try_input(
         r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"DataAddress","endpointType":"https://w3id.org/idsa/v4.1/HTTP"}"#,
+        TransferDSPMessageType::TransferStartMessage,
     )
     .await;
-    assert!(TransferDSPContextTyped::from_rdf(rdf).is_err());
+    assert!(read.is_err());
 }
 
 /// A message without dataAddress or pids extracts to None, not an error.
@@ -265,36 +261,7 @@ async fn a_body_declaring_no_message_type_is_rejected() {
 async fn extractor_tolerates_missing_optional_fields() {
     let rdf =
         rdf_from(r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"TransferStartMessage"}"#).await;
-    let typed = TransferDSPContextTyped::from_rdf(rdf).unwrap();
-    assert!(typed.fields.provider_pid.is_none());
-    assert!(typed.fields.data_address.is_none());
-}
-
-async fn rdf_from_typed(
-    body: &'static str,
-    message_type: TransferDSPMessageType,
-) -> TransferDSPContextRdf {
-    let raw = TransferContextRaw::<TransferDSPAuthn>::from_request(request_with_mate(body))
-        .await
-        .unwrap();
-    let json: serde_json::Value = serde_json::from_slice(&raw.body_bytes).unwrap();
-    let parsed =
-        TransferDSPContextParsed::from_raw(raw, &ProtocolId::Dsp2025_1, &message_type, json)
-            .unwrap();
-    TransferDSPContextRdf::from_parsed(parsed).await.unwrap()
-}
-
-async fn rdf_from(body: &'static str) -> TransferDSPContextRdf {
-    let raw = TransferContextRaw::<TransferDSPAuthn>::from_request(request_with_mate(body))
-        .await
-        .unwrap();
-    let json: serde_json::Value = serde_json::from_slice(&raw.body_bytes).unwrap();
-    let parsed = TransferDSPContextParsed::from_raw(
-        raw,
-        &ProtocolId::Dsp2025_1,
-        &TransferDSPMessageType::TransferStartMessage,
-        json,
-    )
-    .unwrap();
-    TransferDSPContextRdf::from_parsed(parsed).await.unwrap()
+    let typed = rdf;
+    assert!(typed.body.fields.provider_pid.is_none());
+    assert!(typed.body.fields.data_address.is_none());
 }

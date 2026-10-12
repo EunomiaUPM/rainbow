@@ -127,12 +127,6 @@ fn transfer_rules_pids_and_uri_correlation() {
         TransferRules::uri_and_pid("urn:uuid:1", Some("urn:uuid:2"), None, &Consumer, "uri")
             .is_err()
     );
-
-    // Stored PID correlation
-    assert!(TransferRules::correlation(Some("c"), Some("p"), Some("c"), Some("p"), "pids").is_ok());
-    assert!(
-        TransferRules::correlation(Some("c"), Some("p"), Some("c"), Some("other"), "pids").is_err()
-    );
 }
 
 /// Every registry has a validator for each DSP transfer message.

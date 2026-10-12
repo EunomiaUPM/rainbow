@@ -21,22 +21,20 @@
 use std::str::FromStr;
 
 use common::dsp_common::data_address::DataAddress;
-use common::eunomia::{EunomiaProfile, EUNOMIA_CONTEXT_URL};
 use common::oauth::Owner;
-use common::rdf::ExpandedDoc;
+use common::rdf::{RdfMessage, RdfProtocolTrait};
 use serde::Serialize;
 use serde_json::{json, Value};
 use urn::Urn;
-use ymir::errors::{BadFormat, Errors, Outcome};
+use ymir::errors::Outcome;
 
 use crate::entities::protocol::{TransferDirection, TransferRole};
 use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::context_common::TransferContextConnectorRole;
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::entities::rdf_extractor_dsp::ExtractProtocolFields;
+use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
 use crate::protocols::dsp::entities::rdf_extractor_rpc::EunomiaTransfer;
-use crate::protocols::dsp::entities::rdf_message::RdfDspMessage;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
@@ -64,7 +62,7 @@ impl TransferRpcBody {
     /// The body as a eunomia JSON-LD message of the RPC that sends `message`.
     pub fn to_json_ld(&self, message: &TransferDSPMessageType) -> Value {
         let mut json = json!({
-            "@context": EUNOMIA_CONTEXT_URL,
+            "@context": EunomiaTransfer::context(),
             "@type": EunomiaTransfer::compact_type(message),
         });
         if let (Value::Object(object), Ok(Value::Object(members))) =
@@ -97,31 +95,11 @@ impl TransferRpcCommand {
 
     /// Reads a eunomia RPC body; its `@type` must be the RPC of the route's `message`.
     pub async fn read(message: &TransferDSPMessageType, json: Value) -> Outcome<Self> {
-        let expansion = EunomiaProfile::shared().expand(&json).await?;
-        let doc = ExpandedDoc::new(&expansion.expanded).ok_or_else(|| {
-            Errors::format(
-                BadFormat::Received,
-                "expanded JSON-LD is not an array of node objects",
-                None,
-            )
-        })?;
-        let (declared, node) = EunomiaTransfer::root_message(&doc)?;
-        if &declared != message {
-            return Err(Errors::format(
-                BadFormat::Received,
-                format!(
-                    "body is a {} but this route sends a {}",
-                    EunomiaTransfer::compact_type(&declared),
-                    EunomiaTransfer::compact_type(message)
-                ),
-                None,
-            ));
-        }
-        let body = EunomiaTransfer::extract(&node)?;
+        let read = RdfMessage::<EunomiaTransfer>::read_as(message, json).await?;
         Ok(Self {
-            message: declared,
-            body,
-            json,
+            message: read.message,
+            body: read.fields,
+            json: read.json,
         })
     }
 
@@ -144,7 +122,7 @@ pub struct TransferRpcFacts {
     pub owner: Owner,
     pub peer_id: String,
     pub target_url: String,
-    pub outgoing: RdfDspMessage,
+    pub outgoing: RdfMessage<DspTransfer>,
     pub is_restart: bool,
 }
 

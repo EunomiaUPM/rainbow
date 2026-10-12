@@ -23,7 +23,7 @@ use crate::entities::commands::EditTransferProcessCommand;
 use crate::entities::protocol::{ProtocolState, StateMetadata, TransferRole};
 use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::entities::context_dsp::TransferDspFacts;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
@@ -34,10 +34,10 @@ use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 pub struct TransitionHandler;
 
 impl TransitionHandler {
-    #[tracing::instrument(level = "info", skip_all, err, fields(message = %facts.typed.message))]
+    #[tracing::instrument(level = "info", skip_all, err, fields(message = %facts.input.body.message))]
     pub async fn handle(
         deps: &TransferHandlerDeps,
-        mut facts: TransferDSPContextDomain,
+        mut facts: TransferDspFacts,
     ) -> Outcome<TransferDspReply> {
         let TransferContextProcessSlot::Existing(current) = &facts.process else {
             return Err(Errors::crazy(
@@ -45,7 +45,7 @@ impl TransitionHandler {
                 None,
             ));
         };
-        let target = Self::target_state(&facts.typed.message)?;
+        let target = Self::target_state(&facts.input.body.message)?;
         let from = current.state().clone();
         let to = ProtocolState(target.to_string().into());
         let id = current.id().as_urn().clone();
@@ -55,9 +55,9 @@ impl TransitionHandler {
             state: Some(to.clone()),
             state_metadata: Some(StateMetadata {
                 attribute: Some(Self::caused_by(facts.role).to_string()),
-                reason: (!facts.typed.fields.reason.is_empty())
-                    .then(|| facts.typed.fields.reason.clone()),
-                code: facts.typed.fields.code.clone(),
+                reason: (!facts.input.body.fields.reason.is_empty())
+                    .then(|| facts.input.body.fields.reason.clone()),
+                code: facts.input.body.fields.code.clone(),
             }),
             identifiers: None,
             properties: None,
@@ -69,7 +69,7 @@ impl TransitionHandler {
         let process = deps.reload(&id).await?;
         deps.record_message(&process, &facts, &from, &to).await?;
 
-        facts.process = TransferContextProcessSlot::Existing(process.clone());
+        facts.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
         Self::post_hook(deps, &facts).await?;
 
         let correlation = process.correlation();
@@ -81,7 +81,7 @@ impl TransitionHandler {
             ),
             created: false,
             process_version: process.version(),
-            idempotency_key: facts.typed.idempotency_key.clone(),
+            idempotency_key: facts.input.idempotency_key.clone(),
             agreement_id: facts.agreement.id.to_string(),
             role: facts.role,
         })
@@ -109,10 +109,10 @@ impl TransitionHandler {
         }
     }
 
-    async fn pre_hook(deps: &TransferHandlerDeps, facts: &TransferDSPContextDomain) -> Outcome<()> {
+    async fn pre_hook(deps: &TransferHandlerDeps, facts: &TransferDspFacts) -> Outcome<()> {
         use TransferDSPMessageType::*;
         let hooks = facts.dataplane_hooks()?;
-        match facts.typed.message {
+        match facts.input.body.message {
             TransferStartMessage => deps.dataplane.on_transfer_start_pre(&hooks).await?,
             TransferCompletionMessage => deps.dataplane.on_transfer_completion_pre(&hooks).await?,
             TransferSuspensionMessage => deps.dataplane.on_transfer_suspension_pre(&hooks).await?,
@@ -126,11 +126,11 @@ impl TransitionHandler {
 
     async fn post_hook(
         deps: &TransferHandlerDeps,
-        facts: &TransferDSPContextDomain,
+        facts: &TransferDspFacts,
     ) -> Outcome<()> {
         use TransferDSPMessageType::*;
         let hooks = facts.dataplane_hooks()?;
-        match facts.typed.message {
+        match facts.input.body.message {
             TransferStartMessage => deps.dataplane.on_transfer_start_post(&hooks).await?,
             TransferCompletionMessage => deps.dataplane.on_transfer_completion_post(&hooks).await?,
             TransferSuspensionMessage => deps.dataplane.on_transfer_suspension_post(&hooks).await?,

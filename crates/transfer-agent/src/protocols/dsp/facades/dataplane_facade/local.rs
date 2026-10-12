@@ -19,9 +19,6 @@ use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
-use crate::protocols::dsp::facades::dataplane_facade::strategy::{
-    strategy_for, strategy_for_request_pre,
-};
 use dataplane::DataplaneManager;
 use std::sync::Arc;
 use ymir::errors::Outcome;
@@ -29,18 +26,11 @@ use ymir::errors::Outcome;
 /// Drives the dataplane manager in-process; the dataplane always runs inside transfer.
 pub struct DataPlaneLocalFacade {
     dataplane_manager: Arc<DataplaneManager>,
-    proxy_base_url: String,
 }
 
 impl DataPlaneLocalFacade {
-    pub fn new(
-        dataplane_manager: Arc<DataplaneManager>,
-        proxy_base_url: String,
-    ) -> DataPlaneLocalFacade {
-        DataPlaneLocalFacade {
-            dataplane_manager,
-            proxy_base_url,
-        }
+    pub fn new(dataplane_manager: Arc<DataplaneManager>) -> DataPlaneLocalFacade {
+        DataPlaneLocalFacade { dataplane_manager }
     }
 }
 
@@ -51,7 +41,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for_request_pre(&ctx.data_address)
+        ctx.request_strategy()
             .on_request_pre(ctx, &self.dataplane_manager)
             .await
     }
@@ -61,7 +51,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_request_post(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -72,7 +62,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_start_pre(ctx, &self.dataplane_manager)
             .await
     }
@@ -82,7 +72,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_start_post(ctx, &self.dataplane_manager)
             .await
     }
@@ -92,7 +82,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_suspend_pre(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -103,7 +93,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_suspend_post(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -114,7 +104,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_complete_pre(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -125,7 +115,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_complete_post(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -136,7 +126,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_terminate_pre(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)
@@ -147,7 +137,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
         &self,
         ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for(ctx.role, ctx.transfer_direction)
+        ctx.strategy()
             .on_terminate_post(ctx, &self.dataplane_manager)
             .await?;
         Ok(None)

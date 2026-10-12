@@ -19,14 +19,11 @@
 
 use super::*;
 
-/// The over-collapse this exists to prevent: a transfer is started, suspended,
-/// then legitimately restarted with a byte-identical message. Keyed on protocol
-/// identity alone the restart looks like a replay and never runs; the process
-/// version tells them apart.
+/// A restart after a suspension repeats the start byte for byte; the process version tells
+/// it from a replay, which identity alone could not.
 #[tokio::test]
 async fn a_restart_after_a_suspension_is_not_a_replay() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     // Start #1 arrives with the process at version 5 and leaves it at 6.
     let start = start_message().await;
@@ -76,8 +73,7 @@ async fn a_restart_after_a_suspension_is_not_a_replay() {
 /// `process_version_after` yet, and must replay rather than execute twice.
 #[tokio::test]
 async fn a_retry_while_still_in_flight_replays() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let start = start_message().await;
     let IdempotencyVerdict::New(key) = guard.check(&start, Some(5)).await.unwrap() else {
@@ -92,17 +88,11 @@ async fn a_retry_while_still_in_flight_replays() {
     ));
 }
 
-/// Content still outranks the version: a genuinely different message on a
-/// moved-on process is a conflict, not a permitted new transition.
-///
-/// The difference has to be a term the DSP context defines *for this message
-/// type* — its scoped contexts give `TransferStartMessage` only `consumerPid`,
-/// `dataAddress` and `providerPid`, and anything else is dropped by expansion
-/// and so is invisible to both the guard and the field extractor.
+/// A different message on a moved-on process is still a conflict; the difference must be a
+/// term the start's scoped context defines, or expansion drops it.
 #[tokio::test]
 async fn different_content_conflicts_even_when_superseded() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let start = start_message().await;
     let IdempotencyVerdict::New(key) = guard.check(&start, Some(5)).await.unwrap() else {
@@ -125,8 +115,8 @@ async fn different_content_conflicts_even_when_superseded() {
     )
     .await;
     assert_ne!(
-        start_message().await.rdf.canonical_hash,
-        tampered.rdf.canonical_hash,
+        start_message().await.body.canonical_hash,
+        tampered.body.canonical_hash,
         "a differing dataAddress really is different content"
     );
     assert!(matches!(
@@ -135,15 +125,11 @@ async fn different_content_conflicts_even_when_superseded() {
     ));
 }
 
-/// A nested router hands the handler a path with the mount prefix stripped, so
-/// `/dsp/2024-1/transfers/request` and `/dsp/current/transfers/request` both
-/// arrive as `/request`. Without the version in the key, one peer's
-/// `consumerPid` would collide across the two versions a connector may serve
-/// side by side (DSP 4.3).
+/// Both versions' routes arrive as `/request` once the prefix is stripped, so the version in
+/// the key keeps a pid from colliding across them (DSP 4.3).
 #[tokio::test]
 async fn the_protocol_version_separates_otherwise_identical_messages() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
     let body = message("urn:uuid:cc", "https://c/cb");
 
     let v2025 = typed_versioned(
@@ -165,10 +151,6 @@ async fn the_protocol_version_separates_otherwise_identical_messages() {
     )
     .await;
 
-    assert_eq!(
-        v2025.rdf.parsed.raw.request_path, v2024.rdf.parsed.raw.request_path,
-        "the stripped path really is identical — the version is all that differs"
-    );
     assert_ne!(
         v2025.idempotency_key.as_str(),
         v2024.idempotency_key.as_str()

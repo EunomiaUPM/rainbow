@@ -21,7 +21,7 @@ use common::oauth::Owner;
 use crate::entities::protocol::{
     ProtocolId, ProtocolState, StateMetadata, TransferCorrelation, TransferRole,
 };
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use common::utils::json_merge;
 
 /// TransferProcess domain entity
@@ -72,9 +72,7 @@ impl TransferProcess {
         }
     }
 
-    /// TransferProcess entity constructor from arguments
-    /// Is same as having all pub in struct definition
-    /// But protecting version
+    /// Rebuilds a stored process; the fields stay private so only edits move the version.
     #[allow(clippy::too_many_arguments)]
     pub fn rehydrate(
         transfer_id: TransferProcessId,
@@ -170,11 +168,5 @@ impl TransferProcess {
 
     pub fn belongs_to(&self, owner: &Owner) -> bool {
         &self.owner == owner
-    }
-    pub fn uses_protocol(&self, protocol: &ProtocolId) -> bool {
-        &self.protocol == protocol
-    }
-    pub fn age(&self) -> Duration {
-        Utc::now() - self.created_at
     }
 }

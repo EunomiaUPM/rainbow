@@ -22,8 +22,7 @@ use super::*;
 /// The first message is new and claimed; the same message again is a replay.
 #[tokio::test]
 async fn first_message_is_new_then_a_retry_replays() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
     let typed = typed_from(
         "did:example:consumer",
         message("urn:uuid:cc", "https://c/cb"),
@@ -47,14 +46,11 @@ async fn first_message_is_new_then_a_retry_replays() {
     ));
 }
 
-/// The case the whole split exists for: a retry that took a different route
-/// through a proxy arrives with different bytes but the same statement. Keying
-/// on the wire hash would execute it twice; keying on protocol identity does
-/// not, and the canonical guard agrees it is the same message.
+/// A retry reserialized on the way (different bytes, same statement) replays: the key is
+/// protocol identity, not the bytes, and the canonical hash agrees.
 #[tokio::test]
 async fn reserialized_retry_is_a_replay_not_a_second_execution() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let a = typed_from(
         "did:example:consumer",
@@ -73,12 +69,11 @@ async fn reserialized_retry_is_a_replay_not_a_second_execution() {
     .await;
 
     assert_ne!(
-        a.rdf.parsed.raw.wire_hash(),
-        b.rdf.parsed.raw.wire_hash(),
-        "the bytes really do differ — a wire-hash key would miss the retry"
+        a.body.json, b.body.json,
+        "the bodies really do differ — a key on the bytes would miss the retry"
     );
     assert_eq!(
-        a.rdf.canonical_hash, b.rdf.canonical_hash,
+        a.body.canonical_hash, b.body.canonical_hash,
         "but it is the same statement"
     );
 
@@ -96,8 +91,7 @@ async fn reserialized_retry_is_a_replay_not_a_second_execution() {
 /// protocol violation, not a retry, so it must not get the cached ack.
 #[tokio::test]
 async fn same_pid_with_different_content_conflicts() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let first = typed_from(
         "did:example:consumer",
@@ -124,8 +118,7 @@ async fn same_pid_with_different_content_conflicts() {
 /// `consumerPid` must not collide into one record.
 #[tokio::test]
 async fn different_peers_reusing_a_pid_do_not_collide() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let a = typed_from("did:example:one", message("urn:uuid:cc", "https://one/cb")).await;
     let b = typed_from("did:example:two", message("urn:uuid:cc", "https://two/cb")).await;
@@ -144,13 +137,11 @@ async fn different_peers_reusing_a_pid_do_not_collide() {
     );
 }
 
-/// A peer-supplied key must not be usable to reach another peer's record.
-/// Before the header was folded in rather than substituted, both peers keyed
-/// on the literal string and the second got the first's verdict.
+/// A peer-supplied key cannot reach another peer's record: the header is folded into the key,
+/// not substituted for it.
 #[tokio::test]
 async fn supplied_key_is_still_scoped_to_the_peer() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
 
     let a = typed_from_with_key(
         "did:example:one",
@@ -183,8 +174,7 @@ async fn supplied_key_is_still_scoped_to_the_peer() {
 /// restart does. Distinct keys give distinct records, so both execute.
 #[tokio::test]
 async fn distinct_supplied_keys_separate_identical_messages() {
-    let store = InMemoryIdempotencyStore::new();
-    let guard = IdempotencyGuard::new(&store);
+    let guard = Guard::new();
     let body = message("urn:uuid:cc", "https://c/cb");
 
     let first = typed_from_with_key("did:example:consumer", body.clone(), Some("attempt-1")).await;

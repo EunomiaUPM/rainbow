@@ -18,45 +18,15 @@
 //! Reading the Transfer Process Protocol fields (DSP 9.2) off an expanded
 //! message. Everything protocol-agnostic lives in `common::rdf`.
 
+use common::dsp_common::context_field::ContextField;
 use common::dsp_common::data_address::{DataAddress, EndpointProperty};
-use common::rdf::{ExpandedDoc, RdfCanonicalizer, RdfNode};
+use common::dsp_common::rdf::DspProfile;
+use common::rdf::{RdfCanonicalizer, RdfEngine, RdfNode, RdfProtocolTrait};
+use serde_json::Value;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
-
-/// Protocol-specific field extractor interface.
-pub trait ExtractProtocolFields {
-    type MessageType: std::fmt::Display;
-    type Fields;
-
-    fn type_iri(message: &Self::MessageType) -> String;
-    fn extract(node: &RdfNode<'_, '_>) -> Outcome<Self::Fields>;
-    fn message_type(node: &RdfNode<'_, '_>) -> Option<Self::MessageType>;
-
-    fn root_message<'d, 'a>(
-        doc: &'d ExpandedDoc<'a>,
-    ) -> Outcome<(Self::MessageType, RdfNode<'d, 'a>)> {
-        let mut matching = doc
-            .nodes()
-            .filter_map(|node| Self::message_type(&node).map(|kind| (kind, node)));
-        let found = matching.next().ok_or_else(|| {
-            Errors::format(
-                BadFormat::Received,
-                "expanded body declares no message type",
-                None,
-            )
-        })?;
-        if matching.next().is_some() {
-            return Err(Errors::format(
-                BadFormat::Received,
-                "expanded body declares more than one message node",
-                None,
-            ));
-        }
-        Ok(found)
-    }
-}
 
 /// Namespace every DSP term expands into.
 const DSPACE: &str = "https://w3id.org/dspace/2025/1/";
@@ -64,11 +34,24 @@ const DSPACE: &str = "https://w3id.org/dspace/2025/1/";
 const DCT_FORMAT: &str = "http://purl.org/dc/terms/format";
 
 /// The transfer protocol, as an extraction target.
+#[derive(Debug, Clone)]
 pub struct DspTransfer;
 
-impl ExtractProtocolFields for DspTransfer {
+impl RdfProtocolTrait for DspTransfer {
     type MessageType = TransferDSPMessageType;
     type Fields = TransferProtocolFields;
+
+    fn engine() -> &'static RdfEngine {
+        DspProfile::shared()
+    }
+
+    fn context() -> Value {
+        serde_json::to_value(ContextField::default()).unwrap_or_default()
+    }
+
+    fn compact_type(message: &TransferDSPMessageType) -> String {
+        message.to_string()
+    }
 
     fn type_iri(message: &TransferDSPMessageType) -> String {
         Self::dspace(&message.to_string())

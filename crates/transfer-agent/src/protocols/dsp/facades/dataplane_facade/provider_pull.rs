@@ -20,9 +20,8 @@ use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
-use crate::protocols::dsp::facades::dataplane_facade::to_dataplane_address;
 use dataplane::{
-    DataplaneAddress, DataplaneCommand, DataplaneCommandResponse, DataplaneContinuation,
+    DataplaneCommand, DataplaneCommandResponse, DataplaneContinuation,
     DataplaneInitCommandDirection, DataplaneInitCommandTypes, DataplaneManager,
 };
 use ymir::errors::{Errors, Outcome};
@@ -47,7 +46,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
-        let id = ctx.process_urn("provider pull request_post")?;
+        let id = ctx.process_id.clone();
         let TransferContextConnectorRole::ProviderHavingConnector(connector_instance) =
             &ctx.connector_instance
         else {
@@ -56,7 +55,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         let cmd = DataplaneCommand::SetInit(DataplaneInitCommandTypes::AsProvider {
             transfer_process_id: id,
             owner: ctx.owner(),
-            connector_instance: connector_instance.clone(),
+            connector_instance: connector_instance.as_ref().clone(),
             direction: DataplaneInitCommandDirection::Pull { data_address: None },
         });
         let _res = mgr.execute_command(cmd).await?;
@@ -71,7 +70,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         // First start and restart alike hand the consumer the process's pull endpoint.
-        let id = ctx.process_urn("provider pull start_pre")?;
+        let id = ctx.process_id.clone();
         let res = mgr
             .execute_command(DataplaneCommand::GetAssociated(DataplaneContinuation {
                 transfer_dto_urn: id,
@@ -90,32 +89,17 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        let id = ctx.process_urn("provider pull start_post")?;
-        if !ctx.is_restart {
-            let continuation = DataplaneContinuation {
-                transfer_dto_urn: id,
-            };
-            let dataplane: DataplaneAddress = ctx
-                .resolved_data_address
-                .clone()
-                .map(|addr| to_dataplane_address(&addr))
-                .ok_or_else(|| {
-                    Errors::crazy(
-                        "Dataplane_address required for provider pull start_post",
-                        None,
-                    )
-                })?;
-            let cmd = DataplaneCommand::SetStarted(continuation);
-            let res = mgr.execute_command(cmd).await?;
-            return Ok(None);
+        let id = ctx.process_id.clone();
+        if !ctx.is_restart && ctx.resolved_data_address.is_none() {
+            return Err(Errors::crazy(
+                "Dataplane_address required for provider pull start_post",
+                None,
+            ));
         }
-        if ctx.is_restart {
-            mgr.execute_command(DataplaneCommand::SetStarted(DataplaneContinuation {
-                transfer_dto_urn: id,
-            }))
-            .await?;
-            return Ok(None);
-        }
+        mgr.execute_command(DataplaneCommand::SetStarted(DataplaneContinuation {
+            transfer_dto_urn: id,
+        }))
+        .await?;
         Ok(None)
     }
 
@@ -135,7 +119,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("provider pull suspend_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -157,7 +141,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("provider pull complete_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -179,7 +163,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("provider pull terminate_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())

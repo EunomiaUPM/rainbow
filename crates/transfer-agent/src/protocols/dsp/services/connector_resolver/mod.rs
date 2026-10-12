@@ -15,15 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Provider side of a transfer request: which connector instance serves the data an
-//! agreement grants, following the agreement to its dataset, distribution and connector
-//! instance.
+//! Provider side of a transfer request: the connector instance serving what an agreement
+//! grants, through its dataset and distribution.
 
 use connector::ConnectorInstanceDto;
 use urn::Urn;
 use ymir::errors::Outcome;
 
-pub mod connector_resolver;
+pub mod service;
 
 /// Finding the connector instance that serves an agreement.
 #[mockall::automock]

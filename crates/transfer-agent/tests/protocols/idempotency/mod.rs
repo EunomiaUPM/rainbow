@@ -15,25 +15,64 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! IdempotencyGuard over an in-memory store, split into how messages are keyed and how a
-//! process version tells restarts from retries.
+//! IdempotencyGuard over an in-memory store with transfer's keys, split into how messages are
+//! keyed and how a process version tells restarts from retries.
 
 mod keys;
 mod versions;
 
-use transfer_agent::entities::protocol::ProtocolId;
-use transfer_agent::protocols::dsp::entities::auth::TransferDSPAuthn;
-use transfer_agent::protocols::dsp::entities::context_common::TransferContextRaw;
-use transfer_agent::protocols::dsp::entities::context_dsp::TransferDSPContextTyped;
-use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use std::sync::Arc;
 
 use axum::extract::Request;
-use transfer_agent::protocols::dsp::entities::context_dsp::TransferDSPContextParsed;
-use transfer_agent::protocols::dsp::entities::idempotency::*;
 use common::facades::grants_facade::VerifiedPeer;
+use common::flow::idempotency::{IdempotencyRecord, IdempotencyVerdict};
+use common::flow::{IdempotencyGuard, IdempotencyKey, InMemoryIdempotencyStore};
 use common::oauth::RolePath;
+use transfer_agent::entities::protocol::ProtocolId;
+use transfer_agent::protocols::dsp::entities::context_dsp::TransferDspInput;
+use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use ymir::errors::Outcome;
 
 const CTX: &str = "https://w3id.org/dspace/2025/1/context.jsonld";
+
+/// The common guard driven with what a transfer input carries.
+struct Guard(IdempotencyGuard);
+
+impl Guard {
+    fn new() -> Self {
+        Self(IdempotencyGuard::new(Arc::new(InMemoryIdempotencyStore::new())))
+    }
+
+    async fn check(
+        &self,
+        input: &TransferDspInput,
+        version: Option<u64>,
+    ) -> Outcome<IdempotencyVerdict> {
+        self.0
+            .check(&input.idempotency_key, &input.body.canonical_hash, version)
+            .await
+    }
+
+    async fn claim(
+        &self,
+        key: IdempotencyKey,
+        input: &TransferDspInput,
+        version: Option<u64>,
+    ) -> Outcome<IdempotencyRecord> {
+        self.0.claim(key, input.body.canonical_hash, version).await
+    }
+
+    async fn record_response(
+        &self,
+        record: IdempotencyRecord,
+        response: serde_json::Value,
+        version_after: Option<u64>,
+    ) -> Outcome<()> {
+        self.0
+            .record_response(&record.key, response, version_after)
+            .await
+    }
+}
 
 fn mate(participant_id: &str) -> VerifiedPeer {
     VerifiedPeer {
@@ -43,8 +82,8 @@ fn mate(participant_id: &str) -> VerifiedPeer {
     }
 }
 
-/// Build the typed context a handler would have, for a body sent by `peer`.
-async fn typed_from(peer: &str, body: String) -> TransferDSPContextTyped {
+/// The input a handler would get, for a body sent by `peer`.
+async fn typed_from(peer: &str, body: String) -> TransferDspInput {
     typed_from_with_key(peer, body, None).await
 }
 
@@ -52,7 +91,7 @@ async fn typed_from_with_key(
     peer: &str,
     body: String,
     supplied_key: Option<&str>,
-) -> TransferDSPContextTyped {
+) -> TransferDspInput {
     typed_at(
         peer,
         body,
@@ -69,7 +108,7 @@ async fn typed_at(
     supplied_key: Option<&str>,
     uri: &str,
     message_type: TransferDSPMessageType,
-) -> TransferDSPContextTyped {
+) -> TransferDspInput {
     typed_versioned(
         peer,
         body,
@@ -88,29 +127,16 @@ async fn typed_versioned(
     uri: &str,
     message_type: TransferDSPMessageType,
     dsp_version: ProtocolId,
-) -> TransferDSPContextTyped {
-    let mut builder = Request::builder()
-        .method("POST")
-        .uri(uri.to_string())
-        .header("authorization", "Bearer tok");
+) -> TransferDspInput {
+    let mut builder = Request::builder().method("POST").uri(uri.to_string());
     if let Some(key) = supplied_key {
         builder = builder.header("idempotency-key", key);
     }
     let mut req = builder.body(axum::body::Body::from(body)).unwrap();
     req.extensions_mut().insert(mate(peer));
-    let raw = TransferContextRaw::<TransferDSPAuthn>::from_request(req)
+    TransferDspInput::read(&dsp_version, &message_type, req)
         .await
-        .unwrap();
-    let json: serde_json::Value = serde_json::from_slice(&raw.body_bytes).unwrap();
-    let parsed =
-        TransferDSPContextParsed::from_raw(raw, &dsp_version, &message_type, json).unwrap();
-    let rdf =
-        transfer_agent::protocols::dsp::entities::context_dsp::TransferDSPContextRdf::from_parsed(
-            parsed,
-        )
-        .await
-        .unwrap();
-    TransferDSPContextTyped::from_rdf(rdf).unwrap()
+        .unwrap()
 }
 
 fn message(consumer_pid: &str, callback: &str) -> String {
@@ -121,7 +147,7 @@ fn message(consumer_pid: &str, callback: &str) -> String {
 
 /// A `TransferStartMessage` on the state-transition route: same pids every
 /// time, so protocol identity alone cannot tell a retry from a restart.
-async fn start_message() -> TransferDSPContextTyped {
+async fn start_message() -> TransferDspInput {
     typed_at(
         "did:example:consumer",
         format!(

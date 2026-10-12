@@ -19,7 +19,6 @@ use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext as Ds
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
-use crate::protocols::dsp::facades::dataplane_facade::to_dataplane_address;
 use dataplane::{
     DataplaneAddress, DataplaneCommand, DataplaneContinuation, DataplaneInitCommandDirection,
     DataplaneInitCommandTypes, DataplaneManager,
@@ -36,7 +35,7 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         ctx: &DspTransferContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        let transfer_id = ctx.process_urn("consumer pull request_pre")?;
+        let transfer_id = ctx.process_id.clone();
         let cmd = DataplaneCommand::SetInit(DataplaneInitCommandTypes::AsConsumer {
             transfer_process_id: transfer_id.clone(),
             owner: ctx.owner(),
@@ -71,15 +70,13 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         ctx: &DspTransferContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        let id = ctx.process_urn("consumer pull start_post")?;
+        let id = ctx.process_id.clone();
         let continuation = DataplaneContinuation {
             transfer_dto_urn: id,
         };
         if !ctx.is_restart {
             let dataplane: DataplaneAddress = ctx
-                .data_address
-                .clone()
-                .map(|addr| to_dataplane_address(&addr))
+                .dataplane_address()
                 .ok_or_else(|| {
                     Errors::crazy(
                         "Dataplane_address required for consumer pull start post",
@@ -114,7 +111,7 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("consumer pull suspend_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -136,7 +133,7 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("consumer pull complete_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())
@@ -158,7 +155,7 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
-            transfer_dto_urn: ctx.process_urn("consumer pull terminate_post")?,
+            transfer_dto_urn: ctx.process_id.clone(),
         }))
         .await?;
         Ok(())

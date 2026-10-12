@@ -15,44 +15,39 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Reading the DSP message type of a payload.
+//! The DSP message type names, written and read back.
 
-use serde_json::json;
 use transfer_agent::protocols::dsp::entities::message_types::*;
 
-/// The type is read from the top-level `@type`.
+/// Every message type reads back from the name it writes.
 #[test]
-fn reads_the_top_level_type() {
-    let t = TransferDSPMessageType::from_json_payload(&json!({"@type": "TransferRequestMessage"}));
-    assert_eq!(t.unwrap(), TransferDSPMessageType::TransferRequestMessage);
+fn names_round_trip() {
+    for t in [
+        TransferDSPMessageType::TransferRequestMessage,
+        TransferDSPMessageType::TransferStartMessage,
+        TransferDSPMessageType::TransferCompletionMessage,
+        TransferDSPMessageType::TransferSuspensionMessage,
+        TransferDSPMessageType::TransferTerminationMessage,
+        TransferDSPMessageType::TransferProcess,
+        TransferDSPMessageType::TransferError,
+    ] {
+        assert_eq!(t.to_string().parse::<TransferDSPMessageType>().unwrap(), t);
+    }
 }
 
-/// A `dspace:`-prefixed type is accepted.
+/// A prefixed or full-IRI type is accepted.
 #[test]
-fn accepts_the_prefixed_form() {
-    let t =
-        TransferDSPMessageType::from_json_payload(&json!({"@type": "dspace:TransferStartMessage"}));
-    assert_eq!(t.unwrap(), TransferDSPMessageType::TransferStartMessage);
+fn accepts_prefixed_and_iri_forms() {
+    let prefixed: TransferDSPMessageType = "dspace:TransferStartMessage".parse().unwrap();
+    assert_eq!(prefixed, TransferDSPMessageType::TransferStartMessage);
+    let iri: TransferDSPMessageType = "https://w3id.org/dspace/2025/1/TransferStartMessage"
+        .parse()
+        .unwrap();
+    assert_eq!(iri, TransferDSPMessageType::TransferStartMessage);
 }
 
-/// The `@graph` form carries no top-level `@type`; the message node is inside.
+/// An unknown name is an error.
 #[test]
-fn finds_the_type_inside_a_graph() {
-    let payload = json!({
-        "@context": "https://w3id.org/dspace/2025/1/context.jsonld",
-        "@graph": [
-            {"@id": "_:addr", "@type": "DataAddress"},
-            {"@id": "_:msg", "@type": "TransferRequestMessage"}
-        ]
-    });
-    let t = TransferDSPMessageType::from_json_payload(&payload);
-    assert_eq!(t.unwrap(), TransferDSPMessageType::TransferRequestMessage);
-}
-
-/// A payload without type is an error.
-#[test]
-fn a_payload_without_a_type_is_an_error() {
-    assert!(
-        TransferDSPMessageType::from_json_payload(&json!({"consumerPid": "urn:uuid:cc"})).is_err()
-    );
+fn an_unknown_name_is_an_error() {
+    assert!("ContractRequestMessage".parse::<TransferDSPMessageType>().is_err());
 }

@@ -22,7 +22,6 @@ use crate::protocols::dsp::facades::dataplane_facade::{
     consumer_pull::ConsumerPullStrategy, consumer_push::ConsumerPushStrategy,
     provider_pull::ProviderPullStrategy, provider_push::ProviderPushStrategy,
 };
-use common::dsp_common::data_address::DataAddress;
 use dataplane::DataplaneManager;
 use ymir::errors::Outcome;
 
@@ -94,28 +93,24 @@ static CONSUMER_PUSH: ConsumerPushStrategy = ConsumerPushStrategy;
 static PROVIDER_PULL: ProviderPullStrategy = ProviderPullStrategy;
 static PROVIDER_PUSH: ProviderPushStrategy = ProviderPushStrategy;
 
-// Capture and factory of strategy once TransferProcess exists
-pub(super) fn strategy_for(
-    role: TransferRole,
-    direction: TransferDirection,
-) -> &'static dyn DataPlaneStrategy {
-    match (role, direction) {
-        (TransferRole::Consumer, TransferDirection::Pull) => &CONSUMER_PULL,
-        (TransferRole::Consumer, TransferDirection::Push) => &CONSUMER_PUSH,
-        (TransferRole::Provider, TransferDirection::Pull) => &PROVIDER_PULL,
-        // Provider/Push, and Relay (not a data-plane role) fall back to provider push.
-        _ => &PROVIDER_PUSH,
+impl DataplaneHookContext {
+    /// The strategy for an existing process, by our role and the transfer direction.
+    pub(super) fn strategy(&self) -> &'static dyn DataPlaneStrategy {
+        match (self.role, self.transfer_direction) {
+            (TransferRole::Consumer, TransferDirection::Pull) => &CONSUMER_PULL,
+            (TransferRole::Consumer, TransferDirection::Push) => &CONSUMER_PUSH,
+            (TransferRole::Provider, TransferDirection::Pull) => &PROVIDER_PULL,
+            // Provider/Push, and Relay (not a data-plane role) fall back to provider push.
+            _ => &PROVIDER_PUSH,
+        }
     }
-}
 
-// Capture and factory of strategy when it's being created for first time in provider
-// Based on DSP, if PUSH DataAddress should be in message, otherwise is PULL
-pub(super) fn strategy_for_request_pre(
-    data_address: &Option<DataAddress>,
-) -> &'static dyn DataPlaneStrategy {
-    if data_address.is_some() {
-        &CONSUMER_PUSH
-    } else {
-        &CONSUMER_PULL
+    /// The strategy for the consumer's own request: push when it carries a data address.
+    pub(super) fn request_strategy(&self) -> &'static dyn DataPlaneStrategy {
+        if self.data_address.is_some() {
+            &CONSUMER_PUSH
+        } else {
+            &CONSUMER_PULL
+        }
     }
 }

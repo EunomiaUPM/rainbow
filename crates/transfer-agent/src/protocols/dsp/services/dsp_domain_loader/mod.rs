@@ -23,7 +23,7 @@ use urn::Urn;
 use ymir::errors::Outcome;
 
 pub mod agreement_resolver;
-pub mod dsp_domain_loader;
+pub mod service;
 
 /// Facts the domain loader needs from other agents.
 #[mockall::automock]

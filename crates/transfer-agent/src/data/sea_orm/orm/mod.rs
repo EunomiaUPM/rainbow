@@ -16,7 +16,7 @@
  */
 
 mod helpers;
-pub use helpers::ser_enum;
+pub(crate) use helpers::OrmCodec;
 pub mod transfer_identifier;
 pub mod transfer_message;
 pub mod transfer_process;

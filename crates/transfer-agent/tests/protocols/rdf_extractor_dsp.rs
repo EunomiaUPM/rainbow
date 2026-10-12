@@ -17,7 +17,7 @@
 
 //! DspTransfer: typed DSP transfer fields extracted from the expanded RDF.
 
-use common::rdf::ExpandedDoc;
+use common::rdf::{ExpandedDoc, RdfProtocolTrait};
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use transfer_agent::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 
