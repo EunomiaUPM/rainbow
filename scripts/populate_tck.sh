@@ -98,7 +98,7 @@ make_dataset() {
 
   dist_id=$(curl_j POST "$PROVIDER_URL/api/v1/catalog-agent/distributions" \
     "$(jq -n --arg d "$d_id" --arg s "$DS_SVC_ID" \
-      '{"dctTitle":"dist","dcatAccessService":$s,"datasetId":$d,"dctFormats":"http+pull"}')" \
+      '{"dctTitle":"dist","dcatAccessService":$s,"datasetId":$d,"dctFormats":"HttpData-PULL"}')" \
     | jq -r '.id')
 
   curl_j POST "$PROVIDER_URL/api/v1/connector/instances" \

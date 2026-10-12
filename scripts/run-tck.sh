@@ -177,7 +177,7 @@ dataspacetck.dsp.connector.http.headers.authorization=Bearer ${token}
 dataspacetck.dsp.default.wait=15000
 
 dataspacetck.dsp.connector.negotiation.initiate.url=${DOCKER_CONSUMER_URL}/tck/negotiations/requests
-dataspacetck.dsp.connector.transfer.initiate.url=${DOCKER_CONSUMER_URL}/tck/transfers/requests
+dataspacetck.dsp.connector.transfer.initiate.url=${DOCKER_CONSUMER_URL}/dsp/current/transfers/tck/transfers/requests
 
 # ── Catalog ───────────────────────────────────────────────────────────────────
 CAT_01_01_DATASETID=$(lookup_ds CAT0101)
