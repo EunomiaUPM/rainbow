@@ -16,6 +16,7 @@
  */
 
 use crate::engine::dataplane_manager::dataplane_commands::DataplaneCommandStateMachine;
+use crate::engine::dataplane_manager::dataplane_driver_factory::DataplaneDriverFactoryTrait;
 use crate::services::dataplane_transfers::DataplaneTransferServiceTrait;
 use common::config::services::TransferConfig;
 use connector::ConnectorInstanceFacadeTrait;
@@ -27,6 +28,7 @@ pub struct DataplaneHandlerConsumerPush {
     connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
     config: Arc<TransferConfig>,
     secret_store: Option<Arc<dyn SecretStore>>,
+    driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
 }
 
 impl DataplaneHandlerConsumerPush {
@@ -35,12 +37,14 @@ impl DataplaneHandlerConsumerPush {
         connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
         config: Arc<TransferConfig>,
         secret_store: Option<Arc<dyn SecretStore>>,
+        driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
     ) -> Self {
         Self {
             dataplane_service,
             connector_service,
             config,
             secret_store,
+            driver_factory,
         }
     }
 }
@@ -61,5 +65,8 @@ impl DataplaneCommandStateMachine for DataplaneHandlerConsumerPush {
     }
     fn secret_store(&self) -> Option<Arc<dyn SecretStore>> {
         self.secret_store.clone()
+    }
+    fn driver_factory(&self) -> Arc<dyn DataplaneDriverFactoryTrait> {
+        self.driver_factory.clone()
     }
 }

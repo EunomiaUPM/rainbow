@@ -108,12 +108,34 @@
 //!
 //! A violation can echo the offending value with `with_value`, but only when it cannot be a
 //! credential: the value goes back to the peer inside the error.
+//!
+//! ## 6. Rules from several origins: `ValidationRegistry`
+//!
+//! A [`ValidationRegistry`] is the extensible form of the registry: core, profiles and plugins
+//! add rules to a key at a [`Stage`] (`Shape`, `Integrity`, `Domain`, `Profile`). Stages are
+//! barriers for everyone: all rules of a stage run and accumulate, and the next stage runs
+//! only if it passed. A key with no core rule fails closed, and each violation records the
+//! origin of the rule that produced it. [`SchemaRule`] turns a JSON Schema into a rule.
+//!
+//! ```rust,ignore
+//! let rules = ValidationRegistry::new("negotiation.dsp.input")
+//!     .with_any(Stage::Shape, Validator::new().rule(context_is_dsp))
+//!     .with(ContractRequestMessage, Stage::Shape, Validator::new().json(|i| &i.raw, schema));
+//! rules.register(ContractRequestMessage, Stage::Profile, assigner_is_did(), Origin::profile("catena-x"));
+//! rules.validate(&key, &input).map_err(Violations::into_errors)?;
+//! ```
 
+pub mod registry;
 pub mod rule;
+pub mod schema;
+pub mod stage;
 pub mod validator;
 pub mod violation;
 
+pub use registry::{StagedValidator, ValidationRegistry};
 pub use rule::Rule;
+pub use schema::SchemaRule;
+pub use stage::Stage;
 pub use validator::{Validator, ValidatorRegistry};
 pub use violation::{codes, violation, Path, Violation, ViolationCode, Violations};
 

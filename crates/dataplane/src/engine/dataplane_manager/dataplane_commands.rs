@@ -16,9 +16,7 @@
  */
 
 use crate::engine::dataplane_manager::dataplane_context::DataplaneContext;
-use crate::engine::dataplane_manager::dataplane_driver_factory::{
-    DataplaneDriverFactory, DataplaneDriverFactoryTrait,
-};
+use crate::engine::dataplane_manager::dataplane_driver_factory::DataplaneDriverFactoryTrait;
 use crate::engine::dataplane_manager::dataplane_runtime::{DataplaneRuntime, RuntimeSecretVault};
 use crate::entities::dataplane_transfers::{EditDataplaneTransferDto, TransferState};
 use crate::errors::DataplaneError;
@@ -124,9 +122,8 @@ pub trait DataplaneCommandStateMachine: Send + Sync {
     fn transfer_config(&self) -> Arc<TransferConfig>;
     fn secret_store(&self) -> Option<Arc<dyn SecretStore>>;
 
-    fn driver_factory(&self) -> Arc<dyn DataplaneDriverFactoryTrait> {
-        Arc::new(DataplaneDriverFactory::new())
-    }
+    /// The manager's factory, shared so every driver sees the same keystore.
+    fn driver_factory(&self) -> Arc<dyn DataplaneDriverFactoryTrait>;
 
     /// Creates the driver, configures its proxy and moves the process to `Configuring`.
     async fn configure_driver(&self, context: DataplaneContext) -> Outcome<DataplaneContext> {

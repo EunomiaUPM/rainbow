@@ -21,8 +21,10 @@
 //! about DSP. The protocol that answers turns it into a wire error, usually through
 //! [`Violations::to_reasons`].
 
+use crate::registry::Origin;
 use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
+use ymir::errors::{ErrorReason, Errors};
 
 /// Where in the subject the problem is, e.g. `dataAddress.endpointProperties[0].name`.
 /// Literal paths allocate nothing; only nested and indexed ones build a string.
@@ -71,6 +73,12 @@ impl From<&'static str> for Path {
     }
 }
 
+impl From<String> for Path {
+    fn from(s: String) -> Self {
+        Self(Cow::Owned(s))
+    }
+}
+
 /// Stable, machine-readable kind of failure. `common` owns only the shared [`codes`]; agents
 /// number their own, and a published code is never reassigned because peers rely on it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -105,6 +113,8 @@ pub struct Violation {
     /// Offending value echoed back to the peer. Set it only where it cannot be a credential:
     /// fields like `endpointProperties[].value` routinely carry bearer tokens.
     pub value: Option<String>,
+    /// Who registered the failing rule; for logs and traces, never sent to the peer.
+    pub origin: Option<Origin>,
 }
 
 impl Violation {
@@ -119,6 +129,7 @@ impl Violation {
             code,
             message: message.into(),
             value: None,
+            origin: None,
         }
     }
 
@@ -185,6 +196,28 @@ impl Violations {
     /// Extract human-readable error messages without path prefixes.
     pub fn messages(&self) -> Vec<String> {
         self.0.iter().map(|v| v.message.to_string()).collect()
+    }
+
+    /// Tag every violation not yet attributed with the origin of the rule that produced it.
+    pub fn with_origin(mut self, origin: &Origin) -> Self {
+        for v in self.0.iter_mut().filter(|v| v.origin.is_none()) {
+            v.origin = Some(origin.clone());
+        }
+        self
+    }
+
+    /// Structured 400 error with one reason per violation.
+    pub fn into_errors(self) -> Errors {
+        Errors::validation_with(
+            self.0
+                .into_iter()
+                .map(|v| ErrorReason {
+                    path: v.path.to_string(),
+                    code: v.code.0,
+                    message: v.message.into_owned(),
+                })
+                .collect(),
+        )
     }
 
     /// Formatted reason strings: `<path>: <message>`.

@@ -140,6 +140,7 @@ impl DataplaneManager {
             self.connector_service.clone(),
             self.config.clone(),
             self.secret_store.clone(),
+            self.driver_factory.clone(),
         )
         .get_strategy(&context);
 

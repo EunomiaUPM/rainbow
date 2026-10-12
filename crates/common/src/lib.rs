@@ -47,6 +47,7 @@ pub mod module_loader;
 pub mod paginated_spec;
 pub mod query;
 pub mod rdf;
+pub mod registry;
 pub mod routes;
 pub mod secret;
 pub mod serde_utils;

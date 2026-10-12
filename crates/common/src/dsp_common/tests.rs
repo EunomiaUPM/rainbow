@@ -24,7 +24,7 @@ use tower::ServiceExt;
 use crate::dsp_common::normalizer::{
     dsp_namespace_normalizer, normalise_value, WireBody, MAX_BODY_BYTES,
 };
-use crate::dsp_common::DspRules;
+use crate::dsp_common::{DspErrorBody, DspRules};
 use crate::validation::codes;
 
 /// A literal's `xsd:` datatype survives normalisation: stripping it would leave a relative
@@ -159,4 +159,25 @@ fn context_and_type_accept_string_or_array_forms() {
 
     let bad_type = json!({ "@type": "TransferStartMessage" });
     assert!(DspRules::expected_type(&bad_type, "TransferRequestMessage", "@type").is_err());
+}
+
+/// A DSP error body carries one reason per violation, in order.
+#[test]
+fn error_body_lists_every_violation() {
+    let mut vs =
+        crate::validation::violation("consumerPid", codes::MALFORMED, "must be a valid URN");
+    vs.extend(crate::validation::violation(
+        "offer",
+        codes::MISSING,
+        "field is required",
+    ));
+    let body = DspErrorBody::from_violations("400", &vs);
+    assert_eq!(body.code, "400");
+    assert_eq!(
+        body.reason,
+        vec![
+            "consumerPid: must be a valid URN",
+            "offer: field is required"
+        ]
+    );
 }

@@ -17,6 +17,7 @@
 
 use crate::engine::dataplane_manager::dataplane_commands::DataplaneCommandStateMachine;
 use crate::engine::dataplane_manager::dataplane_context::DataplaneContext;
+use crate::engine::dataplane_manager::dataplane_driver_factory::DataplaneDriverFactoryTrait;
 use crate::engine::dataplane_manager::dataplane_handlers_consumer_pull::DataplaneHandlerConsumerPull;
 use crate::engine::dataplane_manager::dataplane_handlers_consumer_push::DataplaneHandlerConsumerPush;
 use crate::engine::dataplane_manager::dataplane_handlers_provider_pull::DataplaneHandlerProviderPull;
@@ -33,6 +34,7 @@ pub struct DataplaneStrategyFactory {
     connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
     config: Arc<TransferConfig>,
     secret_store: Option<Arc<dyn SecretStore>>,
+    driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
 }
 impl DataplaneStrategyFactory {
     pub fn new(
@@ -40,12 +42,14 @@ impl DataplaneStrategyFactory {
         connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
         config: Arc<TransferConfig>,
         secret_store: Option<Arc<dyn SecretStore>>,
+        driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
     ) -> Self {
         Self {
             dataplane_service,
             connector_service,
             config,
             secret_store,
+            driver_factory,
         }
     }
     pub fn get_strategy(
@@ -61,6 +65,7 @@ impl DataplaneStrategyFactory {
                     self.connector_service.clone(),
                     self.config.clone(),
                     self.secret_store.clone(),
+                    self.driver_factory.clone(),
                 ))
             }
             (TransferRole::Provider, InteractionMode::Push) => {
@@ -69,6 +74,7 @@ impl DataplaneStrategyFactory {
                     self.connector_service.clone(),
                     self.config.clone(),
                     self.secret_store.clone(),
+                    self.driver_factory.clone(),
                 ))
             }
             (TransferRole::Consumer, InteractionMode::Pull) => {
@@ -77,6 +83,7 @@ impl DataplaneStrategyFactory {
                     self.connector_service.clone(),
                     self.config.clone(),
                     self.secret_store.clone(),
+                    self.driver_factory.clone(),
                 ))
             }
             (TransferRole::Consumer, InteractionMode::Push) => {
@@ -85,6 +92,7 @@ impl DataplaneStrategyFactory {
                     self.connector_service.clone(),
                     self.config.clone(),
                     self.secret_store.clone(),
+                    self.driver_factory.clone(),
                 ))
             }
         }

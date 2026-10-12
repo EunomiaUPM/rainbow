@@ -21,6 +21,9 @@ use dataplane::engine::dataplane_manager::dataplane_commands::{
     DataplaneCommandStateMachine, DataplaneInitCommandTypes,
 };
 use dataplane::engine::dataplane_manager::dataplane_context::DataplaneContext;
+use dataplane::engine::dataplane_manager::dataplane_driver_factory::{
+    DataplaneDriverFactory, DataplaneDriverFactoryTrait,
+};
 use dataplane::services::dataplane_transfers::DataplaneTransferServiceTrait;
 use std::sync::Arc;
 
@@ -113,6 +116,7 @@ fn get_strategy(context: DataplaneContext) -> Box<dyn DataplaneCommandStateMachi
         Arc::new(MockConnectorMock::new()),
         transfer_config_fixture(),
         None,
+        Arc::new(DataplaneDriverFactory::new()),
     )
     .get_strategy(&context)
 }
@@ -182,4 +186,28 @@ async fn provider_push_routes_to_provider_push_handler() {
     })
     .await;
     assert_eq!(get_strategy(context).handler_name(), "ProviderPush");
+}
+
+/// Every handler gets the manager's driver factory instead of building a keystore-less one.
+#[tokio::test]
+async fn handlers_share_the_injected_driver_factory() {
+    let context = dummy_context(DataplaneInitCommandTypes::AsProvider {
+        owner: common::test_utils::scopes::TestUsers::owner("tenant-1"),
+        transfer_process_id: Urn::from_str("urn:tp:1").unwrap(),
+        connector_instance: connector_fixture(),
+        direction: DataplaneInitCommandDirection::Pull {
+            data_address: Some(empty_address()),
+        },
+    })
+    .await;
+    let factory: Arc<dyn DataplaneDriverFactoryTrait> = Arc::new(DataplaneDriverFactory::new());
+    let handler = DataplaneStrategyFactory::new(
+        entity_for_init(),
+        Arc::new(MockConnectorMock::new()),
+        transfer_config_fixture(),
+        None,
+        factory.clone(),
+    )
+    .get_strategy(&context);
+    assert!(Arc::ptr_eq(&handler.driver_factory(), &factory));
 }

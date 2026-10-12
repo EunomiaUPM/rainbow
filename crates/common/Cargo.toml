@@ -57,6 +57,8 @@ locspan = "0.7"
 rdf-types = "=0.15.4"
 contextual = "=0.1.6"
 sha2 = { workspace = true }
+arc-swap = { workspace = true }
+jsonschema = { workspace = true }
 
 [dev-dependencies]
 tower = { workspace = true, features = ["util"] }

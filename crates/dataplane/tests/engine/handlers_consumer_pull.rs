@@ -22,6 +22,7 @@ use dataplane::engine::dataplane_manager::dataplane_commands::{
     DataplaneCommandStateMachine, DataplaneInitCommandTypes,
 };
 use dataplane::engine::dataplane_manager::dataplane_context::DataplaneContext;
+use dataplane::engine::dataplane_manager::dataplane_driver_factory::DataplaneDriverFactory;
 use std::sync::Arc;
 
 use common::test_utils::config_fixtures::transfer_config_fixture;
@@ -82,6 +83,7 @@ fn handler(
         Arc::new(MockConnectorInstance::new()),
         transfer_config_fixture(),
         None,
+        Arc::new(DataplaneDriverFactory::new()),
     )
 }
 

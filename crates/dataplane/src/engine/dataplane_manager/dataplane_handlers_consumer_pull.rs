@@ -19,6 +19,7 @@ use crate::engine::dataplane_manager::dataplane_commands::{
     DataplaneCommandStateMachine,
 };
 use crate::engine::dataplane_manager::dataplane_context::DataplaneContext;
+use crate::engine::dataplane_manager::dataplane_driver_factory::DataplaneDriverFactoryTrait;
 use crate::services::dataplane_transfers::DataplaneTransferServiceTrait;
 use common::config::services::TransferConfig;
 use connector::ConnectorInstanceFacadeTrait;
@@ -31,6 +32,7 @@ pub struct DataplaneHandlerConsumerPull {
     connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
     config: Arc<TransferConfig>,
     secret_store: Option<Arc<dyn SecretStore>>,
+    driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
 }
 
 impl DataplaneHandlerConsumerPull {
@@ -39,12 +41,14 @@ impl DataplaneHandlerConsumerPull {
         connector_service: Arc<dyn ConnectorInstanceFacadeTrait>,
         config: Arc<TransferConfig>,
         secret_store: Option<Arc<dyn SecretStore>>,
+        driver_factory: Arc<dyn DataplaneDriverFactoryTrait>,
     ) -> Self {
         Self {
             dataplane_service,
             connector_service,
             config,
             secret_store,
+            driver_factory,
         }
     }
 }
@@ -65,6 +69,9 @@ impl DataplaneCommandStateMachine for DataplaneHandlerConsumerPull {
     }
     fn secret_store(&self) -> Option<Arc<dyn SecretStore>> {
         self.secret_store.clone()
+    }
+    fn driver_factory(&self) -> Arc<dyn DataplaneDriverFactoryTrait> {
+        self.driver_factory.clone()
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(handler = self.handler_name()))]

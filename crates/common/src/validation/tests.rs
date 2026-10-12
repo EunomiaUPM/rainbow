@@ -406,3 +406,172 @@ fn registry_merge_combines_message_validators() {
     let vs = reg_a.validate(&"order", &invalid).unwrap_err();
     assert_eq!(vs.len(), 2, "both merged registrations ran");
 }
+
+mod staged_registry {
+    //! ValidationRegistry: global stages across origins, fail-closed keys and attribution.
+
+    use crate::registry::{Origin, PluginRef};
+    use crate::validation::{codes, violation, Stage, ValidationRegistry, Validator};
+
+    fn plugin() -> Origin {
+        Origin::Plugin(PluginRef {
+            id: "p".into(),
+            version: "1".into(),
+            digest: "d".into(),
+        })
+    }
+
+    fn fails(path: &'static str) -> Validator<u32> {
+        Validator::new().rule(move |_: &u32| Err(violation(path, codes::NOT_ALLOWED, "no")))
+    }
+
+    fn passes() -> Validator<u32> {
+        Validator::new().rule(|_: &u32| Ok(()))
+    }
+
+    /// A failing stage stops later stages, whoever registered them.
+    #[test]
+    fn a_failing_stage_stops_later_stages() {
+        let reg = ValidationRegistry::new("t")
+            .with("k", Stage::Shape, fails("shape"))
+            .with("k", Stage::Domain, fails("domain"));
+        reg.register("k", Stage::Profile, fails("profile"), plugin());
+        let err = reg.validate(&"k", &0).unwrap_err();
+        assert_eq!(err.to_reasons(), vec!["shape: no"]);
+    }
+
+    /// Within a stage every origin's failures are reported together, each with its origin.
+    #[test]
+    fn one_stage_accumulates_every_origin() {
+        let reg = ValidationRegistry::new("t").with("k", Stage::Domain, fails("core"));
+        reg.register("k", Stage::Domain, fails("plugin"), plugin());
+        let err = reg.validate(&"k", &0).unwrap_err();
+        let origins: Vec<_> = err.iter().map(|v| v.origin.clone()).collect();
+        assert_eq!(err.len(), 2);
+        assert_eq!(origins, vec![Some(Origin::Core), Some(plugin())]);
+    }
+
+    /// A key with only plugin or wildcard rules is rejected: core must register it.
+    #[test]
+    fn a_key_without_core_rules_fails_closed() {
+        let reg = ValidationRegistry::new("t").with_any(Stage::Shape, passes());
+        reg.register("k", Stage::Shape, passes(), plugin());
+        let err = reg.validate(&"k", &0).unwrap_err();
+        assert_eq!(err.code(), Some(codes::NOT_ALLOWED));
+    }
+
+    /// Wildcard rules apply to every registered key.
+    #[test]
+    fn wildcard_rules_apply_to_every_key() {
+        let reg = ValidationRegistry::new("t")
+            .with_any(Stage::Shape, fails("@context"))
+            .with("a", Stage::Domain, passes())
+            .with("b", Stage::Domain, passes());
+        assert!(reg.validate(&"a", &0).is_err());
+        assert!(reg.validate(&"b", &0).is_err());
+    }
+
+    /// Uninstalling a plugin removes its rules and leaves the core ones.
+    #[test]
+    fn unregistering_an_origin_removes_its_rules() {
+        let reg = ValidationRegistry::new("t").with("k", Stage::Shape, passes());
+        reg.register("k", Stage::Shape, fails("plugin"), plugin());
+        assert!(reg.validate(&"k", &0).is_err());
+        assert_eq!(reg.unregister_origin(&plugin()), 1);
+        assert!(reg.validate(&"k", &0).is_ok());
+    }
+
+    /// Violations become one structured 400 error with a reason per failure.
+    #[test]
+    fn violations_become_structured_errors() {
+        let reg = ValidationRegistry::new("t")
+            .with("k", Stage::Shape, fails("a"))
+            .with("k", Stage::Shape, fails("b"));
+        let err = reg.validate(&"k", &0).unwrap_err().into_errors();
+        let paths: Vec<_> = err.info().reasons.iter().map(|r| r.path.as_str()).collect();
+        assert_eq!(paths, vec!["a", "b"]);
+    }
+}
+
+mod json_schema {
+    //! SchemaRule over the DSP 2025-1 negotiation schemas, resolved offline.
+
+    use crate::validation::{Rule, SchemaRule, Stage, ValidationRegistry, Validator};
+    use serde_json::{json, Value};
+
+    const REQUEST: &str =
+        include_str!("../../../negotiation-agent/dsp_schema/contract-request-message-schema.json");
+    const CONTRACT: &str =
+        include_str!("../../../negotiation-agent/dsp_schema/contract-schema.json");
+    const DATASET: &str = include_str!("../../../catalog-agent/dsp_schema/dataset-schema.json");
+    const CONTEXT: &str = include_str!("../dsp_common/common/context-schema.json");
+    const EXAMPLE: &str =
+        include_str!("../../../negotiation-agent/dsp_schema/example/contract-request-message.json");
+
+    fn request_rule() -> SchemaRule {
+        SchemaRule::with_resources(
+            REQUEST,
+            &[
+                (
+                    "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json",
+                    CONTRACT,
+                ),
+                (
+                    "https://w3id.org/dspace/2025/1/catalog/dataset-schema.json",
+                    DATASET,
+                ),
+                (
+                    "https://w3id.org/dspace/2025/1/common/context-schema.json",
+                    CONTEXT,
+                ),
+            ],
+        )
+        .unwrap()
+    }
+
+    /// The published example passes the published schema.
+    #[test]
+    fn official_example_is_valid() {
+        let example: Value = serde_json::from_str(EXAMPLE).unwrap();
+        assert!(request_rule().check(&example).is_ok());
+    }
+
+    /// Every schema failure is reported, each at the place it happened.
+    #[test]
+    fn broken_message_reports_each_failure() {
+        let mut broken: Value = serde_json::from_str(EXAMPLE).unwrap();
+        broken["@type"] = json!("ContractOfferMessage");
+        broken["consumerPid"] = json!(42);
+        let err = request_rule().check(&broken).unwrap_err();
+        assert!(err.len() >= 2, "{err}");
+        assert!(err.iter().any(|v| v.path.as_str() == "/consumerPid"));
+        assert!(err.iter().any(|v| v.path.as_str() == "/@type"));
+    }
+
+    /// A reference that was not provided fails when the rule is built, never at validation.
+    #[test]
+    fn missing_reference_fails_at_build_time() {
+        assert!(SchemaRule::from_str(REQUEST).is_err());
+    }
+
+    /// A schema rule plugs into a validator over a JSON field of the subject.
+    #[test]
+    fn schema_rule_runs_inside_a_registry() {
+        struct Input {
+            raw: Value,
+        }
+        let reg = ValidationRegistry::new("t").with(
+            (),
+            Stage::Shape,
+            Validator::new().json(|i: &Input| &i.raw, request_rule()),
+        );
+        assert!(reg
+            .validate(
+                &(),
+                &Input {
+                    raw: json!({"@type": "Nope"})
+                }
+            )
+            .is_err());
+    }
+}
