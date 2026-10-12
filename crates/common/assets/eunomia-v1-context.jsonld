@@ -1,0 +1,125 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dct": "http://purl.org/dc/terms/",
+    "dspace": "https://w3id.org/dspace/2025/1/",
+    "eunomia": "https://w3id.org/eunomia/v1/",
+    "RpcTransferRequestMessage": {
+      "@id": "eunomia:RpcTransferRequestMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "associatedAgentPeer": "eunomia:associatedAgentPeer",
+        "providerAddress": "eunomia:providerAddress",
+        "callbackAddress": "dspace:callbackAddress",
+        "agreementId": "dspace:agreementId",
+        "format": "dct:format",
+        "dataAddress": {
+          "@id": "dspace:dataAddress",
+          "@context": {
+            "@version": 1.1,
+            "@protected": true,
+            "endpointType": "dspace:endpointType",
+            "endpoint": "dspace:endpoint",
+            "endpointProperties": {
+              "@id": "dspace:endpointProperties",
+              "@container": "@set",
+              "@context": {
+                "@version": 1.1,
+                "@protected": true,
+                "name": "dspace:name",
+                "value": "dspace:value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RpcTransferStartMessage": {
+      "@id": "eunomia:RpcTransferStartMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "dataAddress": {
+          "@id": "dspace:dataAddress",
+          "@context": {
+            "@version": 1.1,
+            "@protected": true,
+            "endpointType": "dspace:endpointType",
+            "endpoint": "dspace:endpoint",
+            "endpointProperties": {
+              "@id": "dspace:endpointProperties",
+              "@container": "@set",
+              "@context": {
+                "@version": 1.1,
+                "@protected": true,
+                "name": "dspace:name",
+                "value": "dspace:value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RpcTransferCompletionMessage": {
+      "@id": "eunomia:RpcTransferCompletionMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid"
+      }
+    },
+    "RpcTransferSuspensionMessage": {
+      "@id": "eunomia:RpcTransferSuspensionMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "code": "dspace:code",
+        "reason": {
+          "@id": "dspace:reason",
+          "@container": "@set"
+        }
+      }
+    },
+    "RpcTransferTerminationMessage": {
+      "@id": "eunomia:RpcTransferTerminationMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "code": "dspace:code",
+        "reason": {
+          "@id": "dspace:reason",
+          "@container": "@set"
+        }
+      }
+    },
+    "RpcTransferResult": {
+      "@id": "eunomia:RpcTransferResult",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "request": {
+          "@id": "eunomia:request",
+          "@type": "@json"
+        },
+        "response": {
+          "@id": "eunomia:response",
+          "@type": "@json"
+        },
+        "transferAgentModel": {
+          "@id": "eunomia:transferAgentModel",
+          "@type": "@json"
+        }
+      }
+    }
+  }
+}

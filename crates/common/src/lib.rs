@@ -35,6 +35,7 @@ pub mod cache;
 pub mod config;
 pub mod dsp_common;
 pub mod errors;
+pub mod eunomia;
 pub mod facades;
 pub mod flow;
 pub mod grpc;
