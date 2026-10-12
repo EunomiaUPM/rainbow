@@ -117,7 +117,7 @@ fn make_new_cmd(identifiers: Option<HashMap<String, String>>) -> NewTransferProc
         callback_address: None,
         connector_instance_id: None,
         agreement_id: p_urn(99),
-        peer_participant_id: ParticipantId::new(p_urn(100)),
+        peer_participant_id: ParticipantId::new(p_urn(100).to_string()),
         identifiers,
         properties: None,
     }

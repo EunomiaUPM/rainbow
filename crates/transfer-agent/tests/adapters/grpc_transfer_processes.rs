@@ -220,7 +220,7 @@ async fn create_maps_enums_struct_and_identifiers() {
                 && cmd.protocol == ProtocolId::Dsp2025_1
                 && cmd.agreement_id.to_string() == "urn:agreement:1"
                 && cmd.peer_participant_id
-                    == ParticipantId::new("urn:participant:1".parse().unwrap())
+                    == ParticipantId::new("urn:participant:1")
                 && cmd.callback_address.as_ref().map(|u| u.as_str())
                     == Some("https://peer.example/cb")
                 && cmd.identifiers.as_ref().and_then(|m| m.get("consumerPid"))

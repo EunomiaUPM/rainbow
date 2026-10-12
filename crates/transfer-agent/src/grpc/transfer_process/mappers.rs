@@ -53,7 +53,7 @@ impl TryFrom<ListTransferProcessesRequest> for ListParams<TransferProcessFilter>
             agreement_id: req.agreement_id.opt_urn("agreement_id")?,
             peer_participant_id: req
                 .peer_participant_id
-                .opt_urn("peer_participant_id")?
+                .non_empty()
                 .map(ParticipantId::new),
             created_after: req.created_after.opt_rfc3339("created_after")?,
             created_before: req.created_before.opt_rfc3339("created_before")?,
@@ -100,7 +100,7 @@ impl TryFrom<CreateTransferProcessRequest> for NewTransferProcessCommand {
             connector_instance_id: None,
             agreement_id: req.agreement_id.urn("agreement_id")?,
             peer_participant_id: ParticipantId::new(
-                req.peer_participant_id.urn("peer_participant_id")?,
+                req.peer_participant_id.parsed::<String>("peer_participant_id")?,
             ),
             identifiers: Self::opt_identifiers(req.identifiers),
             properties: req.properties.map(JsonStructExt::into_json),

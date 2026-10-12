@@ -20,8 +20,9 @@ use compact_str::CompactString;
 
 urn_id!(TransferProcessId, gen = "transfer-process");
 urn_id!(MessageId, gen = "transfer-message");
-urn_id!(ParticipantId);
 
+// The peer as its grant names it: a DID, or a URN for older peers.
+str_id!(ParticipantId, String);
 str_id!(CorrelationId, CompactString);
 str_id!(RequestId, CompactString, gen);
 str_id!(IdempotencyKey, CompactString, gen);
