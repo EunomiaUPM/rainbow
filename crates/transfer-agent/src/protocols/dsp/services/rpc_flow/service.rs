@@ -18,11 +18,6 @@
 //! Outbound DSP transfer messages, sent by a local user or by the agent itself, as a flow:
 //! load the process and build the message, check it, send it, then record what changed.
 
-pub mod codec;
-pub mod input;
-pub mod message;
-pub mod rules;
-
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -32,7 +27,6 @@ use common::dsp_common::DspActor;
 use common::facades::grants_facade::{send_with_peer_token, GrantsFacadeTrait};
 use common::flow::{FlowCx, FlowTrait};
 use common::oauth::{Owner, OwnerScope, UserInfo};
-use serde::Serialize;
 use serde_json::{json, Map, Value};
 use url::Url;
 use urn::Urn;
@@ -49,66 +43,14 @@ use crate::entities::protocol::{
 };
 use crate::entities::transfer_message::Direction;
 use crate::entities::transfer_process::TransferProcess;
-use crate::protocols::dsp::entities::context_common::TransferContextConnectorRole;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
-use crate::protocols::dsp::flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::rpc_flow::input::{TransferRpcBody, TransferRpcCommand};
-use crate::protocols::dsp::rpc_flow::message::RdfDspMessage;
+use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use crate::protocols::dsp::entities::context_rpc::{TransferRpcCommand, TransferRpcFacts};
+use crate::protocols::dsp::entities::rdf_message::RdfDspMessage;
 use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DIRECTION_PROPERTY;
-use crate::services::transfer_process::views::TransferProcessView;
-
-/// The command plus everything resolved to send it: process, role, peer and the message.
-pub struct TransferRpcFacts {
-    pub command: TransferRpcCommand,
-    pub process: Option<TransferProcess>,
-    pub process_id: Urn,
-    pub role: TransferRole,
-    pub transfer_direction: TransferDirection,
-    pub owner: Owner,
-    pub peer_id: String,
-    pub target_url: String,
-    pub outgoing: RdfDspMessage,
-    pub is_restart: bool,
-}
-
-impl TransferRpcFacts {
-    pub fn current_state(&self) -> Option<TransferDSPState> {
-        self.process
-            .as_ref()
-            .and_then(|p| TransferDSPState::from_str(p.state().0.as_str()).ok())
-    }
-
-    fn hooks(&self, data_address: Option<DataAddress>) -> DataplaneHookContext {
-        DataplaneHookContext {
-            process_id: self.process_id.clone(),
-            owner: self.owner.clone(),
-            role: self.role,
-            transfer_direction: self.transfer_direction,
-            connector_instance: TransferContextConnectorRole::ConsumerNotHavingConnector,
-            resolved_data_address: data_address.clone(),
-            data_address,
-            is_restart: self.is_restart,
-        }
-    }
-}
-
-/// What the RPC answers: what was asked, what the peer said and the process as it stands.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TransferRpcReply {
-    pub request: TransferRpcBody,
-    pub response: Value,
-    pub transfer_agent_model: TransferProcessView,
-    #[serde(skip)]
-    pub agreement_id: String,
-    #[serde(skip)]
-    pub role: TransferRole,
-    #[serde(skip)]
-    pub message: TransferDSPMessageType,
-}
+use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
 
 /// Sends the five transfer messages to the peer and moves the local process with them.
 pub struct TransferRpcFlow {
@@ -513,7 +455,9 @@ impl FlowTrait for TransferRpcFlow {
             .get_one(&TransferHandlerDeps::actor(), process.id().as_urn())
             .await?;
         Ok(TransferRpcReply {
-            request: facts.command.body,
+            context: TransferRpcReply::CONTEXT,
+            kind: TransferRpcReply::TYPE,
+            request: facts.command.json,
             response: reply["raw"].clone(),
             transfer_agent_model: model,
             agreement_id: process

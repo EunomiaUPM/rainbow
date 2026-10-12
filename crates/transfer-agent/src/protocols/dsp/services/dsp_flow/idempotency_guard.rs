@@ -30,7 +30,8 @@ use crate::protocols::dsp::entities::idempotency::{
     IdempotencyGuard, IdempotencyStoreTrait, IdempotencyVerdict,
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::flow::{TransferDspFlow, TransferDspReply};
+use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// Claims each message before it is applied and stores the reply once it is committed.
 pub struct TransferIdempotencyGuard {

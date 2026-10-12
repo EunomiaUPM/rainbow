@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Transfer-agent gRPC services with mocked domain services and a stub token validator.
+//! Transfer-agent gRPC services and DSP routes, with mocked domain services and stores.
 
 mod grpc_transfer_messages;
 mod grpc_transfer_processes;
+mod http_dsp;

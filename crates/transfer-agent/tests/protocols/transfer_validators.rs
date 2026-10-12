@@ -139,7 +139,6 @@ fn transfer_rules_pids_and_uri_correlation() {
 #[test]
 fn registries_are_populated_for_dsp_lifecycle() {
     let dsp_reg = TransferValidators::fact_rules();
-    let rpc_reg = TransferValidators::rpc_registry();
     let edge_reg = TransferValidators::input_rules();
 
     for msg in [
@@ -150,7 +149,6 @@ fn registries_are_populated_for_dsp_lifecycle() {
         TransferTerminationMessage,
     ] {
         assert!(dsp_reg.has_key(&msg));
-        assert!(rpc_reg.has_key(&msg));
         assert!(edge_reg.has_key(&msg));
     }
 }

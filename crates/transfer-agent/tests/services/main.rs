@@ -15,8 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Transfer-agent services with mocked repositories.
+//! Transfer-agent services with mocked repositories, and the TCK scenario lookup.
 
 mod agreement_resolver;
+mod tck_scenarios;
 mod transfer_messages;
 mod transfer_processes;

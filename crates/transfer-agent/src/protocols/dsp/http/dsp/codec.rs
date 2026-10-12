@@ -32,7 +32,8 @@ use crate::protocols::dsp::entities::context_dsp::{
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
-use crate::protocols::dsp::flow::{TransferDspFlow, TransferDspReply};
+use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// Pids a `TransferError` names, taken from the input before the flow runs.
 #[derive(Debug, Default)]

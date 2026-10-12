@@ -59,3 +59,23 @@ impl From<DataAddressDto> for DataAddress {
         }
     }
 }
+
+/// Narrow a data address read off RDF to the DTO; the `@type` tags are dropped.
+impl From<DataAddress> for DataAddressDto {
+    fn from(address: DataAddress) -> Self {
+        Self {
+            endpoint_type: address.endpoint_type,
+            endpoint: address.endpoint,
+            endpoint_properties: Some(
+                address
+                    .endpoint_properties
+                    .into_iter()
+                    .map(|p| EndpointPropertyDto {
+                        name: p.name,
+                        value: p.value,
+                    })
+                    .collect(),
+            ),
+        }
+    }
+}

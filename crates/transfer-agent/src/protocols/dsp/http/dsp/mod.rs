@@ -17,6 +17,8 @@
 
 //! DSP transfer routes (DSP 10.2): every message goes through the transfer flow runner.
 
+pub mod codec;
+
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -38,8 +40,8 @@ use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
-use crate::protocols::dsp::flow::codec::TransferDspCodec;
-use crate::protocols::dsp::flow::TransferDspFlow;
+use crate::protocols::dsp::http::dsp::codec::TransferDspCodec;
+use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -66,9 +68,8 @@ impl DspRouter {
         mut request: Request,
         next: Next,
     ) -> Result<impl IntoResponse, StatusCode> {
-        // DSP 10.1.2.3: an unauthorized client MUST get a 404, not a 401 — the
-        // same answer as a missing process (10.1.2.2), so that probing cannot
-        // reveal which Transfer Processes exist.
+        // DSP 10.1.2.3: an unauthorized client gets a 404 like a missing process (10.1.2.2),
+        // so probing cannot reveal which Transfer Processes exist.
         let token = OauthHttpMiddleware::bearer(request.headers())
             .map_err(|_| StatusCode::NOT_FOUND)?
             .to_owned();

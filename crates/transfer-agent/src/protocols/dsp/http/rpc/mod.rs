@@ -15,8 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! RPC routes a local user calls to make the agent send transfer messages, and the endpoint
+//! Eunomia RPC routes a local user calls to make the agent send transfer messages, and the endpoint
 //! the DSP TCK uses to make a consumer open a transfer (TCK mode only).
+
+pub mod codec;
 
 use std::sync::Arc;
 
@@ -29,11 +31,12 @@ use common::flow::FlowRunner;
 use common::oauth::UserInfo;
 use http::StatusCode;
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::Value;
 
+use crate::protocols::dsp::entities::context_rpc::TransferRpcBody;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::rpc_flow::codec::TransferRpcCodec;
-use crate::protocols::dsp::rpc_flow::TransferRpcFlow;
+use crate::protocols::dsp::http::rpc::codec::TransferRpcCodec;
+use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
 
 /// What the TCK posts to `dataspacetck.dsp.connector.transfer.initiate.url`.
 #[derive(Debug, Deserialize)]
@@ -156,12 +159,14 @@ impl TransferRpcRouter {
                 return (StatusCode::BAD_REQUEST, rejection.body_text()).into_response()
             }
         };
-        let body = json!({
-            "associatedAgentPeer": tck.provider_id,
-            "agreementId": tck.agreement_id,
-            "format": tck.format,
-            "providerAddress": tck.connector_address,
-        });
+        let body = TransferRpcBody {
+            associated_agent_peer: Some(tck.provider_id),
+            agreement_id: Some(tck.agreement_id),
+            format: Some(tck.format),
+            provider_address: Some(tck.connector_address),
+            ..TransferRpcBody::default()
+        }
+        .to_json_ld(&TransferDSPMessageType::TransferRequestMessage);
         let agent = UserInfo::system();
         s.dispatch(
             &agent,

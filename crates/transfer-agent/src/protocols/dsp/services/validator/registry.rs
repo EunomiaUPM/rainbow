@@ -15,23 +15,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Rule registries for inbound DSP messages (shape and facts) and outbound RPC commands.
+//! Rule registries for inbound DSP messages: shape over the input, then the loaded facts.
 
 use common::dsp_common::DspRules;
-use common::validation::{Rule, Stage, ValidationRegistry, Validator, ValidatorRegistry, Violations, codes};
+use common::validation::{Rule, Stage, ValidationRegistry, Validator, Violations, codes};
 use std::str::FromStr;
 
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
 use crate::protocols::dsp::entities::context_dsp::{
     TransferDSPContextDomain, TransferDSPContextTyped,
 };
-use crate::protocols::dsp::entities::context_rpc::TransferRPCContextDomain;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::validator::rules::TransferRules;
 
-/// Validator registries for inbound DSP messages, outbound RPC calls and edge checks.
+/// Validator registries for inbound DSP messages and the message shapes the RPC side reuses.
 pub struct TransferValidators;
 
 impl TransferValidators {
@@ -44,32 +43,6 @@ impl TransferValidators {
             .with(TransferCompletionMessage, Stage::Domain, Self::completion_dsp())
             .with(TransferSuspensionMessage, Stage::Domain, Self::suspension_dsp())
             .with(TransferTerminationMessage, Stage::Domain, Self::termination_dsp())
-    }
-
-    /// Outbound RPC validator registry checking symmetrical invariants before sending to peers.
-    pub fn rpc_registry() -> ValidatorRegistry<TransferDSPMessageType, TransferRPCContextDomain> {
-        let mut reg = ValidatorRegistry::new();
-        reg.register(
-            TransferDSPMessageType::TransferRequestMessage,
-            Self::request_rpc(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferStartMessage,
-            Self::start_rpc(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferCompletionMessage,
-            Self::completion_rpc(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferSuspensionMessage,
-            Self::suspension_rpc(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferTerminationMessage,
-            Self::termination_rpc(),
-        );
-        reg
     }
 
     /// Inbound DSP shape rules over the extracted fields, before any lookup.
@@ -397,121 +370,6 @@ impl TransferValidators {
                     ctx.typed.fields.consumer_pid.as_deref(),
                     ctx.typed.fields.provider_pid.as_deref(),
                     "pids",
-                ) {
-                    v.extend(vs);
-                }
-                v.into_result()
-            })
-    }
-
-    fn request_rpc() -> Validator<TransferRPCContextDomain> {
-        Validator::new()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                Self::check_urn_opt(&mut v, "consumerPid", ctx.typed.consumer_pid.as_deref());
-                Self::check_urn_opt(&mut v, "agreementId", ctx.typed.agreement_id.as_deref());
-                v.into_result()
-            })
-            .then()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                let current_state = TransferRules::current_state(&ctx.process);
-                if let Err(vs) = TransferRules::state_transition(
-                    current_state.as_ref(),
-                    &ctx.typed.message,
-                    "state",
-                ) {
-                    v.extend(vs);
-                }
-                v.into_result()
-            })
-    }
-
-    fn start_rpc() -> Validator<TransferRPCContextDomain> {
-        Validator::new()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                Self::check_urn_opt(&mut v, "consumerPid", ctx.typed.consumer_pid.as_deref());
-                Self::check_urn_opt(&mut v, "providerPid", ctx.typed.provider_pid.as_deref());
-                v.into_result()
-            })
-            .then()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                let current_state = TransferRules::current_state(&ctx.process);
-                if let Err(vs) = TransferRules::state_transition(
-                    current_state.as_ref(),
-                    &ctx.typed.message,
-                    "state",
-                ) {
-                    v.extend(vs);
-                }
-                v.into_result()
-            })
-    }
-
-    fn completion_rpc() -> Validator<TransferRPCContextDomain> {
-        Validator::new()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                Self::check_urn_opt(&mut v, "consumerPid", ctx.typed.consumer_pid.as_deref());
-                Self::check_urn_opt(&mut v, "providerPid", ctx.typed.provider_pid.as_deref());
-                v.into_result()
-            })
-            .then()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                let current_state = TransferRules::current_state(&ctx.process);
-                if let Err(vs) = TransferRules::state_transition(
-                    current_state.as_ref(),
-                    &ctx.typed.message,
-                    "state",
-                ) {
-                    v.extend(vs);
-                }
-                v.into_result()
-            })
-    }
-
-    fn suspension_rpc() -> Validator<TransferRPCContextDomain> {
-        Validator::new()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                Self::check_urn_opt(&mut v, "consumerPid", ctx.typed.consumer_pid.as_deref());
-                Self::check_urn_opt(&mut v, "providerPid", ctx.typed.provider_pid.as_deref());
-                v.into_result()
-            })
-            .then()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                let current_state = TransferRules::current_state(&ctx.process);
-                if let Err(vs) = TransferRules::state_transition(
-                    current_state.as_ref(),
-                    &ctx.typed.message,
-                    "state",
-                ) {
-                    v.extend(vs);
-                }
-                v.into_result()
-            })
-    }
-
-    fn termination_rpc() -> Validator<TransferRPCContextDomain> {
-        Validator::new()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                Self::check_urn_opt(&mut v, "consumerPid", ctx.typed.consumer_pid.as_deref());
-                Self::check_urn_opt(&mut v, "providerPid", ctx.typed.provider_pid.as_deref());
-                v.into_result()
-            })
-            .then()
-            .rule(|ctx: &TransferRPCContextDomain| {
-                let mut v = Violations::new();
-                let current_state = TransferRules::current_state(&ctx.process);
-                if let Err(vs) = TransferRules::state_transition(
-                    current_state.as_ref(),
-                    &ctx.typed.message,
-                    "state",
                 ) {
                     v.extend(vs);
                 }

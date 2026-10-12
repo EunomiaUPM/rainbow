@@ -27,8 +27,8 @@ use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::flow::TransferDspReply;
+use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// Moves an existing process to the state its message names, around the dataplane hooks.
 pub struct TransitionHandler;

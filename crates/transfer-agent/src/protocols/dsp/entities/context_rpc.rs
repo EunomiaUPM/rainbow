@@ -15,139 +15,156 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The outbound RPC context, stage by stage: raw, parsed, typed and domain.
-//! Plain JSON, so the typed stage is a single serde pass.
+//! An outbound transfer message: the eunomia RPC body a local user sends, and everything
+//! resolved to send it.
 
-use crate::entities::protocol::{TransferDirection, TransferRole};
-use crate::protocols::dsp::entities::auth::TransferRPCAuthn;
-use crate::protocols::dsp::entities::context_common::{BuildAuthn, TransferContextRaw};
-use crate::protocols::dsp::entities::context_common::{
-    TransferContextConnectorRole, TransferContextProcessSlot,
-};
-use crate::protocols::dsp::entities::data_address::DataAddressDto;
-use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use http::request::Parts;
-use common::oauth::UserInfo;
-use serde::Deserialize;
+use std::str::FromStr;
+
+use common::dsp_common::data_address::DataAddress;
+use common::eunomia::{EunomiaProfile, EUNOMIA_CONTEXT_URL};
+use common::oauth::Owner;
+use common::rdf::ExpandedDoc;
+use serde::Serialize;
+use serde_json::{json, Value};
+use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
-impl BuildAuthn for TransferRPCAuthn {
-    fn from_request_parts(parts: &Parts) -> Outcome<Self> {
-        let me_user = parts.extensions.get::<UserInfo>().cloned().ok_or_else(|| {
-            Errors::crazy("auth middleware did not resolve the user (UserInfo missing)", None)
-        })?;
-        let raw = Self::header(&parts.headers, "authorization").unwrap_or_default();
-        let (token_type, token_content) = raw
-            .split_once(' ')
-            .map(|(t, c)| (t.to_string(), c.trim().to_string()))
-            .unwrap_or_else(|| (String::new(), raw.clone()));
-        Ok(TransferRPCAuthn {
-            raw,
-            token_type,
-            token_content,
-            me_user,
-        })
-    }
-}
+use crate::entities::protocol::{TransferDirection, TransferRole};
+use crate::entities::transfer_process::TransferProcess;
+use crate::protocols::dsp::entities::context_common::TransferContextConnectorRole;
+use crate::protocols::dsp::entities::data_address::DataAddressDto;
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::rdf_extractor_dsp::ExtractProtocolFields;
+use crate::protocols::dsp::entities::rdf_extractor_rpc::EunomiaTransfer;
+use crate::protocols::dsp::entities::rdf_message::RdfDspMessage;
+use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
-/// Outbound RPC call read as JSON.
-#[derive(Debug)]
-pub struct TransferRPCContextParsed {
-    pub raw: TransferContextRaw<TransferRPCAuthn>,
-    pub json_value: serde_json::Value,
-}
-
-impl TransferRPCContextParsed {
-    pub fn from_raw(
-        raw: TransferContextRaw<TransferRPCAuthn>,
-        json_value: serde_json::Value,
-    ) -> Outcome<Self> {
-        Ok(Self { raw, json_value })
-    }
-}
-
-#[derive(Debug, Deserialize, Default)]
+/// RPC body for any outbound transfer message; which fields matter depends on the message.
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RpcMessageFields {
-    pub consumer_pid: Option<String>,
-    pub provider_pid: Option<String>,
-    pub agreement_id: Option<String>,
-    pub data_address: Option<DataAddressDto>,
-    pub format: Option<String>,
-    /// Routing fields consumed locally, never forwarded on the wire.
-    pub provider_address: Option<String>,
-    pub callback_address: Option<String>,
+pub struct TransferRpcBody {
+    /// The provider's participant id, for a request.
     pub associated_agent_peer: Option<String>,
-}
-
-/// Outbound RPC call with its fields deserialized.
-#[derive(Debug)]
-pub struct TransferRPCContextTyped {
-    pub parsed: TransferRPCContextParsed,
-    pub message: TransferDSPMessageType,
-    pub consumer_pid: Option<String>,
-    pub provider_pid: Option<String>,
-    pub data_address: Option<DataAddressDto>,
     pub agreement_id: Option<String>,
     pub format: Option<String>,
+    /// The sink a push transfer delivers to, for a request.
+    pub data_address: Option<DataAddressDto>,
+    /// The provider's DSP base, for a request.
     pub provider_address: Option<String>,
+    /// Our DSP base as the provider will call it back; defaults to this agent's own.
     pub callback_address: Option<String>,
-    pub associated_agent_peer: Option<String>,
+    pub consumer_pid: Option<String>,
+    pub provider_pid: Option<String>,
+    pub code: Option<String>,
+    pub reason: Option<Vec<String>>,
 }
 
-impl TransferRPCContextTyped {
-    /// Deserialize the RPC body into its fields. One serde pass — the whole point
-    /// of RPC being plain JSON.
-    pub fn from_parsed(
-        parsed: TransferRPCContextParsed,
-        message: TransferDSPMessageType,
-    ) -> Outcome<Self> {
-        let f: RpcMessageFields =
-            serde_json::from_value(parsed.json_value.clone()).map_err(|e| {
-                Errors::format(BadFormat::Received, format!("invalid RPC body: {e}"), None)
-            })?;
-        Ok(Self {
-            parsed,
-            message,
-            consumer_pid: f.consumer_pid,
-            provider_pid: f.provider_pid,
-            data_address: f.data_address,
-            agreement_id: f.agreement_id,
-            format: f.format,
-            provider_address: f.provider_address,
-            callback_address: f.callback_address,
-            associated_agent_peer: f.associated_agent_peer,
-        })
+impl TransferRpcBody {
+    /// The body as a eunomia JSON-LD message of the RPC that sends `message`.
+    pub fn to_json_ld(&self, message: &TransferDSPMessageType) -> Value {
+        let mut json = json!({
+            "@context": EUNOMIA_CONTEXT_URL,
+            "@type": EunomiaTransfer::compact_type(message),
+        });
+        if let (Value::Object(object), Ok(Value::Object(members))) =
+            (&mut json, serde_json::to_value(self))
+        {
+            object.extend(members.into_iter().filter(|(_, v)| !v.is_null()));
+        }
+        json
     }
 }
 
-/// Outbound RPC call with the process, role and direction it acts on.
-#[derive(Debug)]
-pub struct TransferRPCContextDomain {
-    pub typed: TransferRPCContextTyped,
-    pub process: TransferContextProcessSlot,
+/// The message to send, fixed by the route, its body and the JSON-LD it was read from.
+#[derive(Debug, Clone)]
+pub struct TransferRpcCommand {
+    pub message: TransferDSPMessageType,
+    pub body: TransferRpcBody,
+    pub json: Value,
+}
+
+impl TransferRpcCommand {
+    /// A command built in process, such as the TCK's, with its JSON-LD rendered from the body.
+    pub fn new(message: TransferDSPMessageType, body: TransferRpcBody) -> Self {
+        let json = body.to_json_ld(&message);
+        Self {
+            message,
+            body,
+            json,
+        }
+    }
+
+    /// Reads a eunomia RPC body; its `@type` must be the RPC of the route's `message`.
+    pub async fn read(message: &TransferDSPMessageType, json: Value) -> Outcome<Self> {
+        let expansion = EunomiaProfile::shared().expand(&json).await?;
+        let doc = ExpandedDoc::new(&expansion.expanded).ok_or_else(|| {
+            Errors::format(
+                BadFormat::Received,
+                "expanded JSON-LD is not an array of node objects",
+                None,
+            )
+        })?;
+        let (declared, node) = EunomiaTransfer::root_message(&doc)?;
+        if &declared != message {
+            return Err(Errors::format(
+                BadFormat::Received,
+                format!(
+                    "body is a {} but this route sends a {}",
+                    EunomiaTransfer::compact_type(&declared),
+                    EunomiaTransfer::compact_type(message)
+                ),
+                None,
+            ));
+        }
+        let body = EunomiaTransfer::extract(&node)?;
+        Ok(Self {
+            message: declared,
+            body,
+            json,
+        })
+    }
+
+    /// The pid of an existing process the command refers to, ours or the peer's.
+    pub fn pid(&self) -> Option<&str> {
+        self.body
+            .provider_pid
+            .as_deref()
+            .or(self.body.consumer_pid.as_deref())
+    }
+}
+
+/// The command plus everything resolved to send it: process, role, peer and the message.
+pub struct TransferRpcFacts {
+    pub command: TransferRpcCommand,
+    pub process: Option<TransferProcess>,
+    pub process_id: Urn,
     pub role: TransferRole,
     pub transfer_direction: TransferDirection,
-    pub connector_instance: TransferContextConnectorRole,
+    pub owner: Owner,
+    pub peer_id: String,
+    pub target_url: String,
+    pub outgoing: RdfDspMessage,
     pub is_restart: bool,
 }
 
-impl TransferRPCContextDomain {
-    pub fn from_typed(
-        typed: TransferRPCContextTyped,
-        process: TransferContextProcessSlot,
-        role: TransferRole,
-        transfer_direction: TransferDirection,
-        connector_instance: TransferContextConnectorRole,
-        is_restart: bool,
-    ) -> Outcome<Self> {
-        Ok(Self {
-            typed,
-            process,
-            role,
-            transfer_direction,
-            connector_instance,
-            is_restart,
-        })
+impl TransferRpcFacts {
+    pub fn current_state(&self) -> Option<TransferDSPState> {
+        self.process
+            .as_ref()
+            .and_then(|p| TransferDSPState::from_str(p.state().0.as_str()).ok())
+    }
+
+    pub fn hooks(&self, data_address: Option<DataAddress>) -> DataplaneHookContext {
+        DataplaneHookContext {
+            process_id: self.process_id.clone(),
+            owner: self.owner.clone(),
+            role: self.role,
+            transfer_direction: self.transfer_direction,
+            connector_instance: TransferContextConnectorRole::ConsumerNotHavingConnector,
+            resolved_data_address: data_address.clone(),
+            data_address,
+            is_restart: self.is_restart,
+        }
     }
 }

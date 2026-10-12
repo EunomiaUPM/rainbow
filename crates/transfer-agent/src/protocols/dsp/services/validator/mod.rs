@@ -15,13 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The checks a message must pass before the manager runs it: payload shape and
-//! state-machine legality.
+//! Validation registries of the transfer flows: inbound message and facts rules, and the
+//! outbound RPC rules.
 
-pub mod payload;
 pub mod registry;
+pub mod rpc_registry;
 pub mod rules;
-pub mod transition;
 
 pub use registry::TransferValidators;
 pub use rules::TransferRules;

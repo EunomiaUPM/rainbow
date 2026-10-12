@@ -22,8 +22,8 @@ use common::validation::{Rule, Stage, ValidationRegistry, Validator};
 use serde_json::Value;
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::rpc_flow::input::TransferRpcCommand;
-use crate::protocols::dsp::rpc_flow::TransferRpcFacts;
+use crate::protocols::dsp::entities::context_rpc::TransferRpcCommand;
+use crate::protocols::dsp::entities::context_rpc::TransferRpcFacts;
 use crate::protocols::dsp::services::validator::{TransferRules, TransferValidators};
 
 /// Rule registries of the outbound transfer flow.

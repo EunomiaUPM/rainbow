@@ -103,7 +103,7 @@ impl ExtractProtocolFields for DspTransfer {
 impl DspTransfer {
     /// A `dataAddress` is optional, but a present one missing a required member is
     /// malformed rather than absent.
-    fn data_address(node: &RdfNode<'_, '_>) -> Outcome<Option<DataAddress>> {
+    pub(crate) fn data_address(node: &RdfNode<'_, '_>) -> Outcome<Option<DataAddress>> {
         let Some(address) = node.object(&Self::dspace("dataAddress")) else {
             return Ok(None);
         };

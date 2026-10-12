@@ -15,15 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! What the DSP TCK expects this connector to do on its own in each transfer test.
-//!
-//! The TCK names an agreement per test (`TP_01_01_AGREEMENTID`…) and waits for the connector
-//! under test to send its part of the scenario. Only active when `DSP_TCK_MAPPING` points at
-//! the mapping `scripts/populate_tck.sh` writes (`tck/tck_mapping.json`); it also mounts the
-//! TCK's consumer trigger, which is not served otherwise.
-
-pub mod guard;
-pub mod worker;
+//! Which scenario the TCK expects for each agreement, read from the mapping
+//! `scripts/populate_tck.sh` writes; lookups read the file because the TCK seeds it after boot.
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -31,48 +24,10 @@ use std::path::PathBuf;
 use serde::Deserialize;
 use ymir::errors::{Errors, Outcome};
 
-use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::tck::{TckEvent, TckMessage, TckStep};
 
 /// Environment variable naming the TCK mapping file.
 pub const TCK_MAPPING_ENV: &str = "DSP_TCK_MAPPING";
-
-/// One thing the connector does in a scenario.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TckStep {
-    Send(TckMessage),
-    Pause,
-}
-
-/// The messages a scenario makes the connector send.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TckMessage {
-    Start,
-    Suspend,
-    Complete,
-    Terminate,
-}
-
-impl TckMessage {
-    pub fn message_type(self) -> TransferDSPMessageType {
-        match self {
-            Self::Start => TransferDSPMessageType::TransferStartMessage,
-            Self::Suspend => TransferDSPMessageType::TransferSuspensionMessage,
-            Self::Complete => TransferDSPMessageType::TransferCompletionMessage,
-            Self::Terminate => TransferDSPMessageType::TransferTerminationMessage,
-        }
-    }
-}
-
-/// What just happened to a process, from which a scenario continues.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TckEvent {
-    /// We are the provider and accepted a request.
-    ProviderRequested,
-    /// We are the consumer and our request was accepted.
-    ConsumerRequested,
-    /// We are the consumer and the provider started the transfer.
-    ConsumerStarted,
-}
 
 #[derive(Debug, Default, Deserialize)]
 struct TckMapping {

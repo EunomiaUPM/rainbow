@@ -15,19 +15,20 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! JSON over HTTP for the outbound flow: the RPC body in, the reply or a `TransferError` out.
+//! JSON-LD over HTTP for the outbound flow: the eunomia RPC body in, the eunomia result or a
+//! `TransferError` out.
 
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use common::flow::{FlowCodecTrait, FlowError};
 use http::StatusCode;
 use serde_json::Value;
-use ymir::errors::{BadFormat, Errors};
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
-use crate::protocols::dsp::rpc_flow::input::{TransferRpcBody, TransferRpcCommand};
-use crate::protocols::dsp::rpc_flow::{TransferRpcFlow, TransferRpcReply};
+use crate::protocols::dsp::entities::context_rpc::TransferRpcCommand;
+use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
+use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
 
 /// Pids the error names, as the caller sent them.
 #[derive(Debug, Default)]
@@ -50,17 +51,9 @@ impl FlowCodecTrait<TransferRpcFlow> for TransferRpcCodec {
         key: &TransferDSPMessageType,
         raw: Value,
     ) -> Result<TransferRpcCommand, FlowError> {
-        let body: TransferRpcBody = serde_json::from_value(raw).map_err(|e| {
-            FlowError::from(Errors::format(
-                BadFormat::Received,
-                format!("invalid RPC body: {e}"),
-                None,
-            ))
-        })?;
-        Ok(TransferRpcCommand {
-            message: key.clone(),
-            body,
-        })
+        TransferRpcCommand::read(key, raw)
+            .await
+            .map_err(FlowError::from)
     }
 
     fn error_context(&self, input: &TransferRpcCommand) -> TransferRpcErrorPids {

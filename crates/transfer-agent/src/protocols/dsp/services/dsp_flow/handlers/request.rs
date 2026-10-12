@@ -35,8 +35,8 @@ use crate::protocols::dsp::entities::context_common::{
 use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::flow::TransferDspReply;
+use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DIRECTION_PROPERTY;
 
 /// Creates the process with a new `providerPid`, records the message and starts the dataplane.

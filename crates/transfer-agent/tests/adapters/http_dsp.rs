@@ -45,9 +45,9 @@ use transfer_agent::entities::transfer_message::Direction;
 use transfer_agent::entities::transfer_process::TransferProcess;
 use transfer_agent::protocols::dsp::entities::idempotency::InMemoryIdempotencyStore;
 use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
-use transfer_agent::protocols::dsp::flow::handlers::TransferHandlerDeps;
-use transfer_agent::protocols::dsp::flow::idempotency_guard::TransferIdempotencyGuard;
-use transfer_agent::protocols::dsp::flow::TransferDspFlow;
+use transfer_agent::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use transfer_agent::protocols::dsp::services::dsp_flow::idempotency_guard::TransferIdempotencyGuard;
+use transfer_agent::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
 use transfer_agent::protocols::dsp::services::connector_resolver::MockConnectorResolverTrait;
 use transfer_agent::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
@@ -61,7 +61,6 @@ use urn::Urn;
 use ymir::errors::Errors;
 
 const CONSUMER_PID: &str = "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833";
-const AGREEMENT: &str = "urn:uuid:e8dc8655-44c2-46ef-b701-4cffdc2faa44";
 
 const REQUEST_BODY: &str = r#"{
         "@context": ["https://w3id.org/dspace/2025/1/context.jsonld"],

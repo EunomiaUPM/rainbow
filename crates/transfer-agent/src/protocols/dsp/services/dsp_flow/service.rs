@@ -17,43 +17,22 @@
 
 //! Inbound DSP transfer messages as a flow: the runner validates, this loads and applies.
 
-pub mod codec;
-pub mod handlers;
-pub mod idempotency_guard;
-
 use std::sync::Arc;
 
 use common::facades::grants_facade::VerifiedPeer;
 use common::flow::{FlowCx, FlowTrait};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use ymir::errors::Outcome;
 
-use crate::entities::ids::IdempotencyKey;
-use crate::entities::protocol::TransferRole;
-use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::context_dsp::{
     TransferDSPContextDomain, TransferDSPContextTyped,
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::flow::handlers::request::RequestHandler;
-use crate::protocols::dsp::flow::handlers::transition::TransitionHandler;
-use crate::protocols::dsp::flow::handlers::TransferHandlerDeps;
+use crate::protocols::dsp::services::dsp_flow::handlers::request::RequestHandler;
+use crate::protocols::dsp::services::dsp_flow::handlers::transition::TransitionHandler;
+use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
 use crate::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
-
-/// What applying a message produced: the ACK, and what idempotency needs to replay it.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TransferDspReply {
-    pub ack: TransferProcessAck,
-    /// A request opened the process (201); any other message moved it (200).
-    pub created: bool,
-    pub process_version: u64,
-    pub idempotency_key: IdempotencyKey,
-    /// What the process runs under and our side of it, for whoever reacts to the change.
-    pub agreement_id: String,
-    pub role: TransferRole,
-}
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// The five inbound transfer messages; `apply` picks the handler by message type.
 pub struct TransferDspFlow {

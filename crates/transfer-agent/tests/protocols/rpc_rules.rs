@@ -21,17 +21,14 @@ use transfer_agent::entities::protocol::TransferRole::{Consumer, Provider, Relay
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType::{
     TransferRequestMessage, TransferStartMessage, TransferTerminationMessage,
 };
-use transfer_agent::protocols::dsp::rpc_flow::input::{TransferRpcBody, TransferRpcCommand};
-use transfer_agent::protocols::dsp::rpc_flow::rules::TransferRpcRules;
+use transfer_agent::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcCommand};
+use transfer_agent::protocols::dsp::services::validator::rpc_registry::TransferRpcRules;
 use transfer_agent::protocols::dsp::services::validator::TransferRules;
 
 /// A request without peer, address, format or agreement reports all four at once.
 #[test]
 fn an_empty_request_reports_every_missing_field() {
-    let command = TransferRpcCommand {
-        message: TransferRequestMessage,
-        body: TransferRpcBody::default(),
-    };
+    let command = TransferRpcCommand::new(TransferRequestMessage, TransferRpcBody::default());
     let err = TransferRpcRules::input_rules()
         .validate(&TransferRequestMessage, &command)
         .unwrap_err();
@@ -41,20 +38,17 @@ fn an_empty_request_reports_every_missing_field() {
 /// A state change needs the pid of the process it moves.
 #[test]
 fn a_state_change_needs_a_pid() {
-    let without = TransferRpcCommand {
-        message: TransferTerminationMessage,
-        body: TransferRpcBody::default(),
-    };
+    let without = TransferRpcCommand::new(TransferTerminationMessage, TransferRpcBody::default());
     assert!(TransferRpcRules::input_rules()
         .validate(&TransferTerminationMessage, &without)
         .is_err());
-    let with = TransferRpcCommand {
-        message: TransferTerminationMessage,
-        body: TransferRpcBody {
+    let with = TransferRpcCommand::new(
+        TransferTerminationMessage,
+        TransferRpcBody {
             provider_pid: Some("urn:uuid:p".into()),
             ..TransferRpcBody::default()
         },
-    };
+    );
     assert!(TransferRpcRules::input_rules()
         .validate(&TransferTerminationMessage, &with)
         .is_ok());

@@ -28,9 +28,9 @@ use tokio::task::JoinSet;
 use tokio_util::sync::CancellationToken;
 use ymir::errors::Outcome;
 
-use crate::protocols::dsp::rpc_flow::input::{TransferRpcBody, TransferRpcCommand};
-use crate::protocols::dsp::rpc_flow::TransferRpcFlow;
-use crate::protocols::dsp::tck::{TckMessage, TckStep};
+use crate::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcCommand};
+use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
+use crate::protocols::dsp::entities::tck::{TckMessage, TckStep};
 
 /// Steps to play on the process with pid `pid`.
 #[derive(Debug)]
@@ -67,13 +67,13 @@ impl TckWorker {
     /// Sends one message, retrying while the peer is not ready for it yet.
     async fn send(runner: &FlowRunner<TransferRpcFlow>, pid: &str, message: TckMessage) {
         for attempt in 1..=Self::ATTEMPTS {
-            let command = TransferRpcCommand {
-                message: message.message_type(),
-                body: TransferRpcBody {
+            let command = TransferRpcCommand::new(
+                message.message_type(),
+                TransferRpcBody {
                     provider_pid: Some(pid.to_string()),
                     ..TransferRpcBody::default()
                 },
-            };
+            );
             match runner.run(&UserInfo::system(), command).await {
                 Ok(_) => return,
                 Err(err) => {

@@ -15,9 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! What runs between the HTTP edge and the domain: the inbound pipeline, the
-//! domain loader, the validators and the lifecycle manager.
+//! Use cases of the DSP transfer process: the inbound and outbound flows, the domain loader,
+//! the validators and the TCK scenarios.
 
 pub mod connector_resolver;
 pub mod dsp_domain_loader;
+pub mod dsp_flow;
+pub mod rpc_flow;
+pub mod tck;
 pub mod validator;

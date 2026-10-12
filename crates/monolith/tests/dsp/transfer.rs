@@ -18,6 +18,7 @@
 //! Transfer over DSP after a finalized negotiation: the consumer, as a raw DSP peer, opens a
 //! transfer on the provider and terminates it, through the transfer flow end to end.
 
+use common::eunomia::EUNOMIA_CONTEXT_URL;
 use serde_json::{json, Value};
 use uuid::Uuid;
 
@@ -205,6 +206,8 @@ async fn consumer_and_provider_drive_a_transfer_over_rpc() {
         .post(
             &format!("{TRANSFERS}/rpc/setup-request"),
             json!({
+                "@context": EUNOMIA_CONTEXT_URL,
+                "@type": "RpcTransferRequestMessage",
                 "associatedAgentPeer": PROVIDER_DID,
                 "agreementId": negotiated.agreement["id"],
                 "format": "http+pull",
@@ -212,6 +215,7 @@ async fn consumer_and_provider_drive_a_transfer_over_rpc() {
             }),
         )
         .await;
+    assert_eq!(requested["@type"], "RpcTransferResult", "{requested}");
     let model = &requested["transferAgentModel"];
     assert_eq!(model["state"], "REQUESTED", "{requested}");
     assert_eq!(
@@ -231,17 +235,20 @@ async fn consumer_and_provider_drive_a_transfer_over_rpc() {
         "REQUESTED"
     );
 
-    let pids = json!({"consumerPid": consumer_pid, "providerPid": provider_pid});
-    let steps: [(&Participant, &str, &str); 4] = [
-        (provider, "setup-start", "STARTED"),
-        (provider, "setup-suspension", "SUSPENDED"),
-        (provider, "setup-start", "STARTED"),
-        (consumer, "setup-termination", "TERMINATED"),
+    let steps: [(&Participant, &str, &str, &str); 4] = [
+        (provider, "setup-start", "RpcTransferStartMessage", "STARTED"),
+        (provider, "setup-suspension", "RpcTransferSuspensionMessage", "SUSPENDED"),
+        (provider, "setup-start", "RpcTransferStartMessage", "STARTED"),
+        (consumer, "setup-termination", "RpcTransferTerminationMessage", "TERMINATED"),
     ];
-    for (who, step, expected) in steps {
-        let answer = who
-            .post(&format!("{TRANSFERS}/rpc/{step}"), pids.clone())
-            .await;
+    for (who, step, rpc_type, expected) in steps {
+        let body = json!({
+            "@context": EUNOMIA_CONTEXT_URL,
+            "@type": rpc_type,
+            "consumerPid": consumer_pid,
+            "providerPid": provider_pid,
+        });
+        let answer = who.post(&format!("{TRANSFERS}/rpc/{step}"), body).await;
         assert_eq!(
             answer["transferAgentModel"]["state"], expected,
             "{step}: {answer}"

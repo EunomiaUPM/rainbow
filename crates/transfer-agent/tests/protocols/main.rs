@@ -15,18 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP protocol layer: contexts, idempotency, message types, RDF extraction, the payload
-//! and transition validators, and the HTTP routes.
+//! The DSP protocol layer: DSP and eunomia RPC contexts, idempotency, message types, RDF
+//! extraction and the inbound and RPC validation registries.
 
 mod ack;
 mod context_dsp;
 mod context_rpc;
-mod http;
 mod idempotency;
 mod message_types;
-mod payload_validator;
 mod rdf_extractor_dsp;
 mod rpc_rules;
-mod tck_scenarios;
 mod transfer_validators;
-mod transition_validator;

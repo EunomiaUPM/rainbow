@@ -17,7 +17,8 @@
 
 //! TCK scenarios: the connector's part of each test, looked up through the seeded mapping.
 
-use transfer_agent::protocols::dsp::tck::{TckEvent, TckMessage, TckScenarios, TckStep};
+use transfer_agent::protocols::dsp::entities::tck::{TckEvent, TckMessage, TckStep};
+use transfer_agent::protocols::dsp::services::tck::service::TckScenarios;
 
 fn mapping_file() -> std::path::PathBuf {
     std::env::temp_dir().join(format!("tck-mapping-{}.json", uuid::Uuid::new_v4()))

@@ -27,10 +27,13 @@ use ymir::errors::Outcome;
 
 use crate::entities::protocol::TransferRole;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::flow::{TransferDspFlow, TransferDspReply};
-use crate::protocols::dsp::rpc_flow::{TransferRpcFlow, TransferRpcReply};
-use crate::protocols::dsp::tck::worker::TckJob;
-use crate::protocols::dsp::tck::{TckEvent, TckScenarios};
+use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
+use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
+use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
+use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
+use crate::protocols::dsp::services::tck::worker::TckJob;
+use crate::protocols::dsp::entities::tck::TckEvent;
+use crate::protocols::dsp::services::tck::service::TckScenarios;
 
 /// Turns committed changes into scenario jobs for the worker.
 #[derive(Clone)]
