@@ -179,6 +179,8 @@
 //! ```
 
 pub mod canonical;
+pub mod context_cache;
+pub mod context_resolver;
 pub mod engine;
 pub mod loader;
 pub mod node;
@@ -186,6 +188,8 @@ pub mod profile;
 pub mod traits;
 
 pub use canonical::{RdfCanonicalizer, RdfExpansion};
+pub use context_cache::RdfContextCache;
+pub use context_resolver::RdfContextResolver;
 pub use engine::RdfEngine;
 pub use loader::{RdfContextLoader, RdfLoaderError};
 pub use node::{ExpandedDoc, RdfNode};

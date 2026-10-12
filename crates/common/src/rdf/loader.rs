@@ -15,23 +15,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Context document loader supporting local assets, in-memory caching, and remote fallback.
+//! JSON-LD document loader: contexts come from a long-lived cache, local copies, or the network.
 
-use axum::http::header::ACCEPT;
-use axum::http::{HeaderMap, HeaderValue};
-use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
-use ymir::services::client::ClientTrait;
-use ymir::utils::http_client;
 
-use json_syntax::{Parse, Value as JsonSyntaxValue};
+use json_syntax::Value as JsonSyntaxValue;
 use locspan::{Location, Meta, Span};
-use sophia_iri::Iri;
 use sophia_jsonld::json_ld::future::{BoxFuture, FutureExt};
 use sophia_jsonld::json_ld::{Loader, LoadingResult, RemoteDocument};
 use sophia_jsonld::vocabulary::ArcIri;
-use tokio::sync::RwLock;
+
+use crate::rdf::context_cache::RdfContextCache;
+use crate::rdf::context_resolver::RdfContextResolver;
 
 /// JSON value as parsed by the JSON-LD loader, with source locations.
 pub type JsonVal = JsonSyntaxValue<Location<ArcIri, Span>>;
@@ -49,105 +44,52 @@ pub enum RdfLoaderError {
     Parse(String, String),
 }
 
-/// A composite JSON-LD loader with local embedded assets, memory caching, and HTTP fallback.
-#[derive(Clone, Debug)]
+/// JSON-LD document loader over a [`RdfContextResolver`]: cache, local copies, network.
+#[derive(Clone, Debug, Default)]
 pub struct RdfContextLoader {
-    assets: Arc<HashMap<String, MetaVal>>,
-    cache: Arc<RwLock<HashMap<String, MetaVal>>>,
-}
-
-impl Default for RdfContextLoader {
-    fn default() -> Self {
-        Self::new()
-    }
+    resolver: RdfContextResolver,
 }
 
 impl RdfContextLoader {
-    /// Creates an empty loader with in-memory caching and HTTP remote fallback.
+    /// Loader with an empty long-lived cache and no local copies yet.
     pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Loader whose resolver uses `cache` (to share one cache, or set another TTL).
+    pub fn with_cache(cache: RdfContextCache) -> Self {
         Self {
-            assets: Arc::new(HashMap::new()),
-            cache: Arc::new(RwLock::new(HashMap::new())),
+            resolver: RdfContextResolver::new(cache),
         }
     }
 
-    /// Registers a raw JSON-LD context document on an owned loader (builder style).
+    /// Registers a context document on an owned loader (builder style).
     pub fn with_asset(mut self, url: &str, json_doc: &str) -> Result<Self, RdfLoaderError> {
         self.register_asset(url, json_doc)?;
         Ok(self)
     }
 
-    /// Registers a raw JSON-LD context document under a specific canonical URL or filename.
+    /// Registers a context document under its URL and file name as a local copy.
     pub fn register_asset(&mut self, url: &str, json_doc: &str) -> Result<(), RdfLoaderError> {
-        let iri_str = if url.contains("://") {
-            url.to_string()
-        } else {
-            format!("file://local/{url}")
-        };
-        let parsed = Self::parse_doc(&iri_str, json_doc)?;
-        let mut map = (*self.assets).clone();
-        map.insert(url.to_string(), parsed.clone());
-        if let Some(fname) = url.rsplit('/').next() {
-            if fname != url {
-                map.insert(fname.to_string(), parsed);
-            }
-        }
-        self.assets = Arc::new(map);
-        Ok(())
+        self.resolver.register_asset(url, json_doc)
     }
 
-    /// Preloads any `.jsonld` context files found in the specified filesystem directory.
+    /// Looks for local copies of contexts in `dir_path`, read when first needed.
     pub fn preload_dir<P: AsRef<Path>>(&mut self, dir_path: P) -> Result<(), RdfLoaderError> {
-        let path = dir_path.as_ref();
-        if !path.exists() || !path.is_dir() {
-            return Ok(());
-        }
-
-        let mut map = (*self.assets).clone();
-        if let Ok(entries) = std::fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let file_path = entry.path();
-                if file_path.extension().is_some_and(|ext| ext == "jsonld") {
-                    if let Ok(content) = std::fs::read_to_string(&file_path) {
-                        let file_name = file_path
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .unwrap_or_default()
-                            .to_string();
-                        let fallback_url = format!("file://local/{file_name}");
-                        if let Ok(parsed) = Self::parse_doc(&fallback_url, &content) {
-                            map.insert(file_name, parsed.clone());
-                            map.insert(fallback_url, parsed);
-                        }
-                    }
-                }
-            }
-        }
-        self.assets = Arc::new(map);
+        self.resolver.set_folder(dir_path.as_ref());
         Ok(())
     }
 
-    /// Checks if a context URL is currently held in the in-memory cache or assets.
+    /// Whether a context resolves without going to the network.
     pub async fn is_cached(&self, url: &str) -> bool {
-        if self.assets.contains_key(url) {
-            return true;
-        }
-        if let Some(fname) = url.rsplit('/').next() {
-            if self.assets.contains_key(fname) {
-                return true;
-            }
-        }
-        self.cache.read().await.contains_key(url)
+        self.resolver.is_local_or_cached(url).await
     }
 
     /// Parses string content into a typed JSON syntax tree bound to the URL location.
     pub fn parse_doc(url_str: &str, doc_str: &str) -> Result<MetaVal, RdfLoaderError> {
-        let iri: ArcIri = Iri::new_unchecked(Arc::from(url_str));
-        JsonSyntaxValue::parse_str(doc_str, |span| Location::new(iri.clone(), span))
-            .map_err(|e| RdfLoaderError::Parse(url_str.to_string(), e.to_string()))
+        RdfContextResolver::parse_doc(url_str, doc_str)
     }
 
-    /// Constructs a RemoteDocument wrapping the parsed JSON-LD syntax tree.
     fn to_remote_document(
         url: ArcIri,
         parsed: MetaVal,
@@ -172,59 +114,10 @@ impl Loader<ArcIri, Location<ArcIri, Span>> for RdfContextLoader {
     where
         ArcIri: 'a,
     {
-        let url_str = url.as_str().to_string();
-        let assets = Arc::clone(&self.assets);
-        let cache = Arc::clone(&self.cache);
-
+        let resolver = self.resolver.clone();
         async move {
-            let asset_doc = assets.get(&url_str).or_else(|| {
-                url_str
-                    .rsplit('/')
-                    .next()
-                    .and_then(|fname| assets.get(fname))
-            });
-            if let Some(doc) = asset_doc {
-                return Ok(Self::to_remote_document(url, doc.clone()));
-            }
-
-            {
-                let read_guard = cache.read().await;
-                if let Some(doc) = read_guard.get(&url_str) {
-                    return Ok(Self::to_remote_document(url, doc.clone()));
-                }
-            }
-
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                ACCEPT,
-                HeaderValue::from_static("application/ld+json, application/json"),
-            );
-            let resp = http_client()
-                .get(&url_str, Some(headers))
-                .await
-                .map_err(|e| RdfLoaderError::Network(url_str.clone(), e.to_string()))?;
-
-            if !resp.status().is_success() {
-                return Err(RdfLoaderError::Network(
-                    url_str.clone(),
-                    format!("HTTP {}", resp.status()),
-                ));
-            }
-
-            let text = resp
-                .text()
-                .await
-                .map_err(|e| RdfLoaderError::Network(url_str.clone(), e.to_string()))?;
-
-            let parsed = JsonSyntaxValue::parse_str(&text, |span| Location::new(url.clone(), span))
-                .map_err(|e| RdfLoaderError::Parse(url_str.clone(), e.to_string()))?;
-
-            {
-                let mut write_guard = cache.write().await;
-                write_guard.insert(url_str, parsed.clone());
-            }
-
-            Ok(Self::to_remote_document(url, parsed))
+            let doc = resolver.resolve(&url).await?;
+            Ok(Self::to_remote_document(url, doc))
         }
         .boxed()
     }

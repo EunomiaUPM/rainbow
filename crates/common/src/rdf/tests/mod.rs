@@ -18,6 +18,7 @@
 //! The RDF engine, split by behaviour: typed extraction, expansion and canonicalization, and
 //! navigation of an expanded document. Shares a sample DSP transfer request.
 
+mod context_resolver;
 mod expanded_doc;
 mod expansion;
 mod extraction;

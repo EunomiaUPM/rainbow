@@ -59,6 +59,9 @@ pub struct RdfCanonicalizer {
 }
 
 impl RdfCanonicalizer {
+    /// Base the message is expanded against; a relative IRI or bare `@vocab` term ends up below it.
+    pub const DOCUMENT_BASE: &'static str = "x-string://";
+
     /// Constructs a canonicalizer for the given parsed JSON-LD document.
     pub fn new(message: serde_json::Value) -> Self {
         Self {
@@ -98,7 +101,7 @@ impl RdfCanonicalizer {
             )
         })?;
 
-        let base: ArcIri = Iri::new_unchecked(Arc::from("x-string://"));
+        let base: ArcIri = Iri::new_unchecked(Arc::from(Self::DOCUMENT_BASE));
         let json = JsonSyntaxValue::parse_str(&message, |span| Location::new(base.clone(), span))
             .map_err(|e| {
             Errors::format(
