@@ -17,7 +17,6 @@
 
 //! Unified high-level RDF engine for JSON-LD expansion, canonicalization, and typed extraction.
 
-use sha2::{Digest, Sha256};
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::rdf::canonical::{RdfCanonicalizer, RdfExpansion};
@@ -94,13 +93,10 @@ impl RdfEngine {
 
     /// Computes the SHA-256 hash over the message's canonical n-quads representation.
     pub async fn hash(&self, message: &serde_json::Value) -> Outcome<String> {
-        let n_quads = self.canonicalize(message).await?;
-        Ok(Self::sha256_hex(n_quads.as_bytes()))
+        Ok(Self::hex(&self.expand(message).await?.canonical_hash()))
     }
 
-    /// Internal helper: computes the lowercase SHA-256 hex digest of the given bytes.
-    fn sha256_hex(bytes: &[u8]) -> String {
-        let hash: [u8; 32] = Sha256::digest(bytes).into();
+    fn hex(hash: &[u8; 32]) -> String {
         hash.iter().map(|b| format!("{b:02x}")).collect()
     }
 
@@ -134,8 +130,7 @@ impl RdfEngine {
         message: &serde_json::Value,
     ) -> Outcome<(T, String)> {
         let (expansion, target) = self.extract_parts(message).await?;
-        let hash_hex = Self::sha256_hex(expansion.canonical_n_quads.as_bytes());
-        Ok((target, hash_hex))
+        Ok((target, Self::hex(&expansion.canonical_hash())))
     }
 
     /// Helper: extracts directly from a raw JSON-LD string using the default engine.

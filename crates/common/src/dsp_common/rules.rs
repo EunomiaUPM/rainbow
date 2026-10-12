@@ -67,6 +67,23 @@ impl DspRules {
         }
     }
 
+    /// The pids a message carries must be the ones stored for its process (DSP 9.2), both sides.
+    pub fn correlate_process_pids(
+        stored: (Option<&str>, Option<&str>),
+        message: (Option<&str>, Option<&str>),
+        path: impl Into<Path>,
+    ) -> Result<(), Violations> {
+        if stored == message {
+            Ok(())
+        } else {
+            Err(violation(
+                path.into(),
+                codes::NOT_ALLOWED,
+                "message pids and process pids are not correlated",
+            ))
+        }
+    }
+
     /// Verify that a JSON-LD payload references canonical DSP context.
     pub fn valid_dsp_context(
         doc: &serde_json::Value,

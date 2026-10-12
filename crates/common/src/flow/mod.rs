@@ -28,21 +28,24 @@
 //! ```
 //!
 //! ```rust,ignore
-//! let runner = FlowRunner::builder(Arc::new(MyFlow::new(ctx)), Arc::new(AutocommitUnitOfWorkFactory))
-//!     .input_rules(Arc::new(MyRules::input()))
-//!     .fact_rules(Arc::new(MyRules::facts()))
-//!     .guard(Arc::new(MyIdempotencyGuard::new(store)))
+//! let runner = FlowRunner::builder(flow, uow, Arc::new(MyRules::input()), Arc::new(MyRules::facts()))
+//!     .guard(Arc::new(IdempotencyGuard::new(store)))
 //!     .build();
 //! let response = runner.serve(&codec, &peer, MessageType::Request, request).await;
 //! ```
 
 mod codec;
 mod error;
+pub mod idempotency;
 mod runner;
 mod uow;
 
 pub use codec::FlowCodecTrait;
 pub use error::FlowError;
+pub use idempotency::{
+    IdempotencyGuard, IdempotencyKey, IdempotencyStoreTrait, IdempotentFactsTrait,
+    IdempotentOutputTrait, InMemoryIdempotencyStore,
+};
 pub use runner::{FlowRunner, FlowRunnerBuilder};
 pub use uow::{AutocommitUnitOfWorkFactory, UnitOfWork, UnitOfWorkFactoryTrait};
 

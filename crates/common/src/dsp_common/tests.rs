@@ -137,6 +137,29 @@ fn correlate_pids_rejects_a_mismatch() {
     assert_eq!(mismatch.code(), Some(codes::NOT_ALLOWED));
 }
 
+/// A message's pids must be the stored ones on both sides, absent ones included.
+#[test]
+fn process_pids_must_match_the_stored_ones() {
+    let stored = (Some("urn:uuid:c"), Some("urn:uuid:p"));
+    assert!(DspRules::correlate_process_pids(stored, stored, "pids").is_ok());
+
+    let other = DspRules::correlate_process_pids(stored, (Some("urn:uuid:c"), None), "pids")
+        .unwrap_err();
+    assert_eq!(other.code(), Some(codes::NOT_ALLOWED));
+}
+
+/// An error body without reasons serializes without the member and reads back the same.
+#[test]
+fn error_body_round_trips_without_reasons() {
+    let body = DspErrorBody {
+        code: "404".into(),
+        reason: vec![],
+    };
+    let json = serde_json::to_value(&body).unwrap();
+    assert_eq!(json, json!({"code": "404"}));
+    assert_eq!(serde_json::from_value::<DspErrorBody>(json).unwrap(), body);
+}
+
 /// The DSP context and the expected type are found whether given as a string or an array.
 #[test]
 fn context_and_type_accept_string_or_array_forms() {

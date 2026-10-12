@@ -19,12 +19,13 @@
 //! (`ContractNegotiationError`, `CatalogError`, `TransferError`).
 
 use crate::validation::Violations;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// The `code` and `reason` members shared by every DSP error message.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DspErrorBody {
     pub code: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reason: Vec<String>,
 }
 

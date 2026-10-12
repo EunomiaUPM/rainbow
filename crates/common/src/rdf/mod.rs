@@ -177,12 +177,27 @@
 //! // Instantiate the engine configured with your custom profile:
 //! let custom_engine = RdfEngine::with_profile::<MyCustomProfile>();
 //! ```
+//!
+//! ---
+//!
+//! ## 6. Protocol Messages with `RdfMessage`
+//!
+//! A protocol whose messages carry many optional fields (DSP, eunomia RPC) implements
+//! [`RdfProtocolTrait`] once on a marker type; [`RdfMessage`] then builds, reads and checks
+//! its messages, keeping the JSON-LD, the declared type, the fields and the canonical hash:
+//!
+//! ```rust,ignore
+//! let start = RdfMessage::<DspTransfer>::read(json).await?;          // any transfer message
+//! let rpc = RdfMessage::<EunomiaTransfer>::read_as(&route, body).await?; // must be the route's
+//! let out = RdfMessage::<DspTransfer>::build(&message, members).await?;  // ours, read back
+//! ```
 
 pub mod canonical;
 pub mod context_cache;
 pub mod context_resolver;
 pub mod engine;
 pub mod loader;
+pub mod message;
 pub mod node;
 pub mod profile;
 pub mod traits;
@@ -192,6 +207,7 @@ pub use context_cache::RdfContextCache;
 pub use context_resolver::RdfContextResolver;
 pub use engine::RdfEngine;
 pub use loader::{RdfContextLoader, RdfLoaderError};
+pub use message::{RdfMessage, RdfProtocolTrait};
 pub use node::{ExpandedDoc, RdfNode};
 pub use profile::{DefaultProfile, RdfProfile};
 pub use traits::FromRdf;

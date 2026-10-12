@@ -32,6 +32,7 @@ use sophia_jsonld::json_ld::syntax::context::Value as ContextValue;
 use sophia_jsonld::json_ld::{JsonLdProcessor, Options as JsonLdOptions, RemoteDocument};
 use sophia_jsonld::parser::RdfTerm;
 use sophia_jsonld::vocabulary::{ArcIri, ArcVoc};
+use sha2::{Digest, Sha256};
 use sophia_term::ArcTerm;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
@@ -49,6 +50,13 @@ type LdOptions = JsonLdOptions<ArcIri, LdMeta, ContextValue<LdMeta>>;
 pub struct RdfExpansion {
     pub expanded: serde_json::Value,
     pub canonical_n_quads: String,
+}
+
+impl RdfExpansion {
+    /// SHA-256 over the canonical n-quads: the message's semantic identity.
+    pub fn canonical_hash(&self) -> [u8; 32] {
+        Sha256::digest(self.canonical_n_quads.as_bytes()).into()
+    }
 }
 
 /// Canonicalizes a JSON-LD document to URDNA2015 / RDFC-1.0 quads.

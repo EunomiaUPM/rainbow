@@ -15,13 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The RDF engine, split by behaviour: typed extraction, expansion and canonicalization, and
-//! navigation of an expanded document. Shares a sample DSP transfer request.
+//! The RDF engine, split by behaviour: typed extraction, expansion and canonicalization,
+//! protocol messages and document navigation. Shares a sample DSP transfer request.
 
 mod context_resolver;
 mod expanded_doc;
 mod expansion;
 mod extraction;
+mod message;
 
 use serde_json::json;
 

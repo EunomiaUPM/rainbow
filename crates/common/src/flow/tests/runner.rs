@@ -17,7 +17,7 @@
 
 //! FlowRunner stage order, with a fake flow that counts calls and stub guards.
 
-use super::*;
+use crate::flow::*;
 use crate::validation::{codes, violation, Stage, ValidationRegistry, Validator};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
