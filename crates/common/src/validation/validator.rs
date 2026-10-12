@@ -21,8 +21,6 @@
 //! one passed, so a rule never sees state an earlier rule already rejected.
 
 use std::borrow::Cow;
-use std::collections::HashMap;
-use std::hash::Hash;
 
 use crate::validation::rule::Rule;
 use crate::validation::violation::{codes, violation, Path, Violations};
@@ -205,61 +203,5 @@ impl<S> Validator<S> {
             }
         }
         Ok(())
-    }
-}
-
-/// Validators by message type. Registering a key twice runs both, so a profile can add rules
-/// without touching the core's.
-pub struct ValidatorRegistry<K, S> {
-    by_key: HashMap<K, Vec<Validator<S>>>,
-}
-
-impl<K, S> Default for ValidatorRegistry<K, S> {
-    fn default() -> Self {
-        Self {
-            by_key: HashMap::new(),
-        }
-    }
-}
-
-impl<K: Eq + Hash, S> ValidatorRegistry<K, S> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Adds a validator for `key`; earlier ones for the same key keep running.
-    pub fn register(&mut self, key: K, validator: Validator<S>) {
-        self.by_key.entry(key).or_default().push(validator);
-    }
-
-    /// Merge another registry into this one by appending validators.
-    pub fn merge(&mut self, other: ValidatorRegistry<K, S>) {
-        for (key, validators) in other.by_key {
-            self.by_key.entry(key).or_default().extend(validators);
-        }
-    }
-
-    /// Check if a validator is registered for the specified key.
-    pub fn has_key(&self, key: &K) -> bool {
-        self.by_key.contains_key(key)
-    }
-
-    /// Fails closed: a key with nothing registered is rejected, not waved
-    /// through. Forgetting to register is then a test failure, not a hole.
-    pub fn validate(&self, key: &K, subject: &S) -> Result<(), Violations> {
-        let Some(validators) = self.by_key.get(key) else {
-            return Err(crate::validation::violation::violation(
-                "@type",
-                crate::validation::violation::codes::NOT_ALLOWED,
-                "no validator registered for this message type",
-            ));
-        };
-        let mut found = Violations::new();
-        for v in validators {
-            if let Err(vs) = v.validate(subject) {
-                found.extend(vs);
-            }
-        }
-        found.into_result()
     }
 }

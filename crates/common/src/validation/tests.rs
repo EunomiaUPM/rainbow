@@ -15,11 +15,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Rules, staged Validators, ValidatorRegistry and Violations, on sample message and order
+//! Rules, staged Validators and Violations, on sample message and order
 //! types.
 
 use crate::validation::{
-    codes, violation, Path, Rule, Validator, ValidatorRegistry, Violation, Violations,
+    codes, violation, Path, Rule, Validator, Violation, Violations,
 };
 
 struct Msg {
@@ -165,35 +165,6 @@ fn later_stages_run_when_the_earlier_ones_pass() {
         format: Some("f".into()),
     });
     assert!(ok.is_ok());
-}
-
-/// Registering the same key twice runs both validators.
-#[test]
-fn registering_twice_composes_instead_of_replacing() {
-    let mut reg: ValidatorRegistry<&str, Msg> = ValidatorRegistry::new();
-    reg.register("Request", Validator::new().rule(pid_present));
-    reg.register("Request", Validator::new().rule(format_present));
-    let vs = reg
-        .validate(
-            &"Request",
-            &Msg {
-                pid: None,
-                format: None,
-            },
-        )
-        .unwrap_err();
-    assert_eq!(vs.len(), 2, "both registrations ran");
-}
-
-/// A key without a registered validator is rejected.
-#[test]
-fn an_unregistered_key_is_rejected() {
-    let reg: ValidatorRegistry<&str, Msg> = ValidatorRegistry::new();
-    let subject = Msg {
-        pid: Some("urn:uuid:cc".into()),
-        format: Some("f".into()),
-    };
-    assert!(reg.validate(&"Unknown", &subject).is_err());
 }
 
 /// Paths render like the document they point into.
@@ -373,38 +344,6 @@ fn validator_merge_combines_stages() {
 
     let vs = merged.validate(&order).unwrap_err();
     assert_eq!(vs.len(), 2, "both stage 0 rules ran together");
-}
-
-/// Merging registries composes the validators registered under the same key.
-#[test]
-fn registry_merge_combines_message_validators() {
-    let mut reg_a: ValidatorRegistry<&str, Order> = ValidatorRegistry::new();
-    reg_a.register(
-        "order",
-        Validator::<Order>::new().ensure_not_empty("order_id", |o| o.order_id.as_deref()),
-    );
-
-    let mut reg_b: ValidatorRegistry<&str, Order> = ValidatorRegistry::new();
-    reg_b.register(
-        "order",
-        Validator::<Order>::new().ensure("amount", "positive", |o| o.amount > 0),
-    );
-
-    reg_a.merge(reg_b);
-    assert!(reg_a.has_key(&"order"));
-
-    let invalid = Order {
-        order_id: None,
-        amount: 0,
-        address: empty_address(),
-        shipping_address: None,
-        items: vec![],
-        is_gift: false,
-        gift_note: None,
-    };
-
-    let vs = reg_a.validate(&"order", &invalid).unwrap_err();
-    assert_eq!(vs.len(), 2, "both merged registrations ran");
 }
 
 mod staged_registry {

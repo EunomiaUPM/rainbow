@@ -22,7 +22,7 @@
 //! right shape is one. A [`Validator`] runs rules in stages: a stage collects every failure,
 //! and the next stage runs only if the previous one passed. Failures come back as
 //! [`Violations`], each with a [`Path`] into the subject, a [`ViolationCode`] and a message. A
-//! [`ValidatorRegistry`] picks the validator by message type.
+//! [`ValidationRegistry`] picks the validators by message type and stage.
 //!
 //! ## 1. Writing rules
 //!
@@ -77,23 +77,7 @@
 //! // A failure in the third item reads "items[2].sku: must be a valid URN".
 //! ```
 //!
-//! ## 4. One validator per message type
-//!
-//! A [`ValidatorRegistry`] maps a key to its validators. Registering the same key twice adds
-//! rules instead of replacing them, so a profile can extend the core set. An unregistered key
-//! fails, so forgetting to register is caught by tests rather than letting messages through.
-//!
-//! ```rust,ignore
-//! use common::validation::ValidatorRegistry;
-//!
-//! let mut reg = ValidatorRegistry::new();
-//! reg.register(TransferDSPMessageType::TransferRequestMessage, Self::request_dsp());
-//! reg.register(TransferDSPMessageType::TransferStartMessage, Self::start_dsp());
-//!
-//! reg.validate(&message_type, &context)?;
-//! ```
-//!
-//! ## 5. Reporting
+//! ## 4. Reporting
 //!
 //! [`Violations`] keeps the order the rules ran in, so `code()` (the first failure) is the most
 //! fundamental one. `to_reasons()` gives `"<path>: <message>"` strings for a wire error and
@@ -109,10 +93,9 @@
 //! A violation can echo the offending value with `with_value`, but only when it cannot be a
 //! credential: the value goes back to the peer inside the error.
 //!
-//! ## 6. Rules from several origins: `ValidationRegistry`
+//! ## 5. One registry per flow, rules from several origins: `ValidationRegistry`
 //!
-//! A [`ValidationRegistry`] is the extensible form of the registry: core, profiles and plugins
-//! add rules to a key at a [`Stage`] (`Shape`, `Integrity`, `Domain`, `Profile`). Stages are
+//! A [`ValidationRegistry`] maps a key to its rules: core, profiles and plugins add them to a key at a [`Stage`] (`Shape`, `Integrity`, `Domain`, `Profile`). Stages are
 //! barriers for everyone: all rules of a stage run and accumulate, and the next stage runs
 //! only if it passed. A key with no core rule fails closed, and each violation records the
 //! origin of the rule that produced it. [`SchemaRule`] turns a JSON Schema into a rule.
@@ -136,7 +119,7 @@ pub use registry::{StagedValidator, ValidationRegistry};
 pub use rule::Rule;
 pub use schema::SchemaRule;
 pub use stage::Stage;
-pub use validator::{Validator, ValidatorRegistry};
+pub use validator::Validator;
 pub use violation::{codes, violation, Path, Violation, ViolationCode, Violations};
 
 #[cfg(test)]
