@@ -36,6 +36,7 @@ pub mod config;
 pub mod dsp_common;
 pub mod errors;
 pub mod facades;
+pub mod flow;
 pub mod grpc;
 pub mod http_global_404;
 pub mod http_tracing;

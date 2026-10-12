@@ -551,7 +551,7 @@ mod json_schema {
     /// A reference that was not provided fails when the rule is built, never at validation.
     #[test]
     fn missing_reference_fails_at_build_time() {
-        assert!(SchemaRule::from_str(REQUEST).is_err());
+        assert!(SchemaRule::new(REQUEST).is_err());
     }
 
     /// A schema rule plugs into a validator over a JSON field of the subject.

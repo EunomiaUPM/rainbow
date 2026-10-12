@@ -88,6 +88,15 @@ impl<K: RegistryKey, S: 'static> ValidationRegistry<K, S> {
             .register_any(Arc::new(StagedValidator { stage, validator }), origin, 0)
     }
 
+    /// Whether `key` has a core rule, the condition for it to validate at all.
+    pub fn has_key(&self, key: &K) -> bool {
+        self.rules
+            .snapshot()
+            .for_key(key)
+            .iter()
+            .any(|e| e.origin == Origin::Core)
+    }
+
     /// Drops every rule `origin` registered; core rules stay.
     pub fn unregister_origin(&self, origin: &Origin) -> usize {
         self.rules.unregister_origin(origin)

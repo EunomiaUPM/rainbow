@@ -102,6 +102,8 @@ pub mod codes {
     pub const NOT_SINGLE_VALUED: ViolationCode = ViolationCode(3);
     /// Present, but not allowed here.
     pub const NOT_ALLOWED: ViolationCode = ViolationCode(4);
+    /// The stored record changed since it was read (version or claim mismatch).
+    pub const STALE: ViolationCode = ViolationCode(5);
 }
 
 /// One failed check.

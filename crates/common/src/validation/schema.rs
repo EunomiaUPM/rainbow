@@ -33,7 +33,7 @@ pub struct SchemaRule {
 
 impl SchemaRule {
     /// Schema without external references.
-    pub fn from_str(schema: &str) -> Outcome<Self> {
+    pub fn new(schema: &str) -> Outcome<Self> {
         Self::with_resources(schema, &[])
     }
 
