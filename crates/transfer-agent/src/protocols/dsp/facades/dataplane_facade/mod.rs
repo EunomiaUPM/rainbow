@@ -15,7 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
 
 mod consumer_pull;
 mod consumer_push;
@@ -24,10 +23,40 @@ mod provider_pull;
 mod provider_push;
 mod strategy;
 
+use crate::entities::protocol::{TransferDirection, TransferRole};
+use crate::protocols::dsp::entities::context_common::TransferContextConnectorRole;
 use crate::protocols::dsp::entities::data_address::{DataAddressDto, EndpointPropertyDto};
 use common::dsp_common::data_address::DataAddress;
+use common::oauth::Owner;
 use dataplane::DataplaneAddress;
+use urn::Urn;
 use ymir::errors::Outcome;
+
+/// What the dataplane hooks need about a transfer, whichever side and direction drives it.
+#[derive(Debug)]
+pub struct DataplaneHookContext {
+    pub process_id: Urn,
+    pub owner: Owner,
+    pub role: TransferRole,
+    pub transfer_direction: TransferDirection,
+    pub connector_instance: TransferContextConnectorRole,
+    /// The address the message carries (a push sink, or the pull endpoint on start).
+    pub data_address: Option<DataAddress>,
+    /// The address this side handed to the peer, once a start resolved it.
+    pub resolved_data_address: Option<DataAddress>,
+    pub is_restart: bool,
+}
+
+impl DataplaneHookContext {
+    /// Process id; `location` names the hook in errors.
+    pub fn process_urn(&self, _location: &str) -> Outcome<Urn> {
+        Ok(self.process_id.clone())
+    }
+
+    pub fn owner(&self) -> Owner {
+        self.owner.clone()
+    }
+}
 
 /// Converts the message's `DataAddress` (common wire type) into a dataplane address. A free
 /// function rather than a `From` impl: both types are foreign, so the orphan rule
@@ -118,51 +147,51 @@ impl From<DataplaneAddress> for DataAddressDto {
 pub trait DataPlaneFacadeTrait: Send + Sync {
     async fn on_transfer_request_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_request_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_start_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_start_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_suspension_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_suspension_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_completion_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_completion_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_termination_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_transfer_termination_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>>;
 }

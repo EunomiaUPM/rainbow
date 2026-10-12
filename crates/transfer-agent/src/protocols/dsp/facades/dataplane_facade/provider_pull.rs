@@ -16,7 +16,7 @@
  */
 
 use crate::protocols::dsp::entities::context_common::TransferContextConnectorRole;
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
@@ -34,7 +34,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_request_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         // noop
@@ -44,7 +44,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_request_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         let id = ctx.process_urn("provider pull request_post")?;
@@ -67,36 +67,27 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_start_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
-        if !ctx.is_restart {
-            let id = ctx.process_urn("provider pull start_pre")?;
-            let res = mgr
-                .execute_command(DataplaneCommand::GetAssociated(DataplaneContinuation {
-                    transfer_dto_urn: id,
-                }))
-                .await?;
-
-            return if let DataplaneCommandResponse::OkWithAddress(address) = res {
-                Ok(Some(address.into()))
-            } else {
-                Err(Errors::crazy(
-                    "Data address instance should be defined",
-                    None,
-                ))
-            };
+        // First start and restart alike hand the consumer the process's pull endpoint.
+        let id = ctx.process_urn("provider pull start_pre")?;
+        let res = mgr
+            .execute_command(DataplaneCommand::GetAssociated(DataplaneContinuation {
+                transfer_dto_urn: id,
+            }))
+            .await?;
+        if let DataplaneCommandResponse::OkWithAddress(address) = res {
+            Ok(Some(address.into()))
+        } else {
+            Err(Errors::crazy("Data address instance should be defined", None))
         }
-        if ctx.is_restart {
-            todo!()
-        }
-        Ok(None)
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_start_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         let id = ctx.process_urn("provider pull start_post")?;
@@ -131,7 +122,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_suspend_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
@@ -140,7 +131,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_suspend_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
@@ -153,7 +144,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_complete_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
@@ -162,7 +153,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_complete_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {
@@ -175,7 +166,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_terminate_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
@@ -184,7 +175,7 @@ impl DataPlaneStrategy for ProviderPullStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_terminate_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetStopped(DataplaneContinuation {

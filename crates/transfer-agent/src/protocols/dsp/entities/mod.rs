@@ -19,7 +19,6 @@
 
 pub mod ack;
 pub mod auth;
-pub mod command;
 pub mod context_common;
 pub mod context_dsp;
 pub mod context_rpc;
@@ -31,3 +30,4 @@ pub mod protocol_fields;
 pub mod rdf_extractor_dsp;
 pub mod state;
 pub mod state_metadata;
+pub mod transfer_error;

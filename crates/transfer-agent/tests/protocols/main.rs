@@ -26,5 +26,7 @@ mod idempotency;
 mod message_types;
 mod payload_validator;
 mod rdf_extractor_dsp;
+mod rpc_rules;
+mod tck_scenarios;
 mod transfer_validators;
 mod transition_validator;

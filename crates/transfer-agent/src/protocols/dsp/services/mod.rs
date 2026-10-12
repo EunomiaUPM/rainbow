@@ -20,6 +20,4 @@
 
 pub mod connector_resolver;
 pub mod dsp_domain_loader;
-pub mod dsp_handler_pipeline;
-mod manager;
 pub mod validator;

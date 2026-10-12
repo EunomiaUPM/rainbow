@@ -15,66 +15,49 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::entities::protocol::ProtocolId;
-use crate::protocols::dsp::entities::idempotency::{
-    IdempotencyStoreTrait, InMemoryIdempotencyStore,
-};
-use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::services::dsp_handler_pipeline::DSPHandlerPipeline;
+//! DSP transfer routes (DSP 10.2): every message goes through the transfer flow runner.
+
+use std::str::FromStr;
+use std::sync::Arc;
+
 use axum::extract::{Path, Request, State};
 use axum::middleware::Next;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use axum::{Router, middleware};
-use ymir::http::OauthHttpMiddleware;
-use common::facades::grants_facade::GrantsFacadeTrait;
-use common::validation::ValidatorRegistry;
+use axum::{middleware, Extension, Json, Router};
+use common::dsp_common::DspActor;
+use common::facades::grants_facade::{GrantsFacadeTrait, VerifiedPeer};
+use common::flow::FlowRunner;
+use common::oauth::OwnerScope;
 use http::StatusCode;
-use std::sync::Arc;
-use ymir::errors::AppResult;
+use urn::Urn;
+use ymir::http::OauthHttpMiddleware;
 
-use crate::protocols::dsp::entities::context_dsp::{
-    TransferDSPContextDomain, TransferDSPContextTyped,
-};
-use crate::protocols::dsp::services::validator::TransferValidators;
+use crate::data::repo::transfer_process::TransferProcessRepoTrait;
+use crate::protocols::dsp::entities::ack::TransferProcessAck;
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
+use crate::protocols::dsp::flow::codec::TransferDspCodec;
+use crate::protocols::dsp::flow::TransferDspFlow;
 
 #[derive(Clone)]
 pub struct DspRouter {
     grants: Arc<dyn GrantsFacadeTrait>,
-    idempotency: Arc<dyn IdempotencyStoreTrait>,
-    edge_validators: Arc<ValidatorRegistry<TransferDSPMessageType, TransferDSPContextTyped>>,
-    domain_validators: Arc<ValidatorRegistry<TransferDSPMessageType, TransferDSPContextDomain>>,
+    runner: Arc<FlowRunner<TransferDspFlow>>,
+    processes: Arc<dyn TransferProcessRepoTrait>,
 }
 
 impl DspRouter {
-    /// Uses the in-memory idempotency store and default transfer validators.
-    pub fn new(grants: Arc<dyn GrantsFacadeTrait>) -> Self {
-        Self::with_idempotency_store(grants, Arc::new(InMemoryIdempotencyStore::new()))
-    }
-
-    pub fn with_idempotency_store(
+    pub fn new(
         grants: Arc<dyn GrantsFacadeTrait>,
-        idempotency: Arc<dyn IdempotencyStoreTrait>,
-    ) -> Self {
-        Self::with_validators(
-            grants,
-            idempotency,
-            Arc::new(TransferValidators::edge_registry()),
-            Arc::new(TransferValidators::dsp_registry()),
-        )
-    }
-
-    pub fn with_validators(
-        grants: Arc<dyn GrantsFacadeTrait>,
-        idempotency: Arc<dyn IdempotencyStoreTrait>,
-        edge_validators: Arc<ValidatorRegistry<TransferDSPMessageType, TransferDSPContextTyped>>,
-        domain_validators: Arc<ValidatorRegistry<TransferDSPMessageType, TransferDSPContextDomain>>,
+        runner: Arc<FlowRunner<TransferDspFlow>>,
+        processes: Arc<dyn TransferProcessRepoTrait>,
     ) -> Self {
         Self {
             grants,
-            idempotency,
-            edge_validators,
-            domain_validators,
+            runner,
+            processes,
         }
     }
 
@@ -100,24 +83,12 @@ impl DspRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/request", post(Self::handle_transfer_request::<DspRouter>))
+            .route("/request", post(Self::handle_transfer_request))
             .route("/{id}", get(Self::handle_get_transfer_process))
-            .route(
-                "/{id}/start",
-                post(Self::handle_transfer_start::<DspRouter>),
-            )
-            .route(
-                "/{id}/completion",
-                post(Self::handle_transfer_completion::<DspRouter>),
-            )
-            .route(
-                "/{id}/termination",
-                post(Self::handle_transfer_termination::<DspRouter>),
-            )
-            .route(
-                "/{id}/suspension",
-                post(Self::handle_transfer_suspension::<DspRouter>),
-            )
+            .route("/{id}/start", post(Self::handle_transfer_start))
+            .route("/{id}/completion", post(Self::handle_transfer_completion))
+            .route("/{id}/termination", post(Self::handle_transfer_termination))
+            .route("/{id}/suspension", post(Self::handle_transfer_suspension))
             .layer(middleware::from_fn_with_state(
                 self.clone(),
                 Self::auth_middleware,
@@ -125,106 +96,124 @@ impl DspRouter {
             .with_state(self)
     }
 
-    async fn build_response<P: DSPHandlerPipeline>(
+    /// Decode, run and encode: the same three steps for every message route.
+    async fn dispatch(
+        &self,
+        peer: &VerifiedPeer,
+        key: TransferDSPMessageType,
         request: Request,
-        message_route: &TransferDSPMessageType,
-        protocol_id: &ProtocolId,
-        edge_validators: &ValidatorRegistry<TransferDSPMessageType, TransferDSPContextTyped>,
-        domain_validators: &ValidatorRegistry<TransferDSPMessageType, TransferDSPContextDomain>,
-    ) -> AppResult<StatusCode> {
-        match P::run(
-            request,
-            message_route,
-            protocol_id,
-            edge_validators,
-            domain_validators,
-        )
-        .await
-        {
-            // TODO, project to DSP
-            Ok(_res) => Ok(StatusCode::ACCEPTED),
-            // TODO, project to DSP
-            Err(err) => {
-                tracing::warn!(%err, "DSP pipeline rejected the message");
-                Ok(StatusCode::BAD_REQUEST)
+    ) -> Response {
+        self.runner
+            .serve(&TransferDspCodec, peer, key, request)
+            .await
+    }
+
+    async fn handle_transfer_request(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        request: Request,
+    ) -> Response {
+        state
+            .dispatch(
+                &peer,
+                TransferDSPMessageType::TransferRequestMessage,
+                request,
+            )
+            .await
+    }
+
+    async fn handle_transfer_start(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        request: Request,
+    ) -> Response {
+        state
+            .dispatch(&peer, TransferDSPMessageType::TransferStartMessage, request)
+            .await
+    }
+
+    async fn handle_transfer_completion(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        request: Request,
+    ) -> Response {
+        state
+            .dispatch(
+                &peer,
+                TransferDSPMessageType::TransferCompletionMessage,
+                request,
+            )
+            .await
+    }
+
+    async fn handle_transfer_termination(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        request: Request,
+    ) -> Response {
+        state
+            .dispatch(
+                &peer,
+                TransferDSPMessageType::TransferTerminationMessage,
+                request,
+            )
+            .await
+    }
+
+    async fn handle_transfer_suspension(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        request: Request,
+    ) -> Response {
+        state
+            .dispatch(
+                &peer,
+                TransferDSPMessageType::TransferSuspensionMessage,
+                request,
+            )
+            .await
+    }
+
+    /// DSP 10.2.1: the process as the peer knows it; unknown and foreign answer alike (404).
+    async fn handle_get_transfer_process(
+        State(state): State<DspRouter>,
+        Extension(peer): Extension<VerifiedPeer>,
+        Path(id): Path<String>,
+    ) -> Response {
+        match state.find_for_peer(&peer, &id).await {
+            Some(ack) => (StatusCode::OK, Json(ack)).into_response(),
+            None => {
+                let body = TransferErrorDto::new(
+                    id.clone(),
+                    id,
+                    "404".into(),
+                    vec!["transfer process not found".into()],
+                );
+                (StatusCode::NOT_FOUND, Json(body)).into_response()
             }
         }
     }
 
-    async fn handle_transfer_request<P: DSPHandlerPipeline>(
-        State(state): State<DspRouter>,
-        request: Request,
-    ) -> AppResult<StatusCode> {
-        Self::build_response::<P>(
-            request,
-            &TransferDSPMessageType::TransferRequestMessage,
-            &ProtocolId::Dsp2025_1,
-            &state.edge_validators,
-            &state.domain_validators,
-        )
-        .await
-    }
-
-    async fn handle_get_transfer_process(
-        State(_state): State<DspRouter>,
-        Path(_id): Path<String>,
-    ) -> impl IntoResponse {
-        "ok"
-    }
-
-    async fn handle_transfer_start<P: DSPHandlerPipeline>(
-        State(state): State<DspRouter>,
-        request: Request,
-    ) -> AppResult<StatusCode> {
-        Self::build_response::<P>(
-            request,
-            &TransferDSPMessageType::TransferStartMessage,
-            &ProtocolId::Dsp2025_1,
-            &state.edge_validators,
-            &state.domain_validators,
-        )
-        .await
-    }
-
-    async fn handle_transfer_completion<P: DSPHandlerPipeline>(
-        State(state): State<DspRouter>,
-        request: Request,
-    ) -> AppResult<StatusCode> {
-        Self::build_response::<P>(
-            request,
-            &TransferDSPMessageType::TransferCompletionMessage,
-            &ProtocolId::Dsp2025_1,
-            &state.edge_validators,
-            &state.domain_validators,
-        )
-        .await
-    }
-
-    async fn handle_transfer_termination<P: DSPHandlerPipeline>(
-        State(state): State<DspRouter>,
-        request: Request,
-    ) -> AppResult<StatusCode> {
-        Self::build_response::<P>(
-            request,
-            &TransferDSPMessageType::TransferTerminationMessage,
-            &ProtocolId::Dsp2025_1,
-            &state.edge_validators,
-            &state.domain_validators,
-        )
-        .await
-    }
-
-    async fn handle_transfer_suspension<P: DSPHandlerPipeline>(
-        State(state): State<DspRouter>,
-        request: Request,
-    ) -> AppResult<StatusCode> {
-        Self::build_response::<P>(
-            request,
-            &TransferDSPMessageType::TransferSuspensionMessage,
-            &ProtocolId::Dsp2025_1,
-            &state.edge_validators,
-            &state.domain_validators,
-        )
-        .await
+    async fn find_for_peer(&self, peer: &VerifiedPeer, pid: &str) -> Option<TransferProcessAck> {
+        let urn = Urn::from_str(pid).ok()?;
+        let process = self
+            .processes
+            .get_transfer_process_by_key_value(&OwnerScope::All, &urn)
+            .await
+            .ok()??;
+        let correlation = process.correlation();
+        let counterparty = correlation
+            .peer_participant_id
+            .as_ref()
+            .map(|p| p.as_str())
+            .unwrap_or_default();
+        DspActor::peer(peer)
+            .authorize(process.owner(), counterparty, &urn)
+            .ok()?;
+        Some(TransferProcessAck::new(
+            correlation.consumer_pid.clone().unwrap_or_default(),
+            correlation.provider_pid.clone().unwrap_or_default(),
+            TransferDSPState::from_str(process.state().0.as_str()).ok()?,
+        ))
     }
 }

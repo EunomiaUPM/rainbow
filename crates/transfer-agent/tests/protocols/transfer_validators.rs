@@ -98,16 +98,17 @@ fn transfer_rules_suspension_semaphore() {
     assert!(TransferRules::semaphore(&OnRequest, &TransferStartMessage, &Provider, "sem").is_ok());
 }
 
-/// The data address may only come on the first start, from either role.
+/// A start may carry the pull endpoint to the consumer, never to the provider.
 #[test]
 fn transfer_rules_data_address_format() {
-    assert!(TransferRules::data_address_format(true, &Provider, &OnRequest, "dataAddress").is_ok());
-    assert!(TransferRules::data_address_format(true, &Consumer, &OnRequest, "dataAddress").is_ok());
+    assert!(TransferRules::data_address_format(true, &Consumer, "dataAddress").is_ok());
     assert!(
-        TransferRules::data_address_format(true, &Consumer, &ByProvider, "dataAddress").is_err()
+        TransferRules::data_address_format(true, &Consumer, "dataAddress").is_ok(),
+        "a resumed pull gets the endpoint again"
     );
+    assert!(TransferRules::data_address_format(true, &Provider, "dataAddress").is_err());
     assert!(
-        TransferRules::data_address_format(false, &Consumer, &ByProvider, "dataAddress").is_ok()
+        TransferRules::data_address_format(false, &Provider, "dataAddress").is_ok()
     );
 }
 
@@ -137,9 +138,9 @@ fn transfer_rules_pids_and_uri_correlation() {
 /// Every registry has a validator for each DSP transfer message.
 #[test]
 fn registries_are_populated_for_dsp_lifecycle() {
-    let dsp_reg = TransferValidators::dsp_registry();
+    let dsp_reg = TransferValidators::fact_rules();
     let rpc_reg = TransferValidators::rpc_registry();
-    let edge_reg = TransferValidators::edge_registry();
+    let edge_reg = TransferValidators::input_rules();
 
     for msg in [
         TransferRequestMessage,

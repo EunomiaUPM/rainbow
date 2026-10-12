@@ -84,4 +84,8 @@ impl ServiceModuleTrait for TransferAgentModule {
     fn grpc_descriptors(&self) -> Vec<&'static [u8]> {
         self.modules.grpc_descriptors()
     }
+
+    fn workers(&self) -> Vec<Box<dyn common::boot::workers::BackgroundWorker>> {
+        self.modules.workers()
+    }
 }

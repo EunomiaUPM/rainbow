@@ -26,12 +26,13 @@ use ymir::errors::Outcome;
 pub mod connector_resolver;
 
 /// Finding the connector instance that serves an agreement.
+#[mockall::automock]
 #[async_trait::async_trait]
 pub trait ConnectorResolverTrait: Send + Sync {
-    /// Connector of the agreement's distribution in format `formats`; fails without a format.
+    /// Connector of the agreement's distribution in `format`; fails without a format.
     async fn resolve_connector_by_agreement_id(
         &self,
         agreement_id: &Urn,
-        formats: Option<&String>,
+        format: Option<String>,
     ) -> Outcome<ConnectorInstanceDto>;
 }

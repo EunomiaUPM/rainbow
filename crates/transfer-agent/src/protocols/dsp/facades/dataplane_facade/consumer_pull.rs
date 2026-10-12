@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain as DspTransferContext;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext as DspTransferContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
@@ -77,8 +77,6 @@ impl DataPlaneStrategy for ConsumerPullStrategy {
         };
         if !ctx.is_restart {
             let dataplane: DataplaneAddress = ctx
-                .typed
-                .fields
                 .data_address
                 .clone()
                 .map(|addr| to_dataplane_address(&addr))

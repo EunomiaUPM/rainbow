@@ -53,9 +53,9 @@ impl ConnectorResolverTrait for ConnectorResolver {
     async fn resolve_connector_by_agreement_id(
         &self,
         agreement_id: &Urn,
-        formats: Option<&String>,
+        format: Option<String>,
     ) -> Outcome<ConnectorInstanceDto> {
-        let format = formats.ok_or_else(|| Errors::crazy("dct_formats is required", None))?;
+        let format = format.ok_or_else(|| Errors::crazy("dct_formats is required", None))?;
 
         // The agreement fixes the dataset; the lookups below go by id, whoever owns the records.
         let agreement = self.negotiation.get_agreement(agreement_id).await?;
@@ -66,7 +66,7 @@ impl ConnectorResolverTrait for ConnectorResolver {
 
         let distribution = self
             .catalog
-            .get_distribution_by_format(&dataset_id, format)
+            .get_distribution_by_format(&dataset_id, &format)
             .await?;
         let distribution_id = Urn::from_str(distribution.inner.id.as_str())?;
 

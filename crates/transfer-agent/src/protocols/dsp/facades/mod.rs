@@ -15,32 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
-use std::sync::Arc;
-
 pub mod catalog_facade;
 pub mod dataplane_facade;
 pub mod negotiation_facade;
 
-/// Facades the DSP manager drives while a transfer runs.
-#[async_trait::async_trait]
-pub trait FacadeTrait: Send + Sync {
-    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneFacadeTrait>;
-}
-
-pub struct FacadeService {
-    data_plane_facade: Arc<dyn DataPlaneFacadeTrait>,
-}
-
-impl FacadeService {
-    pub fn new(data_plane_facade: Arc<dyn DataPlaneFacadeTrait>) -> FacadeService {
-        Self { data_plane_facade }
-    }
-}
-
-#[async_trait::async_trait]
-impl FacadeTrait for FacadeService {
-    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneFacadeTrait> {
-        self.data_plane_facade.clone()
-    }
-}

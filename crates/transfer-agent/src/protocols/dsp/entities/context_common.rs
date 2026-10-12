@@ -136,7 +136,7 @@ pub enum TransferContextProcessSlot {
 
 /// The connector backing this transfer: a provider resolves one from the
 /// agreement; a consumer has none.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TransferContextConnectorRole {
     ConsumerNotHavingConnector,
     ProviderHavingConnector(ConnectorInstanceDto),

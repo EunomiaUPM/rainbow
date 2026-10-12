@@ -15,22 +15,20 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Resolving the domain facts an inbound message needs before the manager can
-//! act on it: the process, the agreement, the connector and the role.
+//! Resolving the domain facts an inbound message needs before it can be applied: the process,
+//! the agreement, the connector, the role and the direction.
 
-use crate::entities::protocol::TransferRole;
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextTyped;
 use common::dsp_common::odrl::OdrlAgreement;
+use urn::Urn;
 use ymir::errors::Outcome;
 
+pub mod agreement_resolver;
 pub mod dsp_domain_loader;
 
 /// Facts the domain loader needs from other agents.
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait DspDomainLoaderTrait: Send + Sync {
-    /// Agreement named by the message.
-    async fn resolve_agreement(&self, typed: &TransferDSPContextTyped) -> Outcome<OdrlAgreement>;
-    /// Role this agent plays in a process the message would create.
-    async fn resolve_role_for_new(&self, typed: &TransferDSPContextTyped) -> Outcome<TransferRole>;
+    /// The agreement a transfer runs under, as negotiated.
+    async fn resolve_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement>;
 }

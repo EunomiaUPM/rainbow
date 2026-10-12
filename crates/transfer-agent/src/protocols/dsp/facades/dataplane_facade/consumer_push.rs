@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::strategy::DataPlaneStrategy;
 use crate::protocols::dsp::facades::dataplane_facade::to_dataplane_address;
@@ -32,13 +32,11 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_request_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         let transfer_id = ctx.process_urn("consumer push request_pre")?;
         let data_address_dto = ctx
-            .typed
-            .fields
             .data_address
             .as_ref()
             .ok_or_else(|| Errors::crazy("Data address instance should be defined", None))?;
@@ -68,7 +66,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_request_post(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         // noop
@@ -78,7 +76,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_start_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         // noop
@@ -88,7 +86,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_start_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>> {
         let id = ctx.process_urn("consumer push start_post")?;
@@ -102,7 +100,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_suspend_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         // noop
@@ -112,7 +110,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_suspend_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         let id = ctx.process_urn("consumer push suspend_post")?;
@@ -126,7 +124,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_complete_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
@@ -135,7 +133,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_complete_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {
@@ -148,7 +146,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_terminate_pre(
         &self,
-        _ctx: &TransferDSPContextDomain,
+        _ctx: &DataplaneHookContext,
         _mgr: &DataplaneManager,
     ) -> Outcome<()> {
         Ok(())
@@ -157,7 +155,7 @@ impl DataPlaneStrategy for ConsumerPushStrategy {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_terminate_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()> {
         mgr.execute_command(DataplaneCommand::SetUnsubscribing(DataplaneContinuation {

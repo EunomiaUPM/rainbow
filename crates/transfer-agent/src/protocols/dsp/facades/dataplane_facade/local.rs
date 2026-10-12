@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
@@ -49,9 +49,9 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_request_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
-        strategy_for_request_pre(&ctx.typed.fields.data_address)
+        strategy_for_request_pre(&ctx.data_address)
             .on_request_pre(ctx, &self.dataplane_manager)
             .await
     }
@@ -59,7 +59,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_request_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_request_post(ctx, &self.dataplane_manager)
@@ -70,7 +70,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_start_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_start_pre(ctx, &self.dataplane_manager)
@@ -80,7 +80,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_start_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_start_post(ctx, &self.dataplane_manager)
@@ -90,7 +90,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_suspension_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_suspend_pre(ctx, &self.dataplane_manager)
@@ -101,7 +101,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_suspension_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_suspend_post(ctx, &self.dataplane_manager)
@@ -112,7 +112,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_completion_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_complete_pre(ctx, &self.dataplane_manager)
@@ -123,7 +123,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_completion_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_complete_post(ctx, &self.dataplane_manager)
@@ -134,7 +134,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_termination_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_terminate_pre(ctx, &self.dataplane_manager)
@@ -145,7 +145,7 @@ impl DataPlaneFacadeTrait for DataPlaneLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "dataplane"))]
     async fn on_transfer_termination_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
     ) -> Outcome<Option<DataAddressDto>> {
         strategy_for(ctx.role, ctx.transfer_direction)
             .on_terminate_post(ctx, &self.dataplane_manager)

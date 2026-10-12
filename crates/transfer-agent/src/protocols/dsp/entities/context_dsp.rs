@@ -28,6 +28,7 @@ use crate::protocols::dsp::entities::context_common::{
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 use crate::protocols::dsp::entities::rdf_extractor_dsp::{DspTransfer, ExtractProtocolFields};
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 use common::dsp_common::data_address::DataAddress;
 use common::oauth::Owner;
 use common::dsp_common::odrl::OdrlAgreement;
@@ -213,6 +214,20 @@ impl TransferDSPContextDomain {
                 self.typed.rdf.parsed.raw.authn.associated_participant.owner()
             }
         }
+    }
+
+    /// What the dataplane hooks need from this message and the process it refers to.
+    pub fn dataplane_hooks(&self) -> Outcome<DataplaneHookContext> {
+        Ok(DataplaneHookContext {
+            process_id: self.process_urn("dataplane hooks")?,
+            owner: self.owner(),
+            role: self.role,
+            transfer_direction: self.transfer_direction,
+            connector_instance: self.connector_instance.clone(),
+            data_address: self.typed.fields.data_address.clone(),
+            resolved_data_address: self.resolved_data_address.clone(),
+            is_restart: self.is_restart,
+        })
     }
 
     /// Id of the existing process, or the consumer pid of a new one; `location` names the

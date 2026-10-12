@@ -15,58 +15,293 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP transfer routes end to end with an auth facade that accepts or rejects every token.
+//! The DSP transfer routes end to end through the flow runner: real codec, rules, loader and
+//! handlers over an in-memory process store, with the agreement, connector and dataplane mocked.
 
-use axum::Router;
 use axum::extract::Request;
 use axum::response::Response;
-use common::facades::grants_facade::MockGrantsFacadeTrait;
+use axum::Router;
+use chrono::Utc;
+use common::dsp_common::odrl::OdrlAgreement;
+use common::facades::grants_facade::{MockGrantsFacadeTrait, VerifiedPeer};
+use common::flow::{AutocommitUnitOfWorkFactory, FlowRunner};
+use common::oauth::{RolePath, Visibility};
+use connector::{
+    AuthenticationConfig, ConnectorInstanceDto, ConnectorMetadata, HttpSpec, InteractionConfig,
+    ProtocolSpec, PullLifecycle, TemplateVecString,
+};
 use http::StatusCode;
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use tower::ServiceExt;
+use transfer_agent::data::repo::transfer_process::MockTransferProcessRepoTrait;
+use transfer_agent::entities::ids::{MessageId, TransferProcessId};
+use transfer_agent::entities::message_envelope::MessageEnvelope;
+use transfer_agent::entities::protocol::{
+    ProtocolId, ProtocolMessageType, TransferCorrelation, CONSUMER_PID_KEY, PROVIDER_PID_KEY,
+};
+use transfer_agent::entities::transfer_message::Direction;
+use transfer_agent::entities::transfer_process::TransferProcess;
+use transfer_agent::protocols::dsp::entities::idempotency::InMemoryIdempotencyStore;
+use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
+use transfer_agent::protocols::dsp::flow::handlers::TransferHandlerDeps;
+use transfer_agent::protocols::dsp::flow::idempotency_guard::TransferIdempotencyGuard;
+use transfer_agent::protocols::dsp::flow::TransferDspFlow;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
-use common::facades::grants_facade::VerifiedPeer;
-use common::oauth::RolePath;
+use transfer_agent::protocols::dsp::services::connector_resolver::MockConnectorResolverTrait;
+use transfer_agent::protocols::dsp::services::dsp_domain_loader::dsp_domain_loader::DspDomainLoader;
+use transfer_agent::protocols::dsp::services::dsp_domain_loader::MockDspDomainLoaderTrait;
+use transfer_agent::protocols::dsp::services::validator::TransferValidators;
+use transfer_agent::services::transfer_message::views::TransferMessageView;
+use transfer_agent::services::transfer_message::MockTransferMessageServiceTrait;
+use transfer_agent::services::transfer_process::views::TransferProcessView;
+use transfer_agent::services::transfer_process::MockTransferProcessServiceTrait;
+use urn::Urn;
 use ymir::errors::Errors;
+
+const CONSUMER_PID: &str = "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833";
+const AGREEMENT: &str = "urn:uuid:e8dc8655-44c2-46ef-b701-4cffdc2faa44";
 
 const REQUEST_BODY: &str = r#"{
         "@context": ["https://w3id.org/dspace/2025/1/context.jsonld"],
         "@type": "TransferRequestMessage",
         "consumerPid": "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833",
         "agreementId": "urn:uuid:e8dc8655-44c2-46ef-b701-4cffdc2faa44",
-        "format": "example:HTTP_PUSH",
+        "format": "example:HTTP_PULL",
         "callbackAddress": "https://example.com/callback"
     }"#;
 
-fn mate() -> VerifiedPeer {
+fn peer(id: &str) -> VerifiedPeer {
     VerifiedPeer {
-        participant_id: "did:example:consumer".into(),
+        participant_id: id.into(),
         role: RolePath::root(),
-        visibility: common::oauth::Visibility::Public,
+        visibility: Visibility::Public,
     }
 }
 
-/// A router whose auth facade accepts every token, or rejects every token.
+type Store = Arc<Mutex<Vec<TransferProcess>>>;
+
+/// Processes the fake repo and service share, so a write is visible to the next read.
+fn store() -> Store {
+    Arc::new(Mutex::new(Vec::new()))
+}
+
+fn find_by_pid(store: &Store, pid: &Urn) -> Option<TransferProcess> {
+    let pid = pid.to_string();
+    store
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|p| {
+            let c = p.correlation();
+            c.consumer_pid.as_deref() == Some(&pid) || c.provider_pid.as_deref() == Some(&pid)
+        })
+        .cloned()
+}
+
+fn repo(store: &Store) -> MockTransferProcessRepoTrait {
+    let mut repo = MockTransferProcessRepoTrait::new();
+    let s = store.clone();
+    repo.expect_get_transfer_process_by_key_value()
+        .returning(move |_, pid| Ok(find_by_pid(&s, pid)));
+    let s = store.clone();
+    repo.expect_get_transfer_process_by_id()
+        .returning(move |_, id| {
+            Ok(s.lock()
+                .unwrap()
+                .iter()
+                .find(|p| p.id().as_urn() == id)
+                .cloned())
+        });
+    repo
+}
+
+fn processes(store: &Store) -> MockTransferProcessServiceTrait {
+    let mut svc = MockTransferProcessServiceTrait::new();
+    let s = store.clone();
+    svc.expect_create().returning(move |_, cmd| {
+        let ids = cmd.identifiers.clone().unwrap_or_default();
+        let mut correlation = TransferCorrelation::empty();
+        correlation.consumer_pid = ids.get(CONSUMER_PID_KEY).cloned();
+        correlation.provider_pid = ids.get(PROVIDER_PID_KEY).cloned();
+        correlation.agreement_id = Some(cmd.agreement_id.clone());
+        correlation.callback_address = cmd.callback_address.clone();
+        correlation.peer_participant_id = Some(cmd.peer_participant_id.clone());
+        let process = TransferProcess::rehydrate(
+            cmd.id.clone().unwrap_or_else(TransferProcessId::generate),
+            cmd.owner.clone().unwrap(),
+            cmd.role,
+            Utc::now(),
+            Utc::now(),
+            0,
+            cmd.protocol.clone(),
+            cmd.initial_state.clone(),
+            cmd.initial_state_metadata.clone(),
+            correlation,
+            cmd.properties.clone().unwrap_or_default(),
+            None,
+        );
+        s.lock().unwrap().push(process.clone());
+        Ok(TransferProcessView::assemble(process, ids))
+    });
+    let s = store.clone();
+    svc.expect_edit().returning(move |_, id, cmd| {
+        let mut all = s.lock().unwrap();
+        let process = all.iter_mut().find(|p| p.id().as_urn() == id).unwrap();
+        process.apply_edit(cmd.clone());
+        Ok(TransferProcessView::assemble(
+            process.clone(),
+            HashMap::new(),
+        ))
+    });
+    svc
+}
+
+fn messages() -> MockTransferMessageServiceTrait {
+    let mut svc = MockTransferMessageServiceTrait::new();
+    svc.expect_create().returning(|_, cmd| {
+        Ok(TransferMessageView {
+            id: MessageId::generate(),
+            transfer_process_id: cmd.transfer_process_id.clone(),
+            user_id: "peer".into(),
+            user_role: RolePath::root(),
+            visibility: Visibility::Public,
+            direction: Direction::Inbound,
+            protocol: ProtocolId::Dsp2025_1,
+            message_type: ProtocolMessageType(cmd.message_type.0.clone()),
+            state_transition_from: cmd.state_transition_from.0.to_string(),
+            state_transition_to: cmd.state_transition_to.0.to_string(),
+            envelope: MessageEnvelope::from_canonical(serde_json::json!({}), None),
+            occurred_at: Utc::now(),
+        })
+    });
+    svc
+}
+
+fn dataplane() -> MockDataPlaneFacadeTrait {
+    let mut dp = MockDataPlaneFacadeTrait::new();
+    dp.expect_on_transfer_request_post().returning(|_| Ok(None));
+    dp.expect_on_transfer_termination_pre()
+        .returning(|_| Ok(None));
+    dp.expect_on_transfer_termination_post()
+        .returning(|_| Ok(None));
+    dp
+}
+
+fn connector() -> ConnectorInstanceDto {
+    ConnectorInstanceDto {
+        id: Urn::from_str("urn:connector-instance:1").unwrap(),
+        user_id: "provider".into(),
+        metadata: ConnectorMetadata {
+            name: None,
+            author: None,
+            description: None,
+            version: None,
+            created_at: None,
+        },
+        authentication_config: AuthenticationConfig::NoAuth,
+        interaction: InteractionConfig::Pull(PullLifecycle {
+            data_access: ProtocolSpec::Http(HttpSpec {
+                url_template: "http://backend/data".into(),
+                method: TemplateVecString::Value(vec!["GET".into()]),
+                headers: None,
+                body_template: None,
+            }),
+        }),
+        distribution_id: Urn::from_str("urn:distribution:1").unwrap(),
+    }
+}
+
+fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
+    let mut connectors = MockConnectorResolverTrait::new();
+    connectors
+        .expect_resolve_connector_by_agreement_id()
+        .returning(|_, _| Ok(connector()));
+    let mut agreements = MockDspDomainLoaderTrait::new();
+    agreements.expect_resolve_agreement().returning(|id| {
+        Ok(OdrlAgreement {
+            id: id.clone(),
+            ..Default::default()
+        })
+    });
+    let repo: Arc<MockTransferProcessRepoTrait> = Arc::new(repo(store));
+    let loader = DspDomainLoader::new(repo.clone(), Arc::new(connectors), Arc::new(agreements));
+    let deps = TransferHandlerDeps {
+        processes: Arc::new(processes(store)),
+        process_repo: repo,
+        messages: Arc::new(messages()),
+        dataplane: Arc::new(dataplane()),
+    };
+    Arc::new(
+        FlowRunner::builder(
+            Arc::new(TransferDspFlow::new(Arc::new(loader), deps)),
+            Arc::new(AutocommitUnitOfWorkFactory),
+            Arc::new(TransferValidators::input_rules()),
+            Arc::new(TransferValidators::fact_rules()),
+        )
+        .guard(Arc::new(TransferIdempotencyGuard::new(Arc::new(
+            InMemoryIdempotencyStore::new(),
+        ))))
+        .build(),
+    )
+}
+
+/// A router on `store` whose auth facade accepts every token as `as_peer`, or rejects them all.
+fn router_as(store: &Store, as_peer: Option<&str>) -> Router {
+    let mut grants = MockGrantsFacadeTrait::new();
+    match as_peer.map(str::to_string) {
+        Some(id) => {
+            grants
+                .expect_verify_token()
+                .returning(move |_| Ok(peer(&id)));
+        }
+        None => {
+            grants
+                .expect_verify_token()
+                .returning(|_| Err(Errors::unauthorized("nope", None)));
+        }
+    }
+    DspRouter::new(Arc::new(grants), runner(store), Arc::new(repo(store))).router()
+}
+
 fn router(authorized: bool) -> Router {
-    let mut ssi = MockGrantsFacadeTrait::new();
-    if authorized {
-        ssi.expect_verify_token().returning(|_| Ok(mate()));
-    } else {
-        ssi.expect_verify_token()
-            .returning(|_| Err(Errors::unauthorized("nope", None)));
-    }
-    DspRouter::new(Arc::new(ssi)).router()
+    router_as(&store(), authorized.then_some("did:example:consumer"))
 }
 
-fn post_request(token: Option<&str>) -> Request {
+fn post(uri: &str, body: &str, token: Option<&str>) -> Request {
     let mut builder = Request::builder()
         .method("POST")
-        .uri("/request")
+        .uri(uri)
         .header("content-type", "application/json");
     if let Some(token) = token {
         builder = builder.header("authorization", format!("Bearer {token}"));
     }
-    builder.body(axum::body::Body::from(REQUEST_BODY)).unwrap()
+    builder
+        .body(axum::body::Body::from(body.to_string()))
+        .unwrap()
+}
+
+fn get(uri: &str) -> Request {
+    Request::builder()
+        .method("GET")
+        .uri(uri)
+        .header("authorization", "Bearer tok")
+        .body(axum::body::Body::empty())
+        .unwrap()
+}
+
+fn termination(provider_pid: &str) -> String {
+    format!(
+        r#"{{
+        "@context": ["https://w3id.org/dspace/2025/1/context.jsonld"],
+        "@type": "TransferTerminationMessage",
+        "providerPid": "{provider_pid}",
+        "consumerPid": "{CONSUMER_PID}",
+        "code": "STOPPED",
+        "reason": ["no longer needed"]
+    }}"#
+    )
 }
 
 async fn body_json(response: Response) -> serde_json::Value {
@@ -76,23 +311,11 @@ async fn body_json(response: Response) -> serde_json::Value {
     serde_json::from_slice(&bytes).unwrap()
 }
 
-/// The pipeline runs green through the wire, parsed, rdf and typed stages. Asserts
-/// only that no stage errored; the DSP response body is still to come.
+/// DSP 10.2.2: a request answers 201 with a TransferProcess body (9.3.1).
 #[tokio::test]
-async fn transfer_request_runs_the_pipeline() {
-    let response = router(true)
-        .oneshot(post_request(Some("tok")))
-        .await
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::ACCEPTED, "a stage errored");
-}
-
-/// DSP 10.2.2: 201 Created with a TransferProcess body (9.3.1).
-#[tokio::test]
-#[ignore = "needs to_domain and the DSP response projection in build_response"]
 async fn transfer_request_answers_201_with_a_transfer_process() {
     let response = router(true)
-        .oneshot(post_request(Some("tok")))
+        .oneshot(post("/request", REQUEST_BODY, Some("tok")))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::CREATED);
@@ -100,40 +323,153 @@ async fn transfer_request_answers_201_with_a_transfer_process() {
     let body = body_json(response).await;
     assert_eq!(body["@type"], "TransferProcess");
     assert_eq!(body["state"], "REQUESTED");
-    assert_eq!(
-        body["consumerPid"],
-        "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833"
-    );
+    assert_eq!(body["consumerPid"], CONSUMER_PID);
     assert!(
-        body["providerPid"].as_str().is_some_and(|p| !p.is_empty()),
-        "providerPid is REQUIRED: {body}"
+        body["providerPid"]
+            .as_str()
+            .is_some_and(|p| p.starts_with("urn:uuid:")),
+        "{body}"
     );
     assert!(body["@context"].is_array(), "@context is REQUIRED: {body}");
 }
 
-/// DSP 9.2.1: a repeated Transfer Request for a known consumerPid is answered
-/// as the first one was — same providerPid, not a second process.
+/// DSP 9.2.1: a repeated request for a known consumerPid gets the first answer, not a second process.
 #[tokio::test]
-#[ignore = "needs to_domain and the DSP response projection in build_response"]
 async fn a_repeated_transfer_request_replays_the_same_ack() {
-    let app = router(true);
+    let store = store();
+    let app = router_as(&store, Some("did:example:consumer"));
     let first = app
         .clone()
-        .oneshot(post_request(Some("tok")))
+        .oneshot(post("/request", REQUEST_BODY, Some("tok")))
         .await
         .unwrap();
     assert_eq!(first.status(), StatusCode::CREATED);
     let first = body_json(first).await;
 
-    let second = app.oneshot(post_request(Some("tok"))).await.unwrap();
+    let second = app
+        .oneshot(post("/request", REQUEST_BODY, Some("tok")))
+        .await
+        .unwrap();
     assert_eq!(second.status(), StatusCode::CREATED);
-    let second = body_json(second).await;
-
+    assert_eq!(first, body_json(second).await);
     assert_eq!(
-        first["providerPid"], second["providerPid"],
-        "a retry must not mint a second Transfer Process"
+        store.lock().unwrap().len(),
+        1,
+        "a retry must not mint a second process"
     );
-    assert_eq!(first, second);
+}
+
+/// Every shape failure comes back at once, in a TransferError, and nothing is stored.
+#[tokio::test]
+async fn a_malformed_request_reports_every_violation() {
+    let store = store();
+    let body = r#"{
+        "@context": ["https://w3id.org/dspace/2025/1/context.jsonld"],
+        "@type": "TransferRequestMessage",
+        "consumerPid": "not-a-urn",
+        "callbackAddress": "https://example.com/callback"
+    }"#;
+    let response = router_as(&store, Some("did:example:consumer"))
+        .oneshot(post("/request", body, Some("tok")))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let error = body_json(response).await;
+    assert_eq!(error["@type"], "TransferError");
+    let reasons = error["reason"].as_array().unwrap();
+    assert!(
+        reasons.len() >= 3,
+        "consumerPid, agreementId and format: {error}"
+    );
+    assert!(store.lock().unwrap().is_empty());
+}
+
+/// A body whose type is not the endpoint's is rejected before anything is loaded.
+#[tokio::test]
+async fn a_body_for_another_endpoint_is_rejected() {
+    let response = router(true)
+        .oneshot(post("/request", &termination("urn:uuid:p"), Some("tok")))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let error = body_json(response).await;
+    assert!(error["reason"].to_string().contains("@type"), "{error}");
+}
+
+/// A state change for a process nobody has answers 404 (DSP 10.1.2.2).
+#[tokio::test]
+async fn a_state_change_on_an_unknown_process_answers_404() {
+    let response = router(true)
+        .oneshot(post(
+            "/urn:uuid:unknown/termination",
+            &termination("urn:uuid:unknown"),
+            Some("tok"),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+/// The consumer can terminate the process it requested; the provider then reports it terminated.
+#[tokio::test]
+async fn the_requesting_peer_can_terminate_its_process() {
+    let store = store();
+    let app = router_as(&store, Some("did:example:consumer"));
+    let created = body_json(
+        app.clone()
+            .oneshot(post("/request", REQUEST_BODY, Some("tok")))
+            .await
+            .unwrap(),
+    )
+    .await;
+    let provider_pid = created["providerPid"].as_str().unwrap().to_string();
+
+    let terminated = app
+        .clone()
+        .oneshot(post(
+            &format!("/{provider_pid}/termination"),
+            &termination(&provider_pid),
+            Some("tok"),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(terminated.status(), StatusCode::OK);
+
+    let process = app.oneshot(get(&format!("/{provider_pid}"))).await.unwrap();
+    assert_eq!(process.status(), StatusCode::OK);
+    assert_eq!(body_json(process).await["state"], "TERMINATED");
+}
+
+/// Another peer cannot see or act on the process: it answers as if it did not exist.
+#[tokio::test]
+async fn another_peer_cannot_touch_the_process() {
+    let store = store();
+    let owner = router_as(&store, Some("did:example:consumer"));
+    let created = body_json(
+        owner
+            .oneshot(post("/request", REQUEST_BODY, Some("tok")))
+            .await
+            .unwrap(),
+    )
+    .await;
+    let provider_pid = created["providerPid"].as_str().unwrap().to_string();
+
+    let intruder = router_as(&store, Some("did:example:intruder"));
+    let terminate = intruder
+        .clone()
+        .oneshot(post(
+            &format!("/{provider_pid}/termination"),
+            &termination(&provider_pid),
+            Some("tok"),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(terminate.status(), StatusCode::NOT_FOUND);
+    let read = intruder
+        .oneshot(get(&format!("/{provider_pid}")))
+        .await
+        .unwrap();
+    assert_eq!(read.status(), StatusCode::NOT_FOUND);
 }
 
 /// DSP 10.1.2.3: an unauthorized client gets 404, not 401 — the same answer as
@@ -141,7 +477,7 @@ async fn a_repeated_transfer_request_replays_the_same_ack() {
 #[tokio::test]
 async fn an_unauthorized_request_answers_404() {
     let response = router(false)
-        .oneshot(post_request(Some("bad")))
+        .oneshot(post("/request", REQUEST_BODY, Some("bad")))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -150,6 +486,9 @@ async fn an_unauthorized_request_answers_404() {
 /// A request without token also answers 404.
 #[tokio::test]
 async fn a_request_without_a_token_answers_404() {
-    let response = router(true).oneshot(post_request(None)).await.unwrap();
+    let response = router(true)
+        .oneshot(post("/request", REQUEST_BODY, None))
+        .await
+        .unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

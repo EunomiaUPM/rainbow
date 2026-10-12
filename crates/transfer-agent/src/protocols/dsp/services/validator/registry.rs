@@ -15,10 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Composable validator registries for inbound DSP messages, outbound RPC commands, and edge validation.
+//! Rule registries for inbound DSP messages (shape and facts) and outbound RPC commands.
 
 use common::dsp_common::DspRules;
-use common::validation::{Validator, ValidatorRegistry, Violations, codes};
+use common::validation::{Rule, Stage, ValidationRegistry, Validator, ValidatorRegistry, Violations, codes};
 use std::str::FromStr;
 
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
@@ -27,6 +27,7 @@ use crate::protocols::dsp::entities::context_dsp::{
 };
 use crate::protocols::dsp::entities::context_rpc::TransferRPCContextDomain;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::validator::rules::TransferRules;
 
@@ -34,30 +35,15 @@ use crate::protocols::dsp::services::validator::rules::TransferRules;
 pub struct TransferValidators;
 
 impl TransferValidators {
-    /// Inbound DSP validator registry checking structural syntax and domain invariants.
-    pub fn dsp_registry() -> ValidatorRegistry<TransferDSPMessageType, TransferDSPContextDomain> {
-        let mut reg = ValidatorRegistry::new();
-        reg.register(
-            TransferDSPMessageType::TransferRequestMessage,
-            Self::request_dsp(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferStartMessage,
-            Self::start_dsp(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferCompletionMessage,
-            Self::completion_dsp(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferSuspensionMessage,
-            Self::suspension_dsp(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferTerminationMessage,
-            Self::termination_dsp(),
-        );
-        reg
+    /// Inbound DSP rules over loaded facts: state machine, role, semaphore and correlation.
+    pub fn fact_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDSPContextDomain> {
+        use TransferDSPMessageType::*;
+        ValidationRegistry::new("transfer.dsp.facts")
+            .with(TransferRequestMessage, Stage::Domain, Self::request_dsp())
+            .with(TransferStartMessage, Stage::Domain, Self::start_dsp())
+            .with(TransferCompletionMessage, Stage::Domain, Self::completion_dsp())
+            .with(TransferSuspensionMessage, Stage::Domain, Self::suspension_dsp())
+            .with(TransferTerminationMessage, Stage::Domain, Self::termination_dsp())
     }
 
     /// Outbound RPC validator registry checking symmetrical invariants before sending to peers.
@@ -86,36 +72,37 @@ impl TransferValidators {
         reg
     }
 
-    /// Edge validator registry checking wire format and presence prior to database lookups.
-    pub fn edge_registry() -> ValidatorRegistry<TransferDSPMessageType, TransferDSPContextTyped> {
-        let mut reg = ValidatorRegistry::new();
-        reg.register(
-            TransferDSPMessageType::TransferRequestMessage,
-            Self::request_edge(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferStartMessage,
-            Self::start_edge(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferCompletionMessage,
-            Self::completion_edge(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferSuspensionMessage,
-            Self::suspension_edge(),
-        );
-        reg.register(
-            TransferDSPMessageType::TransferTerminationMessage,
-            Self::termination_edge(),
-        );
-        reg
+    /// Inbound DSP shape rules over the extracted fields, before any lookup.
+    pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDSPContextTyped> {
+        use TransferDSPMessageType::*;
+        ValidationRegistry::new("transfer.dsp.input")
+            .with_any(Stage::Shape, Self::route_matches_body())
+            .with(TransferRequestMessage, Stage::Shape, Self::on_fields(Self::request_message()))
+            .with(TransferStartMessage, Stage::Shape, Self::on_fields(Self::start_message()))
+            .with(TransferCompletionMessage, Stage::Shape, Self::on_fields(Self::completion_message()))
+            .with(TransferSuspensionMessage, Stage::Shape, Self::on_fields(Self::suspension_message()))
+            .with(TransferTerminationMessage, Stage::Shape, Self::on_fields(Self::termination_message()))
     }
 
-    fn request_edge() -> Validator<TransferDSPContextTyped> {
-        Validator::new().rule(|ctx: &TransferDSPContextTyped| {
+    /// Runs a message-shape validator on the fields extracted from an inbound message.
+    fn on_fields(fields: Validator<TransferProtocolFields>) -> Validator<TransferDSPContextTyped> {
+        Validator::new().rule(move |ctx: &TransferDSPContextTyped| fields.check(&ctx.fields))
+    }
+
+    /// The body's `@type` must be the message the route handles.
+    fn route_matches_body() -> Validator<TransferDSPContextTyped> {
+        Validator::new().ensure(
+            "@type",
+            "message type does not match the endpoint",
+            |ctx: &TransferDSPContextTyped| ctx.message == ctx.rdf.parsed.dsp_message_type,
+        )
+    }
+
+    /// Shape of a request message, sent or received.
+    pub fn request_message() -> Validator<TransferProtocolFields> {
+        Validator::new().rule(|ctx: &TransferProtocolFields| {
             let mut v = Violations::new();
-            if let Some(consumer_pid) = &ctx.fields.consumer_pid {
+            if let Some(consumer_pid) = &ctx.consumer_pid {
                 if let Err(vs) = DspRules::is_urn(consumer_pid, "consumerPid") {
                     v.extend(vs);
                 }
@@ -126,7 +113,7 @@ impl TransferValidators {
                     "is required",
                 ));
             }
-            if let Some(agreement_id) = &ctx.fields.agreement_id {
+            if let Some(agreement_id) = &ctx.agreement_id {
                 if let Err(vs) = DspRules::is_urn(agreement_id, "agreementId") {
                     v.extend(vs);
                 }
@@ -137,7 +124,7 @@ impl TransferValidators {
                     "is required",
                 ));
             }
-            if ctx.fields.format.as_deref().unwrap_or("").trim().is_empty() {
+            if ctx.format.as_deref().unwrap_or("").trim().is_empty() {
                 v.push(common::validation::Violation::new(
                     "format",
                     codes::MISSING,
@@ -148,52 +135,42 @@ impl TransferValidators {
         })
     }
 
-    fn start_edge() -> Validator<TransferDSPContextTyped> {
-        Validator::new().rule(|ctx: &TransferDSPContextTyped| {
+    /// Shape of a start message, sent or received.
+    pub fn start_message() -> Validator<TransferProtocolFields> {
+        Validator::new().rule(|ctx: &TransferProtocolFields| {
             let mut v = Violations::new();
-            Self::check_urn_opt(&mut v, "consumerPid", ctx.fields.consumer_pid.as_deref());
-            Self::check_urn_opt(&mut v, "providerPid", ctx.fields.provider_pid.as_deref());
+            Self::check_urn_opt(&mut v, "consumerPid", ctx.consumer_pid.as_deref());
+            Self::check_urn_opt(&mut v, "providerPid", ctx.provider_pid.as_deref());
             v.into_result()
         })
     }
 
-    fn completion_edge() -> Validator<TransferDSPContextTyped> {
-        Validator::new().rule(|ctx: &TransferDSPContextTyped| {
+    /// Shape of a completion message, sent or received.
+    pub fn completion_message() -> Validator<TransferProtocolFields> {
+        Validator::new().rule(|ctx: &TransferProtocolFields| {
             let mut v = Violations::new();
-            Self::check_urn_opt(&mut v, "consumerPid", ctx.fields.consumer_pid.as_deref());
-            Self::check_urn_opt(&mut v, "providerPid", ctx.fields.provider_pid.as_deref());
+            Self::check_urn_opt(&mut v, "consumerPid", ctx.consumer_pid.as_deref());
+            Self::check_urn_opt(&mut v, "providerPid", ctx.provider_pid.as_deref());
             v.into_result()
         })
     }
 
-    fn suspension_edge() -> Validator<TransferDSPContextTyped> {
-        Validator::new().rule(|ctx: &TransferDSPContextTyped| {
+    /// Shape of a suspension message, sent or received.
+    pub fn suspension_message() -> Validator<TransferProtocolFields> {
+        Validator::new().rule(|ctx: &TransferProtocolFields| {
             let mut v = Violations::new();
-            Self::check_urn_opt(&mut v, "consumerPid", ctx.fields.consumer_pid.as_deref());
-            Self::check_urn_opt(&mut v, "providerPid", ctx.fields.provider_pid.as_deref());
-            if ctx.fields.code.as_deref().unwrap_or("").trim().is_empty() {
-                v.push(common::validation::Violation::new(
-                    "code",
-                    codes::MISSING,
-                    "is required",
-                ));
-            }
+            Self::check_urn_opt(&mut v, "consumerPid", ctx.consumer_pid.as_deref());
+            Self::check_urn_opt(&mut v, "providerPid", ctx.provider_pid.as_deref());
             v.into_result()
         })
     }
 
-    fn termination_edge() -> Validator<TransferDSPContextTyped> {
-        Validator::new().rule(|ctx: &TransferDSPContextTyped| {
+    /// Shape of a termination message, sent or received.
+    pub fn termination_message() -> Validator<TransferProtocolFields> {
+        Validator::new().rule(|ctx: &TransferProtocolFields| {
             let mut v = Violations::new();
-            Self::check_urn_opt(&mut v, "consumerPid", ctx.fields.consumer_pid.as_deref());
-            Self::check_urn_opt(&mut v, "providerPid", ctx.fields.provider_pid.as_deref());
-            if ctx.fields.code.as_deref().unwrap_or("").trim().is_empty() {
-                v.push(common::validation::Violation::new(
-                    "code",
-                    codes::MISSING,
-                    "is required",
-                ));
-            }
+            Self::check_urn_opt(&mut v, "consumerPid", ctx.consumer_pid.as_deref());
+            Self::check_urn_opt(&mut v, "providerPid", ctx.provider_pid.as_deref());
             v.into_result()
         })
     }
@@ -276,12 +253,7 @@ impl TransferValidators {
                 {
                     v.extend(vs);
                 }
-                if let Err(vs) = TransferRules::data_address_format(
-                    ctx.typed.fields.data_address.is_some(),
-                    &ctx.role,
-                    &attr,
-                    "dataAddress",
-                ) {
+                if let Err(vs) = TransferRules::data_address_format(ctx.typed.fields.data_address.is_some(), &ctx.role, "dataAddress") {
                     v.extend(vs);
                 }
                 if let Some(uri_id) = ctx.typed.rdf.parsed.raw.path_id.as_deref() {
@@ -364,21 +336,6 @@ impl TransferValidators {
                     "providerPid",
                     ctx.typed.fields.provider_pid.as_deref(),
                 );
-                if ctx
-                    .typed
-                    .fields
-                    .code
-                    .as_deref()
-                    .unwrap_or("")
-                    .trim()
-                    .is_empty()
-                {
-                    v.push(common::validation::Violation::new(
-                        "code",
-                        codes::MISSING,
-                        "is required",
-                    ));
-                }
                 v.into_result()
             })
             .then()
@@ -420,21 +377,6 @@ impl TransferValidators {
                     "providerPid",
                     ctx.typed.fields.provider_pid.as_deref(),
                 );
-                if ctx
-                    .typed
-                    .fields
-                    .code
-                    .as_deref()
-                    .unwrap_or("")
-                    .trim()
-                    .is_empty()
-                {
-                    v.push(common::validation::Violation::new(
-                        "code",
-                        codes::MISSING,
-                        "is required",
-                    ));
-                }
                 v.into_result()
             })
             .then()

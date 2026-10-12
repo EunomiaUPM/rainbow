@@ -17,22 +17,29 @@
 
 //! Loader over the process repository and the resolvers.
 
+use std::str::FromStr;
 use std::sync::Arc;
-use common::oauth::OwnerScope;
 
+use common::dsp_common::DspActor;
+use common::oauth::OwnerScope;
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::entities::protocol::{TransferDirection, TransferRole};
+use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::context_common::{
     TransferContextConnectorRole, TransferContextProcessSlot,
 };
 use crate::protocols::dsp::entities::context_dsp::{
     TransferDSPContextDomain, TransferDSPContextTyped,
 };
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::services::connector_resolver::ConnectorResolverTrait;
 use crate::protocols::dsp::services::dsp_domain_loader::DspDomainLoaderTrait;
+
+/// Process property where the direction fixed by the request is kept.
+pub const DIRECTION_PROPERTY: &str = "transferDirection";
 
 /// Loads or mints the process an inbound message refers to, with its agreement and connector.
 pub struct DspDomainLoader {
@@ -58,12 +65,25 @@ impl DspDomainLoader {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn load(&self, typed: TransferDSPContextTyped) -> Outcome<TransferDSPContextDomain> {
         let process = self.process_slot(&typed).await?;
-        let role = self.role(&process, &typed).await?;
-        let is_restart = Self::is_restart(&process);
-        let transfer_direction = Self::transfer_direction(&typed, is_restart);
-        let agreement = self.resolver.resolve_agreement(&typed).await?;
-        let connector_instance = self.connector(&typed).await?;
-        let is_idempotent_replay = self.is_idempotent_replay(&typed, &process).await?;
+        let role = match &process {
+            TransferContextProcessSlot::Existing(p) => p.role(),
+            // Only a request opens a process, and only a provider receives one.
+            TransferContextProcessSlot::New { .. } => TransferRole::Provider,
+        };
+        let transfer_direction = Self::transfer_direction(&typed, &process);
+        let is_restart = Self::is_restart(&typed, &process);
+        let agreement_id = Self::agreement_id(&typed, &process)?;
+        let agreement = self.resolver.resolve_agreement(&agreement_id).await?;
+        let connector_instance = match (&process, role) {
+            (TransferContextProcessSlot::New { .. }, TransferRole::Provider) => {
+                let connector = self
+                    .connectors
+                    .resolve_connector_by_agreement_id(&agreement_id, typed.fields.format.clone())
+                    .await?;
+                TransferContextConnectorRole::ProviderHavingConnector(connector)
+            }
+            _ => TransferContextConnectorRole::ConsumerNotHavingConnector,
+        };
         TransferDSPContextDomain::from_typed(
             typed,
             process,
@@ -72,15 +92,16 @@ impl DspDomainLoader {
             transfer_direction,
             connector_instance,
             is_restart,
-            is_idempotent_replay,
+            false,
         )
     }
 
-    /// Load the existing process by its pid, or signal a brand-new one.
+    /// The existing process by either pid, checked against the peer; a request may open one.
     async fn process_slot(
         &self,
         typed: &TransferDSPContextTyped,
     ) -> Outcome<TransferContextProcessSlot> {
+        let peer = DspActor::peer(&typed.rdf.parsed.raw.authn.associated_participant);
         for pid in [
             typed.fields.provider_pid.as_deref(),
             typed.fields.consumer_pid.as_deref(),
@@ -88,20 +109,34 @@ impl DspDomainLoader {
         .into_iter()
         .flatten()
         {
-            let urn: Urn = pid.parse().map_err(|_| {
-                Errors::format(
-                    BadFormat::Received,
-                    format!("pid is not a URN: {pid}"),
-                    None,
-                )
-            })?;
+            let urn = Self::urn(pid, "pid")?;
             if let Some(found) = self
                 .process_repo
                 .get_transfer_process_by_key_value(&OwnerScope::All, &urn)
                 .await?
             {
+                let counterparty = found
+                    .correlation()
+                    .peer_participant_id
+                    .as_ref()
+                    .map(|p| p.as_str())
+                    .unwrap_or_default();
+                peer.authorize(found.owner(), counterparty, &urn)?;
                 return Ok(TransferContextProcessSlot::Existing(found));
             }
+        }
+        if typed.message != TransferDSPMessageType::TransferRequestMessage {
+            let pid = typed
+                .fields
+                .provider_pid
+                .clone()
+                .or_else(|| typed.fields.consumer_pid.clone())
+                .unwrap_or_default();
+            return Err(Errors::missing_resource(
+                pid,
+                "transfer process not found",
+                None,
+            ));
         }
         let consumer_pid = typed.fields.consumer_pid.clone().ok_or_else(|| {
             Errors::format(
@@ -113,65 +148,63 @@ impl DspDomainLoader {
         Ok(TransferContextProcessSlot::New { consumer_pid })
     }
 
-    /// An existing process carries its role; a new one's role is an external rule.
-    async fn role(
-        &self,
+    /// The agreement named by the message, or the one the process already runs under.
+    fn agreement_id(
+        typed: &TransferDSPContextTyped,
         process: &TransferContextProcessSlot,
-        typed: &TransferDSPContextTyped,
-    ) -> Outcome<TransferRole> {
+    ) -> Outcome<Urn> {
+        if let Some(id) = typed.fields.agreement_id.as_deref() {
+            return Self::urn(id, "agreementId");
+        }
         match process {
-            TransferContextProcessSlot::Existing(p) => Ok(p.role()),
-            TransferContextProcessSlot::New { .. } => {
-                self.resolver.resolve_role_for_new(typed).await
-            }
+            TransferContextProcessSlot::Existing(p) => p
+                .correlation()
+                .agreement_id
+                .clone()
+                .ok_or_else(|| Errors::crazy("stored transfer process has no agreement", None)),
+            TransferContextProcessSlot::New { .. } => Err(Errors::format(
+                BadFormat::Received,
+                "agreementId is required",
+                None,
+            )),
         }
     }
 
-    async fn connector(
-        &self,
+    /// Fixed by the request (a data address means push) and read back from the process after.
+    fn transfer_direction(
         typed: &TransferDSPContextTyped,
-    ) -> Outcome<TransferContextConnectorRole> {
-        let agreement_id = typed
-            .rdf
-            .parsed
-            .json_value
-            .get("agreementId")
-            .and_then(|v| v.as_str());
-        let Some(agreement_id) = agreement_id else {
-            return Ok(TransferContextConnectorRole::ConsumerNotHavingConnector);
-        };
-        let agreement_id: Urn = agreement_id
-            .parse()
-            .map_err(|_| Errors::format(BadFormat::Received, "agreementId is not a URN", None))?;
-        let connector = self
-            .connectors
-            .resolve_connector_by_agreement_id(&agreement_id, None)
-            .await?;
-        Ok(TransferContextConnectorRole::ProviderHavingConnector(
-            connector,
-        ))
-    }
-
-    fn transfer_direction(typed: &TransferDSPContextTyped, is_restart: bool) -> TransferDirection {
-        if is_restart {
-            return TransferDirection::Pull;
-        }
-        if typed.fields.data_address.is_some() {
-            TransferDirection::Push
-        } else {
-            TransferDirection::Pull
+        process: &TransferContextProcessSlot,
+    ) -> TransferDirection {
+        match process {
+            TransferContextProcessSlot::Existing(p) => Self::stored_direction(p),
+            TransferContextProcessSlot::New { .. } if typed.fields.data_address.is_some() => {
+                TransferDirection::Push
+            }
+            TransferContextProcessSlot::New { .. } => TransferDirection::Pull,
         }
     }
 
-    fn is_restart(_process: &TransferContextProcessSlot) -> bool {
-        false
+    /// A start on a suspended process resumes it rather than starting it for the first time.
+    fn is_restart(typed: &TransferDSPContextTyped, process: &TransferContextProcessSlot) -> bool {
+        matches!(process, TransferContextProcessSlot::Existing(p) if p.state().0 == "SUSPENDED")
+            && typed.message == TransferDSPMessageType::TransferStartMessage
     }
 
-    async fn is_idempotent_replay(
-        &self,
-        _typed: &TransferDSPContextTyped,
-        _process: &TransferContextProcessSlot,
-    ) -> Outcome<bool> {
-        Ok(false)
+    fn stored_direction(process: &TransferProcess) -> TransferDirection {
+        process
+            .properties()
+            .get(DIRECTION_PROPERTY)
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or(TransferDirection::Pull)
+    }
+
+    fn urn(value: &str, field: &str) -> Outcome<Urn> {
+        Urn::from_str(value).map_err(|_| {
+            Errors::format(
+                BadFormat::Received,
+                format!("{field} is not a URN: {value}"),
+                None,
+            )
+        })
     }
 }

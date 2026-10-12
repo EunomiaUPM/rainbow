@@ -94,10 +94,12 @@ impl ActiveModel {
             ymir::errors::Errors::crazy("owner must be resolved before reaching the repo", None)
         })?;
         let now = chrono::Utc::now();
+        // The pids live in the identifiers table too; keeping them here lets a read answer DSP.
+        let pid = |key: &str| cmd.identifiers.as_ref().and_then(|ids| ids.get(key).cloned());
         let correlation = TransferCorrelation {
             identifiers: std::collections::HashMap::new(),
-            consumer_pid: None,
-            provider_pid: None,
+            consumer_pid: pid(crate::entities::protocol::CONSUMER_PID_KEY),
+            provider_pid: pid(crate::entities::protocol::PROVIDER_PID_KEY),
             agreement_id: Some(cmd.agreement_id.clone()),
             callback_address: cmd.callback_address.clone(),
             peer_participant_id: Some(cmd.peer_participant_id.clone()),

@@ -18,8 +18,10 @@
 use std::sync::Arc;
 
 use crate::data::factory::DataFactory;
+use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::data::sea_orm::factory::SeaOrmDataFactory;
-use crate::protocols::dsp::facades::{FacadeService, FacadeTrait};
+use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
+use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
 use crate::protocols::dsp::services::connector_resolver::ConnectorResolverTrait;
 use crate::protocols::dsp::services::connector_resolver::connector_resolver::ConnectorResolver;
 use crate::services::transfer_message::service::TransferMessageService;
@@ -35,11 +37,13 @@ pub struct AppContext {
     pub config: Arc<TransferConfig>,
     pub transfer_process_svc: Arc<TransferProcessService>,
     pub transfer_message_svc: Arc<TransferMessageService>,
+    pub transfer_process_repo: Arc<dyn TransferProcessRepoTrait>,
     pub oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
     pub grants_facade: Arc<dyn GrantsFacadeTrait>,
-    /// DSP collaborators, consumed once the domain loader and manager are wired.
+    /// What the DSP flow loads facts from and drives while it applies.
     pub connector_resolver: Arc<dyn ConnectorResolverTrait>,
-    pub dsp_facades: Arc<dyn FacadeTrait>,
+    pub negotiation: Arc<dyn NegotiationFacadeTrait>,
+    pub dataplane: Arc<dyn DataPlaneFacadeTrait>,
 }
 
 impl AppContext {
@@ -69,13 +73,15 @@ impl AppContext {
             config,
             transfer_process_svc,
             transfer_message_svc,
+            transfer_process_repo: db_factory.transfer_process_repo(),
             oauth_validator: root.validator.clone(),
             grants_facade: ports.auth.grants.clone(),
             connector_resolver: Arc::new(ConnectorResolver::new(
                 ports.negotiation.clone(),
                 ports.catalog.clone(),
             )),
-            dsp_facades: Arc::new(FacadeService::new(ports.dataplane.facade.clone())),
+            negotiation: ports.negotiation.clone(),
+            dataplane: ports.dataplane.facade.clone(),
         }
     }
 }

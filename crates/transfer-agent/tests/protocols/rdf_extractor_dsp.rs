@@ -142,3 +142,12 @@ async fn a_data_address_without_an_endpoint_type_is_malformed() {
     let node = doc.root_message_node(&type_iri, &kind).unwrap();
     assert!(DspTransfer::extract(&node).is_err());
 }
+
+/// A bare format term comes back as sent, not as the DSP IRI `@vocab` expands it into.
+#[tokio::test]
+async fn a_bare_format_term_is_read_as_sent() {
+    let mut message = request(json!("urn:uuid:cc"));
+    message["format"] = json!("http+pull");
+    let f = fields_of(message, TransferDSPMessageType::TransferRequestMessage).await;
+    assert_eq!(f.format.as_deref(), Some("http+pull"));
+}

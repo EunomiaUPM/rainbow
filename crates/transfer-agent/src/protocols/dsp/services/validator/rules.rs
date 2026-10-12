@@ -67,7 +67,7 @@ impl TransferRules {
             (TransferRequestMessage, Some(_)) => reject(),
             (TransferStartMessage, Some(REQUESTED | SUSPENDED)) => Ok(()),
             (TransferStartMessage, _) => reject(),
-            (TransferCompletionMessage, Some(STARTED | SUSPENDED)) => Ok(()),
+            (TransferCompletionMessage, Some(STARTED)) => Ok(()),
             (TransferCompletionMessage, _) => reject(),
             (TransferSuspensionMessage, Some(STARTED)) => Ok(()),
             (TransferSuspensionMessage, _) => reject(),
@@ -105,6 +105,26 @@ impl TransferRules {
         }
     }
 
+    /// Whether a role may send the message: only a consumer requests, only a provider starts.
+    pub fn role_may_send(
+        role: &TransferRole,
+        message: &TransferDSPMessageType,
+        path: impl Into<Path>,
+    ) -> Result<(), Violations> {
+        use TransferDSPMessageType::{TransferRequestMessage, TransferStartMessage};
+        let refuse = |why: &'static str| Err(violation(path.into(), codes::NOT_ALLOWED, why));
+        match (role, message) {
+            (TransferRole::Relay, _) => refuse("Relay is not a transfer peer"),
+            (TransferRole::Provider, TransferRequestMessage) => {
+                refuse("only a Consumer sends a TransferRequestMessage")
+            }
+            (TransferRole::Consumer, TransferStartMessage) => {
+                refuse("only a Provider sends a TransferStartMessage")
+            }
+            _ => Ok(()),
+        }
+    }
+
     /// Enforce suspension semaphore: a role cannot resume what it suspended itself.
     pub fn semaphore(
         attribute: &TransferDSPStateAttribute,
@@ -135,18 +155,16 @@ impl TransferRules {
     pub fn data_address_format(
         has_data_address: bool,
         role: &TransferRole,
-        attribute: &TransferDSPStateAttribute,
         path: impl Into<Path>,
     ) -> Result<(), Violations> {
         let p = path.into();
-        if has_data_address
-            && matches!(role, TransferRole::Consumer)
-            && !matches!(attribute, TransferDSPStateAttribute::OnRequest)
-        {
+        // The provider hands the pull endpoint out on every start, a resume included; it never
+        // takes one from the consumer on a start.
+        if has_data_address && matches!(role, TransferRole::Provider) {
             return Err(violation(
                 p,
                 codes::NOT_ALLOWED,
-                "dataAddress is only allowed in the first provider TransferStart",
+                "a provider does not receive a dataAddress on TransferStart",
             ));
         }
         Ok(())

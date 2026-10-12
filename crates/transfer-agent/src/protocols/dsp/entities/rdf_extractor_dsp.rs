@@ -19,7 +19,7 @@
 //! message. Everything protocol-agnostic lives in `common::rdf`.
 
 use common::dsp_common::data_address::{DataAddress, EndpointProperty};
-use common::rdf::{ExpandedDoc, RdfNode};
+use common::rdf::{ExpandedDoc, RdfCanonicalizer, RdfNode};
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
@@ -88,7 +88,7 @@ impl ExtractProtocolFields for DspTransfer {
             provider_pid: Self::owned(node, &Self::dspace("providerPid")),
             agreement_id: Self::owned(node, &Self::dspace("agreementId")),
             callback_address: Self::owned(node, &Self::dspace("callbackAddress")),
-            format: node.iri_or_literal(DCT_FORMAT).map(str::to_string),
+            format: node.iri_or_literal(DCT_FORMAT).map(Self::compact_format),
             data_address: Self::data_address(node)?,
             code: Self::owned(node, &Self::dspace("code")),
             reason: node
@@ -135,6 +135,18 @@ impl DspTransfer {
             value: Self::owned(node, &Self::dspace("value"))
                 .ok_or_else(|| Self::missing("dataAddress.endpointProperties[].value"))?,
         })
+    }
+
+    /// `format` is `@vocab`-typed, so a bare term (`http+pull`) expands to an IRI under the
+    /// document base; it is read back as sent, which is what a distribution stores.
+    fn compact_format(expanded: &str) -> String {
+        let below_base = expanded
+            .strip_prefix(RdfCanonicalizer::DOCUMENT_BASE)
+            .map(|rest| rest.trim_start_matches('/'));
+        below_base
+            .or_else(|| expanded.strip_prefix(DSPACE))
+            .unwrap_or(expanded)
+            .to_string()
     }
 
     /// The full IRI a DSP term expands to.

@@ -17,5 +17,6 @@
 
 //! Transfer-agent services with mocked repositories.
 
+mod agreement_resolver;
 mod transfer_messages;
 mod transfer_processes;

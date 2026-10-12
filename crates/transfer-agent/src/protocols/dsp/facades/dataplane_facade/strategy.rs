@@ -16,7 +16,7 @@
  */
 
 use crate::entities::protocol::{TransferDirection, TransferRole};
-use crate::protocols::dsp::entities::context_dsp::TransferDSPContextDomain;
+use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 use crate::protocols::dsp::entities::data_address::DataAddressDto;
 use crate::protocols::dsp::facades::dataplane_facade::{
     consumer_pull::ConsumerPullStrategy, consumer_push::ConsumerPushStrategy,
@@ -30,61 +30,61 @@ use ymir::errors::Outcome;
 pub(super) trait DataPlaneStrategy: Send + Sync {
     async fn on_request_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_request_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_start_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_start_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<Option<DataAddressDto>>;
 
     async fn on_suspend_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_suspend_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_complete_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_complete_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_terminate_pre(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 
     async fn on_terminate_post(
         &self,
-        ctx: &TransferDSPContextDomain,
+        ctx: &DataplaneHookContext,
         mgr: &DataplaneManager,
     ) -> Outcome<()>;
 }
