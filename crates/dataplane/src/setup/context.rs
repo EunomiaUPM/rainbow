@@ -92,7 +92,7 @@ impl AppContext {
     async fn redis_connection(
         config: &TransferConfig,
     ) -> Outcome<redis::aio::MultiplexedConnection> {
-        let client = redis::Client::open(config.get_full_cache_url()).map_err(|e| {
+        let client = redis::Client::open(config.get_full_cache_url()?).map_err(|e| {
             Errors::crazy(
                 "dataplane setup: failed to open redis client",
                 Some(Box::new(e)),

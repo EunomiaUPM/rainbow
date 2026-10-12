@@ -15,25 +15,29 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use ymir::errors::{Errors, Outcome};
+
 use crate::config::types::cache::{CacheConfig, CacheType};
 
 /// Access to the cache settings of a config.
 pub trait CacheConfigTrait {
     fn cache_config(&self) -> &CacheConfig;
-    /// Redis URL with credentials; only meaningful when `cache_type` is Redis.
-    fn get_full_cache_url(&self) -> String {
-        match self.cache_config().cache_type {
-            CacheType::Redis => {
-                format!(
-                    "{}://{}:{}@{}:{}",
-                    self.cache_config().cache_type,
-                    self.cache_config().user,
-                    self.cache_config().password,
-                    self.cache_config().url,
-                    self.cache_config().port
-                )
-            }
-            _ => todo!("not implemented yet"),
+    /// Redis URL with credentials; fails for any other `cache_type`, which has no URL.
+    fn get_full_cache_url(&self) -> Outcome<String> {
+        let cache = self.cache_config();
+        match cache.cache_type {
+            CacheType::Redis => Ok(format!(
+                "{}://{}:{}@{}:{}",
+                cache.cache_type,
+                cache.user,
+                cache.password.expose(),
+                cache.url,
+                cache.port
+            )),
+            ref other => Err(Errors::parse(
+                format!("cache_type `{other}` has no URL: only Redis is supported here"),
+                None,
+            )),
         }
     }
 }

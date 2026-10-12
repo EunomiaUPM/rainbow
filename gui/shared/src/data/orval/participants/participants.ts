@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -45,8 +45,7 @@ import type {
   PaginatedParticipantDto,
   ParticipantDto,
   ParticipantPlan,
-  UnauthorizedResponse,
-  VerifyTokenRequest
+  UnauthorizedResponse
 } from '.././model';
 
 import { customInstance } from '../../orval-mutator';
@@ -644,66 +643,60 @@ export function useGetMyself<TData = Awaited<ReturnType<typeof getMyself>>, TErr
 
 
 /**
- * Used by the protocol agents to authenticate DSP calls.
- * @summary Participant owning a peer token
+ * Root only. Pulls the participants each known authority lists into the registry.
+ * @summary Sync the participant directory from the authorities
  */
-export type getParticipantByTokenResponse200 = {
-  data: ParticipantDto
+export type syncParticipantDirectoryResponse200 = {
+  data: number
   status: 200
 }
 
-export type getParticipantByTokenResponse400 = {
-  data: BadRequestResponse
-  status: 400
-}
-
-export type getParticipantByTokenResponse401 = {
+export type syncParticipantDirectoryResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
 
-export type getParticipantByTokenResponse404 = {
-  data: NotFoundResponse
-  status: 404
+export type syncParticipantDirectoryResponse403 = {
+  data: ForbiddenResponse
+  status: 403
 }
     
-export type getParticipantByTokenResponseSuccess = (getParticipantByTokenResponse200) & {
+export type syncParticipantDirectoryResponseSuccess = (syncParticipantDirectoryResponse200) & {
   headers: Headers;
 };
-export type getParticipantByTokenResponseError = (getParticipantByTokenResponse400 | getParticipantByTokenResponse401 | getParticipantByTokenResponse404) & {
+export type syncParticipantDirectoryResponseError = (syncParticipantDirectoryResponse401 | syncParticipantDirectoryResponse403) & {
   headers: Headers;
 };
 
-export type getParticipantByTokenResponse = (getParticipantByTokenResponseSuccess | getParticipantByTokenResponseError)
+export type syncParticipantDirectoryResponse = (syncParticipantDirectoryResponseSuccess | syncParticipantDirectoryResponseError)
 
-export const getGetParticipantByTokenUrl = () => {
+export const getSyncParticipantDirectoryUrl = () => {
 
 
   
 
-  return `/mates/token`
+  return `/mates/sync`
 }
 
-export const getParticipantByToken = async (verifyTokenRequest: VerifyTokenRequest, options?: RequestInit): Promise<getParticipantByTokenResponse> => {
+export const syncParticipantDirectory = async ( options?: RequestInit): Promise<syncParticipantDirectoryResponse> => {
   
-  return customInstance<getParticipantByTokenResponse>(getGetParticipantByTokenUrl(),
+  return customInstance<syncParticipantDirectoryResponse>(getSyncParticipantDirectoryUrl(),
   {      
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      verifyTokenRequest,)
+    method: 'POST'
+    
+    
   }
 );}
 
 
 
 
-export const getGetParticipantByTokenMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getParticipantByToken>>, TError,{data: BodyType<VerifyTokenRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof getParticipantByToken>>, TError,{data: BodyType<VerifyTokenRequest>}, TContext> => {
+export const getSyncParticipantDirectoryMutationOptions = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncParticipantDirectory>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncParticipantDirectory>>, TError,void, TContext> => {
 
-const mutationKey = ['getParticipantByToken'];
+const mutationKey = ['syncParticipantDirectory'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -713,10 +706,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getParticipantByToken>>, {data: BodyType<VerifyTokenRequest>}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncParticipantDirectory>>, void> = () => {
+          
 
-          return  getParticipantByToken(data,requestOptions)
+          return  syncParticipantDirectory(requestOptions)
         }
 
 
@@ -726,22 +719,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type GetParticipantByTokenMutationResult = NonNullable<Awaited<ReturnType<typeof getParticipantByToken>>>
-    export type GetParticipantByTokenMutationBody = BodyType<VerifyTokenRequest>
-    export type GetParticipantByTokenMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>
+    export type SyncParticipantDirectoryMutationResult = NonNullable<Awaited<ReturnType<typeof syncParticipantDirectory>>>
+    
+    export type SyncParticipantDirectoryMutationError = ErrorType<UnauthorizedResponse | ForbiddenResponse>
 
     /**
- * @summary Participant owning a peer token
+ * @summary Sync the participant directory from the authorities
  */
-export const useGetParticipantByToken = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getParticipantByToken>>, TError,{data: BodyType<VerifyTokenRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const useSyncParticipantDirectory = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncParticipantDirectory>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getParticipantByToken>>,
+        Awaited<ReturnType<typeof syncParticipantDirectory>>,
         TError,
-        {data: BodyType<VerifyTokenRequest>},
+        void,
         TContext
       > => {
-      return useMutation(getGetParticipantByTokenMutationOptions(options), queryClient);
+      return useMutation(getSyncParticipantDirectoryMutationOptions(options), queryClient);
     }
     /**
  * @summary Get a participant

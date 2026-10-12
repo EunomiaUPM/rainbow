@@ -16,7 +16,8 @@
  */
 
 use crate::config::services::TransferConfig;
-use crate::config::types::traits::{CommonConfigTrait, ConfigLoader};
+use crate::config::types::cache::CacheConfig;
+use crate::config::types::traits::{CacheConfigTrait, CommonConfigTrait, ConfigLoader};
 use crate::config::ApplicationConfig;
 
 const DEV_PROVIDER: &str = "../../static/environment/config/dev/dev.provider.yaml";
@@ -59,4 +60,22 @@ fn agent_file_without_other_sections_falls_back_to_local_load() {
     std::fs::remove_file(&path).ok();
 
     assert!(loaded.is_ok());
+}
+
+/// Redis credentials go into the URL but never into the serialized config (logs, API).
+#[test]
+fn cache_password_reaches_the_url_but_not_the_serialized_config() {
+    let cache: CacheConfig = serde_json::from_value(serde_json::json!({
+        "cache_type": "Redis", "url": "localhost", "port": "6379", "user": "", "password": "s3cr3t"
+    }))
+    .unwrap();
+
+    assert_eq!(cache.get_full_cache_url().unwrap(), "redis://:s3cr3t@localhost:6379");
+    assert!(!serde_json::to_string(&cache).unwrap().contains("s3cr3t"));
+}
+
+/// A cache without URL is a config error, not a panic.
+#[test]
+fn noop_cache_has_no_url() {
+    assert!(CacheConfig::default().get_full_cache_url().is_err());
 }

@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -38,8 +38,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Idempotent; existing main entities are kept.
- * @summary Give a tenant its main catalog and data service
+ * Idempotent; existing main entities are kept. The boot already runs it as the root.
+ * @summary Give the connector its main catalog and data service
  */
 export type provisionTenantResponse200 = {
   data: ProvisionedTenantDto
@@ -70,17 +70,17 @@ export type provisionTenantResponseError = (provisionTenantResponse400 | provisi
 
 export type provisionTenantResponse = (provisionTenantResponseSuccess | provisionTenantResponseError)
 
-export const getProvisionTenantUrl = (tenantId: string,) => {
+export const getProvisionTenantUrl = () => {
 
 
   
 
-  return `/v1/catalog-agent/tenants/${tenantId}/provision`
+  return `/v1/catalog-agent/tenants/provision`
 }
 
-export const provisionTenant = async (tenantId: string, options?: RequestInit): Promise<provisionTenantResponse> => {
+export const provisionTenant = async ( options?: RequestInit): Promise<provisionTenantResponse> => {
   
-  return customInstance<provisionTenantResponse>(getProvisionTenantUrl(tenantId),
+  return customInstance<provisionTenantResponse>(getProvisionTenantUrl(),
   {      
     ...options,
     method: 'POST'
@@ -93,8 +93,8 @@ export const provisionTenant = async (tenantId: string, options?: RequestInit): 
 
 
 export const getProvisionTenantMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,{tenantId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,{tenantId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,void, TContext> => {
 
 const mutationKey = ['provisionTenant'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -106,10 +106,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof provisionTenant>>, {tenantId: string}> = (props) => {
-          const {tenantId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof provisionTenant>>, void> = () => {
+          
 
-          return  provisionTenant(tenantId,requestOptions)
+          return  provisionTenant(requestOptions)
         }
 
 
@@ -124,14 +124,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ProvisionTenantMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
 
     /**
- * @summary Give a tenant its main catalog and data service
+ * @summary Give the connector its main catalog and data service
  */
 export const useProvisionTenant = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,{tenantId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisionTenant>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof provisionTenant>>,
         TError,
-        {tenantId: string},
+        void,
         TContext
       > => {
       return useMutation(getProvisionTenantMutationOptions(options), queryClient);

@@ -163,7 +163,7 @@ impl EventSubscriptionRepo for SeaOrmSubscriptionRepo {
         &self,
         scope: &OwnerScope,
         id: &str,
-        dto: UpdateSubscriptionDto,
+        mut dto: UpdateSubscriptionDto,
     ) -> Outcome<SubscriptionRecord> {
         let model = subscription::Entity::find()
             .filter(subscription::Column::Id.eq(id))
@@ -173,6 +173,7 @@ impl EventSubscriptionRepo for SeaOrmSubscriptionRepo {
             .map_err(|e| Errors::db("failed to find subscription", Some(Box::new(e))))?
             .ok_or_else(|| Errors::missing_resource(id, "subscription not found", None))?;
 
+        let new_secret = dto.take_new_secret();
         let mut active: subscription::ActiveModel = model.into();
         if let Some(addr) = dto.callback_address {
             active.callback_address = ActiveValue::Set(addr);
@@ -181,8 +182,8 @@ impl EventSubscriptionRepo for SeaOrmSubscriptionRepo {
             TopicPattern::new(&pat).map_err(|e| Errors::format(BadFormat::Received, e, None))?;
             active.topic_pattern = ActiveValue::Set(pat);
         }
-        if dto.secret.is_some() {
-            active.secret = ActiveValue::Set(dto.secret.map(Secret::into_exposed));
+        if let Some(secret) = new_secret {
+            active.secret = ActiveValue::Set(Some(secret.into_exposed()));
         }
         if let Some(headers) = dto.headers {
             active.headers =

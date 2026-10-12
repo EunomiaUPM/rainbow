@@ -106,7 +106,7 @@
     },
     {
       "name": "Catalogs",
-      "description": "DCAT catalogs; each tenant has one main catalog"
+      "description": "DCAT catalogs; the connector has one main catalog"
     },
     {
       "name": "Datasets",
@@ -118,7 +118,7 @@
     },
     {
       "name": "Data Services",
-      "description": "Data services of a catalog; each tenant has one main data service"
+      "description": "Data services of a catalog; the connector has one main data service"
     },
     {
       "name": "ODRL Policies",
@@ -138,7 +138,7 @@
     },
     {
       "name": "Tenants",
-      "description": "Tenant provisioning"
+      "description": "Provisioning of the connector's main catalog and data service"
     },
     {
       "name": "Catalog Protocol",
@@ -282,7 +282,7 @@
         ],
         "operationId": "fetchDataspaceVersionFromParticipant",
         "summary": "Fetch a peer's version document",
-        "description": "Resolves the participant in the tenant's registry and reads its `.well-known/dspace-version`.",
+        "description": "Resolves the participant in the registry and reads its `.well-known/dspace-version`.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1552,13 +1552,10 @@
         "summary": "List parameters",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/KeyPrefix"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           }
         ],
         "responses": {
@@ -1597,11 +1594,6 @@
         ],
         "operationId": "createParameter",
         "summary": "Create a parameter",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1650,9 +1642,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/KeyPath"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -1780,13 +1769,10 @@
         "summary": "List secrets",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/KeyPrefix"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           }
         ],
         "responses": {
@@ -1825,11 +1811,6 @@
         ],
         "operationId": "createSecret",
         "summary": "Create a secret",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1878,9 +1859,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/KeyPath"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -2006,11 +1984,6 @@
         ],
         "operationId": "getApplicationConfig",
         "summary": "Effective application configuration",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Config file of the process, one optional section per agent",
@@ -2047,9 +2020,6 @@
         "operationId": "listEventsFeed",
         "summary": "List events",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -2099,12 +2069,7 @@
         ],
         "operationId": "publishEvent",
         "summary": "Publish an event",
-        "description": "The event belongs to the acting tenant; `source_crate` defaults to `events`.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "description": "The event belongs to the caller; `source_crate` defaults to `events`.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2195,9 +2160,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/EventId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -2238,9 +2200,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/EventId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -2276,9 +2235,6 @@
         "operationId": "listEventSubscriptions",
         "summary": "List webhook subscriptions",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -2331,11 +2287,6 @@
         ],
         "operationId": "createEventSubscription",
         "summary": "Create a webhook subscription",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2383,9 +2334,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -2501,9 +2449,6 @@
         "summary": "List dead letters",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -2556,11 +2501,6 @@
         ],
         "operationId": "replayAllDeadLetters",
         "summary": "Replay every unresolved dead letter",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Number of dead letters replayed",
@@ -2595,9 +2535,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -2672,9 +2609,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -3298,11 +3232,6 @@
         ],
         "operationId": "createParticipant",
         "summary": "Register a participant",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3334,6 +3263,7 @@
             "$ref": "#/components/responses/Forbidden"
           }
         },
+        "description": "Registers a participant; `visibility` says who else sees it.",
         "security": [
           {
             "bearerAuth": []
@@ -3349,9 +3279,6 @@
         "operationId": "getAllParticipants",
         "summary": "List participants",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -3427,11 +3354,6 @@
         ],
         "operationId": "getMyself",
         "summary": "This agent's own participant entry",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Own participant",
@@ -3464,11 +3386,6 @@
         ],
         "operationId": "getBatchParticipants",
         "summary": "Get several participants by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3507,57 +3424,6 @@
         ]
       }
     },
-    "/api/v1/mates/token": {
-      "post": {
-        "tags": [
-          "Participants"
-        ],
-        "operationId": "getParticipantByToken",
-        "summary": "Participant owning a peer token",
-        "description": "Used by the protocol agents to authenticate DSP calls.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyTokenRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Participant",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ParticipantDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
     "/api/v1/mates/{id}": {
       "parameters": [
         {
@@ -3568,9 +3434,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -3655,11 +3518,6 @@
         "operationId": "begVc",
         "summary": "Request a credential from an authority",
         "description": "Starts a GNAP credential request; with `auto` the OID4VP and OID4VCI steps run unattended.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3696,9 +3554,6 @@
         "operationId": "getAllVcRequests",
         "summary": "List credential requests",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -3765,9 +3620,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -3805,9 +3657,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -3845,9 +3694,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -3891,9 +3737,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -4016,11 +3859,6 @@
         "operationId": "connectToPeer",
         "summary": "Start onboarding with a peer",
         "description": "Sends a GNAP access request; with `auto` the OID4VP step runs unattended.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4057,9 +3895,6 @@
         "operationId": "getAllPeerConnectionRequests",
         "summary": "List onboarding requests sent",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -4126,9 +3961,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -4154,6 +3986,35 @@
             "bearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "Peer Connection"
+        ],
+        "operationId": "disconnectSentGrant",
+        "summary": "Disconnect from a peer",
+        "description": "Ends the sent grant and asks the peer to revoke its tokens.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/peer-connection/request/{id}/details": {
@@ -4166,9 +4027,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -4206,9 +4064,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -4323,104 +4178,6 @@
         }
       }
     },
-    "/api/v1/gate/{tenant}/access": {
-      "post": {
-        "tags": [
-          "GateKeeper"
-        ],
-        "operationId": "gnapAccessRequest",
-        "summary": "GNAP grant request",
-        "description": "A peer asks for access to `tenant`. Only the `httpsig` key proof is supported: the\nrequest must carry HTTP Message Signatures over this endpoint and body, verified with\nthe client key it declares.\n",
-        "security": [],
-        "parameters": [
-          {
-            "name": "tenant",
-            "in": "path",
-            "required": true,
-            "description": "Tenant the peer onboards into.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GnapGrantRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "GNAP grant response (pending interaction, approved or error)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GnapGrantResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/gate/{tenant}/continue/{id}": {
-      "post": {
-        "tags": [
-          "GateKeeper"
-        ],
-        "operationId": "gnapContinueRequest",
-        "summary": "GNAP continuation request",
-        "description": "Signed like the grant request; `interact_ref` must match the interaction.",
-        "security": [],
-        "parameters": [
-          {
-            "name": "tenant",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/StringPathId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "interact_ref"
-                ],
-                "properties": {
-                  "interact_ref": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "GNAP grant response, with the access token once approved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GnapGrantResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/gate/request/all": {
       "get": {
         "tags": [
@@ -4429,9 +4186,6 @@
         "operationId": "getAllReceivedGrants",
         "summary": "List grant requests received",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -4495,9 +4249,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -4523,6 +4274,35 @@
             "bearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "disconnectReceivedGrant",
+        "summary": "Disconnect a peer",
+        "description": "Ends the received grant and revokes its tokens.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/gate/request/{id}/details": {
@@ -4535,9 +4315,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -4665,11 +4442,6 @@
         ],
         "operationId": "generateGaiaCredentials",
         "summary": "Generate the Gaia-X self-attested credentials",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Generated"
@@ -4688,6 +4460,339 @@
         ]
       }
     },
+    "/api/v1/mates/sync": {
+      "post": {
+        "tags": [
+          "Participants"
+        ],
+        "operationId": "syncParticipantDirectory",
+        "summary": "Sync the participant directory from the authorities",
+        "description": "Root only. Pulls the participants each known authority lists into the registry.",
+        "responses": {
+          "200": {
+            "description": "Number of participants synced",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/gate/access": {
+      "post": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "gnapAccessRequest",
+        "summary": "GNAP grant request",
+        "description": "A peer asks for access to this connector. Only the `httpsig` key proof is supported: the\nrequest must carry HTTP Message Signatures over this endpoint and body, verified with\nthe client key it declares.\n",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GnapGrantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "GNAP grant response (pending interaction, approved or error)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GnapGrantResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gate/continue/{id}": {
+      "post": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "gnapContinueRequest",
+        "summary": "GNAP continuation request",
+        "description": "Signed like the grant request; `interact_ref` must match the interaction.",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interact_ref"
+                ],
+                "properties": {
+                  "interact_ref": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "GNAP grant response, with the access token once approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GnapGrantResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gate/token/{id}": {
+      "post": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "gnapRotateToken",
+        "summary": "Rotate an access token (GNAP token management)",
+        "description": "The peer presents its managing token for `id` and gets a new access token. Signed with HTTP Message Signatures like the grant request.",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GNAP grant response with the new access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GnapGrantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "gnapRevokeToken",
+        "summary": "Revoke an access token (GNAP token management)",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/gate/token/verify": {
+      "post": {
+        "tags": [
+          "GateKeeper"
+        ],
+        "operationId": "verifyPeerToken",
+        "summary": "Check a token a peer presents",
+        "description": "Used by the protocol agents to authenticate DSP calls.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifiedPeer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/peer-connection/token/{id}": {
+      "get": {
+        "tags": [
+          "Peer Connection"
+        ],
+        "operationId": "getPeerToken",
+        "summary": "Caller's token towards a peer",
+        "description": "`id` is the peer participant id. Used by the grants facade.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          },
+          {
+            "name": "requested",
+            "in": "query",
+            "required": false,
+            "description": "Token of the grant this connector requested (default) or of the one the peer requested.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access token towards the peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Not ready yet; retry after the `Retry-After` seconds",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/peer-connection/token/{id}/refresh": {
+      "post": {
+        "tags": [
+          "Peer Connection"
+        ],
+        "operationId": "refreshPeerToken",
+        "summary": "Rotate the token towards a peer",
+        "description": "Asks the peer for a new access token with the managing token.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StringPathId"
+          },
+          {
+            "name": "requested",
+            "in": "query",
+            "required": false,
+            "description": "Token of the grant this connector requested (default) or of the one the peer requested.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access token towards the peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Not ready yet; retry after the `Retry-After` seconds",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/catalog-agent/catalogs": {
       "get": {
         "tags": [
@@ -4696,9 +4801,6 @@
         "operationId": "getAllCatalogs",
         "summary": "List catalogs",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -4712,7 +4814,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "title",
@@ -4742,7 +4844,7 @@
             "name": "with_main_catalog",
             "in": "query",
             "required": false,
-            "description": "Include the tenant's main catalog in the listing.",
+            "description": "Include the connector's main catalog in the listing.",
             "schema": {
               "type": "boolean"
             }
@@ -4787,11 +4889,6 @@
         ],
         "operationId": "createCatalog",
         "summary": "Create a catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4836,12 +4933,7 @@
           "Catalogs"
         ],
         "operationId": "getMainCatalog",
-        "summary": "The tenant's main catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "The connector's main catalog",
         "responses": {
           "200": {
             "description": "Main catalog",
@@ -4871,12 +4963,7 @@
           "Catalogs"
         ],
         "operationId": "createMainCatalog",
-        "summary": "Create the tenant's main catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "Create the connector's main catalog",
         "requestBody": {
           "required": true,
           "content": {
@@ -4922,11 +5009,6 @@
         ],
         "operationId": "getBatchCatalogs",
         "summary": "Get several catalogs by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4969,9 +5051,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -5092,9 +5171,6 @@
         "summary": "List datasets",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -5107,7 +5183,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "catalog_id",
@@ -5181,11 +5257,6 @@
         ],
         "operationId": "createDataset",
         "summary": "Create a dataset",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5231,11 +5302,6 @@
         ],
         "operationId": "getBatchDatasets",
         "summary": "Get several datasets by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5284,9 +5350,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -5324,9 +5387,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -5447,9 +5507,6 @@
         "summary": "List distributions",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -5462,7 +5519,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "dataset_id",
@@ -5536,11 +5593,6 @@
         ],
         "operationId": "createDistribution",
         "summary": "Create a distribution",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5586,11 +5638,6 @@
         ],
         "operationId": "getBatchDistributions",
         "summary": "Get several distributions by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5639,9 +5686,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -5694,9 +5738,6 @@
                 "HttpData-PULL"
               ]
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -5731,9 +5772,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -5854,9 +5892,6 @@
         "summary": "List data services",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -5869,7 +5904,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "catalog_id",
@@ -5951,11 +5986,6 @@
         ],
         "operationId": "createDataService",
         "summary": "Create a data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6000,12 +6030,7 @@
           "Data Services"
         ],
         "operationId": "getMainDataService",
-        "summary": "The tenant's main data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "The connector's main data service",
         "responses": {
           "200": {
             "description": "Main data service",
@@ -6035,12 +6060,7 @@
           "Data Services"
         ],
         "operationId": "createMainDataService",
-        "summary": "Create the tenant's main data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "Create the connector's main data service",
         "requestBody": {
           "required": true,
           "content": {
@@ -6086,11 +6106,6 @@
         ],
         "operationId": "getBatchDataServices",
         "summary": "Get several data services by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6139,9 +6154,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -6176,9 +6188,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -6299,9 +6308,6 @@
         "summary": "List ODRL offers",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -6314,7 +6320,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "entity",
@@ -6389,11 +6395,6 @@
         ],
         "operationId": "createOdrlPolicy",
         "summary": "Attach an ODRL offer to an entity",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6439,11 +6440,6 @@
         ],
         "operationId": "getBatchOdrlPolicies",
         "summary": "Get several offers by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6492,9 +6488,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -6561,9 +6554,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -6638,9 +6628,6 @@
         "summary": "List policy templates",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -6653,7 +6640,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "id",
@@ -6722,9 +6709,6 @@
         "description": "With `silent=true` an invalid body or an existing id and version answers 200 with an empty\nbody instead of an error; seeders use it to stay idempotent.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "name": "silent",
             "in": "query",
             "required": false,
@@ -6791,11 +6775,6 @@
         ],
         "operationId": "getBatchPolicyTemplates",
         "summary": "Get several templates by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6842,11 +6821,6 @@
         "operationId": "instantiateOdrlOffer",
         "summary": "Instantiate a template as an offer on an entity",
         "description": "Validates the parameters, fills the placeholders and stores the resulting offer.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6898,9 +6872,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -6940,9 +6911,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -7009,12 +6977,7 @@
         ],
         "operationId": "createDatasetOffering",
         "summary": "Publish a dataset with its distribution and policy",
-        "description": "Without `dataset.catalogId` the dataset goes to the tenant's main catalog; without\n`distribution.accessServiceId` the distribution uses the main data service.\n",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "description": "Without `dataset.catalogId` the dataset goes to the connector's main catalog; without\n`distribution.accessServiceId` the distribution uses the main data service.\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -7063,11 +7026,6 @@
         ],
         "operationId": "getAllPeerCatalog",
         "summary": "Cached catalogs of every peer",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "One `[participant, catalog]` pair per peer",
@@ -7109,9 +7067,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -7139,27 +7094,17 @@
         ]
       }
     },
-    "/api/v1/catalog-agent/tenants/{tenantId}/provision": {
+    "/api/v1/catalog-agent/tenants/provision": {
       "post": {
         "tags": [
           "Tenants"
         ],
         "operationId": "provisionTenant",
-        "summary": "Give a tenant its main catalog and data service",
-        "description": "Idempotent; existing main entities are kept.",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "summary": "Give the connector its main catalog and data service",
+        "description": "Idempotent; existing main entities are kept. The boot already runs it as the root.",
         "responses": {
           "200": {
-            "description": "The tenant's main entities",
+            "description": "The connector's main entities",
             "content": {
               "application/json": {
                 "schema": {
@@ -7192,7 +7137,7 @@
         ],
         "operationId": "protocolRequestCatalog",
         "summary": "Catalog request",
-        "description": "Answers the tenant's catalog with the datasets and offers visible to the peer.",
+        "description": "Answers the connector's main catalog with the datasets and offers visible to the peer.",
         "security": [
           {
             "peerBearer": []
@@ -7278,11 +7223,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7334,11 +7274,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7387,9 +7322,6 @@
         "summary": "List connector templates",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -7402,9 +7334,10 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "name": "tenant_id",
+            "name": "user_id",
             "in": "query",
             "required": false,
+            "description": "Only the records of this user, among those the caller sees.",
             "schema": {
               "type": "string"
             }
@@ -7474,11 +7407,6 @@
         "operationId": "createConnectorTemplate",
         "summary": "Create a connector template",
         "description": "Every placeholder used in `authentication` or `interaction` must be declared in\n`parameters`, and every declared parameter must be used.\n",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7532,9 +7460,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -7582,9 +7507,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -7652,11 +7574,6 @@
         "operationId": "upsertConnectorInstance",
         "summary": "Create or replace the instance of a distribution",
         "description": "Validates the parameters against the template, adds system parameters, resolves every\nplaceholder and stores the result. With `dryRun` the instance is resolved but not stored.\n",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7702,9 +7619,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -7788,9 +7702,6 @@
                 "urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b"
               ]
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -7830,9 +7741,6 @@
         "summary": "List negotiations",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -7853,7 +7761,7 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantIdCamel"
+            "$ref": "#/components/parameters/UserIdCamel"
           },
           {
             "name": "state",
@@ -7937,11 +7845,6 @@
         ],
         "operationId": "createNegotiationProcess",
         "summary": "Create a negotiation record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7987,11 +7890,6 @@
         ],
         "operationId": "getBatchNegotiationProcesses",
         "summary": "Get several negotiations by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8034,9 +7932,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -8170,9 +8065,6 @@
                 "consumerPid"
               ]
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -8212,9 +8104,6 @@
         "summary": "List negotiation messages",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -8235,7 +8124,7 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantIdCamel"
+            "$ref": "#/components/parameters/UserIdCamel"
           },
           {
             "name": "processId",
@@ -8321,11 +8210,6 @@
         ],
         "operationId": "createNegotiationMessage",
         "summary": "Create a message record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8371,11 +8255,6 @@
         ],
         "operationId": "getBatchNegotiationMessages",
         "summary": "Get several messages by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8426,9 +8305,6 @@
             "$ref": "#/components/parameters/ProcessIdPath"
           },
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -8475,9 +8351,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -8552,9 +8425,6 @@
         "summary": "List offers",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -8575,7 +8445,7 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantIdCamel"
+            "$ref": "#/components/parameters/UserIdCamel"
           },
           {
             "name": "processId",
@@ -8647,11 +8517,6 @@
         ],
         "operationId": "createOffer",
         "summary": "Create an offer record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8697,11 +8562,6 @@
         ],
         "operationId": "getBatchOffers",
         "summary": "Get several offers by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8750,9 +8610,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/ProcessIdPath"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           },
           {
             "$ref": "#/components/parameters/Limit"
@@ -8815,9 +8672,6 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -8861,9 +8715,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -8938,9 +8789,6 @@
         "summary": "List agreements",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -8961,7 +8809,7 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantIdCamel"
+            "$ref": "#/components/parameters/UserIdCamel"
           },
           {
             "name": "processId",
@@ -9050,11 +8898,6 @@
         ],
         "operationId": "createAgreement",
         "summary": "Create an agreement record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9100,11 +8943,6 @@
         ],
         "operationId": "getBatchAgreements",
         "summary": "Get several agreements by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9153,9 +8991,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/ProcessIdPath"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           },
           {
             "$ref": "#/components/parameters/Limit"
@@ -9218,9 +9053,6 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -9278,9 +9110,6 @@
             }
           },
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -9324,9 +9153,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -9819,11 +9645,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9864,11 +9685,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -9913,11 +9729,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9958,11 +9769,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -10008,11 +9814,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10055,11 +9856,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10100,11 +9896,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -10150,11 +9941,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10195,11 +9981,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -10245,11 +10026,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10290,11 +10066,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -10339,11 +10110,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10384,11 +10150,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -10434,11 +10195,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10481,11 +10237,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10525,9 +10276,6 @@
         "summary": "List transfer processes",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -10540,7 +10288,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "protocol",
@@ -10630,11 +10378,6 @@
         ],
         "operationId": "createTransferProcess",
         "summary": "Create a transfer process record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10680,11 +10423,6 @@
         ],
         "operationId": "getBatchTransferProcesses",
         "summary": "Get several transfer processes by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10732,9 +10470,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -10855,9 +10590,6 @@
         "summary": "List transfer messages",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -10870,7 +10602,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "direction",
@@ -10941,11 +10673,6 @@
         ],
         "operationId": "createTransferMessage",
         "summary": "Create a message record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10994,9 +10721,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/ProcessIdPath"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           },
           {
             "$ref": "#/components/parameters/Limit"
@@ -11061,9 +10785,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -11368,9 +11089,6 @@
         "summary": "List dataplane processes",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -11383,7 +11101,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "transfer_process_id",
@@ -11462,11 +11180,6 @@
         ],
         "operationId": "createDataplaneTransfer",
         "summary": "Create a dataplane process record",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -11512,11 +11225,6 @@
         ],
         "operationId": "getBatchDataplaneTransfers",
         "summary": "Get several dataplane processes by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -11576,9 +11284,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -11613,9 +11318,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/DataplaneProcessId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -11738,9 +11440,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/DataplaneProcessId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -11781,9 +11480,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/DataplaneProcessId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -11824,9 +11520,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/DataplaneProcessId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -11873,9 +11566,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -12680,24 +12370,6 @@
           "type": "string"
         }
       },
-      "TenantIdCamel": {
-        "name": "tenantId",
-        "in": "query",
-        "required": false,
-        "description": "Tenant filter, honoured for admins.",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "TenantIdQuery": {
-        "name": "tenant_id",
-        "in": "query",
-        "required": false,
-        "description": "Tenant filter, honoured for admins.",
-        "schema": {
-          "type": "string"
-        }
-      },
       "TopicPattern": {
         "name": "topic",
         "in": "query",
@@ -12721,6 +12393,24 @@
           "examples": [
             "urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b"
           ]
+        }
+      },
+      "UserIdCamel": {
+        "name": "userId",
+        "in": "query",
+        "required": false,
+        "description": "Only the records of this user, among those the caller sees.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "UserIdQuery": {
+        "name": "user_id",
+        "in": "query",
+        "required": false,
+        "description": "Only the records of this user, among those the caller sees.",
+        "schema": {
+          "type": "string"
         }
       },
       "VerifierState": {
@@ -12860,7 +12550,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "negotiationAgentMessageId",
           "consumerParticipantId",
@@ -12874,8 +12566,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -13068,7 +12771,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "dspaceMainCatalog"
         ],
@@ -13077,8 +12782,19 @@
             "type": "string",
             "description": "URN of the catalog."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "foafHomePage": {
             "type": [
@@ -13263,12 +12979,9 @@
             "default": false,
             "description": "Resolve and validate without storing."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           }
         }
       },
@@ -13956,7 +13669,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dcatEndpointUrl",
           "dctIssued",
           "catalogId",
@@ -13967,8 +13682,19 @@
             "type": "string",
             "description": "URN of the data service."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dcatEndpointDescription": {
             "type": [
@@ -14078,7 +13804,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "transferProcessId",
           "role",
           "interactionMode",
@@ -14094,8 +13822,19 @@
             "type": "string",
             "description": "URN of the dataplane process."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "transferProcessId": {
             "type": "string"
@@ -14154,7 +13893,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenant_id",
+          "user_id",
+          "user_role",
+          "visibility",
           "dataplane_process_id",
           "new_state",
           "trigger",
@@ -14164,8 +13905,19 @@
           "id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
+          "user_id": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "user_role": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dataplane_process_id": {
             "type": "string"
@@ -14202,7 +13954,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "catalogId"
         ],
@@ -14211,8 +13965,19 @@
             "type": "string",
             "description": "URN of the dataset."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctConformsTo": {
             "type": [
@@ -14289,7 +14054,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenant_id",
+          "user_id",
+          "role",
+          "visibility",
           "event_id",
           "subscription_id",
           "topic",
@@ -14304,8 +14071,19 @@
           "id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
+          "user_id": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "role": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "delivery_id": {
             "type": [
@@ -14439,7 +14217,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "dcatAccessService",
           "datasetId"
@@ -14449,8 +14229,19 @@
             "type": "string",
             "description": "URN of the distribution."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctIssued": {
             "type": "string",
@@ -15059,7 +14850,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenant_id",
+          "user_id",
+          "role",
+          "visibility",
           "event_id",
           "subscription_id",
           "status",
@@ -15070,8 +14863,19 @@
           "id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
+          "user_id": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "role": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "event_id": {
             "type": "string"
@@ -15740,13 +15544,6 @@
               "string",
               "null"
             ]
-          },
-          "tenant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
           }
         }
       },
@@ -15772,13 +15569,6 @@
               "string",
               "null"
             ]
-          },
-          "tenant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
           }
         }
       },
@@ -15964,7 +15754,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "createdAt",
           "direction",
@@ -15978,8 +15770,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -16066,7 +15869,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "state",
           "associatedAgentPeer",
           "protocol",
@@ -16079,8 +15884,19 @@
             "type": "string",
             "description": "URN of the negotiation."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "state": {
             "$ref": "#/components/schemas/NegotiationProcessState"
@@ -16164,12 +15980,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -16200,12 +16013,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "foafHomePage": {
             "type": [
@@ -16254,12 +16064,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dcatEndpointDescription": {
             "type": [
@@ -16304,7 +16111,6 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "tenantId",
           "transferProcessId",
           "role",
           "interactionMode",
@@ -16320,8 +16126,30 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": "string"
+          "owner": {
+            "description": "Owner to stamp; in-process callers only, the root may name another.",
+            "type": "object",
+            "required": [
+              "user_id",
+              "role",
+              "visibility"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "description": "Author of the record (`system` when a peer opened it)."
+              },
+              "role": {
+                "type": "string",
+                "description": "Role the record was created under (or that handles it).",
+                "examples": [
+                  "/admin/upm"
+                ]
+              },
+              "visibility": {
+                "$ref": "#/components/schemas/Visibility"
+              }
+            }
           },
           "transferProcessId": {
             "type": "string"
@@ -16359,12 +16187,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctConformsTo": {
             "type": [
@@ -16437,7 +16262,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Defaults to the tenant's main catalog."
+                "description": "Defaults to the connector's main catalog."
               }
             }
           },
@@ -16468,7 +16293,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Defaults to the tenant's main data service."
+                "description": "Defaults to the connector's main data service."
               }
             }
           },
@@ -16526,12 +16351,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctTitle": {
             "type": [
@@ -16584,12 +16406,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -16633,12 +16452,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "state": {
             "$ref": "#/components/schemas/NegotiationProcessState"
@@ -16696,12 +16512,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "odrlOffer": {
             "$ref": "#/components/schemas/OdrlPolicyInfo"
@@ -16742,12 +16555,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -16812,9 +16622,9 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string",
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "version": {
             "type": "string"
@@ -16865,12 +16675,9 @@
           "transferProcessId": {
             "type": "string"
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "direction": {
             "$ref": "#/components/schemas/TransferMessageDirection"
@@ -16910,12 +16717,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "role": {
             "$ref": "#/components/schemas/TransferRole"
@@ -17583,7 +17387,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "odrlOffer",
           "entity",
           "entityType",
@@ -17594,8 +17400,19 @@
             "type": "string",
             "description": "URN of the offer."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "odrlOffer": {
             "$ref": "#/components/schemas/OdrlPolicyInfo"
@@ -17681,7 +17498,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "negotiationAgentMessageId",
           "offerId",
@@ -17692,8 +17511,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -18306,7 +18136,6 @@
         "type": "object",
         "description": "Participant registry entry (\"mate\").",
         "required": [
-          "tenant_id",
           "participant_id",
           "participant_nick",
           "participant_type",
@@ -18316,9 +18145,6 @@
           "extra_fields"
         ],
         "properties": {
-          "tenant_id": {
-            "type": "string"
-          },
           "participant_id": {
             "type": "string",
             "description": "DID of the participant."
@@ -18331,13 +18157,6 @@
           },
           "base_url": {
             "type": "string"
-          },
-          "token": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Token this agent holds for calling the participant."
           },
           "saved_at": {
             "type": "string",
@@ -18354,16 +18173,13 @@
         "type": "object",
         "required": [
           "participant_id",
-          "tenant_id",
           "participant_nick",
           "participant_type",
-          "base_url"
+          "base_url",
+          "visibility"
         ],
         "properties": {
           "participant_id": {
-            "type": "string"
-          },
-          "tenant_id": {
             "type": "string"
           },
           "participant_nick": {
@@ -18375,14 +18191,12 @@
           "base_url": {
             "type": "string"
           },
-          "token": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "extra_fields": {}
-        }
+          "extra_fields": {},
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "description": "New participant; `visibility` says who else sees it."
       },
       "ParticipantType": {
         "type": "string",
@@ -18498,7 +18312,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "version",
           "date",
           "author",
@@ -18509,8 +18325,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "version": {
             "type": "string"
@@ -18730,14 +18557,10 @@
       "ProvisionedTenantDto": {
         "type": "object",
         "required": [
-          "tenantId",
           "catalog",
           "dataService"
         ],
         "properties": {
-          "tenantId": {
-            "type": "string"
-          },
           "catalog": {
             "$ref": "#/components/schemas/CatalogDto"
           },
@@ -18876,7 +18699,8 @@
           "id",
           "nick",
           "url",
-          "actions"
+          "actions",
+          "visibility"
         ],
         "properties": {
           "id": {
@@ -18906,14 +18730,26 @@
               "null"
             ],
             "description": "Run the manual steps automatically."
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          },
+          "requested": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether this side requested the grant."
           }
         }
       },
       "ReceivedGrant": {
         "type": "object",
+        "description": "Grant a peer requested from this connector.",
         "required": [
           "id",
-          "tenant_id",
+          "role",
+          "visibility",
           "participant_nick",
           "kind",
           "status",
@@ -18923,20 +18759,59 @@
           "id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
+          "role": {
+            "type": "string",
+            "description": "Role path, e.g. `/admin/upm`.",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "participant_nick": {
             "type": "string"
           },
-          "kind": {
-            "$ref": "#/components/schemas/GrantKind"
-          },
-          "token": {
+          "participant_id": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GrantKind"
+          },
+          "final_token_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "final_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "managing_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "managing_token_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "managing_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "vc_type_config": {
             "type": [
@@ -19478,29 +19353,49 @@
       },
       "SentGrant": {
         "type": "object",
+        "description": "Grant this connector requested from a peer.",
         "required": [
           "id",
-          "tenant_id",
+          "role",
+          "user_id",
           "participant_id",
           "participant_nick",
+          "visibility",
           "grant_endpoint",
           "kind",
           "status",
           "auto",
+          "requested",
           "created_at"
         ],
         "properties": {
           "id": {
             "type": "string"
           },
-          "tenant_id": {
+          "role": {
+            "type": "string",
+            "description": "Role path, e.g. `/admin/upm`.",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "user_id": {
             "type": "string"
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "participant_id": {
             "type": "string"
           },
           "participant_nick": {
             "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "grant_endpoint": {
             "type": "string"
@@ -19511,11 +19406,39 @@
           "status": {
             "$ref": "#/components/schemas/GrantStatus"
           },
-          "token": {
+          "final_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Access token towards the peer."
+          },
+          "final_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "managing_uri": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "managing_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Token to rotate or revoke the access token."
+          },
+          "managing_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "vc_type_config": {
             "type": [
@@ -19539,6 +19462,9 @@
             ]
           },
           "auto": {
+            "type": "boolean"
+          },
+          "requested": {
             "type": "boolean"
           },
           "created_at": {
@@ -19713,7 +19639,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenant_id",
+          "user_id",
+          "user_role",
+          "visibility",
           "transfer_id",
           "level",
           "component",
@@ -19724,8 +19652,19 @@
           "id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
+          "user_id": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "user_role": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "transfer_id": {
             "type": "string",
@@ -19761,7 +19700,9 @@
         "required": [
           "id",
           "transferProcessId",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "direction",
           "protocol",
           "messageType",
@@ -19778,8 +19719,19 @@
           "transferProcessId": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "direction": {
             "$ref": "#/components/schemas/TransferMessageDirection"
@@ -19837,7 +19789,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "role",
           "protocol",
           "state",
@@ -19853,8 +19807,19 @@
             "type": "string",
             "description": "URN of the transfer process."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "role": {
             "$ref": "#/components/schemas/TransferRole"
@@ -20126,6 +20091,31 @@
           "gx_LegalPerson_jwt_vc_json",
           "DataSpaceParticipant_jwt_vc_json"
         ]
+      },
+      "VerifiedPeer": {
+        "type": "object",
+        "description": "Peer behind a valid token, with the role and visibility its grant gives.",
+        "required": [
+          "participant_id",
+          "role",
+          "visibility"
+        ],
+        "properties": {
+          "participant_id": {
+            "type": "string",
+            "description": "DID of the peer."
+          },
+          "role": {
+            "type": "string",
+            "description": "Role path, e.g. `/admin/upm`.",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        }
       },
       "VerifyTokenRequest": {
         "type": "object",
@@ -20437,14 +20427,9 @@
       "WellKnownRPCRequest": {
         "type": "object",
         "required": [
-          "tenant_id",
           "participant_id"
         ],
         "properties": {
-          "tenant_id": {
-            "type": "string",
-            "description": "Tenant whose participant registry holds `participant_id`."
-          },
           "participant_id": {
             "type": "string"
           }

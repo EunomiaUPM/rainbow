@@ -5,18 +5,23 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
 import type { DeadLetterRecordStatus } from './deadLetterRecordStatus';
+import type { Visibility } from './visibility';
 
 export interface DeadLetterRecord {
   id: string;
-  tenant_id: string;
+  /** Author of the record (`system` when a peer opened it). */
+  user_id: string;
+  /** Role the record was created under (or that handles it). */
+  role: string;
+  visibility: Visibility;
   /** @nullable */
   delivery_id?: string | null;
   event_id: string;

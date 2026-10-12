@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Event bus domain logic that lives in structs: topics and subscription patterns.
+//! Event bus domain logic that lives in structs: topics, subscription patterns and commands.
 
+mod commands;
 mod topic;
 mod topic_pattern;

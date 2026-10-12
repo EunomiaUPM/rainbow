@@ -26,6 +26,6 @@ pub trait DatahubConfigTrait {
     }
     /// Token the catalog sends to the datahub.
     fn get_token(&self) -> &str {
-        &self.datahub().token
+        self.datahub().token.expose()
     }
 }

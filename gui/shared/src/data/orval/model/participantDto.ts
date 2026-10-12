@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -18,17 +18,11 @@ import type { ParticipantDtoParticipantType } from './participantDtoParticipantT
  * Participant registry entry ("mate").
  */
 export interface ParticipantDto {
-  tenant_id: string;
   /** DID of the participant. */
   participant_id: string;
   participant_nick: string;
   participant_type: ParticipantDtoParticipantType;
   base_url: string;
-  /**
-   * Token this agent holds for calling the participant.
-   * @nullable
-   */
-  token?: string | null;
   saved_at: string;
   last_interaction: string;
   extra_fields: unknown;

@@ -5,22 +5,21 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
 import type { ParticipantPlanParticipantType } from './participantPlanParticipantType';
+import type { Visibility } from './visibility';
 
 export interface ParticipantPlan {
   participant_id: string;
-  tenant_id: string;
   participant_nick: string;
   participant_type: ParticipantPlanParticipantType;
   base_url: string;
-  /** @nullable */
-  token?: string | null;
   extra_fields?: unknown;
+  visibility: Visibility;
 }

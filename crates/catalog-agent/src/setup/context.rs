@@ -148,7 +148,7 @@ impl AppContext {
     async fn cache(config: &CatalogConfig) -> Outcome<Arc<dyn CatalogAgentCacheTrait>> {
         match config.cache_config().cache_type {
             CacheType::Redis => {
-                let redis = redis::Client::open(config.get_full_cache_url())
+                let redis = redis::Client::open(config.get_full_cache_url()?)
                     .map_err(|e| Errors::crazy("Error creating Redis client", Some(Box::new(e))))?
                     .get_multiplexed_async_connection()
                     .await

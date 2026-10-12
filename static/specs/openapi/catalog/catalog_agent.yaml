@@ -4,7 +4,7 @@ info:
   description: |
     Management API of the catalog agent (`crates/catalog-agent`): catalogs, datasets,
     distributions, data services, ODRL offers, policy templates, one-step dataset offerings,
-    cached peer catalogs and tenant provisioning. Entity responses use camelCase keys.
+    cached peer catalogs and main catalog provisioning. Entity responses use camelCase keys.
   version: 1.0.0
   license:
     name: GPL-3.0-or-later
@@ -18,13 +18,13 @@ security:
 - bearerAuth: []
 tags:
 - name: Catalogs
-  description: DCAT catalogs; each tenant has one main catalog
+  description: DCAT catalogs; the connector has one main catalog
 - name: Datasets
   description: Datasets of a catalog
 - name: Distributions
   description: Distributions of a dataset
 - name: Data Services
-  description: Data services of a catalog; each tenant has one main data service
+  description: Data services of a catalog; the connector has one main data service
 - name: ODRL Policies
   description: ODRL offers attached to catalog entities
 - name: Policy Templates
@@ -34,7 +34,7 @@ tags:
 - name: Peer Catalogs
   description: Catalogs of peers, cached from DSP catalog requests
 - name: Tenants
-  description: Tenant provisioning
+  description: Provisioning of the connector's main catalog and data service
 paths:
   /api/v1/catalog-agent/catalogs:
     get:
@@ -43,12 +43,11 @@ paths:
       operationId: getAllCatalogs
       summary: List catalogs
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: title
         in: query
         required: false
@@ -67,7 +66,7 @@ paths:
       - name: with_main_catalog
         in: query
         required: false
-        description: Include the tenant's main catalog in the listing.
+        description: Include the connector's main catalog in the listing.
         schema:
           type: boolean
       - $ref: '#/components/parameters/CreatedAfter'
@@ -90,8 +89,6 @@ paths:
       - Catalogs
       operationId: createCatalog
       summary: Create a catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -116,9 +113,7 @@ paths:
       tags:
       - Catalogs
       operationId: getMainCatalog
-      summary: The tenant's main catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: The connector's main catalog
       responses:
         '200':
           description: Main catalog
@@ -134,9 +129,7 @@ paths:
       tags:
       - Catalogs
       operationId: createMainCatalog
-      summary: Create the tenant's main catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: Create the connector's main catalog
       requestBody:
         required: true
         content:
@@ -162,8 +155,6 @@ paths:
       - Catalogs
       operationId: getBatchCatalogs
       summary: Get several catalogs by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -186,7 +177,6 @@ paths:
   /api/v1/catalog-agent/catalogs/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Catalogs
@@ -254,12 +244,11 @@ paths:
       operationId: getAllDatasets
       summary: List datasets
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: catalog_id
         in: query
         required: false
@@ -300,8 +289,6 @@ paths:
       - Datasets
       operationId: createDataset
       summary: Create a dataset
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -327,8 +314,6 @@ paths:
       - Datasets
       operationId: getBatchDatasets
       summary: Get several datasets by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -356,7 +341,6 @@ paths:
       summary: Datasets of a catalog
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Datasets of the catalog
@@ -375,7 +359,6 @@ paths:
   /api/v1/catalog-agent/datasets/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Datasets
@@ -443,12 +426,11 @@ paths:
       operationId: getAllDistributions
       summary: List distributions
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: dataset_id
         in: query
         required: false
@@ -489,8 +471,6 @@ paths:
       - Distributions
       operationId: createDistribution
       summary: Create a distribution
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -516,8 +496,6 @@ paths:
       - Distributions
       operationId: getBatchDistributions
       summary: Get several distributions by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -545,7 +523,6 @@ paths:
       summary: Distributions of a dataset
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Distributions of the dataset
@@ -575,7 +552,6 @@ paths:
           type: string
           examples:
           - HttpData-PULL
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Distribution
@@ -592,7 +568,6 @@ paths:
   /api/v1/catalog-agent/distributions/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Distributions
@@ -660,12 +635,11 @@ paths:
       operationId: getAllDataServices
       summary: List data services
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: catalog_id
         in: query
         required: false
@@ -711,8 +685,6 @@ paths:
       - Data Services
       operationId: createDataService
       summary: Create a data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -737,9 +709,7 @@ paths:
       tags:
       - Data Services
       operationId: getMainDataService
-      summary: The tenant's main data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: The connector's main data service
       responses:
         '200':
           description: Main data service
@@ -755,9 +725,7 @@ paths:
       tags:
       - Data Services
       operationId: createMainDataService
-      summary: Create the tenant's main data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: Create the connector's main data service
       requestBody:
         required: true
         content:
@@ -783,8 +751,6 @@ paths:
       - Data Services
       operationId: getBatchDataServices
       summary: Get several data services by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -812,7 +778,6 @@ paths:
       summary: Data services of a catalog
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Data services of the catalog
@@ -829,7 +794,6 @@ paths:
   /api/v1/catalog-agent/data-services/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Data Services
@@ -897,12 +861,11 @@ paths:
       operationId: getAllOdrlPolicies
       summary: List ODRL offers
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: entity
         in: query
         required: false
@@ -944,8 +907,6 @@ paths:
       - ODRL Policies
       operationId: createOdrlPolicy
       summary: Attach an ODRL offer to an entity
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -971,8 +932,6 @@ paths:
       - ODRL Policies
       operationId: getBatchOdrlPolicies
       summary: Get several offers by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1000,7 +959,6 @@ paths:
       description: URN of the catalog entity.
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - ODRL Policies
@@ -1036,7 +994,6 @@ paths:
   /api/v1/catalog-agent/odrl-policies/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - ODRL Policies
@@ -1078,12 +1035,11 @@ paths:
       operationId: getAllPolicyTemplates
       summary: List policy templates
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: id
         in: query
         required: false
@@ -1123,7 +1079,6 @@ paths:
         With `silent=true` an invalid body or an existing id and version answers 200 with an empty
         body instead of an error; seeders use it to stay idempotent.
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - name: silent
         in: query
         required: false
@@ -1162,8 +1117,6 @@ paths:
       - Policy Templates
       operationId: getBatchPolicyTemplates
       summary: Get several templates by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1190,8 +1143,6 @@ paths:
       operationId: instantiateOdrlOffer
       summary: Instantiate a template as an offer on an entity
       description: Validates the parameters, fills the placeholders and stores the resulting offer.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1221,7 +1172,6 @@ paths:
       summary: Every version of a template
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Versions of the template
@@ -1241,7 +1191,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Policy Templates
@@ -1279,10 +1228,8 @@ paths:
       operationId: createDatasetOffering
       summary: Publish a dataset with its distribution and policy
       description: |
-        Without `dataset.catalogId` the dataset goes to the tenant's main catalog; without
+        Without `dataset.catalogId` the dataset goes to the connector's main catalog; without
         `distribution.accessServiceId` the distribution uses the main data service.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1310,8 +1257,6 @@ paths:
       - Peer Catalogs
       operationId: getAllPeerCatalog
       summary: Cached catalogs of every peer
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: One `[participant, catalog]` pair per peer
@@ -1336,7 +1281,6 @@ paths:
         description: Participant id (DID) of the peer.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Peer catalog
@@ -1348,22 +1292,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/catalog-agent/tenants/{tenantId}/provision:
+  /api/v1/catalog-agent/tenants/provision:
     post:
       tags:
       - Tenants
       operationId: provisionTenant
-      summary: Give a tenant its main catalog and data service
-      description: Idempotent; existing main entities are kept.
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
+      summary: Give the connector its main catalog and data service
+      description: Idempotent; existing main entities are kept. The boot already runs it as the root.
       responses:
         '200':
-          description: The tenant's main entities
+          description: The connector's main entities
           content:
             application/json:
               schema:
@@ -1438,20 +1376,6 @@ components:
       required: true
       schema:
         type: string
-    TenantHeader:
-      name: x-tenant-id
-      in: header
-      required: false
-      description: Tenant to act on. Non-admins may only name their own tenant.
-      schema:
-        type: string
-    TenantIdQuery:
-      name: tenant_id
-      in: query
-      required: false
-      description: Tenant filter, honoured for admins.
-      schema:
-        type: string
     UrnPathId:
       name: id
       in: path
@@ -1461,6 +1385,13 @@ components:
         type: string
         examples:
         - urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b
+    UserIdQuery:
+      name: user_id
+      in: query
+      required: false
+      description: Only the records of this user, among those the caller sees.
+      schema:
+        type: string
   responses:
     BadRequest:
       description: Malformed request or failed validation
@@ -1510,15 +1441,25 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - dspaceMainCatalog
       properties:
         id:
           type: string
           description: URN of the catalog.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         foafHomePage:
           type:
           - string
@@ -1573,7 +1514,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dcatEndpointUrl
       - dctIssued
       - catalogId
@@ -1582,8 +1525,16 @@ components:
         id:
           type: string
           description: URN of the data service.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dcatEndpointDescription:
           type:
           - string
@@ -1626,15 +1577,25 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - catalogId
       properties:
         id:
           type: string
           description: URN of the dataset.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dctConformsTo:
           type:
           - string
@@ -1683,7 +1644,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - dcatAccessService
       - datasetId
@@ -1691,8 +1654,16 @@ components:
         id:
           type: string
           description: URN of the distribution.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dctIssued:
           type: string
           format: date-time
@@ -2047,11 +2018,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         foafHomePage:
           type:
           - string
@@ -2084,11 +2053,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dcatEndpointDescription:
           type:
           - string
@@ -2125,11 +2092,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dctConformsTo:
           type:
           - string
@@ -2180,7 +2145,7 @@ components:
               type:
               - string
               - 'null'
-              description: Defaults to the tenant's main catalog.
+              description: Defaults to the connector's main catalog.
         distribution:
           type: object
           additionalProperties: false
@@ -2201,7 +2166,7 @@ components:
               type:
               - string
               - 'null'
-              description: Defaults to the tenant's main data service.
+              description: Defaults to the connector's main data service.
         policy:
           type:
           - object
@@ -2239,11 +2204,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dctTitle:
           type:
           - string
@@ -2277,11 +2240,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         odrlOffer:
           $ref: '#/components/schemas/OdrlPolicyInfo'
         entityId:
@@ -2334,9 +2295,9 @@ components:
       properties:
         id:
           type: string
-        tenantId:
-          type: string
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         version:
           type: string
         date:
@@ -2473,7 +2434,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - odrlOffer
       - entity
       - entityType
@@ -2482,8 +2445,16 @@ components:
         id:
           type: string
           description: URN of the offer.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         odrlOffer:
           $ref: '#/components/schemas/OdrlPolicyInfo'
         entity:
@@ -2622,7 +2593,6 @@ components:
       type: object
       description: Participant registry entry ("mate").
       required:
-      - tenant_id
       - participant_id
       - participant_nick
       - participant_type
@@ -2631,8 +2601,6 @@ components:
       - last_interaction
       - extra_fields
       properties:
-        tenant_id:
-          type: string
         participant_id:
           type: string
           description: DID of the participant.
@@ -2642,11 +2610,6 @@ components:
           $ref: '#/components/schemas/ParticipantType'
         base_url:
           type: string
-        token:
-          type:
-          - string
-          - 'null'
-          description: Token this agent holds for calling the participant.
         saved_at:
           type: string
           format: date-time
@@ -2676,7 +2639,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - version
       - date
       - author
@@ -2685,8 +2650,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         version:
           type: string
         date:
@@ -2771,13 +2744,19 @@ components:
     ProvisionedTenantDto:
       type: object
       required:
-      - tenantId
       - catalog
       - dataService
       properties:
-        tenantId:
-          type: string
         catalog:
           $ref: '#/components/schemas/CatalogDto'
         dataService:
           $ref: '#/components/schemas/DataServiceDto'
+    Visibility:
+      type: string
+      description: |
+        Who else sees a record beyond those its role lets in: nobody (Private), everyone without
+        its author (Anonymous), or everyone (Public).
+      enum:
+      - Private
+      - Anonymous
+      - Public

@@ -350,12 +350,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /api/v1/mates:
     post:
-      tags:
+      tags: &id003
       - Participants
       operationId: createParticipant
       summary: Register a participant
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -375,6 +373,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+      description: Registers a participant; `visibility` says who else sees it.
   /api/v1/mates/all:
     get:
       tags:
@@ -382,7 +381,6 @@ paths:
       operationId: getAllParticipants
       summary: List participants
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -421,8 +419,6 @@ paths:
       - Participants
       operationId: getMyself
       summary: This agent's own participant entry
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Own participant
@@ -440,8 +436,6 @@ paths:
       - Participants
       operationId: getBatchParticipants
       summary: Get several participants by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -461,34 +455,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /api/v1/mates/token:
-    post:
-      tags:
-      - Participants
-      operationId: getParticipantByToken
-      summary: Participant owning a peer token
-      description: Used by the protocol agents to authenticate DSP calls.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VerifyTokenRequest'
-      responses:
-        '200':
-          description: Participant
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParticipantDto'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
   /api/v1/mates/{id}:
     parameters:
     - name: id
@@ -497,7 +463,6 @@ paths:
       description: Participant id (DID).
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Participants
@@ -545,8 +510,6 @@ paths:
       operationId: begVc
       summary: Request a credential from an authority
       description: Starts a GNAP credential request; with `auto` the OID4VP and OID4VCI steps run unattended.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -567,7 +530,6 @@ paths:
       operationId: getAllVcRequests
       summary: List credential requests
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -597,7 +559,6 @@ paths:
       summary: Get a credential request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request
@@ -617,7 +578,6 @@ paths:
       summary: Credential request with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request and related records, as free-form JSON
@@ -637,7 +597,6 @@ paths:
       summary: Redeem the credential offer of a request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -661,7 +620,6 @@ paths:
       summary: Answer the presentation request of a request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -730,13 +688,11 @@ paths:
           $ref: '#/components/responses/NotFound'
   /api/v1/peer-connection/connect:
     post:
-      tags:
+      tags: &id001
       - Peer Connection
       operationId: connectToPeer
       summary: Start onboarding with a peer
       description: Sends a GNAP access request; with `auto` the OID4VP step runs unattended.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -757,7 +713,6 @@ paths:
       operationId: getAllPeerConnectionRequests
       summary: List onboarding requests sent
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -787,7 +742,6 @@ paths:
       summary: Get an onboarding request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request
@@ -795,6 +749,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SentGrant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: *id001
+      operationId: disconnectSentGrant
+      summary: Disconnect from a peer
+      description: Ends the sent grant and asks the peer to revoke its tokens.
+      parameters:
+      - &id002
+        $ref: '#/components/parameters/StringPathId'
+      responses:
+        '204':
+          description: Disconnected
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -807,7 +776,6 @@ paths:
       summary: Onboarding request with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request and related records, as free-form JSON
@@ -827,7 +795,6 @@ paths:
       summary: Answer the presentation request of an onboarding
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -894,70 +861,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/gate/{tenant}/access:
-    post:
-      tags:
-      - GateKeeper
-      operationId: gnapAccessRequest
-      summary: GNAP grant request
-      description: |
-        A peer asks for access to `tenant`. Only the `httpsig` key proof is supported: the
-        request must carry HTTP Message Signatures over this endpoint and body, verified with
-        the client key it declares.
-      security: []
-      parameters:
-      - name: tenant
-        in: path
-        required: true
-        description: Tenant the peer onboards into.
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GnapGrantRequest'
-      responses:
-        '200':
-          description: GNAP grant response (pending interaction, approved or error)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GnapGrantResponse'
-  /api/v1/gate/{tenant}/continue/{id}:
-    post:
-      tags:
-      - GateKeeper
-      operationId: gnapContinueRequest
-      summary: GNAP continuation request
-      description: Signed like the grant request; `interact_ref` must match the interaction.
-      security: []
-      parameters:
-      - name: tenant
-        in: path
-        required: true
-        schema:
-          type: string
-      - $ref: '#/components/parameters/StringPathId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - interact_ref
-              properties:
-                interact_ref:
-                  type: string
-      responses:
-        '200':
-          description: GNAP grant response, with the access token once approved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GnapGrantResponse'
   /api/v1/gate/request/all:
     get:
       tags:
@@ -965,7 +868,6 @@ paths:
       operationId: getAllReceivedGrants
       summary: List grant requests received
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -994,7 +896,6 @@ paths:
       summary: Get a received grant request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Received grant
@@ -1002,6 +903,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReceivedGrant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: &id004
+      - GateKeeper
+      operationId: disconnectReceivedGrant
+      summary: Disconnect a peer
+      description: Ends the received grant and revokes its tokens.
+      parameters:
+      - *id002
+      responses:
+        '204':
+          description: Disconnected
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1014,7 +930,6 @@ paths:
       summary: Received grant with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Grant and related records, as free-form JSON
@@ -1089,8 +1004,6 @@ paths:
       - Gaia Self-Attester
       operationId: generateGaiaCredentials
       summary: Generate the Gaia-X self-attested credentials
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Generated
@@ -1098,6 +1011,193 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/mates/sync:
+    post:
+      tags: *id003
+      operationId: syncParticipantDirectory
+      summary: Sync the participant directory from the authorities
+      description: Root only. Pulls the participants each known authority lists into the registry.
+      responses:
+        '200':
+          description: Number of participants synced
+          content:
+            application/json:
+              schema:
+                type: integer
+                minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/gate/access:
+    post:
+      tags: *id004
+      operationId: gnapAccessRequest
+      summary: GNAP grant request
+      description: |
+        A peer asks for access to this connector. Only the `httpsig` key proof is supported: the
+        request must carry HTTP Message Signatures over this endpoint and body, verified with
+        the client key it declares.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GnapGrantRequest'
+      responses:
+        '200':
+          description: GNAP grant response (pending interaction, approved or error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GnapGrantResponse'
+  /api/v1/gate/continue/{id}:
+    post:
+      tags:
+      - GateKeeper
+      operationId: gnapContinueRequest
+      summary: GNAP continuation request
+      description: Signed like the grant request; `interact_ref` must match the interaction.
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/StringPathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - interact_ref
+              properties:
+                interact_ref:
+                  type: string
+      responses:
+        '200':
+          description: GNAP grant response, with the access token once approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GnapGrantResponse'
+  /api/v1/gate/token/{id}:
+    post:
+      tags: *id004
+      operationId: gnapRotateToken
+      summary: Rotate an access token (GNAP token management)
+      description: The peer presents its managing token for `id` and gets a new access token. Signed with HTTP Message Signatures like the grant request.
+      security: []
+      parameters:
+      - *id002
+      responses:
+        '200':
+          description: GNAP grant response with the new access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GnapGrantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: *id004
+      operationId: gnapRevokeToken
+      summary: Revoke an access token (GNAP token management)
+      security: []
+      parameters:
+      - *id002
+      responses:
+        '204':
+          description: Revoked
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/gate/token/verify:
+    post:
+      tags: *id004
+      operationId: verifyPeerToken
+      summary: Check a token a peer presents
+      description: Used by the protocol agents to authenticate DSP calls.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyTokenRequest'
+      responses:
+        '200':
+          description: The peer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifiedPeer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/peer-connection/token/{id}:
+    get:
+      tags: *id001
+      operationId: getPeerToken
+      summary: Caller's token towards a peer
+      description: '`id` is the peer participant id. Used by the grants facade.'
+      parameters:
+      - *id002
+      - &id005
+        name: requested
+        in: query
+        required: false
+        description: Token of the grant this connector requested (default) or of the one the peer requested.
+        schema:
+          type: boolean
+          default: true
+      responses:
+        '200':
+          description: Access token towards the peer
+          content:
+            application/json:
+              schema:
+                type: string
+        '202':
+          description: Not ready yet; retry after the `Retry-After` seconds
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/peer-connection/token/{id}/refresh:
+    post:
+      tags: *id001
+      operationId: refreshPeerToken
+      summary: Rotate the token towards a peer
+      description: Asks the peer for a new access token with the managing token.
+      parameters:
+      - *id002
+      - *id005
+      responses:
+        '200':
+          description: Access token towards the peer
+          content:
+            application/json:
+              schema:
+                type: string
+        '202':
+          description: Not ready yet; retry after the `Retry-After` seconds
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -1184,13 +1284,6 @@ components:
       name: id
       in: path
       required: true
-      schema:
-        type: string
-    TenantHeader:
-      name: x-tenant-id
-      in: header
-      required: false
-      description: Tenant to act on. Non-admins may only name their own tenant.
       schema:
         type: string
     VerifierState:
@@ -1522,7 +1615,6 @@ components:
       type: object
       description: Participant registry entry ("mate").
       required:
-      - tenant_id
       - participant_id
       - participant_nick
       - participant_type
@@ -1531,8 +1623,6 @@ components:
       - last_interaction
       - extra_fields
       properties:
-        tenant_id:
-          type: string
         participant_id:
           type: string
           description: DID of the participant.
@@ -1542,11 +1632,6 @@ components:
           $ref: '#/components/schemas/ParticipantType'
         base_url:
           type: string
-        token:
-          type:
-          - string
-          - 'null'
-          description: Token this agent holds for calling the participant.
         saved_at:
           type: string
           format: date-time
@@ -1558,14 +1643,12 @@ components:
       type: object
       required:
       - participant_id
-      - tenant_id
       - participant_nick
       - participant_type
       - base_url
+      - visibility
       properties:
         participant_id:
-          type: string
-        tenant_id:
           type: string
         participant_nick:
           type: string
@@ -1573,11 +1656,10 @@ components:
           $ref: '#/components/schemas/ParticipantType'
         base_url:
           type: string
-        token:
-          type:
-          - string
-          - 'null'
         extra_fields: {}
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+      description: New participant; `visibility` says who else sees it.
     ParticipantType:
       type: string
       enum:
@@ -1668,6 +1750,7 @@ components:
       - nick
       - url
       - actions
+      - visibility
       properties:
         id:
           type: string
@@ -1689,11 +1772,20 @@ components:
           - boolean
           - 'null'
           description: Run the manual steps automatically.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+        requested:
+          type:
+          - boolean
+          - 'null'
+          description: Whether this side requested the grant.
     ReceivedGrant:
       type: object
+      description: Grant a peer requested from this connector.
       required:
       - id
-      - tenant_id
+      - role
+      - visibility
       - participant_nick
       - kind
       - status
@@ -1701,16 +1793,43 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        role:
           type: string
+          description: Role path, e.g. `/admin/upm`.
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         participant_nick:
           type: string
-        kind:
-          $ref: '#/components/schemas/GrantKind'
-        token:
+        participant_id:
           type:
           - string
           - 'null'
+        kind:
+          $ref: '#/components/schemas/GrantKind'
+        final_token_hash:
+          type:
+          - string
+          - 'null'
+        final_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        managing_id:
+          type:
+          - string
+          - 'null'
+        managing_token_hash:
+          type:
+          - string
+          - 'null'
+        managing_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         vc_type_config:
           type:
           - array
@@ -1795,35 +1914,70 @@ components:
           - 'null'
     SentGrant:
       type: object
+      description: Grant this connector requested from a peer.
       required:
       - id
-      - tenant_id
+      - role
+      - user_id
       - participant_id
       - participant_nick
+      - visibility
       - grant_endpoint
       - kind
       - status
       - auto
+      - requested
       - created_at
       properties:
         id:
           type: string
-        tenant_id:
+        role:
           type: string
+          description: Role path, e.g. `/admin/upm`.
+          examples:
+          - /admin/upm
+        user_id:
+          type: string
+        username:
+          type:
+          - string
+          - 'null'
         participant_id:
           type: string
         participant_nick:
           type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         grant_endpoint:
           type: string
         kind:
           $ref: '#/components/schemas/GrantKind'
         status:
           $ref: '#/components/schemas/GrantStatus'
-        token:
+        final_token:
           type:
           - string
           - 'null'
+          description: Access token towards the peer.
+        final_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        managing_uri:
+          type:
+          - string
+          - 'null'
+        managing_token:
+          type:
+          - string
+          - 'null'
+          description: Token to rotate or revoke the access token.
+        managing_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         vc_type_config:
           type:
           - array
@@ -1839,6 +1993,8 @@ components:
           - string
           - 'null'
         auto:
+          type: boolean
+        requested:
           type: boolean
         created_at:
           type: string
@@ -2003,3 +2159,30 @@ components:
         created_at:
           type: string
           format: date-time
+    Visibility:
+      type: string
+      description: |
+        Who else sees a record beyond those its role lets in: nobody (Private), everyone without
+        its author (Anonymous), or everyone (Public).
+      enum:
+      - Private
+      - Anonymous
+      - Public
+    VerifiedPeer:
+      type: object
+      description: Peer behind a valid token, with the role and visibility its grant gives.
+      required:
+      - participant_id
+      - role
+      - visibility
+      properties:
+        participant_id:
+          type: string
+          description: DID of the peer.
+        role:
+          type: string
+          description: Role path, e.g. `/admin/upm`.
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'

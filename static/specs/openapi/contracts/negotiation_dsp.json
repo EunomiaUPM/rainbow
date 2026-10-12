@@ -415,11 +415,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -460,11 +455,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -509,11 +499,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -554,11 +539,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -604,11 +584,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -651,11 +626,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -696,11 +666,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -746,11 +711,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -791,11 +751,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -841,11 +796,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -886,11 +836,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -935,11 +880,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -980,11 +920,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -1030,11 +965,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1075,11 +1005,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -1132,15 +1057,6 @@
         "in": "path",
         "required": true,
         "description": "This agent's process id (`providerPid` on a provider, `consumerPid` on a consumer).",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "TenantHeader": {
-        "name": "x-tenant-id",
-        "in": "header",
-        "required": false,
-        "description": "Tenant to act on. Non-admins may only name their own tenant.",
         "schema": {
           "type": "string"
         }
@@ -1203,7 +1119,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "negotiationAgentMessageId",
           "consumerParticipantId",
@@ -1217,8 +1135,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -1622,7 +1551,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "createdAt",
           "direction",
@@ -1636,8 +1567,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -1724,7 +1666,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "state",
           "associatedAgentPeer",
           "protocol",
@@ -1737,8 +1681,19 @@
             "type": "string",
             "description": "URN of the negotiation."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "state": {
             "$ref": "#/components/schemas/NegotiationProcessState"
@@ -2083,7 +2038,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "negotiationAgentProcessId",
           "negotiationAgentMessageId",
           "offerId",
@@ -2094,8 +2051,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "negotiationAgentProcessId": {
             "type": "string"
@@ -2419,6 +2387,15 @@
             "type": "string"
           }
         }
+      },
+      "Visibility": {
+        "type": "string",
+        "description": "Who else sees a record beyond those its role lets in: nobody (Private), everyone without\nits author (Anonymous), or everyone (Public).\n",
+        "enum": [
+          "Private",
+          "Anonymous",
+          "Public"
+        ]
       }
     }
   }

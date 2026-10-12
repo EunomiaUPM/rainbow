@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -15,14 +15,30 @@ are calls the GUI still makes to routes the backend no longer serves.
 import type { ReceivedGrantKind } from './receivedGrantKind';
 import type { ReceivedGrantStatus } from './receivedGrantStatus';
 import type { VcTypeConfig } from './vcTypeConfig';
+import type { Visibility } from './visibility';
 
+/**
+ * Grant a peer requested from this connector.
+ */
 export interface ReceivedGrant {
   id: string;
-  tenant_id: string;
+  /** Role path, e.g. `/admin/upm`. */
+  role: string;
+  visibility: Visibility;
   participant_nick: string;
+  /** @nullable */
+  participant_id?: string | null;
   kind: ReceivedGrantKind;
   /** @nullable */
-  token?: string | null;
+  final_token_hash?: string | null;
+  /** @nullable */
+  final_expires_at?: string | null;
+  /** @nullable */
+  managing_id?: string | null;
+  /** @nullable */
+  managing_token_hash?: string | null;
+  /** @nullable */
+  managing_expires_at?: string | null;
   /** @nullable */
   vc_type_config?: VcTypeConfig[] | null;
   status: ReceivedGrantStatus;

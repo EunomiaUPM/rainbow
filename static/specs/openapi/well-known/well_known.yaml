@@ -70,7 +70,7 @@ paths:
       - Well-Known RPC
       operationId: fetchDataspaceVersionFromParticipant
       summary: Fetch a peer's version document
-      description: Resolves the participant in the tenant's registry and reads its `.well-known/dspace-version`.
+      description: Resolves the participant in the registry and reads its `.well-known/dspace-version`.
       requestBody:
         required: true
         content:
@@ -363,11 +363,7 @@ components:
     WellKnownRPCRequest:
       type: object
       required:
-      - tenant_id
       - participant_id
       properties:
-        tenant_id:
-          type: string
-          description: Tenant whose participant registry holds `participant_id`.
         participant_id:
           type: string

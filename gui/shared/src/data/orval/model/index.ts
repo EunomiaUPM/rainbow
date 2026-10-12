@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -199,6 +199,7 @@ export * from './newAgreementDto';
 export * from './newCatalogDto';
 export * from './newDataplaneTransferDto';
 export * from './newDataplaneTransferDtoInteractionMode';
+export * from './newDataplaneTransferDtoOwner';
 export * from './newDataplaneTransferDtoRole';
 export * from './newDataplaneTransferDtoState';
 export * from './newDataServiceDto';
@@ -367,9 +368,6 @@ export * from './streamEventsSseParams';
 export * from './tckNegotiationInitiateRequest';
 export * from './templateMapString';
 export * from './templateVecString';
-export * from './tenantHeaderParameter';
-export * from './tenantIdCamelParameter';
-export * from './tenantIdQueryParameter';
 export * from './tokenIntrospectionResponse';
 export * from './topicPatternParameter';
 export * from './transferCorrelation';
@@ -392,9 +390,10 @@ export * from './transferStateMetadata';
 export * from './unauthorizedResponse';
 export * from './updateSubscriptionCommand';
 export * from './updateSubscriptionCommandHeaders';
+export * from './userIdCamelParameter';
+export * from './userIdQueryParameter';
 export * from './vCRequestDto';
 export * from './vcTypeConfig';
-export * from './verifyTokenRequest';
 export * from './version';
 export * from './versionBinding';
 export * from './versionIdentifierType';

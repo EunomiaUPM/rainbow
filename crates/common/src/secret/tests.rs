@@ -31,6 +31,13 @@ fn debug_hides_the_value() {
     assert!(!printed.contains("s3cr3t"));
 }
 
+/// Only the literal mask counts as the mask.
+#[test]
+fn is_mask_spots_the_echoed_mask() {
+    assert!(Secret::new("*****".to_string()).is_mask());
+    assert!(!Secret::new("s3cr3t".to_string()).is_mask());
+}
+
 /// Deserializing reads the value in clear, so secrets stay writable.
 #[test]
 fn deserialize_reads_the_value() {

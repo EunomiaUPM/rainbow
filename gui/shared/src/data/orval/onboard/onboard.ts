@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -645,6 +645,100 @@ export function useGetPeerConnectionRequestById<TData = Awaited<ReturnType<typeo
 
 
 /**
+ * Ends the sent grant and asks the peer to revoke its tokens.
+ * @summary Disconnect from a peer
+ */
+export type disconnectSentGrantResponse204 = {
+  data: void
+  status: 204
+}
+
+export type disconnectSentGrantResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type disconnectSentGrantResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+    
+export type disconnectSentGrantResponseSuccess = (disconnectSentGrantResponse204) & {
+  headers: Headers;
+};
+export type disconnectSentGrantResponseError = (disconnectSentGrantResponse401 | disconnectSentGrantResponse404) & {
+  headers: Headers;
+};
+
+export type disconnectSentGrantResponse = (disconnectSentGrantResponseSuccess | disconnectSentGrantResponseError)
+
+export const getDisconnectSentGrantUrl = (id: string,) => {
+
+
+  
+
+  return `/peer-connection/request/${id}`
+}
+
+export const disconnectSentGrant = async (id: string, options?: RequestInit): Promise<disconnectSentGrantResponse> => {
+  
+  return customInstance<disconnectSentGrantResponse>(getDisconnectSentGrantUrl(id),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getDisconnectSentGrantMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectSentGrant>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectSentGrant>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['disconnectSentGrant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectSentGrant>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  disconnectSentGrant(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectSentGrantMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectSentGrant>>>
+    
+    export type DisconnectSentGrantMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+
+    /**
+ * @summary Disconnect from a peer
+ */
+export const useDisconnectSentGrant = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectSentGrant>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectSentGrant>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDisconnectSentGrantMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Onboarding request with its interaction and verification
  */
 export type getPeerConnectionRequestDetailsResponse200 = {

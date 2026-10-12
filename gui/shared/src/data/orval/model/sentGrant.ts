@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -15,17 +15,40 @@ are calls the GUI still makes to routes the backend no longer serves.
 import type { SentGrantKind } from './sentGrantKind';
 import type { SentGrantStatus } from './sentGrantStatus';
 import type { VcTypeConfig } from './vcTypeConfig';
+import type { Visibility } from './visibility';
 
+/**
+ * Grant this connector requested from a peer.
+ */
 export interface SentGrant {
   id: string;
-  tenant_id: string;
+  /** Role path, e.g. `/admin/upm`. */
+  role: string;
+  user_id: string;
+  /** @nullable */
+  username?: string | null;
   participant_id: string;
   participant_nick: string;
+  visibility: Visibility;
   grant_endpoint: string;
   kind: SentGrantKind;
   status: SentGrantStatus;
+  /**
+   * Access token towards the peer.
+   * @nullable
+   */
+  final_token?: string | null;
   /** @nullable */
-  token?: string | null;
+  final_expires_at?: string | null;
+  /** @nullable */
+  managing_uri?: string | null;
+  /**
+   * Token to rotate or revoke the access token.
+   * @nullable
+   */
+  managing_token?: string | null;
+  /** @nullable */
+  managing_expires_at?: string | null;
   /** @nullable */
   vc_type_config?: VcTypeConfig[] | null;
   /** @nullable */
@@ -33,6 +56,7 @@ export interface SentGrant {
   /** @nullable */
   as_assigned_id?: string | null;
   auto: boolean;
+  requested: boolean;
   created_at: string;
   /** @nullable */
   ended_at?: string | null;

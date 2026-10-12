@@ -32,7 +32,6 @@ paths:
       operationId: listEventsFeed
       summary: List events
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -56,9 +55,7 @@ paths:
       - Events
       operationId: publishEvent
       summary: Publish an event
-      description: The event belongs to the acting tenant; `source_crate` defaults to `events`.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      description: The event belongs to the caller; `source_crate` defaults to `events`.
       requestBody:
         required: true
         content:
@@ -112,7 +109,6 @@ paths:
       summary: Get an event
       parameters:
       - $ref: '#/components/parameters/EventId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Event
@@ -134,7 +130,6 @@ paths:
       summary: Webhook deliveries of an event
       parameters:
       - $ref: '#/components/parameters/EventId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: One record per subscription the event was sent to
@@ -153,7 +148,6 @@ paths:
       operationId: listEventSubscriptions
       summary: List webhook subscriptions
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -180,8 +174,6 @@ paths:
       - Event Subscriptions
       operationId: createEventSubscription
       summary: Create a webhook subscription
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -208,7 +200,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Event Subscriptions
@@ -273,7 +264,6 @@ paths:
       operationId: listDeadLetters
       summary: List dead letters
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -300,8 +290,6 @@ paths:
       - Event Dead Letters
       operationId: replayAllDeadLetters
       summary: Replay every unresolved dead letter
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Number of dead letters replayed
@@ -320,7 +308,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Event Dead Letters
@@ -363,7 +350,6 @@ paths:
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: The new delivery attempt
@@ -428,13 +414,6 @@ components:
         - updated_at_asc
         - updated_at_desc
         default: created_at_desc
-    TenantHeader:
-      name: x-tenant-id
-      in: header
-      required: false
-      description: Tenant to act on. Non-admins may only name their own tenant.
-      schema:
-        type: string
     TopicPattern:
       name: topic
       in: query
@@ -508,7 +487,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - role
+      - visibility
       - event_id
       - subscription_id
       - topic
@@ -521,8 +502,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        role:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         delivery_id:
           type:
           - string
@@ -584,7 +573,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - role
+      - visibility
       - event_id
       - subscription_id
       - status
@@ -593,8 +584,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        role:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         event_id:
           type: string
         subscription_id:

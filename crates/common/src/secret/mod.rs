@@ -40,6 +40,13 @@ impl<T> Secret<T> {
     }
 }
 
+impl Secret<String> {
+    /// Whether the value is the mask itself, as a client echoing a response sends it back.
+    pub fn is_mask(&self) -> bool {
+        self.0 == Self::MASK
+    }
+}
+
 impl<T> std::fmt::Debug for Secret<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Secret({})", Self::MASK)

@@ -60,7 +60,7 @@ impl BootstrapServiceTrait for CoreBoot {
             CacheType::Redis
         ) {
             seeders.push(Box::new(RedisCacheFlush::new(
-                config.monolith().get_full_cache_url(),
+                config.monolith().get_full_cache_url()?,
             )));
         }
         // seeders.push(Box::new(AdminSeeder::new(root.db.clone(), config.common())));

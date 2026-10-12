@@ -21,6 +21,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::config::types::traits::CacheConfigTrait;
+use crate::secret::Secret;
 use serde::{Deserialize, Serialize};
 use ymir::errors::Errors;
 
@@ -31,7 +32,7 @@ pub struct CacheConfig {
     pub url: String,
     pub port: String,
     pub user: String,
-    pub password: String,
+    pub password: Secret<String>,
 }
 
 impl CacheConfigTrait for CacheConfig {
@@ -62,7 +63,7 @@ impl Default for CacheConfig {
             url: "".to_string(),
             port: "".to_string(),
             user: "".to_string(),
-            password: "".to_string(),
+            password: Secret::new(String::new()),
         }
     }
 }

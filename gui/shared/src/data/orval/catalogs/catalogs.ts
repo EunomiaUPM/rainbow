@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -459,7 +459,7 @@ export const useGetBatchCatalogs = <TError = ErrorType<BadRequestResponse | Unau
       return useMutation(getGetBatchCatalogsMutationOptions(options), queryClient);
     }
     /**
- * @summary The tenant's main catalog
+ * @summary The connector's main catalog
  */
 export type getMainCatalogsResponse200 = {
   data: CatalogDto
@@ -568,7 +568,7 @@ export function useGetMainCatalogsInfinite<TData = InfiniteData<Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
 /**
- * @summary The tenant's main catalog
+ * @summary The connector's main catalog
  */
 
 export function useGetMainCatalogsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getMainCatalogs>>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
@@ -633,7 +633,7 @@ export function useGetMainCatalogs<TData = Awaited<ReturnType<typeof getMainCata
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
 /**
- * @summary The tenant's main catalog
+ * @summary The connector's main catalog
  */
 
 export function useGetMainCatalogs<TData = Awaited<ReturnType<typeof getMainCatalogs>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
@@ -652,7 +652,7 @@ export function useGetMainCatalogs<TData = Awaited<ReturnType<typeof getMainCata
 
 
 /**
- * @summary Create the tenant's main catalog
+ * @summary Create the connector's main catalog
  */
 export type createMainCatalogResponse201 = {
   data: CatalogDto
@@ -738,7 +738,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateMainCatalogMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
 
     /**
- * @summary Create the tenant's main catalog
+ * @summary Create the connector's main catalog
  */
 export const useCreateMainCatalog = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMainCatalog>>, TError,{data: BodyType<NewCatalogDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -1157,7 +1157,7 @@ export const useDeleteCatalog = <TError = ErrorType<BadRequestResponse | Unautho
       return useMutation(getDeleteCatalogMutationOptions(options), queryClient);
     }
     /**
- * Without `dataset.catalogId` the dataset goes to the tenant's main catalog; without
+ * Without `dataset.catalogId` the dataset goes to the connector's main catalog; without
 `distribution.accessServiceId` the distribution uses the main data service.
 
  * @summary Publish a dataset with its distribution and policy

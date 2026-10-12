@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Eunomia DS Catalog Agent API",
-    "description": "Management API of the catalog agent (`crates/catalog-agent`): catalogs, datasets,\ndistributions, data services, ODRL offers, policy templates, one-step dataset offerings,\ncached peer catalogs and tenant provisioning. Entity responses use camelCase keys.\n",
+    "description": "Management API of the catalog agent (`crates/catalog-agent`): catalogs, datasets,\ndistributions, data services, ODRL offers, policy templates, one-step dataset offerings,\ncached peer catalogs and main catalog provisioning. Entity responses use camelCase keys.\n",
     "version": "1.0.0",
     "license": {
       "name": "GPL-3.0-or-later",
@@ -27,7 +27,7 @@
   "tags": [
     {
       "name": "Catalogs",
-      "description": "DCAT catalogs; each tenant has one main catalog"
+      "description": "DCAT catalogs; the connector has one main catalog"
     },
     {
       "name": "Datasets",
@@ -39,7 +39,7 @@
     },
     {
       "name": "Data Services",
-      "description": "Data services of a catalog; each tenant has one main data service"
+      "description": "Data services of a catalog; the connector has one main data service"
     },
     {
       "name": "ODRL Policies",
@@ -59,7 +59,7 @@
     },
     {
       "name": "Tenants",
-      "description": "Tenant provisioning"
+      "description": "Provisioning of the connector's main catalog and data service"
     }
   ],
   "paths": {
@@ -71,9 +71,6 @@
         "operationId": "getAllCatalogs",
         "summary": "List catalogs",
         "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
           {
             "$ref": "#/components/parameters/Limit"
           },
@@ -87,7 +84,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "title",
@@ -117,7 +114,7 @@
             "name": "with_main_catalog",
             "in": "query",
             "required": false,
-            "description": "Include the tenant's main catalog in the listing.",
+            "description": "Include the connector's main catalog in the listing.",
             "schema": {
               "type": "boolean"
             }
@@ -157,11 +154,6 @@
         ],
         "operationId": "createCatalog",
         "summary": "Create a catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -201,12 +193,7 @@
           "Catalogs"
         ],
         "operationId": "getMainCatalog",
-        "summary": "The tenant's main catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "The connector's main catalog",
         "responses": {
           "200": {
             "description": "Main catalog",
@@ -231,12 +218,7 @@
           "Catalogs"
         ],
         "operationId": "createMainCatalog",
-        "summary": "Create the tenant's main catalog",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "Create the connector's main catalog",
         "requestBody": {
           "required": true,
           "content": {
@@ -277,11 +259,6 @@
         ],
         "operationId": "getBatchCatalogs",
         "summary": "Get several catalogs by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -319,9 +296,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -427,9 +401,6 @@
         "summary": "List datasets",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -442,7 +413,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "catalog_id",
@@ -511,11 +482,6 @@
         ],
         "operationId": "createDataset",
         "summary": "Create a dataset",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -556,11 +522,6 @@
         ],
         "operationId": "getBatchDatasets",
         "summary": "Get several datasets by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -604,9 +565,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -639,9 +597,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -747,9 +702,6 @@
         "summary": "List distributions",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -762,7 +714,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "dataset_id",
@@ -831,11 +783,6 @@
         ],
         "operationId": "createDistribution",
         "summary": "Create a distribution",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -876,11 +823,6 @@
         ],
         "operationId": "getBatchDistributions",
         "summary": "Get several distributions by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -924,9 +866,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -974,9 +913,6 @@
                 "HttpData-PULL"
               ]
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -1006,9 +942,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -1114,9 +1047,6 @@
         "summary": "List data services",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -1129,7 +1059,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "catalog_id",
@@ -1206,11 +1136,6 @@
         ],
         "operationId": "createDataService",
         "summary": "Create a data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1250,12 +1175,7 @@
           "Data Services"
         ],
         "operationId": "getMainDataService",
-        "summary": "The tenant's main data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "The connector's main data service",
         "responses": {
           "200": {
             "description": "Main data service",
@@ -1280,12 +1200,7 @@
           "Data Services"
         ],
         "operationId": "createMainDataService",
-        "summary": "Create the tenant's main data service",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "summary": "Create the connector's main data service",
         "requestBody": {
           "required": true,
           "content": {
@@ -1326,11 +1241,6 @@
         ],
         "operationId": "getBatchDataServices",
         "summary": "Get several data services by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1374,9 +1284,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/UrnPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -1406,9 +1313,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -1514,9 +1418,6 @@
         "summary": "List ODRL offers",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -1529,7 +1430,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "entity",
@@ -1599,11 +1500,6 @@
         ],
         "operationId": "createOdrlPolicy",
         "summary": "Attach an ODRL offer to an entity",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1644,11 +1540,6 @@
         ],
         "operationId": "getBatchOdrlPolicies",
         "summary": "Get several offers by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1692,9 +1583,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -1751,9 +1639,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/UrnPathId"
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -1818,9 +1703,6 @@
         "summary": "List policy templates",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "$ref": "#/components/parameters/Limit"
           },
           {
@@ -1833,7 +1715,7 @@
             "$ref": "#/components/parameters/Sort"
           },
           {
-            "$ref": "#/components/parameters/TenantIdQuery"
+            "$ref": "#/components/parameters/UserIdQuery"
           },
           {
             "name": "id",
@@ -1897,9 +1779,6 @@
         "description": "With `silent=true` an invalid body or an existing id and version answers 200 with an empty\nbody instead of an error; seeders use it to stay idempotent.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
             "name": "silent",
             "in": "query",
             "required": false,
@@ -1961,11 +1840,6 @@
         ],
         "operationId": "getBatchPolicyTemplates",
         "summary": "Get several templates by id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2007,11 +1881,6 @@
         "operationId": "instantiateOdrlOffer",
         "summary": "Instantiate a template as an offer on an entity",
         "description": "Validates the parameters, fills the placeholders and stores the resulting offer.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2058,9 +1927,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/StringPathId"
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -2095,9 +1961,6 @@
           "schema": {
             "type": "string"
           }
-        },
-        {
-          "$ref": "#/components/parameters/TenantHeader"
         }
       ],
       "get": {
@@ -2154,12 +2017,7 @@
         ],
         "operationId": "createDatasetOffering",
         "summary": "Publish a dataset with its distribution and policy",
-        "description": "Without `dataset.catalogId` the dataset goes to the tenant's main catalog; without\n`distribution.accessServiceId` the distribution uses the main data service.\n",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
+        "description": "Without `dataset.catalogId` the dataset goes to the connector's main catalog; without\n`distribution.accessServiceId` the distribution uses the main data service.\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -2203,11 +2061,6 @@
         ],
         "operationId": "getAllPeerCatalog",
         "summary": "Cached catalogs of every peer",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "responses": {
           "200": {
             "description": "One `[participant, catalog]` pair per peer",
@@ -2244,9 +2097,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "responses": {
@@ -2269,27 +2119,17 @@
         }
       }
     },
-    "/api/v1/catalog-agent/tenants/{tenantId}/provision": {
+    "/api/v1/catalog-agent/tenants/provision": {
       "post": {
         "tags": [
           "Tenants"
         ],
         "operationId": "provisionTenant",
-        "summary": "Give a tenant its main catalog and data service",
-        "description": "Idempotent; existing main entities are kept.",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "summary": "Give the connector its main catalog and data service",
+        "description": "Idempotent; existing main entities are kept. The boot already runs it as the root.",
         "responses": {
           "200": {
-            "description": "The tenant's main entities",
+            "description": "The connector's main entities",
             "content": {
               "application/json": {
                 "schema": {
@@ -2392,24 +2232,6 @@
           "type": "string"
         }
       },
-      "TenantHeader": {
-        "name": "x-tenant-id",
-        "in": "header",
-        "required": false,
-        "description": "Tenant to act on. Non-admins may only name their own tenant.",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "TenantIdQuery": {
-        "name": "tenant_id",
-        "in": "query",
-        "required": false,
-        "description": "Tenant filter, honoured for admins.",
-        "schema": {
-          "type": "string"
-        }
-      },
       "UrnPathId": {
         "name": "id",
         "in": "path",
@@ -2420,6 +2242,15 @@
           "examples": [
             "urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b"
           ]
+        }
+      },
+      "UserIdQuery": {
+        "name": "user_id",
+        "in": "query",
+        "required": false,
+        "description": "Only the records of this user, among those the caller sees.",
+        "schema": {
+          "type": "string"
         }
       }
     },
@@ -2499,7 +2330,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "dspaceMainCatalog"
         ],
@@ -2508,8 +2341,19 @@
             "type": "string",
             "description": "URN of the catalog."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "foafHomePage": {
             "type": [
@@ -2593,7 +2437,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dcatEndpointUrl",
           "dctIssued",
           "catalogId",
@@ -2604,8 +2450,19 @@
             "type": "string",
             "description": "URN of the data service."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dcatEndpointDescription": {
             "type": [
@@ -2669,7 +2526,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "catalogId"
         ],
@@ -2678,8 +2537,19 @@
             "type": "string",
             "description": "URN of the dataset."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctConformsTo": {
             "type": [
@@ -2756,7 +2626,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "dctIssued",
           "dcatAccessService",
           "datasetId"
@@ -2766,8 +2638,19 @@
             "type": "string",
             "description": "URN of the distribution."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctIssued": {
             "type": "string",
@@ -3298,12 +3181,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "foafHomePage": {
             "type": [
@@ -3352,12 +3232,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dcatEndpointDescription": {
             "type": [
@@ -3412,12 +3289,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctConformsTo": {
             "type": [
@@ -3490,7 +3364,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Defaults to the tenant's main catalog."
+                "description": "Defaults to the connector's main catalog."
               }
             }
           },
@@ -3521,7 +3395,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Defaults to the tenant's main data service."
+                "description": "Defaults to the connector's main data service."
               }
             }
           },
@@ -3579,12 +3453,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "dctTitle": {
             "type": [
@@ -3633,12 +3504,9 @@
             ],
             "description": "URN; generated when absent."
           },
-          "tenantId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "odrlOffer": {
             "$ref": "#/components/schemas/OdrlPolicyInfo"
@@ -3713,9 +3581,9 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string",
-            "description": "Target tenant, honoured for admins."
+          "visibility": {
+            "description": "Who else sees it; private by default.",
+            "$ref": "#/components/schemas/Visibility"
           },
           "version": {
             "type": "string"
@@ -3924,7 +3792,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "odrlOffer",
           "entity",
           "entityType",
@@ -3935,8 +3805,19 @@
             "type": "string",
             "description": "URN of the offer."
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "odrlOffer": {
             "$ref": "#/components/schemas/OdrlPolicyInfo"
@@ -4148,7 +4029,6 @@
         "type": "object",
         "description": "Participant registry entry (\"mate\").",
         "required": [
-          "tenant_id",
           "participant_id",
           "participant_nick",
           "participant_type",
@@ -4158,9 +4038,6 @@
           "extra_fields"
         ],
         "properties": {
-          "tenant_id": {
-            "type": "string"
-          },
           "participant_id": {
             "type": "string",
             "description": "DID of the participant."
@@ -4173,13 +4050,6 @@
           },
           "base_url": {
             "type": "string"
-          },
-          "token": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Token this agent holds for calling the participant."
           },
           "saved_at": {
             "type": "string",
@@ -4228,7 +4098,9 @@
         "type": "object",
         "required": [
           "id",
-          "tenantId",
+          "userId",
+          "userRole",
+          "visibility",
           "version",
           "date",
           "author",
@@ -4239,8 +4111,19 @@
           "id": {
             "type": "string"
           },
-          "tenantId": {
-            "type": "string"
+          "userId": {
+            "type": "string",
+            "description": "Author of the record (`system` when a peer opened it)."
+          },
+          "userRole": {
+            "type": "string",
+            "description": "Role the record was created under (or that handles it).",
+            "examples": [
+              "/admin/upm"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           },
           "version": {
             "type": "string"
@@ -4369,14 +4252,10 @@
       "ProvisionedTenantDto": {
         "type": "object",
         "required": [
-          "tenantId",
           "catalog",
           "dataService"
         ],
         "properties": {
-          "tenantId": {
-            "type": "string"
-          },
           "catalog": {
             "$ref": "#/components/schemas/CatalogDto"
           },
@@ -4384,6 +4263,15 @@
             "$ref": "#/components/schemas/DataServiceDto"
           }
         }
+      },
+      "Visibility": {
+        "type": "string",
+        "description": "Who else sees a record beyond those its role lets in: nobody (Private), everyone without\nits author (Anonymous), or everyone (Public).\n",
+        "enum": [
+          "Private",
+          "Anonymous",
+          "Public"
+        ]
       }
     }
   }

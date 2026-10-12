@@ -49,6 +49,13 @@ pub struct UpdateSubscriptionDto {
     pub expiration_time: Option<DateTime<Utc>>,
 }
 
+impl UpdateSubscriptionDto {
+    /// Takes the new secret; the `*****` a client echoes from a response keeps the current one.
+    pub fn take_new_secret(&mut self) -> Option<Secret<String>> {
+        self.secret.take().filter(|s| !s.is_mask())
+    }
+}
+
 /// Event published through the HTTP API, about a record of the caller (private unless
 /// `visibility` says otherwise); the source defaults to `events`.
 #[derive(Debug, Clone, Serialize, Deserialize)]

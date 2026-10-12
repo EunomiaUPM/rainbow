@@ -352,6 +352,7 @@ export const SSIAuthContextProvider = ({ children }: { children: ReactNode }) =>
           url: `${tempPeer.url}/api/v1/gate/access`,
           actions: ["talk"],
           auto: false,
+          visibility: "Private",
         },
       });
       // The connect call answers no id: take the newest request sent to this peer.

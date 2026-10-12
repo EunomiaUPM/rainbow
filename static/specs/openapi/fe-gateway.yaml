@@ -5,8 +5,8 @@ info:
     Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
     answers under `/admin/api` and forwards each path prefix to the agent that owns it
     (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-    `/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-    forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+    `/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+    there. Mirrors the per-agent specs in this folder; operation ids
     and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
     are calls the GUI still makes to routes the backend no longer serves.
   version: 1.0.0
@@ -96,12 +96,11 @@ paths:
       operationId: getCatalogs
       summary: List catalogs
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: title
         in: query
         required: false
@@ -120,7 +119,7 @@ paths:
       - name: with_main_catalog
         in: query
         required: false
-        description: Include the tenant's main catalog in the listing.
+        description: Include the connector's main catalog in the listing.
         schema:
           type: boolean
       - $ref: '#/components/parameters/CreatedAfter'
@@ -143,8 +142,6 @@ paths:
       - Catalogs
       operationId: createCatalog
       summary: Create a catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -170,8 +167,6 @@ paths:
       - Catalogs
       operationId: getBatchCatalogs
       summary: Get several catalogs by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -196,9 +191,7 @@ paths:
       tags:
       - Catalogs
       operationId: getMainCatalogs
-      summary: The tenant's main catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: The connector's main catalog
       responses:
         '200':
           description: Main catalog
@@ -214,9 +207,7 @@ paths:
       tags:
       - Catalogs
       operationId: createMainCatalog
-      summary: Create the tenant's main catalog
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: Create the connector's main catalog
       requestBody:
         required: true
         content:
@@ -239,7 +230,6 @@ paths:
   /catalogs/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Catalogs
@@ -309,8 +299,6 @@ paths:
       description: |
         Validates the parameters against the template, adds system parameters, resolves every
         placeholder and stores the result. With `dryRun` the instance is resolved but not stored.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -346,7 +334,6 @@ paths:
           type: string
           examples:
           - urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Instance
@@ -363,7 +350,6 @@ paths:
   /connector/instances/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Connector
@@ -405,13 +391,13 @@ paths:
       operationId: getConnectorTemplates
       summary: List connector templates
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - name: tenant_id
+      - description: Only the records of this user, among those the caller sees.
         in: query
+        name: user_id
         required: false
         schema:
           type: string
@@ -453,8 +439,6 @@ paths:
       description: |
         Every placeholder used in `authentication` or `interaction` must be declared in
         `parameters`, and every declared parameter must be used.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -486,7 +470,6 @@ paths:
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Versions of the template
@@ -512,7 +495,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - ConnectorTemplates
@@ -550,12 +532,11 @@ paths:
       operationId: getAllDataServices
       summary: List data services
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: catalog_id
         in: query
         required: false
@@ -601,8 +582,6 @@ paths:
       - DataServices
       operationId: createDataService
       summary: Create a data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -628,8 +607,6 @@ paths:
       - DataServices
       operationId: getBatchDataServices
       summary: Get several data services by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -657,7 +634,6 @@ paths:
       summary: Data services of a catalog
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Data services of the catalog
@@ -676,9 +652,7 @@ paths:
       tags:
       - DataServices
       operationId: getMainDataService
-      summary: The tenant's main data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: The connector's main data service
       responses:
         '200':
           description: Main data service
@@ -694,9 +668,7 @@ paths:
       tags:
       - DataServices
       operationId: createMainDataService
-      summary: Create the tenant's main data service
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      summary: Create the connector's main data service
       requestBody:
         required: true
         content:
@@ -719,7 +691,6 @@ paths:
   /data-services/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - DataServices
@@ -787,10 +758,8 @@ paths:
       operationId: createDatasetOffering
       summary: Publish a dataset with its distribution and policy
       description: |
-        Without `dataset.catalogId` the dataset goes to the tenant's main catalog; without
+        Without `dataset.catalogId` the dataset goes to the connector's main catalog; without
         `distribution.accessServiceId` the distribution uses the main data service.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -819,12 +788,11 @@ paths:
       operationId: getAllDatasets
       summary: List datasets
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: catalog_id
         in: query
         required: false
@@ -865,8 +833,6 @@ paths:
       - Datasets
       operationId: createDataset
       summary: Create a dataset
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -892,8 +858,6 @@ paths:
       - Datasets
       operationId: getBatchDatasets
       summary: Get several datasets by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -921,7 +885,6 @@ paths:
       summary: Datasets of a catalog
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Datasets of the catalog
@@ -940,7 +903,6 @@ paths:
   /datasets/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Datasets
@@ -1038,12 +1000,11 @@ paths:
       operationId: getAllDistributions
       summary: List distributions
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: dataset_id
         in: query
         required: false
@@ -1084,8 +1045,6 @@ paths:
       - Distributions
       operationId: createDistribution
       summary: Create a distribution
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1111,8 +1070,6 @@ paths:
       - Distributions
       operationId: getBatchDistributions
       summary: Get several distributions by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1140,7 +1097,6 @@ paths:
       summary: Distributions of a dataset
       parameters:
       - $ref: '#/components/parameters/UrnPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Distributions of the dataset
@@ -1170,7 +1126,6 @@ paths:
           type: string
           examples:
           - HttpData-PULL
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Distribution
@@ -1187,7 +1142,6 @@ paths:
   /distributions/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Distributions
@@ -1255,8 +1209,6 @@ paths:
       operationId: rpcSetupCatalogRequest
       summary: Request a peer's catalog
       description: Sends a catalog request to the peer and caches the answer unless `noCache` is set.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1286,8 +1238,6 @@ paths:
       - CatalogRPC
       operationId: rpcSetupDatasetRequest
       summary: Request one dataset from a peer
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1317,8 +1267,6 @@ paths:
       - NegotiationRPC
       operationId: bffRpcSetupAcceptance
       summary: Accept the current offer (consumer)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1343,8 +1291,6 @@ paths:
       operationId: bffRpcSetupAgreement
       summary: Agree, verify and finalize (provider)
       description: Sends the agreement, then the verification and the `FINALIZED` event.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1368,8 +1314,6 @@ paths:
       - NegotiationRPC
       operationId: bffRpcSetupOfferInit
       summary: Send an initial offer (provider)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1393,8 +1337,6 @@ paths:
       - NegotiationRPC
       operationId: bffRpcSetupRequestInit
       summary: Send an initial contract request (consumer)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1418,8 +1360,6 @@ paths:
       - NegotiationRPC
       operationId: bffRpcSetupTermination
       summary: Terminate the negotiation (either role)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1444,8 +1384,6 @@ paths:
       operationId: rpcSetupAcceptance
       summary: Accept the current offer (consumer)
       description: Sends a `ContractNegotiationEventMessage` with event type `ACCEPTED`.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1469,8 +1407,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupAgreement
       summary: Send the agreement (provider)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1495,8 +1431,6 @@ paths:
       operationId: rpcSetupFinalization
       summary: Finalize the negotiation (provider)
       description: Sends a `ContractNegotiationEventMessage` with event type `FINALIZED`.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1520,8 +1454,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupOffer
       summary: Send a counter offer (provider)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1545,8 +1477,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupOfferInit
       summary: Send an initial offer (provider)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1570,8 +1500,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupRequest
       summary: Send a counter request (consumer)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1595,8 +1523,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupRequestInit
       summary: Send an initial contract request (consumer)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1620,8 +1546,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupTermination
       summary: Terminate the negotiation (either role)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1645,8 +1569,6 @@ paths:
       - NegotiationRPC
       operationId: rpcSetupVerification
       summary: Verify the agreement (consumer)
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -1671,8 +1593,6 @@ paths:
       operationId: tckInitiateNegotiation
       summary: Start a negotiation for the DSP TCK
       description: Builds an initial request referencing `offerId`, with this agent as callback.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2004,7 +1924,6 @@ paths:
       operationId: listEventsFeed
       summary: List events
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2028,9 +1947,7 @@ paths:
       - Events
       operationId: publishEvent
       summary: Publish an event
-      description: The event belongs to the acting tenant; `source_crate` defaults to `events`.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
+      description: The event belongs to the caller; `source_crate` defaults to `events`.
       requestBody:
         required: true
         content:
@@ -2057,7 +1974,6 @@ paths:
       operationId: listDeadLetters
       summary: List dead letters
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2088,8 +2004,6 @@ paths:
       - Events
       operationId: replayAllDeadLetters
       summary: Replay every unresolved dead letter
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Number of dead letters replayed
@@ -2108,7 +2022,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Events
@@ -2151,7 +2064,6 @@ paths:
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: The new delivery attempt
@@ -2198,7 +2110,6 @@ paths:
       operationId: listEventSubscriptions
       summary: List webhook subscriptions
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2225,8 +2136,6 @@ paths:
       - Events
       operationId: createEventSubscription
       summary: Create a webhook subscription
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2253,7 +2162,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Events
@@ -2319,7 +2227,6 @@ paths:
       summary: Get an event
       parameters:
       - $ref: '#/components/parameters/EventId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Event
@@ -2341,7 +2248,6 @@ paths:
       summary: Webhook deliveries of an event
       parameters:
       - $ref: '#/components/parameters/EventId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: One record per subscription the event was sent to
@@ -2402,8 +2308,6 @@ paths:
       - Gaia
       operationId: generateGaiaCredentials
       summary: Generate the Gaia-X self-attested credentials
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Generated
@@ -2418,7 +2322,6 @@ paths:
       operationId: getAllReceivedGrants
       summary: List grant requests received
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2441,13 +2344,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /gate/request/{id}:
     get:
-      tags:
+      tags: &id001
       - GateKeeper
       operationId: getReceivedGrantById
       summary: Get a received grant request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Received grant
@@ -2459,6 +2361,21 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      description: Ends the received grant and revokes its tokens.
+      operationId: disconnectReceivedGrant
+      parameters:
+      - &id003
+        $ref: '#/components/parameters/StringPathId'
+      responses:
+        '204':
+          description: Disconnected
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Disconnect a peer
+      tags: *id001
   /gate/request/{id}/details:
     get:
       tags:
@@ -2467,7 +2384,6 @@ paths:
       summary: Received grant with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Grant and related records, as free-form JSON
@@ -2481,12 +2397,10 @@ paths:
           $ref: '#/components/responses/NotFound'
   /mates:
     post:
-      tags:
+      tags: &id002
       - Participants
       operationId: createParticipant
       summary: Register a participant
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2513,7 +2427,6 @@ paths:
       operationId: getAllParticipants
       summary: List participants
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2556,8 +2469,6 @@ paths:
       - Participants
       operationId: getBatchParticipants
       summary: Get several participants by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2583,8 +2494,6 @@ paths:
       - Participants
       operationId: getMyself
       summary: This agent's own participant entry
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Own participant
@@ -2596,34 +2505,24 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /mates/token:
+  /mates/sync:
     post:
-      tags:
-      - Participants
-      operationId: getParticipantByToken
-      summary: Participant owning a peer token
-      description: Used by the protocol agents to authenticate DSP calls.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VerifyTokenRequest'
+      description: Root only. Pulls the participants each known authority lists into the registry.
+      operationId: syncParticipantDirectory
       responses:
         '200':
-          description: Participant
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParticipantDto'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                minimum: 0
+                type: integer
+          description: Number of participants synced
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      summary: Sync the participant directory from the authorities
+      tags: *id002
   /mates/{id}:
     parameters:
     - name: id
@@ -2632,7 +2531,6 @@ paths:
       description: Participant id (DID).
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Participants
@@ -2699,7 +2597,6 @@ paths:
       operationId: getAgreements
       summary: List agreements
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2709,7 +2606,7 @@ paths:
         required: false
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantIdCamel'
+      - $ref: '#/components/parameters/UserIdCamel'
       - name: processId
         in: query
         required: false
@@ -2760,8 +2657,6 @@ paths:
       - Negotiations
       operationId: createAgreement
       summary: Create an agreement record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2794,7 +2689,6 @@ paths:
         description: Consumer participant id.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2824,7 +2718,6 @@ paths:
         description: Provider participant id.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2847,8 +2740,6 @@ paths:
       - Negotiations
       operationId: getBatchAgreements
       summary: Get several agreements by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -2876,7 +2767,6 @@ paths:
       summary: Agreements of a negotiation
       parameters:
       - $ref: '#/components/parameters/ProcessIdPath'
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2898,7 +2788,6 @@ paths:
   /negotiations/agreements/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Negotiations
@@ -2966,7 +2855,6 @@ paths:
       operationId: getAllNegotiationMessages
       summary: List negotiation messages
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -2976,7 +2864,7 @@ paths:
         required: false
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantIdCamel'
+      - $ref: '#/components/parameters/UserIdCamel'
       - name: processId
         in: query
         required: false
@@ -3025,8 +2913,6 @@ paths:
       - Negotiations
       operationId: createNegotiationMessage
       summary: Create a message record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3052,8 +2938,6 @@ paths:
       - Negotiations
       operationId: getBatchNegotiationMessages
       summary: Get several messages by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3081,7 +2965,6 @@ paths:
       summary: Messages of a negotiation
       parameters:
       - $ref: '#/components/parameters/ProcessIdPath'
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3103,7 +2986,6 @@ paths:
   /negotiations/negotiation-messages/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Negotiations
@@ -3145,7 +3027,6 @@ paths:
       operationId: getNegotiationProcesses
       summary: List negotiations
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3155,7 +3036,7 @@ paths:
         required: false
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantIdCamel'
+      - $ref: '#/components/parameters/UserIdCamel'
       - name: state
         in: query
         required: false
@@ -3211,8 +3092,6 @@ paths:
       - Negotiations
       operationId: createNegotiationProcess
       summary: Create a negotiation record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3238,8 +3117,6 @@ paths:
       - Negotiations
       operationId: getBatchNegotiationProcesses
       summary: Get several negotiations by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3262,7 +3139,6 @@ paths:
   /negotiations/negotiation-processes/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Negotiations
@@ -3339,7 +3215,6 @@ paths:
           type: string
           examples:
           - consumerPid
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Negotiation
@@ -3360,7 +3235,6 @@ paths:
       operationId: getAllOffers
       summary: List offers
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3370,7 +3244,7 @@ paths:
         required: false
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantIdCamel'
+      - $ref: '#/components/parameters/UserIdCamel'
       - name: processId
         in: query
         required: false
@@ -3410,8 +3284,6 @@ paths:
       - Negotiations
       operationId: createOffer
       summary: Create an offer record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3437,8 +3309,6 @@ paths:
       - Negotiations
       operationId: getBatchOffers
       summary: Get several offers by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3471,7 +3341,6 @@ paths:
         description: ODRL offer `@id`.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3496,7 +3365,6 @@ paths:
       summary: Offers of a negotiation
       parameters:
       - $ref: '#/components/parameters/ProcessIdPath'
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3518,7 +3386,6 @@ paths:
   /negotiations/offers/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Negotiations
@@ -3662,7 +3529,6 @@ paths:
       operationId: listOAuthClients
       summary: List OAuth clients
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3710,8 +3576,6 @@ paths:
       - OAuth Clients
       operationId: registerOAuthClient
       summary: Register an OAuth client
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3740,7 +3604,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - OAuth Clients
@@ -3806,7 +3669,6 @@ paths:
       operationId: listPersonalAccessTokens
       summary: List personal access tokens
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -3864,8 +3726,6 @@ paths:
       operationId: createPersonalAccessToken
       summary: Create a personal access token
       description: The token carries the caller's role. The raw token is only returned here.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -3898,7 +3758,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '204':
           description: Revoked
@@ -4018,7 +3877,6 @@ paths:
       operationId: listOAuthUsers
       summary: List users
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -4065,8 +3923,6 @@ paths:
       - OAuth
       operationId: createOAuthUser
       summary: Create a user
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4096,7 +3952,6 @@ paths:
       description: User identifier, which is its tenant id.
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - OAuth Users
@@ -4163,12 +4018,11 @@ paths:
       operationId: getAllOdrlPolicies
       summary: List ODRL offers
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: entity
         in: query
         required: false
@@ -4215,8 +4069,6 @@ paths:
       - OdrlPolicies
       operationId: createOdrlPolicy
       summary: Attach an ODRL offer to an entity
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4242,8 +4094,6 @@ paths:
       - OdrlPolicies
       operationId: getBatchOdrlPolicies
       summary: Get several offers by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4271,7 +4121,6 @@ paths:
       description: URN of the catalog entity.
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - OdrlPolicies
@@ -4307,7 +4156,6 @@ paths:
   /odrl-policies/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - OdrlPolicies
@@ -4348,8 +4196,6 @@ paths:
       - Peer Catalogs
       operationId: getAllPeerCatalog
       summary: Cached catalogs of every peer
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: One `[participant, catalog]` pair per peer
@@ -4374,7 +4220,6 @@ paths:
         description: Participant id (DID) of the peer.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Peer catalog
@@ -4388,13 +4233,11 @@ paths:
           $ref: '#/components/responses/NotFound'
   /peer-connection/connect:
     post:
-      tags:
+      tags: &id004
       - Onboard
       operationId: connectToPeer
       summary: Start onboarding with a peer
       description: Sends a GNAP access request; with `auto` the OID4VP step runs unattended.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4416,7 +4259,6 @@ paths:
       summary: Answer the presentation request of an onboarding
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4439,7 +4281,6 @@ paths:
       operationId: getAllPeerConnectionRequests
       summary: List onboarding requests sent
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -4469,7 +4310,6 @@ paths:
       summary: Get an onboarding request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request
@@ -4481,6 +4321,20 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      description: Ends the sent grant and asks the peer to revoke its tokens.
+      operationId: disconnectSentGrant
+      parameters:
+      - *id003
+      responses:
+        '204':
+          description: Disconnected
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Disconnect from a peer
+      tags: *id004
   /peer-connection/request/{id}/details:
     get:
       tags:
@@ -4489,7 +4343,6 @@ paths:
       summary: Onboarding request with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request and related records, as free-form JSON
@@ -4508,12 +4361,11 @@ paths:
       operationId: getDataplaneTransfers
       summary: List dataplane processes
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: transfer_process_id
         in: query
         required: false
@@ -4574,8 +4426,6 @@ paths:
       - Dataplane Transfers
       operationId: createDataplaneTransfer
       summary: Create a dataplane process record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4601,8 +4451,6 @@ paths:
       - Dataplane Transfers
       operationId: getBatchDataplaneTransfers
       summary: Get several dataplane processes by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4638,7 +4486,6 @@ paths:
         description: URN of the transfer process.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Dataplane process
@@ -4655,7 +4502,6 @@ paths:
   /transfers/dataplane/dataplane-processes/{dataplaneProcessId}:
     parameters:
     - $ref: '#/components/parameters/DataplaneProcessId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Dataplane Transfers
@@ -4724,7 +4570,6 @@ paths:
       summary: Diagnostic events of a dataplane process
       parameters:
       - $ref: '#/components/parameters/DataplaneProcessId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Events of the process
@@ -4747,7 +4592,6 @@ paths:
       description: For pull transfers `ingress_url` is `<Host header>/dataplane/proxy/<id>`.
       parameters:
       - $ref: '#/components/parameters/DataplaneProcessId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Dataplane info
@@ -4769,7 +4613,6 @@ paths:
       summary: State transitions of a dataplane process
       parameters:
       - $ref: '#/components/parameters/DataplaneProcessId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Transitions, oldest first
@@ -4796,7 +4639,6 @@ paths:
         description: URN of the event.
         schema:
           type: string
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Event
@@ -4817,12 +4659,11 @@ paths:
       operationId: getTransferMessages
       summary: List transfer messages
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: direction
         in: query
         required: false
@@ -4867,8 +4708,6 @@ paths:
       - Transfers
       operationId: createTransferMessage
       summary: Create a message record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -4896,7 +4735,6 @@ paths:
       summary: Messages of a transfer process
       parameters:
       - $ref: '#/components/parameters/ProcessIdPath'
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -4931,7 +4769,6 @@ paths:
   /transfers/transfer-messages/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Transfers
@@ -4973,12 +4810,11 @@ paths:
       operationId: getTransferProcesses
       summary: List transfer processes
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: protocol
         in: query
         required: false
@@ -5037,8 +4873,6 @@ paths:
       - Transfers
       operationId: createTransferProcess
       summary: Create a transfer process record
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5064,8 +4898,6 @@ paths:
       - Transfers
       operationId: getBatchTransferProcesses
       summary: Get several transfer processes by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5091,7 +4923,6 @@ paths:
   /transfers/transfer-processes/{id}:
     parameters:
     - $ref: '#/components/parameters/UrnPathId'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Transfers
@@ -5159,12 +4990,11 @@ paths:
       operationId: getAllPolicyTemplates
       summary: List policy templates
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       - name: id
         in: query
         required: false
@@ -5204,7 +5034,6 @@ paths:
         With `silent=true` an invalid body or an existing id and version answers 200 with an empty
         body instead of an error; seeders use it to stay idempotent.
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - name: silent
         in: query
         required: false
@@ -5243,8 +5072,6 @@ paths:
       - PolicyTemplates
       operationId: getBatchPolicyTemplates
       summary: Get several templates by id
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5271,8 +5098,6 @@ paths:
       operationId: instantiateOdrlOffer
       summary: Instantiate a template as an offer on an entity
       description: Validates the parameters, fills the placeholders and stores the resulting offer.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5302,7 +5127,6 @@ paths:
       summary: Every version of a template
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Versions of the template
@@ -5322,7 +5146,6 @@ paths:
       required: true
       schema:
         type: string
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - PolicyTemplates
@@ -5353,22 +5176,16 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /v1/catalog-agent/tenants/{tenantId}/provision:
+  /v1/catalog-agent/tenants/provision:
     post:
       tags:
       - Tenants
       operationId: provisionTenant
-      summary: Give a tenant its main catalog and data service
-      description: Idempotent; existing main entities are kept.
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
+      summary: Give the connector its main catalog and data service
+      description: Idempotent; existing main entities are kept. The boot already runs it as the root.
       responses:
         '200':
-          description: The tenant's main entities
+          description: The connector's main entities
           content:
             application/json:
               schema:
@@ -5385,8 +5202,6 @@ paths:
       - Keystore Config
       operationId: getApplicationConfig
       summary: Effective application configuration
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Config file of the process, one optional section per agent
@@ -5407,9 +5222,8 @@ paths:
       operationId: listParameters
       summary: List parameters
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/KeyPrefix'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       responses:
         '200':
           description: Parameters under the prefix
@@ -5430,8 +5244,6 @@ paths:
       - Keystore Parameters
       operationId: createParameter
       summary: Create a parameter
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5458,7 +5270,6 @@ paths:
   /v1/keystore/parameters/{key}:
     parameters:
     - $ref: '#/components/parameters/KeyPath'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Keystore Parameters
@@ -5531,9 +5342,8 @@ paths:
       operationId: listSecrets
       summary: List secrets
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/KeyPrefix'
-      - $ref: '#/components/parameters/TenantIdQuery'
+      - $ref: '#/components/parameters/UserIdQuery'
       responses:
         '200':
           description: Secrets under the prefix, values masked
@@ -5554,8 +5364,6 @@ paths:
       - Keystore Secrets
       operationId: createSecret
       summary: Create a secret
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5582,7 +5390,6 @@ paths:
   /v1/keystore/secrets/{key}:
     parameters:
     - $ref: '#/components/parameters/KeyPath'
-    - $ref: '#/components/parameters/TenantHeader'
     get:
       tags:
       - Keystore Secrets
@@ -5655,7 +5462,6 @@ paths:
       operationId: getAllVCRequests
       summary: List credential requests
       parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/PageNumber'
@@ -5684,8 +5490,6 @@ paths:
       operationId: begVc
       summary: Request a credential from an authority
       description: Starts a GNAP credential request; with `auto` the OID4VP and OID4VCI steps run unattended.
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5707,7 +5511,6 @@ paths:
       summary: Redeem the credential offer of a request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5731,7 +5534,6 @@ paths:
       summary: Answer the presentation request of a request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -5755,7 +5557,6 @@ paths:
       summary: Get a credential request
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request
@@ -5775,7 +5576,6 @@ paths:
       summary: Credential request with its interaction and verification
       parameters:
       - $ref: '#/components/parameters/StringPathId'
-      - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
           description: Request and related records, as free-form JSON
@@ -6147,7 +5947,7 @@ paths:
       - WellKnownRPC
       operationId: fetchDataspaceVersionFromParticipant
       summary: Fetch a peer's version document
-      description: Resolves the participant in the tenant's registry and reads its `.well-known/dspace-version`.
+      description: Resolves the participant in the registry and reads its `.well-known/dspace-version`.
       requestBody:
         required: true
         content:
@@ -6353,27 +6153,6 @@ components:
       required: true
       schema:
         type: string
-    TenantHeader:
-      name: x-tenant-id
-      in: header
-      required: false
-      description: Tenant to act on. Non-admins may only name their own tenant.
-      schema:
-        type: string
-    TenantIdCamel:
-      name: tenantId
-      in: query
-      required: false
-      description: Tenant filter, honoured for admins.
-      schema:
-        type: string
-    TenantIdQuery:
-      name: tenant_id
-      in: query
-      required: false
-      description: Tenant filter, honoured for admins.
-      schema:
-        type: string
     TopicPattern:
       name: topic
       in: query
@@ -6393,6 +6172,20 @@ components:
         type: string
         examples:
         - urn:uuid:5b0f6a1e-2c3d-4e5f-8a9b-0c1d2e3f4a5b
+    UserIdCamel:
+      description: Only the records of this user, among those the caller sees.
+      in: query
+      name: userId
+      required: false
+      schema:
+        type: string
+    UserIdQuery:
+      description: Only the records of this user, among those the caller sees.
+      in: query
+      name: user_id
+      required: false
+      schema:
+        type: string
   responses:
     BadRequest:
       description: Malformed request or failed validation
@@ -6449,7 +6242,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - negotiationAgentMessageId
       - consumerParticipantId
@@ -6461,8 +6256,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -6590,15 +6393,25 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - dspaceMainCatalog
       properties:
         id:
           type: string
           description: URN of the catalog.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         foafHomePage:
           type:
           - string
@@ -6679,11 +6492,9 @@ components:
           type: boolean
           default: false
           description: Resolve and validate without storing.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
     ConnectorMetadata:
       type: object
       properties:
@@ -7004,7 +6815,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dcatEndpointUrl
       - dctIssued
       - catalogId
@@ -7013,8 +6826,16 @@ components:
         id:
           type: string
           description: URN of the data service.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dcatEndpointDescription:
           type:
           - string
@@ -7073,7 +6894,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - transferProcessId
       - role
       - interactionMode
@@ -7087,8 +6910,16 @@ components:
         id:
           type: string
           description: URN of the dataplane process.
-        tenantId:
+        userId:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        userRole:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         transferProcessId:
           type: string
         role:
@@ -7145,7 +6976,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - user_role
+      - visibility
       - dataplane_process_id
       - new_state
       - trigger
@@ -7153,8 +6986,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        user_role:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dataplane_process_id:
           type: string
         previous_state:
@@ -7200,15 +7041,25 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - catalogId
       properties:
         id:
           type: string
           description: URN of the dataset.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dctConformsTo:
           type:
           - string
@@ -7257,7 +7108,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - role
+      - visibility
       - event_id
       - subscription_id
       - topic
@@ -7270,8 +7123,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        role:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         delivery_id:
           type:
           - string
@@ -7356,7 +7217,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - dctIssued
       - dcatAccessService
       - datasetId
@@ -7364,8 +7227,16 @@ components:
         id:
           type: string
           description: URN of the distribution.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         dctIssued:
           type: string
           format: date-time
@@ -7787,7 +7658,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - role
+      - visibility
       - event_id
       - subscription_id
       - status
@@ -7796,8 +7669,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        role:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         event_id:
           type: string
         subscription_id:
@@ -8092,11 +7973,6 @@ components:
           type:
           - string
           - 'null'
-        tenant_id:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
     KeystoreNewSecretCommand:
       type: object
       required:
@@ -8114,11 +7990,6 @@ components:
           type:
           - string
           - 'null'
-        tenant_id:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
     KeystoreParameterView:
       type: object
       required:
@@ -8232,7 +8103,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - createdAt
       - direction
@@ -8244,8 +8117,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         createdAt:
@@ -8299,7 +8180,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - state
       - associatedAgentPeer
       - protocol
@@ -8310,8 +8193,16 @@ components:
         id:
           type: string
           description: URN of the negotiation.
-        tenantId:
+        userId:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        userRole:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         state:
           type: string
           enum:
@@ -8370,11 +8261,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -8395,11 +8284,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         foafHomePage:
           type:
           - string
@@ -8432,11 +8319,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dcatEndpointDescription:
           type:
           - string
@@ -8466,7 +8351,6 @@ components:
       type: object
       additionalProperties: false
       required:
-      - tenantId
       - transferProcessId
       - role
       - interactionMode
@@ -8479,8 +8363,24 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type: string
+        owner:
+          description: Owner to stamp; in-process callers only, the root may name another.
+          properties:
+            user_id:
+              description: Author of the record (`system` when a peer opened it).
+              type: string
+            role:
+              description: Role the record was created under (or that handles it).
+              examples:
+              - /admin/upm
+              type: string
+            visibility:
+              $ref: '#/components/schemas/Visibility'
+          required:
+          - user_id
+          - role
+          - visibility
+          type: object
         transferProcessId:
           type: string
         role:
@@ -8523,11 +8423,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dctConformsTo:
           type:
           - string
@@ -8578,7 +8476,7 @@ components:
               type:
               - string
               - 'null'
-              description: Defaults to the tenant's main catalog.
+              description: Defaults to the connector's main catalog.
         distribution:
           type: object
           additionalProperties: false
@@ -8599,7 +8497,7 @@ components:
               type:
               - string
               - 'null'
-              description: Defaults to the tenant's main data service.
+              description: Defaults to the connector's main data service.
         policy:
           type:
           - object
@@ -8637,11 +8535,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         dctTitle:
           type:
           - string
@@ -8679,11 +8575,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         direction:
@@ -8714,11 +8608,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+          description: Who else sees it; private by default.
         state:
           type: string
           enum:
@@ -8766,11 +8658,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+          description: Who else sees it; private by default.
         odrlOffer:
           $ref: '#/components/schemas/OdrlPolicyInfo'
         entityId:
@@ -8804,11 +8694,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -8859,9 +8747,9 @@ components:
       properties:
         id:
           type: string
-        tenantId:
-          type: string
-          description: Target tenant, honoured for admins.
+        visibility:
+          description: Who else sees it; private by default.
+          $ref: '#/components/schemas/Visibility'
         version:
           type: string
         date:
@@ -8897,11 +8785,9 @@ components:
           description: URN; generated when absent.
         transferProcessId:
           type: string
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+          description: Who else sees it; private by default.
         direction:
           type: string
           enum:
@@ -8935,11 +8821,9 @@ components:
           - string
           - 'null'
           description: URN; generated when absent.
-        tenantId:
-          type:
-          - string
-          - 'null'
-          description: Target tenant, honoured for admins.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+          description: Who else sees it; private by default.
         role:
           type: string
           description: Capitalised forms are accepted on input.
@@ -9416,7 +9300,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - odrlOffer
       - entity
       - entityType
@@ -9425,8 +9311,16 @@ components:
         id:
           type: string
           description: URN of the offer.
-        tenantId:
+        userId:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        userRole:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         odrlOffer:
           $ref: '#/components/schemas/OdrlPolicyInfo'
         entity:
@@ -9488,7 +9382,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - negotiationAgentMessageId
       - offerId
@@ -9497,8 +9393,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -9908,7 +9812,6 @@ components:
       type: object
       description: Participant registry entry ("mate").
       required:
-      - tenant_id
       - participant_id
       - participant_nick
       - participant_type
@@ -9917,8 +9820,6 @@ components:
       - last_interaction
       - extra_fields
       properties:
-        tenant_id:
-          type: string
         participant_id:
           type: string
           description: DID of the participant.
@@ -9932,11 +9833,6 @@ components:
           - All
         base_url:
           type: string
-        token:
-          type:
-          - string
-          - 'null'
-          description: Token this agent holds for calling the participant.
         saved_at:
           type: string
           format: date-time
@@ -9948,14 +9844,12 @@ components:
       type: object
       required:
       - participant_id
-      - tenant_id
       - participant_nick
       - participant_type
       - base_url
+      - visibility
       properties:
         participant_id:
-          type: string
-        tenant_id:
           type: string
         participant_nick:
           type: string
@@ -9967,11 +9861,9 @@ components:
           - All
         base_url:
           type: string
-        token:
-          type:
-          - string
-          - 'null'
         extra_fields: {}
+        visibility:
+          $ref: '#/components/schemas/Visibility'
     PatRecord:
       type: object
       required:
@@ -10048,7 +9940,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - version
       - date
       - author
@@ -10057,8 +9951,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         version:
           type: string
         date:
@@ -10152,12 +10054,9 @@ components:
     ProvisionedTenantDto:
       type: object
       required:
-      - tenantId
       - catalog
       - dataService
       properties:
-        tenantId:
-          type: string
         catalog:
           $ref: '#/components/schemas/CatalogDto'
         dataService:
@@ -10256,6 +10155,7 @@ components:
       - nick
       - url
       - actions
+      - visibility
       properties:
         id:
           type: string
@@ -10277,11 +10177,20 @@ components:
           - boolean
           - 'null'
           description: Run the manual steps automatically.
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+        requested:
+          description: Whether this side requested the grant.
+          type:
+          - boolean
+          - 'null'
     ReceivedGrant:
       type: object
+      description: Grant a peer requested from this connector.
       required:
       - id
-      - tenant_id
+      - role
+      - visibility
       - participant_nick
       - kind
       - status
@@ -10289,19 +10198,46 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        role:
           type: string
+          description: Role path, e.g. `/admin/upm`.
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         participant_nick:
           type: string
+        participant_id:
+          type:
+          - string
+          - 'null'
         kind:
           type: string
           enum:
           - AccessToken
           - CredentialRequest
-        token:
+        final_token_hash:
           type:
           - string
           - 'null'
+        final_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        managing_id:
+          type:
+          - string
+          - 'null'
+        managing_token_hash:
+          type:
+          - string
+          - 'null'
+        managing_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         vc_type_config:
           type:
           - array
@@ -10654,25 +10590,40 @@ components:
                 type: string
     SentGrant:
       type: object
+      description: Grant this connector requested from a peer.
       required:
       - id
-      - tenant_id
+      - role
+      - user_id
       - participant_id
       - participant_nick
+      - visibility
       - grant_endpoint
       - kind
       - status
       - auto
+      - requested
       - created_at
       properties:
         id:
           type: string
-        tenant_id:
+        role:
           type: string
+          description: Role path, e.g. `/admin/upm`.
+          examples:
+          - /admin/upm
+        user_id:
+          type: string
+        username:
+          type:
+          - string
+          - 'null'
         participant_id:
           type: string
         participant_nick:
           type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         grant_endpoint:
           type: string
         kind:
@@ -10688,10 +10639,30 @@ components:
           - Approved
           - Rejected
           - Finalized
-        token:
+        final_token:
           type:
           - string
           - 'null'
+          description: Access token towards the peer.
+        final_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        managing_uri:
+          type:
+          - string
+          - 'null'
+        managing_token:
+          type:
+          - string
+          - 'null'
+          description: Token to rotate or revoke the access token.
+        managing_expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         vc_type_config:
           type:
           - array
@@ -10707,6 +10678,8 @@ components:
           - string
           - 'null'
         auto:
+          type: boolean
+        requested:
           type: boolean
         created_at:
           type: string
@@ -10829,7 +10802,9 @@ components:
       type: object
       required:
       - id
-      - tenant_id
+      - user_id
+      - user_role
+      - visibility
       - transfer_id
       - level
       - component
@@ -10838,8 +10813,16 @@ components:
       properties:
         id:
           type: string
-        tenant_id:
+        user_id:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        user_role:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         transfer_id:
           type: string
           description: URN of the dataplane process.
@@ -10864,7 +10847,9 @@ components:
       required:
       - id
       - transferProcessId
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - direction
       - protocol
       - messageType
@@ -10878,8 +10863,16 @@ components:
           description: URN of the message.
         transferProcessId:
           type: string
-        tenantId:
+        userId:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        userRole:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         direction:
           type: string
           enum:
@@ -10924,7 +10917,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - role
       - protocol
       - state
@@ -10938,8 +10933,16 @@ components:
         id:
           type: string
           description: URN of the transfer process.
-        tenantId:
+        userId:
+          description: Author of the record (`system` when a peer opened it).
           type: string
+        userRole:
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+          type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         role:
           type: string
           description: Capitalised forms are accepted on input.
@@ -11112,13 +11115,6 @@ components:
       examples:
       - gx_LegalPerson_jwt_vc_json
       - DataSpaceParticipant_jwt_vc_json
-    VerifyTokenRequest:
-      type: object
-      required:
-      - token
-      properties:
-        token:
-          type: string
     Version:
       type: object
       required:
@@ -11331,11 +11327,7 @@ components:
     WellKnownRPCRequest:
       type: object
       required:
-      - tenant_id
       - participant_id
       properties:
-        tenant_id:
-          type: string
-          description: Tenant whose participant registry holds `participant_id`.
         participant_id:
           type: string

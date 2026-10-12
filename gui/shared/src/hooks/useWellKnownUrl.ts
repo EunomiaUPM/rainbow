@@ -61,15 +61,14 @@ export const useParticipantDSPPath = (participantId: string | undefined, version
     data: participantVersion,
   } = useFetchDataspaceVersionFromParticipant();
 
-  // The registry entry gives the tenant the lookup runs in.
-  const participantTenant =
-    participantData?.status === 200 ? participantData.data.tenant_id : undefined;
+  // Only peers in the registry have a version document to read.
+  const participantKnown = participantData?.status === 200;
 
   useEffect(() => {
-    if (participantId && participantTenant) {
-      fetchVersion({ data: { tenant_id: participantTenant, participant_id: participantId } });
+    if (participantId && participantKnown) {
+      fetchVersion({ data: { participant_id: participantId } });
     }
-  }, [participantId, participantTenant, fetchVersion]);
+  }, [participantId, participantKnown, fetchVersion]);
 
   const resolve = async (id: string, ver = version): Promise<string | null> => {
     // Fetch participant
@@ -78,7 +77,7 @@ export const useParticipantDSPPath = (participantId: string | undefined, version
 
     // Fetch version
     const vData = await fetchVersionAsync({
-      data: { tenant_id: pData.data.tenant_id, participant_id: id },
+      data: { participant_id: id },
     });
     if (!vData || !vData.data || !("protocolVersions" in vData.data)) return null;
 

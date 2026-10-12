@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -20,7 +20,7 @@ import type { GetNegotiationProcessesState } from './getNegotiationProcessesStat
 import type { LimitParameter } from './limitParameter';
 import type { PageNumberParameter } from './pageNumberParameter';
 import type { SortParameter } from './sortParameter';
-import type { TenantIdCamelParameter } from './tenantIdCamelParameter';
+import type { UserIdCamelParameter } from './userIdCamelParameter';
 
 export type GetNegotiationProcessesParams = {
 /**
@@ -41,9 +41,9 @@ page?: PageNumberParameter;
 sort?: SortParameter;
 id?: string;
 /**
- * Tenant filter, honoured for admins.
+ * Only the records of this user, among those the caller sees.
  */
-tenantId?: TenantIdCamelParameter;
+userId?: UserIdCamelParameter;
 state?: GetNegotiationProcessesState;
 role?: GetNegotiationProcessesRole;
 protocol?: string;

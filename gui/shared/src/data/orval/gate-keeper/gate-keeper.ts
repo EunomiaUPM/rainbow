@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -14,6 +14,7 @@ are calls the GUI still makes to routes the backend no longer serves.
  */
 import {
   useInfiniteQuery,
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
@@ -22,12 +23,15 @@ import type {
   DefinedUseInfiniteQueryResult,
   DefinedUseQueryResult,
   InfiniteData,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
   UseInfiniteQueryOptions,
   UseInfiniteQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
@@ -444,6 +448,100 @@ export function useGetReceivedGrantById<TData = Awaited<ReturnType<typeof getRec
 
 
 /**
+ * Ends the received grant and revokes its tokens.
+ * @summary Disconnect a peer
+ */
+export type disconnectReceivedGrantResponse204 = {
+  data: void
+  status: 204
+}
+
+export type disconnectReceivedGrantResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type disconnectReceivedGrantResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+    
+export type disconnectReceivedGrantResponseSuccess = (disconnectReceivedGrantResponse204) & {
+  headers: Headers;
+};
+export type disconnectReceivedGrantResponseError = (disconnectReceivedGrantResponse401 | disconnectReceivedGrantResponse404) & {
+  headers: Headers;
+};
+
+export type disconnectReceivedGrantResponse = (disconnectReceivedGrantResponseSuccess | disconnectReceivedGrantResponseError)
+
+export const getDisconnectReceivedGrantUrl = (id: string,) => {
+
+
+  
+
+  return `/gate/request/${id}`
+}
+
+export const disconnectReceivedGrant = async (id: string, options?: RequestInit): Promise<disconnectReceivedGrantResponse> => {
+  
+  return customInstance<disconnectReceivedGrantResponse>(getDisconnectReceivedGrantUrl(id),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getDisconnectReceivedGrantMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectReceivedGrant>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectReceivedGrant>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['disconnectReceivedGrant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectReceivedGrant>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  disconnectReceivedGrant(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectReceivedGrantMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectReceivedGrant>>>
+    
+    export type DisconnectReceivedGrantMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+
+    /**
+ * @summary Disconnect a peer
+ */
+export const useDisconnectReceivedGrant = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectReceivedGrant>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectReceivedGrant>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDisconnectReceivedGrantMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Received grant with its interaction and verification
  */
 export type getReceivedGrantDetailsResponse200 = {

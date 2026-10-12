@@ -19,12 +19,13 @@ use serde::{Deserialize, Serialize};
 use ymir::config::types::HostConfig;
 
 use crate::config::types::traits::DatahubConfigTrait;
+use crate::secret::Secret;
 
 /// Datahub the catalog reads from when `is_datahub` is set.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatahubConfig {
     pub host: HostConfig,
-    pub token: String,
+    pub token: Secret<String>,
 }
 
 impl DatahubConfigTrait for DatahubConfig {

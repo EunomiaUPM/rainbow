@@ -252,8 +252,6 @@ paths:
       summary: Send an initial contract request (consumer)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -279,8 +277,6 @@ paths:
       summary: Send a counter request (consumer)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -306,8 +302,6 @@ paths:
       summary: Send an initial offer (provider)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -333,8 +327,6 @@ paths:
       summary: Send a counter offer (provider)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -361,8 +353,6 @@ paths:
       description: Sends a `ContractNegotiationEventMessage` with event type `ACCEPTED`.
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -388,8 +378,6 @@ paths:
       summary: Send the agreement (provider)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -415,8 +403,6 @@ paths:
       summary: Verify the agreement (consumer)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -443,8 +429,6 @@ paths:
       description: Sends a `ContractNegotiationEventMessage` with event type `FINALIZED`.
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -470,8 +454,6 @@ paths:
       summary: Terminate the negotiation (either role)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -498,8 +480,6 @@ paths:
       description: Builds an initial request referencing `offerId`, with this agent as callback.
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -525,8 +505,6 @@ paths:
       summary: Send an initial contract request (consumer)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -552,8 +530,6 @@ paths:
       summary: Send an initial offer (provider)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -579,8 +555,6 @@ paths:
       summary: Accept the current offer (consumer)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -607,8 +581,6 @@ paths:
       description: Sends the agreement, then the verification and the `FINALIZED` event.
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -634,8 +606,6 @@ paths:
       summary: Terminate the negotiation (either role)
       security:
       - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TenantHeader'
       requestBody:
         required: true
         content:
@@ -669,13 +639,6 @@ components:
       in: path
       required: true
       description: This agent's process id (`providerPid` on a provider, `consumerPid` on a consumer).
-      schema:
-        type: string
-    TenantHeader:
-      name: x-tenant-id
-      in: header
-      required: false
-      description: Tenant to act on. Non-admins may only name their own tenant.
       schema:
         type: string
   responses:
@@ -712,7 +675,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - negotiationAgentMessageId
       - consumerParticipantId
@@ -724,8 +689,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -1005,7 +978,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - createdAt
       - direction
@@ -1017,8 +992,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         createdAt:
@@ -1072,7 +1055,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - state
       - associatedAgentPeer
       - protocol
@@ -1083,8 +1068,16 @@ components:
         id:
           type: string
           description: URN of the negotiation.
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         state:
           $ref: '#/components/schemas/NegotiationProcessState'
         stateAttribute:
@@ -1311,7 +1304,9 @@ components:
       type: object
       required:
       - id
-      - tenantId
+      - userId
+      - userRole
+      - visibility
       - negotiationAgentProcessId
       - negotiationAgentMessageId
       - offerId
@@ -1320,8 +1315,16 @@ components:
       properties:
         id:
           type: string
-        tenantId:
+        userId:
           type: string
+          description: Author of the record (`system` when a peer opened it).
+        userRole:
+          type: string
+          description: Role the record was created under (or that handles it).
+          examples:
+          - /admin/upm
+        visibility:
+          $ref: '#/components/schemas/Visibility'
         negotiationAgentProcessId:
           type: string
         negotiationAgentMessageId:
@@ -1526,3 +1529,12 @@ components:
           type: string
         connectorAddress:
           type: string
+    Visibility:
+      type: string
+      description: |
+        Who else sees a record beyond those its role lets in: nobody (Private), everyone without
+        its author (Anonymous), or everyone (Public).
+      enum:
+      - Private
+      - Anonymous
+      - Public

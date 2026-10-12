@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -14,11 +14,16 @@ are calls the GUI still makes to routes the backend no longer serves.
  */
 import type { OdrlPolicyDtoEntityType } from './odrlPolicyDtoEntityType';
 import type { OdrlPolicyInfo } from './odrlPolicyInfo';
+import type { Visibility } from './visibility';
 
 export interface OdrlPolicyDto {
   /** URN of the offer. */
   id: string;
-  tenantId: string;
+  /** Author of the record (`system` when a peer opened it). */
+  userId: string;
+  /** Role the record was created under (or that handles it). */
+  userRole: string;
+  visibility: Visibility;
   odrlOffer: OdrlPolicyInfo;
   /** URN of the entity the offer is attached to. */
   entity: string;

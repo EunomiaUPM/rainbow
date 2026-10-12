@@ -5,8 +5,8 @@
  * Admin API as the GUI sees it through the gateway agent (`crates/bff`). The gateway
 answers under `/admin/api` and forwards each path prefix to the agent that owns it
 (`catalogs` to the catalog agent, `negotiations` to the negotiation agent, `v1` to
-`/api/v1` of the core agent, and so on); the bearer token and `x-tenant-id` are
-forwarded and checked there. Mirrors the per-agent specs in this folder; operation ids
+`/api/v1` of the core agent, and so on); the bearer token is forwarded and checked
+there. Mirrors the per-agent specs in this folder; operation ids
 and tags match the orval client in `gui/shared/src/data/orval`, and deprecated operations
 are calls the GUI still makes to routes the backend no longer serves.
 
@@ -649,7 +649,7 @@ export function useGetDataServicesByCatalogId<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * @summary The tenant's main data service
+ * @summary The connector's main data service
  */
 export type getMainDataServiceResponse200 = {
   data: DataServiceDto
@@ -758,7 +758,7 @@ export function useGetMainDataServiceInfinite<TData = InfiniteData<Awaited<Retur
  , queryClient?: QueryClient
   ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
 /**
- * @summary The tenant's main data service
+ * @summary The connector's main data service
  */
 
 export function useGetMainDataServiceInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getMainDataService>>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
@@ -823,7 +823,7 @@ export function useGetMainDataService<TData = Awaited<ReturnType<typeof getMainD
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
 /**
- * @summary The tenant's main data service
+ * @summary The connector's main data service
  */
 
 export function useGetMainDataService<TData = Awaited<ReturnType<typeof getMainDataService>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
@@ -842,7 +842,7 @@ export function useGetMainDataService<TData = Awaited<ReturnType<typeof getMainD
 
 
 /**
- * @summary Create the tenant's main data service
+ * @summary Create the connector's main data service
  */
 export type createMainDataServiceResponse200 = {
   data: DataServiceDto
@@ -928,7 +928,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateMainDataServiceMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
 
     /**
- * @summary Create the tenant's main data service
+ * @summary Create the connector's main data service
  */
 export const useCreateMainDataService = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMainDataService>>, TError,{data: BodyType<NewDataServiceDto>}, TContext>, request?: SecondParameter<typeof customInstance>}

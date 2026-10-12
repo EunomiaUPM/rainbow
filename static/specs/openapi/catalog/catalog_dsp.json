@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Eunomia DS Catalog Protocol API",
-    "description": "Catalog Protocol of the Dataspace Protocol 2025-1 as served by the catalog agent, plus the\nRPC endpoints that make this agent act as a consumer against a peer's catalog.\nProtocol endpoints authenticate the peer with the token it obtained through GNAP onboarding\nand answer as a read-only scope on the tenant that peer belongs to. Prefixed keys\n(`dspace:`, `dcat:`, ...) are normalised before parsing.\n",
+    "description": "Catalog Protocol of the Dataspace Protocol 2025-1 as served by the catalog agent, plus the\nRPC endpoints that make this agent act as a consumer against a peer's catalog.\nProtocol endpoints authenticate the peer with the token it obtained through GNAP onboarding\nand answer as the role of the peer's grant: the peer sees what that role sees. Prefixed keys\n(`dspace:`, `dcat:`, ...) are normalised before parsing.\n",
     "version": "1.0.0",
     "license": {
       "name": "GPL-3.0-or-later",
@@ -37,7 +37,7 @@
         ],
         "operationId": "protocolRequestCatalog",
         "summary": "Catalog request",
-        "description": "Answers the tenant's catalog with the datasets and offers visible to the peer.",
+        "description": "Answers the connector's main catalog with the datasets and offers visible to the peer.",
         "security": [
           {
             "peerBearer": []
@@ -123,11 +123,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -177,11 +172,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
           }
         ],
         "requestBody": {
@@ -238,15 +228,6 @@
       }
     },
     "parameters": {
-      "TenantHeader": {
-        "name": "x-tenant-id",
-        "in": "header",
-        "required": false,
-        "description": "Tenant to act on. Non-admins may only name their own tenant.",
-        "schema": {
-          "type": "string"
-        }
-      },
       "UrnPathId": {
         "name": "id",
         "in": "path",
