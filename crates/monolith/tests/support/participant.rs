@@ -23,7 +23,7 @@ use std::sync::{Arc, Once};
 use catalog_agent::setup::{CatalogAgentModule, CatalogPorts};
 use common::boot::seeders::BootPhase;
 use common::boot::workers::WorkerSet;
-use common::config::services::{CommonConfig, ContractsConfig};
+use common::config::services::{CommonConfig, ContractsConfig, TransferConfig};
 use common::config::types::min_known_config::MinKnownConfig;
 use common::facades::AuthPorts;
 use common::module_loader::root_context::RootContext;
@@ -34,6 +34,9 @@ use negotiation_agent::setup::{NegotiationAgentModule, NegotiationPorts};
 use serde_json::{json, Value};
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
+use transfer_agent::setup::{TransferAgentModule, TransferPorts};
+use ymir::services::client::ClientTrait;
+use ymir::types::http::HttpBody;
 use ymir::services::client::ClientExt;
 use ymir::services::vault::fake_vault::FakeVaultService;
 use ymir::services::vault::global::VaultService;
@@ -98,16 +101,48 @@ impl Participant {
                 }),
             ),
             &root,
-            bus,
+            bus.clone(),
             &NegotiationPorts::local(auth.clone(), catalog.odrl_policy_service()),
         )
         .await
         .expect("compose negotiation");
+        // Transfer brings the dataplane, which needs Redis: only composed when REDIS_URL is set.
+        let transfer = match std::env::var("REDIS_URL") {
+            Ok(_) => {
+                let config = Self::section::<TransferConfig>(
+                    &common,
+                    json!({
+                        "cache": Self::cache_config(),
+                        "contracts": Self::known(port),
+                        "catalog": Self::known(port),
+                        "is_catalog_datahub": false,
+                        "ssi_auth": Self::known(port),
+                    }),
+                );
+                let ports = TransferPorts::local(
+                    &config,
+                    &root,
+                    auth.clone(),
+                    negotiation.agreement_service(),
+                    catalog.dataset_service(),
+                    catalog.distribution_service(),
+                    catalog.local_connector_instances(),
+                )
+                .await
+                .expect("compose transfer ports");
+                Some(TransferAgentModule::compose(&config, &root, bus, &ports))
+            }
+            Err(_) => None,
+        };
         let composer = ServiceComposer::new()
             .register(events)
             .register(catalog)
-            .register(negotiation)
-            .with_auth_ports(auth.clone());
+            .register(negotiation);
+        let composer = match transfer {
+            Some(transfer) => composer.register(transfer),
+            None => composer,
+        }
+        .with_auth_ports(auth.clone());
 
         let (before, after): (Vec<_>, Vec<_>) = composer
             .seeders()
@@ -180,6 +215,28 @@ impl Participant {
             )
             .await
             .unwrap_or_else(|e| panic!("POST {path}: {e:?}"))
+    }
+
+    /// POST a DSP message to `path` as a peer presenting `token`; answers status and body.
+    pub async fn post_dsp(&self, path: &str, token: &str, body: &Value) -> (u16, Value) {
+        let response = http_client()
+            .post(&self.url(path), Some(bearer_headers(token).unwrap()), HttpBody::Json(body.clone()))
+            .await
+            .unwrap_or_else(|e| panic!("POST {path}: {e:?}"));
+        let status = response.status().as_u16();
+        let text = response.text().await.unwrap_or_default();
+        (status, serde_json::from_str(&text).unwrap_or(Value::Null))
+    }
+
+    /// GET `path` as a peer presenting `token`; answers status and body.
+    pub async fn get_dsp(&self, path: &str, token: &str) -> (u16, Value) {
+        let response = http_client()
+            .get(&self.url(path), Some(bearer_headers(token).unwrap()))
+            .await
+            .unwrap_or_else(|e| panic!("GET {path}: {e:?}"));
+        let status = response.status().as_u16();
+        let text = response.text().await.unwrap_or_default();
+        (status, serde_json::from_str(&text).unwrap_or(Value::Null))
     }
 
     /// GET `path` without credentials, as a peer reads the well-known documents.

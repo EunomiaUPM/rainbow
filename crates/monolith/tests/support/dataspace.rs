@@ -25,8 +25,8 @@ use uuid::Uuid;
 
 pub const PROVIDER_DID: &str = "did:web:provider.test";
 pub const CONSUMER_DID: &str = "did:web:consumer.test";
-const TO_PROVIDER: &str = "token-consumer-to-provider";
-const TO_CONSUMER: &str = "token-provider-to-consumer";
+pub const TO_PROVIDER: &str = "token-consumer-to-provider";
+pub const TO_CONSUMER: &str = "token-provider-to-consumer";
 
 pub struct Dataspace {
     pub provider: Participant,

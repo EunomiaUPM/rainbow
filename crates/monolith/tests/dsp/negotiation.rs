@@ -23,8 +23,21 @@ use serde_json::{json, Value};
 use crate::support::dataspace::{Dataspace, PROVIDER_DID};
 use crate::support::participant::Participant;
 
+/// What the provider published: the dataset and its `http+pull` distribution.
+pub(crate) struct PublishedOffer {
+    pub distribution_id: Value,
+}
+
+/// A negotiation both sides finished: the offer, its target and the provider's agreement.
+pub(crate) struct Negotiated {
+    pub offer: PublishedOffer,
+    pub target: Value,
+    pub agreement: Value,
+    pub consumer_process: Value,
+}
+
 /// Provider publishes a dataset with a distribution and a usage policy on its main catalog.
-async fn publish_offer(provider: &Participant) {
+pub(crate) async fn publish_offer(provider: &Participant) -> PublishedOffer {
     let catalog = provider.get("/api/v1/catalog-agent/catalogs/main").await;
     let service = provider
         .get("/api/v1/catalog-agent/data-services/main")
@@ -35,7 +48,7 @@ async fn publish_offer(provider: &Participant) {
             json!({"dctTitle": "Weather", "catalogId": catalog["id"]}),
         )
         .await;
-    provider
+    let distribution = provider
         .post(
             "/api/v1/catalog-agent/distributions",
             json!({
@@ -57,6 +70,9 @@ async fn publish_offer(provider: &Participant) {
             }),
         )
         .await;
+    PublishedOffer {
+        distribution_id: distribution["id"].clone(),
+    }
 }
 
 fn offer(policy_id: &Value, target: &Value, action: &str) -> Value {
@@ -68,14 +84,10 @@ fn process_of(answer: &Value) -> &Value {
     &answer["negotiationAgentModel"]
 }
 
-/// The consumer negotiates the provider's offer to FINALIZED: each step moves the process to
-/// the expected state, and both sides end FINALIZED holding the same agreement.
-#[tokio::test]
-#[ignore = "needs DATABASE_URL"]
-async fn negotiation_reaches_finalized_with_an_agreement() {
-    let ds = Dataspace::start().await;
+/// Walks the consumer's request to FINALIZED, checking each step's state on the way.
+pub(crate) async fn negotiate_to_finalized(ds: &Dataspace) -> Negotiated {
     let (provider, consumer) = (&ds.provider, &ds.consumer);
-    publish_offer(provider).await;
+    let published = publish_offer(provider).await;
 
     let catalog = consumer
         .post(
@@ -132,15 +144,32 @@ async fn negotiation_reaches_finalized_with_an_agreement() {
             provider_process = process_of(&answer).clone();
         }
     }
+    Negotiated {
+        offer: published,
+        target: target.clone(),
+        agreement: provider_process["agreement"].clone(),
+        consumer_process,
+    }
+}
 
-    let consumer_view = consumer
+/// The consumer negotiates the provider's offer to FINALIZED: each step moves the process to
+/// the expected state, and both sides end FINALIZED holding the same agreement.
+#[tokio::test]
+#[ignore = "needs DATABASE_URL"]
+async fn negotiation_reaches_finalized_with_an_agreement() {
+    let ds = Dataspace::start().await;
+    let negotiated = negotiate_to_finalized(&ds).await;
+    let (consumer_process, agreement, target) =
+        (&negotiated.consumer_process, &negotiated.agreement, &negotiated.target);
+
+    let consumer_view = ds
+        .consumer
         .get(&format!(
             "/api/v1/negotiation-agent/negotiation-processes/{}",
             consumer_process["id"].as_str().unwrap()
         ))
         .await;
     assert_eq!(consumer_view["state"], "FINALIZED", "{consumer_view}");
-    let agreement = &provider_process["agreement"];
     assert_eq!(agreement["target"], *target);
     assert_eq!(
         consumer_view["agreement"]["id"], agreement["id"],
