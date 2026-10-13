@@ -375,6 +375,18 @@ mod caller {
         );
     }
 
+    /// In TCK mode the TCK's token is the TCK, without asking the grants; off, it is rejected.
+    #[tokio::test]
+    async fn tck_token_is_the_tck_only_in_tck_mode() {
+        let tck = auth(false).tck_mode(true);
+        assert_eq!(
+            call(app(tck), Some("TCK_PARTICIPANT")).await,
+            (StatusCode::OK, "TCK_PARTICIPANT false".to_string())
+        );
+        let off = auth(false).tck_mode(false);
+        assert_eq!(call(app(off), Some("TCK_PARTICIPANT")).await.0, StatusCode::NOT_FOUND);
+    }
+
     /// The OAuth user counts as the caller on RPC routes; with neither, it is a wiring error.
     #[test]
     fn caller_falls_back_to_the_oauth_user() {

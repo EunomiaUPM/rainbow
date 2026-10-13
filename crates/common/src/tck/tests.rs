@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The TCK harness: mapping lookups, the scenario queue and the worker, with a recording player.
+//! The TCK harness: mapping lookups, the scenario queue, the worker with a recording player,
+//! and the TCK as a peer.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -24,7 +25,9 @@ use tokio_util::sync::CancellationToken;
 
 use crate::boot::workers::BackgroundWorker;
 use crate::flow::FlowError;
-use crate::tck::{TckMapping, TckPlayerTrait, TckQueue, TckScriptTrait, TckStep, TckWorker};
+use crate::tck::{
+    TckMapping, TckPeer, TckPlayerTrait, TckQueue, TckScriptTrait, TckStep, TckWorker,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Message {
@@ -164,4 +167,19 @@ async fn worker_plays_the_steps_with_retries() {
             ("pid-1".to_string(), Message::Stop)
         ]
     );
+}
+
+/// In TCK mode the TCK's id is its token, both on our routes and towards it; off, it is nothing.
+#[test]
+fn the_tck_id_is_its_token_only_in_tck_mode() {
+    let peer = TckPeer::verify(true, "TCK_PARTICIPANT").unwrap();
+    assert_eq!(peer.participant_id, TckPeer::PARTICIPANT_ID);
+    assert!(TckPeer::verify(true, "another-token").is_none());
+    assert!(TckPeer::verify(false, "TCK_PARTICIPANT").is_none());
+    assert_eq!(
+        TckPeer::token_for(true, "TCK_PARTICIPANT").as_deref(),
+        Some("TCK_PARTICIPANT")
+    );
+    assert!(TckPeer::token_for(true, "did:web:peer").is_none());
+    assert!(TckPeer::token_for(false, "TCK_PARTICIPANT").is_none());
 }

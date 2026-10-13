@@ -212,22 +212,9 @@ run_onboarding() {
 }
 
 # ── PHASE 3: the token the TCK presents ──────────────────────────────────────
-# The TCK plays the consumer towards the provider, so it presents the GNAP token the provider
-# issued to the consumer: the consumer's own token towards the provider, from its auth API.
-get_peer_token_for_tck() {
-  log "Fetching the consumer's access token towards the provider (for the TCK)"
-  local provider_did segment token
-  provider_did=$(curl_j GET "$PROVIDER_URL/api/v1/mates/myself" | jq -r '.participant_id // empty')
-  [[ -n "$provider_did" ]] || die "Provider DID not found at $PROVIDER_URL/api/v1/mates/myself"
-  # The auth API takes participant ids base64url-encoded, without padding.
-  segment=$(printf '%s' "$provider_did" | base64 | tr -d '\n=' | tr '+/' '-_')
-  token=$(curl_j GET "$CONSUMER_URL/api/v1/peer-connection/token/${segment}?requested=true" \
-    | jq -r 'if type == "string" then . else empty end' 2>/dev/null || true)
-  [[ -n "$token" ]] \
-    || die "The consumer has no approved grant with the provider: onboarding step 4 must succeed"
-  ok "Token fetched (${#token} chars)"
-  echo "$token"
-}
+# The TCK always calls itself TCK_PARTICIPANT and holds no GNAP grant: in TCK mode
+# (DSP_TCK_MAPPING) both agents take that id as its token, on their DSP routes and towards it.
+TCK_TOKEN="TCK_PARTICIPANT"
 
 # ── PHASE 4 & 5: Seeding ──────────────────────────────────────────────────────
 run_seeding() {
@@ -286,7 +273,8 @@ dataspacetck.dsp.connector.transfer.initiate.url=${consumer_url}/dsp/current/tra
 # ── Catalog ───────────────────────────────────────────────────────────────────
 CAT_01_01_DATASETID=$(lookup_ds CAT0101)
 CAT_01_02_DATASETID=$(lookup_ds CAT0102)
-CAT_01_03_DATASETID=$(lookup_ds CAT0103)
+# CAT:01-03 asks for a dataset that must not exist, so it gets a fresh id, never a seeded one.
+CAT_01_03_DATASETID=urn:dataset:$(uuidgen | tr 'A-Z' 'a-z')
 
 # ── Negotiation Provider (CN) ─────────────────────────────────────────────────
 CN_01_01_DATASETID=$(lookup_ds CN0101)
@@ -492,10 +480,7 @@ main() {
 
   run_seeding
 
-  local token
-  token=$(get_peer_token_for_tck)
-
-  generate_properties "$token"
+  generate_properties "$TCK_TOKEN"
 
   if [[ "$SEED_ONLY" == "true" ]]; then
     ok "Seeding completed. tck.properties ready."

@@ -27,6 +27,10 @@
 //! one message through its outbound flow. The [`TckWorker`] plays the queued steps with pauses
 //! and retries, one task per scenario.
 //!
+//! In TCK mode the TCK is a peer like any other, but it calls itself `TCK_PARTICIPANT` and
+//! cannot hold a GNAP grant: [`TckPeer`] accepts that id as its token on the DSP routes
+//! (`PeerAuth`) and presents it when calling the TCK (`obtain_peer_token`).
+//!
 //! ## 1. The script table
 //!
 //! ```rust,ignore
@@ -67,10 +71,12 @@
 //! ```
 
 pub mod mapping;
+pub mod peer;
 pub mod scenarios;
 pub mod worker;
 
 pub use mapping::{TckMapping, TCK_MAPPING_ENV};
+pub use peer::TckPeer;
 pub use scenarios::{TckJob, TckJobs, TckQueue, TckScenarios, TckScriptTrait, TckStep};
 pub use worker::{TckPlayerTrait, TckWorker};
 

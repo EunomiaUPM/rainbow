@@ -34,6 +34,7 @@ use ymir::types::participants::Visibility;
 use ymir::utils::bearer_headers;
 
 use crate::oauth::Owner;
+use crate::tck::TckPeer;
 
 pub mod remote;
 
@@ -114,6 +115,9 @@ pub async fn obtain_peer_token(
     participant_id: &str,
     requested: bool,
 ) -> Outcome<Option<String>> {
+    if let Some(token) = TckPeer::token_for(TckPeer::enabled(), participant_id) {
+        return Ok(Some(token));
+    }
     let first = grants
         .peer_token(user, participant_id.to_string(), requested)
         .await?;

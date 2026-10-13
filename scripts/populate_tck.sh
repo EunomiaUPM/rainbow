@@ -39,6 +39,8 @@ TPL_NAME=""
 TPL_VER=""
 CONSUMER_DID=""
 PROVIDER_DID=""
+# The id the TCK always uses for itself; in TCK mode the agents also take it as its token.
+TCK_PARTICIPANT="TCK_PARTICIPANT"
 declare -A DS OFFER AGR_PROV AGR_CONS
 
 # ── Catalog seeding ──────────────────────────────────────────────────────────
@@ -158,47 +160,51 @@ make_dataset() {
 
 # ── Agreement seeding ────────────────────────────────────────────────────────
 seed_agreements() {
-  log "Seeding agreements for TCK (all stored in provider DB)"
+  log "Seeding agreements for TCK, with the TCK (TCK_PARTICIPANT) as the other party"
 
   local anchor_ds="${DS[CN0101]}"
 
-  log "Creating 16 provider-role agreements (TP*)..."
+  log "Creating 16 provider-role agreements (TP*) in the provider..."
   for key in TP0101 TP0102 TP0103 TP0104 TP0105 \
              TP0201 TP0202 TP0203 TP0204 TP0205 \
              TP0301 TP0302 TP0303 TP0304 TP0305 TP0306; do
-    AGR_PROV[$key]=$(make_agreement "$anchor_ds")
+    AGR_PROV[$key]=$(make_agreement "$PROVIDER_URL" PROVIDER "$anchor_ds" "$PROVIDER_DID" "$TCK_PARTICIPANT")
     ok "$key - ${AGR_PROV[$key]:0:40}..."
   done
 
-  log "Creating 16 consumer-role agreements (TPC*)..."
+  log "Creating 16 consumer-role agreements (TPC*) in the consumer..."
   for key in TPC0101 TPC0102 TPC0103 TPC0104 TPC0105 \
              TPC0201 TPC0202 TPC0203 TPC0204 TPC0205 \
              TPC0301 TPC0302 TPC0303 TPC0304 TPC0305 TPC0306; do
-    AGR_CONS[$key]=$(make_agreement "$anchor_ds")
+    AGR_CONS[$key]=$(make_agreement "$CONSUMER_URL" CONSUMER "$anchor_ds" "$TCK_PARTICIPANT" "$CONSUMER_DID")
     ok "$key - ${AGR_CONS[$key]:0:40}..."
   done
 }
 
+# An agreement stored in the agent at `url` (our side plays `role`) under an AGREED process
+# with the TCK, as if negotiated with it.
 make_agreement() {
-  local ds_id=$1
+  local url=$1 role=$2 ds_id=$3 provider=$4 consumer=$5
   local lid="urn:uuid:$(new_uuid)"
   local rid="urn:uuid:$(new_uuid)"
+  local direction=OUTGOING
+  [[ "$role" == "CONSUMER" ]] && direction=INCOMING
 
   local proc_id
-  proc_id=$(curl_j POST "$PROVIDER_URL/api/v1/negotiation-agent/negotiation-processes" \
-    "$(jq -n --arg peer "$CONSUMER_DID" --arg lid "$lid" --arg rid "$rid" '{
+  proc_id=$(curl_j POST "$url/api/v1/negotiation-agent/negotiation-processes" \
+    "$(jq -n --arg peer "$TCK_PARTICIPANT" --arg role "$role" --arg lid "$lid" --arg rid "$rid" '{
       "state": "AGREED",
       "associatedAgentPeer": $peer,
       "protocol": "dataspace-protocol-http",
-      "role": "PROVIDER",
+      "role": $role,
       "identifiers": {"localId": $lid, "remoteId": $rid}
     }')" | jq -r '.id')
 
   local msg_id
-  msg_id=$(curl_j POST "$PROVIDER_URL/api/v1/negotiation-agent/negotiation-messages" \
-    "$(jq -n --arg pid "$proc_id" '{
+  msg_id=$(curl_j POST "$url/api/v1/negotiation-agent/negotiation-messages" \
+    "$(jq -n --arg pid "$proc_id" --arg dir "$direction" '{
       "negotiationAgentProcessId": $pid,
-      "direction": "OUTGOING",
+      "direction": $dir,
       "protocol": "dataspace-protocol-http",
       "messageType": "CONTRACT_AGREEMENT",
       "stateTransitionFrom": "ACCEPTED",
@@ -207,9 +213,9 @@ make_agreement() {
     }')" | jq -r '.id')
 
   local agr_uid="urn:agreement:tck-$(new_uuid)"
-  curl_j POST "$PROVIDER_URL/api/v1/negotiation-agent/agreements" \
+  curl_j POST "$url/api/v1/negotiation-agent/agreements" \
     "$(jq -n --arg pid "$proc_id" --arg mid "$msg_id" \
-          --arg cons "$CONSUMER_DID" --arg prov "$PROVIDER_DID" \
+          --arg cons "$consumer" --arg prov "$provider" \
           --arg tgt "$ds_id" --arg uid "$agr_uid" '{
       "negotiationAgentProcessId": $pid,
       "negotiationAgentMessageId": $mid,

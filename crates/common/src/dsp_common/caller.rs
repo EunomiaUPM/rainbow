@@ -31,6 +31,7 @@ use ymir::types::oauth::UserInfo;
 use crate::dsp_common::DspActor;
 use crate::facades::grants_facade::{GrantsFacadeTrait, VerifiedPeer};
 use crate::facades::mates_facade::MatesFacadeTrait;
+use crate::tck::TckPeer;
 
 /// Who acts on a DSP process.
 #[derive(Debug, Clone)]
@@ -86,16 +87,25 @@ pub struct PeerAuth {
     grants: Arc<dyn GrantsFacadeTrait>,
     mates: Arc<dyn MatesFacadeTrait>,
     rejection: StatusCode,
+    tck: bool,
 }
 
 impl PeerAuth {
-    /// Rejects like a missing process (DSP 10.1.2.3), so probing cannot reveal which exist.
+    /// Rejects like a missing process (DSP 10.1.2.3), so probing cannot reveal which exist;
+    /// in TCK mode it also accepts the TCK's token.
     pub fn new(grants: Arc<dyn GrantsFacadeTrait>, mates: Arc<dyn MatesFacadeTrait>) -> Self {
         Self {
             grants,
             mates,
             rejection: StatusCode::NOT_FOUND,
+            tck: TckPeer::enabled(),
         }
+    }
+
+    /// Accepts the TCK's token or not, whatever the environment says.
+    pub fn tck_mode(mut self, enabled: bool) -> Self {
+        self.tck = enabled;
+        self
     }
 
     /// Answers `status` instead to a missing or rejected token.
@@ -109,8 +119,12 @@ impl PeerAuth {
         let Ok(token) = OauthHttpMiddleware::bearer(request.headers()).map(str::to_owned) else {
             return auth.rejection.into_response();
         };
-        let Ok(peer) = auth.grants.verify_token(token).await else {
-            return auth.rejection.into_response();
+        let peer = match TckPeer::verify(auth.tck, &token) {
+            Some(tck) => tck,
+            None => match auth.grants.verify_token(token).await {
+                Ok(peer) => peer,
+                Err(_) => return auth.rejection.into_response(),
+            },
         };
         let mate = auth
             .mates
