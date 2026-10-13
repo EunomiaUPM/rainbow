@@ -12,6 +12,7 @@ import {
   useRpcSetupFinalization,
   useRpcSetupTermination,
 } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useRouter } from "@tanstack/react-router";
 import React, { useContext } from "react";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
@@ -38,6 +39,8 @@ export const ContractNegotiationTerminationDialog = ({
     }
     await terminateAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationTerminationMessage",
         consumerPid: process.identifiers.consumerPid,
         providerPid: process.identifiers.providerPid,
         code: "TERMINATED",

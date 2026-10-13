@@ -346,6 +346,7 @@ export * from './rpcNegotiationOfferInitResult';
 export * from './rpcNegotiationOfferMessageDto';
 export * from './rpcNegotiationOfferResult';
 export * from './rpcNegotiationPidsDto';
+export * from './rpcNegotiationPidsDtoType';
 export * from './rpcNegotiationPidsResult';
 export * from './rpcNegotiationRequestInitMessageDto';
 export * from './rpcNegotiationRequestInitResult';

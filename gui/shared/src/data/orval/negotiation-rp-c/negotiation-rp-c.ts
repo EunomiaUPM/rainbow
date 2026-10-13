@@ -51,9 +51,9 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * @summary Accept the current offer (consumer)
  */
-export type bffRpcSetupAcceptanceResponse201 = {
+export type bffRpcSetupAcceptanceResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type bffRpcSetupAcceptanceResponse400 = {
@@ -65,11 +65,26 @@ export type bffRpcSetupAcceptanceResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type bffRpcSetupAcceptanceResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type bffRpcSetupAcceptanceResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type bffRpcSetupAcceptanceResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type bffRpcSetupAcceptanceResponseSuccess = (bffRpcSetupAcceptanceResponse201) & {
+export type bffRpcSetupAcceptanceResponseSuccess = (bffRpcSetupAcceptanceResponse200) & {
   headers: Headers;
 };
-export type bffRpcSetupAcceptanceResponseError = (bffRpcSetupAcceptanceResponse400 | bffRpcSetupAcceptanceResponse401) & {
+export type bffRpcSetupAcceptanceResponseError = (bffRpcSetupAcceptanceResponse400 | bffRpcSetupAcceptanceResponse401 | bffRpcSetupAcceptanceResponse404 | bffRpcSetupAcceptanceResponse409 | bffRpcSetupAcceptanceResponse502) & {
   headers: Headers;
 };
 
@@ -143,12 +158,12 @@ export const useBffRpcSetupAcceptance = <TError = ErrorType<RpcNegotiationErrorR
       return useMutation(getBffRpcSetupAcceptanceMutationOptions(options), queryClient);
     }
     /**
- * Sends the agreement, then the verification and the `FINALIZED` event.
- * @summary Agree, verify and finalize (provider)
+ * Sends the agreement. Verifying is the consumer's message and finalizing follows it, each through its own RPC.
+ * @summary Agree (provider)
  */
-export type bffRpcSetupAgreementResponse201 = {
+export type bffRpcSetupAgreementResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type bffRpcSetupAgreementResponse400 = {
@@ -160,11 +175,26 @@ export type bffRpcSetupAgreementResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type bffRpcSetupAgreementResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type bffRpcSetupAgreementResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type bffRpcSetupAgreementResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type bffRpcSetupAgreementResponseSuccess = (bffRpcSetupAgreementResponse201) & {
+export type bffRpcSetupAgreementResponseSuccess = (bffRpcSetupAgreementResponse200) & {
   headers: Headers;
 };
-export type bffRpcSetupAgreementResponseError = (bffRpcSetupAgreementResponse400 | bffRpcSetupAgreementResponse401) & {
+export type bffRpcSetupAgreementResponseError = (bffRpcSetupAgreementResponse400 | bffRpcSetupAgreementResponse401 | bffRpcSetupAgreementResponse404 | bffRpcSetupAgreementResponse409 | bffRpcSetupAgreementResponse502) & {
   headers: Headers;
 };
 
@@ -225,7 +255,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type BffRpcSetupAgreementMutationError = ErrorType<RpcNegotiationErrorResponse | UnauthorizedResponse>
 
     /**
- * @summary Agree, verify and finalize (provider)
+ * @summary Agree (provider)
  */
 export const useBffRpcSetupAgreement = <TError = ErrorType<RpcNegotiationErrorResponse | UnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRpcSetupAgreement>>, TError,{data: BodyType<RpcNegotiationPidsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -254,11 +284,26 @@ export type bffRpcSetupOfferInitResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type bffRpcSetupOfferInitResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type bffRpcSetupOfferInitResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type bffRpcSetupOfferInitResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
 export type bffRpcSetupOfferInitResponseSuccess = (bffRpcSetupOfferInitResponse201) & {
   headers: Headers;
 };
-export type bffRpcSetupOfferInitResponseError = (bffRpcSetupOfferInitResponse400 | bffRpcSetupOfferInitResponse401) & {
+export type bffRpcSetupOfferInitResponseError = (bffRpcSetupOfferInitResponse400 | bffRpcSetupOfferInitResponse401 | bffRpcSetupOfferInitResponse404 | bffRpcSetupOfferInitResponse409 | bffRpcSetupOfferInitResponse502) & {
   headers: Headers;
 };
 
@@ -348,11 +393,26 @@ export type bffRpcSetupRequestInitResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type bffRpcSetupRequestInitResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type bffRpcSetupRequestInitResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type bffRpcSetupRequestInitResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
 export type bffRpcSetupRequestInitResponseSuccess = (bffRpcSetupRequestInitResponse201) & {
   headers: Headers;
 };
-export type bffRpcSetupRequestInitResponseError = (bffRpcSetupRequestInitResponse400 | bffRpcSetupRequestInitResponse401) & {
+export type bffRpcSetupRequestInitResponseError = (bffRpcSetupRequestInitResponse400 | bffRpcSetupRequestInitResponse401 | bffRpcSetupRequestInitResponse404 | bffRpcSetupRequestInitResponse409 | bffRpcSetupRequestInitResponse502) & {
   headers: Headers;
 };
 
@@ -428,9 +488,9 @@ export const useBffRpcSetupRequestInit = <TError = ErrorType<RpcNegotiationError
     /**
  * @summary Terminate the negotiation (either role)
  */
-export type bffRpcSetupTerminationResponse201 = {
+export type bffRpcSetupTerminationResponse200 = {
   data: RpcNegotiationTerminationResult
-  status: 201
+  status: 200
 }
 
 export type bffRpcSetupTerminationResponse400 = {
@@ -442,11 +502,26 @@ export type bffRpcSetupTerminationResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type bffRpcSetupTerminationResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type bffRpcSetupTerminationResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type bffRpcSetupTerminationResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type bffRpcSetupTerminationResponseSuccess = (bffRpcSetupTerminationResponse201) & {
+export type bffRpcSetupTerminationResponseSuccess = (bffRpcSetupTerminationResponse200) & {
   headers: Headers;
 };
-export type bffRpcSetupTerminationResponseError = (bffRpcSetupTerminationResponse400 | bffRpcSetupTerminationResponse401) & {
+export type bffRpcSetupTerminationResponseError = (bffRpcSetupTerminationResponse400 | bffRpcSetupTerminationResponse401 | bffRpcSetupTerminationResponse404 | bffRpcSetupTerminationResponse409 | bffRpcSetupTerminationResponse502) & {
   headers: Headers;
 };
 
@@ -523,9 +598,9 @@ export const useBffRpcSetupTermination = <TError = ErrorType<RpcNegotiationError
  * Sends a `ContractNegotiationEventMessage` with event type `ACCEPTED`.
  * @summary Accept the current offer (consumer)
  */
-export type rpcSetupAcceptanceResponse201 = {
+export type rpcSetupAcceptanceResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupAcceptanceResponse400 = {
@@ -537,11 +612,26 @@ export type rpcSetupAcceptanceResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupAcceptanceResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupAcceptanceResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupAcceptanceResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupAcceptanceResponseSuccess = (rpcSetupAcceptanceResponse201) & {
+export type rpcSetupAcceptanceResponseSuccess = (rpcSetupAcceptanceResponse200) & {
   headers: Headers;
 };
-export type rpcSetupAcceptanceResponseError = (rpcSetupAcceptanceResponse400 | rpcSetupAcceptanceResponse401) & {
+export type rpcSetupAcceptanceResponseError = (rpcSetupAcceptanceResponse400 | rpcSetupAcceptanceResponse401 | rpcSetupAcceptanceResponse404 | rpcSetupAcceptanceResponse409 | rpcSetupAcceptanceResponse502) & {
   headers: Headers;
 };
 
@@ -617,9 +707,9 @@ export const useRpcSetupAcceptance = <TError = ErrorType<RpcNegotiationErrorResp
     /**
  * @summary Send the agreement (provider)
  */
-export type rpcSetupAgreementResponse201 = {
+export type rpcSetupAgreementResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupAgreementResponse400 = {
@@ -631,11 +721,26 @@ export type rpcSetupAgreementResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupAgreementResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupAgreementResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupAgreementResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupAgreementResponseSuccess = (rpcSetupAgreementResponse201) & {
+export type rpcSetupAgreementResponseSuccess = (rpcSetupAgreementResponse200) & {
   headers: Headers;
 };
-export type rpcSetupAgreementResponseError = (rpcSetupAgreementResponse400 | rpcSetupAgreementResponse401) & {
+export type rpcSetupAgreementResponseError = (rpcSetupAgreementResponse400 | rpcSetupAgreementResponse401 | rpcSetupAgreementResponse404 | rpcSetupAgreementResponse409 | rpcSetupAgreementResponse502) & {
   headers: Headers;
 };
 
@@ -712,9 +817,9 @@ export const useRpcSetupAgreement = <TError = ErrorType<RpcNegotiationErrorRespo
  * Sends a `ContractNegotiationEventMessage` with event type `FINALIZED`.
  * @summary Finalize the negotiation (provider)
  */
-export type rpcSetupFinalizationResponse201 = {
+export type rpcSetupFinalizationResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupFinalizationResponse400 = {
@@ -726,11 +831,26 @@ export type rpcSetupFinalizationResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupFinalizationResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupFinalizationResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupFinalizationResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupFinalizationResponseSuccess = (rpcSetupFinalizationResponse201) & {
+export type rpcSetupFinalizationResponseSuccess = (rpcSetupFinalizationResponse200) & {
   headers: Headers;
 };
-export type rpcSetupFinalizationResponseError = (rpcSetupFinalizationResponse400 | rpcSetupFinalizationResponse401) & {
+export type rpcSetupFinalizationResponseError = (rpcSetupFinalizationResponse400 | rpcSetupFinalizationResponse401 | rpcSetupFinalizationResponse404 | rpcSetupFinalizationResponse409 | rpcSetupFinalizationResponse502) & {
   headers: Headers;
 };
 
@@ -806,9 +926,9 @@ export const useRpcSetupFinalization = <TError = ErrorType<RpcNegotiationErrorRe
     /**
  * @summary Send a counter offer (provider)
  */
-export type rpcSetupOfferResponse201 = {
+export type rpcSetupOfferResponse200 = {
   data: RpcNegotiationOfferResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupOfferResponse400 = {
@@ -820,11 +940,26 @@ export type rpcSetupOfferResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupOfferResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupOfferResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupOfferResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupOfferResponseSuccess = (rpcSetupOfferResponse201) & {
+export type rpcSetupOfferResponseSuccess = (rpcSetupOfferResponse200) & {
   headers: Headers;
 };
-export type rpcSetupOfferResponseError = (rpcSetupOfferResponse400 | rpcSetupOfferResponse401) & {
+export type rpcSetupOfferResponseError = (rpcSetupOfferResponse400 | rpcSetupOfferResponse401 | rpcSetupOfferResponse404 | rpcSetupOfferResponse409 | rpcSetupOfferResponse502) & {
   headers: Headers;
 };
 
@@ -914,11 +1049,26 @@ export type rpcSetupOfferInitResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupOfferInitResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupOfferInitResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupOfferInitResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
 export type rpcSetupOfferInitResponseSuccess = (rpcSetupOfferInitResponse201) & {
   headers: Headers;
 };
-export type rpcSetupOfferInitResponseError = (rpcSetupOfferInitResponse400 | rpcSetupOfferInitResponse401) & {
+export type rpcSetupOfferInitResponseError = (rpcSetupOfferInitResponse400 | rpcSetupOfferInitResponse401 | rpcSetupOfferInitResponse404 | rpcSetupOfferInitResponse409 | rpcSetupOfferInitResponse502) & {
   headers: Headers;
 };
 
@@ -994,9 +1144,9 @@ export const useRpcSetupOfferInit = <TError = ErrorType<RpcNegotiationErrorRespo
     /**
  * @summary Send a counter request (consumer)
  */
-export type rpcSetupRequestResponse201 = {
+export type rpcSetupRequestResponse200 = {
   data: RpcNegotiationRequestResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupRequestResponse400 = {
@@ -1008,11 +1158,26 @@ export type rpcSetupRequestResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupRequestResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupRequestResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupRequestResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupRequestResponseSuccess = (rpcSetupRequestResponse201) & {
+export type rpcSetupRequestResponseSuccess = (rpcSetupRequestResponse200) & {
   headers: Headers;
 };
-export type rpcSetupRequestResponseError = (rpcSetupRequestResponse400 | rpcSetupRequestResponse401) & {
+export type rpcSetupRequestResponseError = (rpcSetupRequestResponse400 | rpcSetupRequestResponse401 | rpcSetupRequestResponse404 | rpcSetupRequestResponse409 | rpcSetupRequestResponse502) & {
   headers: Headers;
 };
 
@@ -1102,11 +1267,26 @@ export type rpcSetupRequestInitResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupRequestInitResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupRequestInitResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupRequestInitResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
 export type rpcSetupRequestInitResponseSuccess = (rpcSetupRequestInitResponse201) & {
   headers: Headers;
 };
-export type rpcSetupRequestInitResponseError = (rpcSetupRequestInitResponse400 | rpcSetupRequestInitResponse401) & {
+export type rpcSetupRequestInitResponseError = (rpcSetupRequestInitResponse400 | rpcSetupRequestInitResponse401 | rpcSetupRequestInitResponse404 | rpcSetupRequestInitResponse409 | rpcSetupRequestInitResponse502) & {
   headers: Headers;
 };
 
@@ -1182,9 +1362,9 @@ export const useRpcSetupRequestInit = <TError = ErrorType<RpcNegotiationErrorRes
     /**
  * @summary Terminate the negotiation (either role)
  */
-export type rpcSetupTerminationResponse201 = {
+export type rpcSetupTerminationResponse200 = {
   data: RpcNegotiationTerminationResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupTerminationResponse400 = {
@@ -1196,11 +1376,26 @@ export type rpcSetupTerminationResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupTerminationResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupTerminationResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupTerminationResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupTerminationResponseSuccess = (rpcSetupTerminationResponse201) & {
+export type rpcSetupTerminationResponseSuccess = (rpcSetupTerminationResponse200) & {
   headers: Headers;
 };
-export type rpcSetupTerminationResponseError = (rpcSetupTerminationResponse400 | rpcSetupTerminationResponse401) & {
+export type rpcSetupTerminationResponseError = (rpcSetupTerminationResponse400 | rpcSetupTerminationResponse401 | rpcSetupTerminationResponse404 | rpcSetupTerminationResponse409 | rpcSetupTerminationResponse502) & {
   headers: Headers;
 };
 
@@ -1276,9 +1471,9 @@ export const useRpcSetupTermination = <TError = ErrorType<RpcNegotiationErrorRes
     /**
  * @summary Verify the agreement (consumer)
  */
-export type rpcSetupVerificationResponse201 = {
+export type rpcSetupVerificationResponse200 = {
   data: RpcNegotiationPidsResult
-  status: 201
+  status: 200
 }
 
 export type rpcSetupVerificationResponse400 = {
@@ -1290,11 +1485,26 @@ export type rpcSetupVerificationResponse401 = {
   data: UnauthorizedResponse
   status: 401
 }
+
+export type rpcSetupVerificationResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type rpcSetupVerificationResponse409 = {
+  data: RpcNegotiationErrorResponse
+  status: 409
+}
+
+export type rpcSetupVerificationResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
+}
     
-export type rpcSetupVerificationResponseSuccess = (rpcSetupVerificationResponse201) & {
+export type rpcSetupVerificationResponseSuccess = (rpcSetupVerificationResponse200) & {
   headers: Headers;
 };
-export type rpcSetupVerificationResponseError = (rpcSetupVerificationResponse400 | rpcSetupVerificationResponse401) & {
+export type rpcSetupVerificationResponseError = (rpcSetupVerificationResponse400 | rpcSetupVerificationResponse401 | rpcSetupVerificationResponse404 | rpcSetupVerificationResponse409 | rpcSetupVerificationResponse502) & {
   headers: Headers;
 };
 
@@ -1368,7 +1578,7 @@ export const useRpcSetupVerification = <TError = ErrorType<RpcNegotiationErrorRe
       return useMutation(getRpcSetupVerificationMutationOptions(options), queryClient);
     }
     /**
- * Builds an initial request referencing `offerId`, with this agent as callback.
+ * Served only in TCK mode (`DSP_TCK_MAPPING`), without user auth: sends an initial request for `offerId` on `datasetId` as the agent itself, with where the TCK reached us as callback.
  * @summary Start a negotiation for the DSP TCK
  */
 export type tckInitiateNegotiationResponse201 = {
@@ -1381,15 +1591,20 @@ export type tckInitiateNegotiationResponse400 = {
   status: 400
 }
 
-export type tckInitiateNegotiationResponse401 = {
-  data: UnauthorizedResponse
-  status: 401
+export type tckInitiateNegotiationResponse404 = {
+  data: RpcNegotiationErrorResponse
+  status: 404
+}
+
+export type tckInitiateNegotiationResponse502 = {
+  data: RpcNegotiationErrorResponse
+  status: 502
 }
     
 export type tckInitiateNegotiationResponseSuccess = (tckInitiateNegotiationResponse201) & {
   headers: Headers;
 };
-export type tckInitiateNegotiationResponseError = (tckInitiateNegotiationResponse400 | tckInitiateNegotiationResponse401) & {
+export type tckInitiateNegotiationResponseError = (tckInitiateNegotiationResponse400 | tckInitiateNegotiationResponse404 | tckInitiateNegotiationResponse502) & {
   headers: Headers;
 };
 
@@ -1418,7 +1633,7 @@ export const tckInitiateNegotiation = async (tckNegotiationInitiateRequest: TckN
 
 
 
-export const getTckInitiateNegotiationMutationOptions = <TError = ErrorType<RpcNegotiationErrorResponse | UnauthorizedResponse>,
+export const getTckInitiateNegotiationMutationOptions = <TError = ErrorType<RpcNegotiationErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tckInitiateNegotiation>>, TError,{data: BodyType<TckNegotiationInitiateRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof tckInitiateNegotiation>>, TError,{data: BodyType<TckNegotiationInitiateRequest>}, TContext> => {
 
@@ -1447,12 +1662,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type TckInitiateNegotiationMutationResult = NonNullable<Awaited<ReturnType<typeof tckInitiateNegotiation>>>
     export type TckInitiateNegotiationMutationBody = BodyType<TckNegotiationInitiateRequest>
-    export type TckInitiateNegotiationMutationError = ErrorType<RpcNegotiationErrorResponse | UnauthorizedResponse>
+    export type TckInitiateNegotiationMutationError = ErrorType<RpcNegotiationErrorResponse>
 
     /**
  * @summary Start a negotiation for the DSP TCK
  */
-export const useTckInitiateNegotiation = <TError = ErrorType<RpcNegotiationErrorResponse | UnauthorizedResponse>,
+export const useTckInitiateNegotiation = <TError = ErrorType<RpcNegotiationErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tckInitiateNegotiation>>, TError,{data: BodyType<TckNegotiationInitiateRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof tckInitiateNegotiation>>,

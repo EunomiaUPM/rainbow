@@ -8,8 +8,10 @@ info:
     the peer with the token it obtained through GNAP onboarding; a missing process and a process
     of another peer both answer 404.
 
-    The RPC endpoints make this agent send the next message of a negotiation; the BFF variants
-    are the shortcuts the admin GUI uses (`setup-agreement` also verifies and finalizes).
+    The RPC endpoints make this agent send the next message of a negotiation. Their bodies are
+    eunomia JSON-LD (`@context` the eunomia context, `@type` the RPC), read through RDF like the
+    DSP messages they become. The BFF variants are the routes the admin GUI uses; each sends one
+    message, as its RPC does.
   version: 1.0.0
   license:
     name: GPL-3.0-or-later
@@ -52,7 +54,7 @@ paths:
       - Negotiation Protocol
       operationId: initialContractRequest
       summary: Initial contract request (provider)
-      description: Starts a negotiation; repeating a known request answers 200 instead of 201.
+      description: Starts a negotiation (201); repeating the same message replays the first answer.
       security:
       - peerBearer: []
       requestBody:
@@ -101,7 +103,7 @@ paths:
       - Negotiation Protocol
       operationId: initialOffer
       summary: Initial contract offer (consumer)
-      description: Starts a provider-initiated negotiation; a known offer answers 200 instead of 201.
+      description: Starts a negotiation (201); repeating the same message replays the first answer.
       security:
       - peerBearer: []
       requestBody:
@@ -269,6 +271,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-request:
     post:
       tags:
@@ -284,7 +292,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationRequestMessageDto'
       responses:
-        '201':
+        '200':
           description: Request sent
           content:
             application/json:
@@ -294,6 +302,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-offer-init:
     post:
       tags:
@@ -319,6 +333,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-offer:
     post:
       tags:
@@ -334,7 +354,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationOfferMessageDto'
       responses:
-        '201':
+        '200':
           description: Offer sent
           content:
             application/json:
@@ -344,6 +364,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-acceptance:
     post:
       tags:
@@ -360,7 +386,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
+        '200':
           description: Event sent
           content:
             application/json:
@@ -370,6 +396,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-agreement:
     post:
       tags:
@@ -385,7 +417,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
+        '200':
           description: Agreement sent
           content:
             application/json:
@@ -395,6 +427,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-verification:
     post:
       tags:
@@ -410,7 +448,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
+        '200':
           description: Verification sent
           content:
             application/json:
@@ -420,6 +458,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-finalization:
     post:
       tags:
@@ -436,7 +480,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
+        '200':
           description: Event sent
           content:
             application/json:
@@ -446,6 +490,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/rpc/setup-termination:
     post:
       tags:
@@ -461,7 +511,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationTerminationMessageDto'
       responses:
-        '201':
+        '200':
           description: Termination sent
           content:
             application/json:
@@ -471,15 +521,20 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/tck/negotiations/requests:
     post:
       tags:
       - Negotiation RPC
       operationId: tckInitiateNegotiation
       summary: Start a negotiation for the DSP TCK
-      description: Builds an initial request referencing `offerId`, with this agent as callback.
-      security:
-      - bearerAuth: []
+      description: 'Served only in TCK mode (`DSP_TCK_MAPPING`), without user auth: sends an initial request for `offerId` on `datasetId` as the agent itself, with where the TCK reached us as callback.'
+      security: []
       requestBody:
         required: true
         content:
@@ -495,8 +550,10 @@ paths:
                 $ref: '#/components/schemas/RpcNegotiationRequestInitResult'
         '400':
           $ref: '#/components/responses/RpcNegotiationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/bff-rpc/setup-request-init:
     post:
       tags:
@@ -522,6 +579,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/bff-rpc/setup-offer-init:
     post:
       tags:
@@ -547,6 +610,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/bff-rpc/setup-acceptance:
     post:
       tags:
@@ -562,7 +631,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
+        '200':
           description: Event sent
           content:
             application/json:
@@ -572,13 +641,19 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/bff-rpc/setup-agreement:
     post:
       tags:
       - Negotiation BFF RPC
       operationId: bffRpcSetupAgreement
-      summary: Agree, verify and finalize (provider)
-      description: Sends the agreement, then the verification and the `FINALIZED` event.
+      summary: Agree (provider)
+      description: Sends the agreement. Verifying is the consumer's message and finalizing follows it, each through its own RPC.
       security:
       - bearerAuth: []
       requestBody:
@@ -588,8 +663,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationPidsDto'
       responses:
-        '201':
-          description: Result of the final `FINALIZED` event
+        '200':
+          description: Agreement sent
           content:
             application/json:
               schema:
@@ -598,6 +673,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
   /dsp/current/negotiations/bff-rpc/setup-termination:
     post:
       tags:
@@ -613,7 +694,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RpcNegotiationTerminationMessageDto'
       responses:
-        '201':
+        '200':
           description: Termination sent
           content:
             application/json:
@@ -623,6 +704,12 @@ paths:
           $ref: '#/components/responses/RpcNegotiationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '409':
+          $ref: '#/components/responses/RpcNegotiationError'
+        '502':
+          $ref: '#/components/responses/RpcNegotiationError'
 components:
   securitySchemes:
     bearerAuth:
@@ -657,13 +744,11 @@ components:
     PeerUnauthorized:
       description: Missing or unknown peer token (empty body)
     RpcNegotiationError:
-      description: Invalid request, or the peer or this agent rejected the message
+      description: Invalid body (400), unknown negotiation (404), stale or repeated (409), or the peer refused it (502)
       content:
         application/json:
           schema:
-            oneOf:
-            - $ref: '#/components/schemas/RpcNegotiationErrorDto'
-            - $ref: '#/components/schemas/ContractNegotiationError'
+            $ref: '#/components/schemas/ContractNegotiationError'
     Unauthorized:
       description: Missing or invalid bearer token
       content:
@@ -1337,34 +1422,31 @@ components:
         createdAt:
           type: string
           format: date-time
-    RpcNegotiationErrorDto:
-      type: object
-      required:
-      - request
-      - error
-      properties:
-        request:
-          description: The RPC request as received.
-        error:
-          $ref: '#/components/schemas/ContractNegotiationError'
     RpcNegotiationOfferInitMessageDto:
       type: object
       additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - associatedAgentPeer
-      - providerAddress
-      - callbackAddress
+      - consumerAddress
       - offer
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationOfferInitMessage
         associatedAgentPeer:
           type: string
           description: Participant id (DID) of the consumer.
-        providerAddress:
+        consumerAddress:
           type: string
-          description: The consumer's DSP negotiation base URL.
+          description: The consumer's DSP base URL (`/dsp/current`).
         callbackAddress:
           type: string
-          description: This agent's DSP negotiation base URL.
+          description: This agent's DSP base URL (`/dsp/current`); defaults to its own.
         offer:
           $ref: '#/components/schemas/ContractRequestOffer'
     RpcNegotiationOfferInitResult:
@@ -1380,16 +1462,23 @@ components:
       type: object
       additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - offer
-      - providerPid
-      - consumerPid
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationOfferMessage
         offer:
           $ref: '#/components/schemas/ContractRequestOffer'
         providerPid:
           type: string
         consumerPid:
           type: string
+      description: Identifies the negotiation by `providerPid` or `consumerPid`.
     RpcNegotiationOfferResult:
       allOf:
       - $ref: '#/components/schemas/RpcNegotiationResultBase'
@@ -1401,12 +1490,22 @@ components:
             $ref: '#/components/schemas/RpcNegotiationOfferMessageDto'
     RpcNegotiationPidsDto:
       type: object
-      description: Identifies the negotiation for acceptance, agreement, verification or finalization.
+      description: Identifies the negotiation; `providerPid` or `consumerPid` is enough. `@type` says which message goes out.
       additionalProperties: false
       required:
-      - providerPid
-      - consumerPid
+      - '@context'
+      - '@type'
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          enum:
+          - RpcNegotiationAcceptanceMessage
+          - RpcNegotiationAgreementMessage
+          - RpcNegotiationVerificationMessage
+          - RpcNegotiationFinalizationMessage
         providerPid:
           type: string
         consumerPid:
@@ -1424,20 +1523,27 @@ components:
       type: object
       additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - associatedAgentPeer
       - providerAddress
-      - callbackAddress
       - offer
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationRequestInitMessage
         associatedAgentPeer:
           type: string
           description: Participant id (DID) of the provider.
         providerAddress:
           type: string
-          description: The provider's DSP negotiation base URL.
+          description: The provider's DSP base URL (`/dsp/current`).
         callbackAddress:
           type: string
-          description: This agent's DSP negotiation base URL.
+          description: This agent's DSP base URL (`/dsp/current`); defaults to its own.
         offer:
           $ref: '#/components/schemas/ContractRequestOffer'
     RpcNegotiationRequestInitResult:
@@ -1453,16 +1559,23 @@ components:
       type: object
       additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - offer
-      - providerPid
-      - consumerPid
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationRequestMessage
         offer:
           $ref: '#/components/schemas/ContractRequestOffer'
         providerPid:
           type: string
         consumerPid:
           type: string
+      description: Identifies the negotiation by `providerPid` or `consumerPid`.
     RpcNegotiationRequestResult:
       allOf:
       - $ref: '#/components/schemas/RpcNegotiationResultBase'
@@ -1475,20 +1588,41 @@ components:
     RpcNegotiationResultBase:
       type: object
       required:
+      - '@context'
+      - '@type'
+      - request
       - response
       - negotiationAgentModel
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationResult
+        request:
+          description: The RPC body as received.
         response:
-          $ref: '#/components/schemas/ContractNegotiation'
+          description: 'The peer''s answer: its `ContractNegotiation` for an opening message, whatever its 200 carried otherwise.'
+          oneOf:
+          - $ref: '#/components/schemas/ContractNegotiation'
+          - type: 'null'
         negotiationAgentModel:
           $ref: '#/components/schemas/NegotiationProcessDto'
+      description: 'An eunomia `RpcNegotiationResult`: the RPC as sent, the peer''s answer and the process as it stands.'
     RpcNegotiationTerminationMessageDto:
       type: object
       additionalProperties: false
       required:
-      - consumerPid
-      - providerPid
+      - '@context'
+      - '@type'
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcNegotiationTerminationMessage
         consumerPid:
           type: string
         providerPid:
@@ -1503,6 +1637,7 @@ components:
           - 'null'
           items:
             type: string
+      description: Identifies the negotiation by `providerPid` or `consumerPid`.
     RpcNegotiationTerminationResult:
       allOf:
       - $ref: '#/components/schemas/RpcNegotiationResultBase'

@@ -15,11 +15,13 @@ are calls the GUI still makes to routes the backend no longer serves.
 import type { ContractRequestOffer } from './contractRequestOffer';
 
 export interface RpcNegotiationRequestInitMessageDto {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcNegotiationRequestInitMessage';
   /** Participant id (DID) of the provider. */
   associatedAgentPeer: string;
-  /** The provider's DSP negotiation base URL. */
+  /** The provider's DSP base URL (`/dsp/current`). */
   providerAddress: string;
-  /** This agent's DSP negotiation base URL. */
-  callbackAddress: string;
+  /** This agent's DSP base URL (`/dsp/current`); defaults to its own. */
+  callbackAddress?: string;
   offer: ContractRequestOffer;
 }

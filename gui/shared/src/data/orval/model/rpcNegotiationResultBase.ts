@@ -15,7 +15,15 @@ are calls the GUI still makes to routes the backend no longer serves.
 import type { ContractNegotiation } from './contractNegotiation';
 import type { NegotiationProcessDto } from './negotiationProcessDto';
 
+/**
+ * An eunomia `RpcNegotiationResult`: the RPC as sent, the peer's answer and the process as it stands.
+ */
 export interface RpcNegotiationResultBase {
-  response: ContractNegotiation;
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcNegotiationResult';
+  /** The RPC body as received. */
+  request: unknown;
+  /** The peer's answer: its `ContractNegotiation` for an opening message, whatever its 200 carried otherwise. */
+  response: ContractNegotiation | null;
   negotiationAgentModel: NegotiationProcessDto;
 }

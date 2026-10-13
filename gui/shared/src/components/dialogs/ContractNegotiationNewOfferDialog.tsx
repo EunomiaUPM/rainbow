@@ -14,6 +14,7 @@ import {
   useRpcSetupOffer,
   useRpcSetupOfferInit,
 } from "shared/src/data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "shared/src/data/eunomia";
 import {
   useGetNegotiationProcesses,
   useGetOffersByProcessId,
@@ -119,8 +120,10 @@ export const ContractNegotiationNewOfferDialog = ({
 
     const res = await setupOffer({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationOfferInitMessage",
         associatedAgentPeer: selectedParticipant?.participant_id || "",
-        providerAddress: resolvedPath || "", // Use resolved path
+        consumerAddress: resolvedPath || "", // Use resolved path
         callbackAddress: myDspPath || "",
         offer: {
           "@id": policy.id,

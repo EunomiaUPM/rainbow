@@ -68,7 +68,8 @@ function RouteComponent() {
 
   const catalog = data?.status === 200 ? data.data : undefined;
   const datasets = Array.isArray(catalog?.response?.dataset) ? catalog.response.dataset : [];
-  const dataservice = catalog?.response?.service as any;
+  const services = catalog?.response?.service as any;
+  const dataservice = Array.isArray(services) ? services[0] : services;
 
   const filteredDatasets = useMemo(() => {
     if (!searchQuery.trim()) return datasets;

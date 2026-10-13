@@ -2,6 +2,7 @@ import React from "react";
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useBffRpcSetupAcceptance } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
@@ -20,6 +21,8 @@ export const ContractNegotiationBusinessAcceptanceDialog = ({
   const handleSubmit = async () => {
     await acceptAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationAcceptanceMessage",
         consumerPid: process.identifiers!.consumerPid,
         providerPid: process.identifiers!.providerPid,
       },

@@ -1737,6 +1737,7 @@ components:
             type: string
         participantId:
           type: string
+          description: The catalog owner's participant id.
         hasPolicy:
           type: array
           items:
@@ -1744,7 +1745,7 @@ components:
         extraFields: {}
         catalog:
           type: array
-          description: Nested catalogs, full or minimized.
+          description: Nested catalogs, full or minimized; omitted when there are none.
           items:
             type: object
         dataset:
@@ -1752,7 +1753,7 @@ components:
           items:
             $ref: '#/components/schemas/DspDataset'
         service:
-          description: One data service, a minimized one, or a list.
+          description: The data services, as a list (DSP 6); older peers may answer a single one.
           oneOf:
           - $ref: '#/components/schemas/DspDataService'
           - type: array

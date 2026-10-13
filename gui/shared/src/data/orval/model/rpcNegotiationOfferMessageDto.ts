@@ -14,8 +14,13 @@ are calls the GUI still makes to routes the backend no longer serves.
  */
 import type { ContractRequestOffer } from './contractRequestOffer';
 
+/**
+ * Identifies the negotiation by `providerPid` or `consumerPid`.
+ */
 export interface RpcNegotiationOfferMessageDto {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcNegotiationOfferMessage';
   offer: ContractRequestOffer;
-  providerPid: string;
-  consumerPid: string;
+  providerPid?: string;
+  consumerPid?: string;
 }

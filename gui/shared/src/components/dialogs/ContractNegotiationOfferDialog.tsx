@@ -11,6 +11,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
 import { useRpcSetupOffer } from "shared/src/data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "shared/src/data/eunomia";
 import {
   useGetNegotiationProcesses,
   useGetOffersByProcessId,
@@ -88,6 +89,8 @@ export const ContractNegotiationOfferDialog = ({
 
     await setupOffer({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationOfferMessage",
         providerPid,
         consumerPid,
         offer: {

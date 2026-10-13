@@ -19,6 +19,7 @@ import {
   useRpcSetupRequest,
   useRpcSetupRequestInit,
 } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
@@ -89,6 +90,8 @@ export const ContractNegotiationRequestDialog = ({
 
     await dataRequestAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationRequestMessage",
         consumerPid: process.identifiers.consumerPid,
         providerPid: process.identifiers.providerPid,
         offer: {

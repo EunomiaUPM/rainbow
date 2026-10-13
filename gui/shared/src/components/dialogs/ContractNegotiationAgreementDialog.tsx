@@ -10,6 +10,7 @@ import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalIn
 import { BaseProcessDialog, mapCNProcessToInfoItemsForProvider } from "./base";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useRpcSetupAgreement } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
@@ -33,6 +34,8 @@ export const ContractNegotiationAgreementDialog = ({
   const handleSubmit = async () => {
     await agreeAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationAgreementMessage",
         consumerPid: process.identifiers!.consumerPid,
         providerPid: process.identifiers!.providerPid,
       },

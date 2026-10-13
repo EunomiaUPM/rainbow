@@ -36,12 +36,13 @@ export interface DspCatalog {
   modified?: string;
   title?: string;
   description?: string[];
+  /** The catalog owner's participant id. */
   participantId?: string;
   hasPolicy?: OdrlOffer[];
   extraFields?: unknown;
-  /** Nested catalogs, full or minimized. */
+  /** Nested catalogs, full or minimized; omitted when there are none. */
   catalog: DspCatalogCatalogItem[];
   dataset: DspDataset[];
-  /** One data service, a minimized one, or a list. */
+  /** The data services, as a list (DSP 6); older peers may answer a single one. */
   service: DspDataService | DspDataService[];
 }

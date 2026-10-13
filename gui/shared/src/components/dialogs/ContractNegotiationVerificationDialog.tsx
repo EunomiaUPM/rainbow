@@ -9,6 +9,7 @@ import React, { useContext } from "react";
 import { GlobalInfoContext, GlobalInfoContextType } from "../../context/GlobalInfoContext";
 import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { useRpcSetupVerification } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
@@ -37,6 +38,8 @@ export const ContractNegotiationVerificationDialog = ({
     }
     await verifyAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationVerificationMessage",
         providerPid: process.identifiers.providerPid,
         consumerPid: process.identifiers.consumerPid,
       },

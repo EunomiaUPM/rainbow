@@ -13,9 +13,8 @@ are calls the GUI still makes to routes the backend no longer serves.
  * OpenAPI spec version: 1.0.0
  */
 import type { ContractNegotiationError } from './contractNegotiationError';
-import type { RpcNegotiationErrorDto } from './rpcNegotiationErrorDto';
 
 /**
- * Invalid request, or the peer or this agent rejected the message
+ * Invalid body (400), unknown negotiation (404), stale or repeated (409), or the peer refused it (502)
  */
-export type RpcNegotiationErrorResponse = RpcNegotiationErrorDto | ContractNegotiationError;
+export type RpcNegotiationErrorResponse = ContractNegotiationError;

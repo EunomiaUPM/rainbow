@@ -19,6 +19,7 @@ import { BaseProcessDialog } from "./base";
 import { urnInfoItem } from "./base/infoItemMappers";
 import { InfoItemProps } from "../ui/info-list";
 import { useRpcSetupRequestInit } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useNavigate } from "@tanstack/react-router";
 import { OdrlOffer } from "../../data/orval/model";
 import { useMyWellKnownDSPPath, useParticipantDSPPath } from "../../hooks/useWellKnownUrl";
@@ -88,6 +89,8 @@ export const ContractNegotiationNewRequestDialog = ({
 
     const res = await requestAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcNegotiationRequestInitMessage",
         associatedAgentPeer: participantId,
         providerAddress: providerDspPath,
         callbackAddress: myDspPath,

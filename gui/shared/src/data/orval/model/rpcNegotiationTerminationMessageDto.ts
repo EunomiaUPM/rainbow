@@ -13,9 +13,14 @@ are calls the GUI still makes to routes the backend no longer serves.
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Identifies the negotiation by `providerPid` or `consumerPid`.
+ */
 export interface RpcNegotiationTerminationMessageDto {
-  consumerPid: string;
-  providerPid: string;
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcNegotiationTerminationMessage';
+  consumerPid?: string;
+  providerPid?: string;
   /** @nullable */
   code?: string | null;
   /** @nullable */
