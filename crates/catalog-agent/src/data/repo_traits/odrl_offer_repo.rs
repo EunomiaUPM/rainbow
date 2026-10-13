@@ -48,6 +48,12 @@ pub trait OdrlOfferRepositoryTrait: Send + Sync {
         scope: &OwnerScope,
         entity: &Urn,
     ) -> Outcome<Vec<odrl_offer::Model>>;
+    /// Offers attached to any of the entities, in one query.
+    async fn get_odrl_offers_by_entities(
+        &self,
+        scope: &OwnerScope,
+        entities: &[Urn],
+    ) -> Outcome<Vec<odrl_offer::Model>>;
     async fn get_odrl_offer_by_id(
         &self,
         scope: &OwnerScope,

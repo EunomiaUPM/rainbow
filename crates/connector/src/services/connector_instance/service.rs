@@ -26,7 +26,7 @@ use crate::entities::interaction::InteractionConfig;
 use crate::entities::parameters::instance_parameters_map::InstanceParametersMapBuilder;
 use crate::entities::parameters::instance_parameters_resolver::InstanceParametersResolver;
 use crate::entities::parameters::instance_parameters_validator::InstanceParametersValidator;
-use crate::facades::catalog_facade::CatalogFacadeTrait;
+use common::facades::catalog::CatalogFacadeTrait;
 use crate::services::connector_instance::ConnectorInstanceServiceTrait;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -179,9 +179,8 @@ impl ConnectorInstanceServiceTrait for ConnectorInstanceService {
 
         // fetch distribution or error
         let distribution_id = instance_dto.distribution_id.to_string();
-        let _ = self
-            .distribution_facade
-            .resolve_distribution_by_id(user, &distribution_id)
+        self.distribution_facade
+            .get_distribution(user, &instance_dto.distribution_id)
             .await?;
 
         // validate instance parameters

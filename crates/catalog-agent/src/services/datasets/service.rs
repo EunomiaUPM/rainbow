@@ -112,6 +112,19 @@ impl DatasetServiceTrait for DatasetService {
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
+    async fn get_datasets_by_catalog_ids(&self, user: &UserInfo, catalog_ids: &[Urn]) -> Outcome<Vec<DatasetDto>> {
+        if catalog_ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let models = self
+            .repo
+            .get_dataset_repo()
+            .get_datasets_by_catalog_ids(&OwnerScope::seeing(user), catalog_ids)
+            .await?;
+        Ok(models.into_iter().map(DatasetDto::from).collect())
+    }
+
+    #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     async fn get_datasets_by_catalog_id(
         &self,
         user: &UserInfo,

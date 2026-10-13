@@ -102,7 +102,7 @@ impl Participant {
             ),
             &root,
             bus.clone(),
-            &NegotiationPorts::local(auth.clone(), catalog.odrl_policy_service()),
+            &NegotiationPorts::local(auth.clone(), catalog.catalog_facade()),
         )
         .await
         .expect("compose negotiation");
@@ -123,9 +123,8 @@ impl Participant {
                     &config,
                     &root,
                     auth.clone(),
-                    negotiation.agreement_service(),
-                    catalog.dataset_service(),
-                    catalog.distribution_service(),
+                    negotiation.negotiation_facade(),
+                    catalog.catalog_facade(),
                     catalog.local_connector_instances(),
                 )
                 .await

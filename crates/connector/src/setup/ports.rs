@@ -19,7 +19,7 @@
 
 use std::sync::Arc;
 
-use crate::facades::catalog_facade::CatalogFacadeTrait;
+use common::facades::catalog::CatalogFacadeTrait;
 
 /// Ports the connector consumes; today only the hosting catalog.
 #[derive(Clone)]

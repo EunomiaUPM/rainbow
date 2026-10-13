@@ -24,9 +24,12 @@ use axum::Router;
 use chrono::Utc;
 use common::dsp_common::odrl::OdrlAgreement;
 use common::facades::grants_facade::{MockGrantsFacadeTrait, VerifiedPeer};
+use common::facades::catalog::{CatalogDataset, CatalogDistribution, MockCatalogFacadeTrait};
 use common::facades::mates_facade::MockMatesFacadeTrait;
+use common::facades::negotiation::MockNegotiationFacadeTrait;
 use common::oauth::{RolePath, Visibility};
 use connector::{
+    MockConnectorInstanceFacadeTrait,
     AuthenticationConfig, ConnectorInstanceDto, ConnectorMetadata, HttpSpec, InteractionConfig,
     ProtocolSpec, PullLifecycle, TemplateVecString,
 };
@@ -44,8 +47,6 @@ use transfer_agent::entities::protocol::{
 use transfer_agent::entities::transfer_message::Direction;
 use transfer_agent::entities::transfer_process::TransferProcess;
 use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
-use transfer_agent::protocols::dsp::facades::catalog_facade::MockCatalogFacadeTrait;
-use transfer_agent::protocols::dsp::facades::negotiation_facade::MockNegotiationFacadeTrait;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
 use transfer_agent::protocols::dsp::setup::DspContext;
 use transfer_agent::services::transfer_message::views::TransferMessageView;
@@ -212,9 +213,27 @@ fn connector() -> ConnectorInstanceDto {
 /// rejects them all; no peer is a known mate.
 fn context(store: &Store, as_peer: Option<&str>) -> Arc<AppContext> {
     let mut catalog = MockCatalogFacadeTrait::new();
+    catalog.expect_get_dataset().returning(|id| {
+        Ok(CatalogDataset {
+            id: id.to_string(),
+            catalog_id: "urn:catalog:1".into(),
+            dct_title: None,
+        })
+    });
     catalog
-        .expect_get_connector_for()
-        .returning(|_, _| Ok(connector()));
+        .expect_get_distribution_by_format()
+        .returning(|dataset, format| {
+            Ok(CatalogDistribution {
+                id: "urn:distribution:1".into(),
+                dataset_id: dataset.to_string(),
+                dct_format: Some(format.into()),
+                dcat_access_service: "urn:data-service:1".into(),
+            })
+        });
+    let mut connectors = MockConnectorInstanceFacadeTrait::new();
+    connectors
+        .expect_get_instance_by_distribution()
+        .returning(|_| Ok(Some(connector())));
     let mut negotiation = MockNegotiationFacadeTrait::new();
     negotiation.expect_get_agreement().returning(|id| {
         Ok(OdrlAgreement {
@@ -245,6 +264,7 @@ fn context(store: &Store, as_peer: Option<&str>) -> Arc<AppContext> {
         .messages(messages())
         .dataplane(dataplane())
         .catalog(catalog)
+        .connectors(connectors)
         .negotiation(negotiation)
         .grants(grants)
         .mates(mates)

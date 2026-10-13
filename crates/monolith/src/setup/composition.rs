@@ -59,7 +59,7 @@ impl MonolithModule {
             CatalogAgentModule::compose(config.catalog()?, root, bus.clone(), &catalog_ports)
                 .await?;
         let negotiation_ports =
-            NegotiationPorts::local(auth_ports.clone(), catalog.odrl_policy_service());
+            NegotiationPorts::local(auth_ports.clone(), catalog.catalog_facade());
         let negotiation = NegotiationAgentModule::compose(
             config.contracts()?,
             root,
@@ -71,9 +71,8 @@ impl MonolithModule {
             config.transfer()?,
             root,
             auth_ports.clone(),
-            negotiation.agreement_service(),
-            catalog.dataset_service(),
-            catalog.distribution_service(),
+            negotiation.negotiation_facade(),
+            catalog.catalog_facade(),
             catalog.local_connector_instances(),
         )
         .await?;

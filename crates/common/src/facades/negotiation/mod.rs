@@ -15,19 +15,23 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Distributions read from the catalog that hosts the connector.
+//! The negotiation agent's published contract: the agreements a transfer runs under.
 
-use common::oauth::UserInfo;
+pub mod remote;
+pub mod views;
+
+use async_trait::async_trait;
+use urn::Urn;
 use ymir::errors::Outcome;
 
-/// Served in-process by the catalog agent, which always hosts the connector.
+use crate::dsp_common::odrl::OdrlAgreement;
+
+pub use views::StoredAgreement;
+
+/// Agreements by id, whoever owns them: the agreement is what fixes a transfer.
 #[mockall::automock]
-#[async_trait::async_trait]
-pub trait CatalogFacadeTrait: Send + Sync {
-    /// Fails unless the catalog holds a distribution `id` that `user` sees.
-    async fn resolve_distribution_by_id(
-        &self,
-        user: &UserInfo,
-        distribution_id: &str,
-    ) -> Outcome<()>;
+#[async_trait]
+pub trait NegotiationFacadeTrait: Send + Sync {
+    /// The agreement as ODRL, with the parties and target the negotiation recorded.
+    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement>;
 }

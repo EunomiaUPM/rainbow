@@ -80,8 +80,7 @@ impl TransferDspLoader {
                 let connector = self
                     .ctx
                     .ports
-                    .catalog
-                    .get_connector_for(&agreement.target, format)
+                    .connector_for(&agreement.target, format)
                     .await?;
                 TransferContextConnectorRole::ProviderHavingConnector(Box::new(connector))
             }

@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Ports to the auth agent that every other agent consumes, with their HTTP adapters.
+//! Ports to the auth agent that every other agent consumes, with their HTTP adapters, and the
+//! contracts the catalog and negotiation agents publish.
 //!
 //! Catalog, negotiation and transfer need two things from the SSI auth agent: the participants a
 //! user sees ([`MatesFacadeTrait`]) and the GNAP tokens with the peers ([`GrantsFacadeTrait`]):
@@ -83,11 +84,33 @@
 //! ```
 //!
 //! Both traits have `mockall` mocks (`MockMatesFacadeTrait`, `MockGrantsFacadeTrait`) for tests.
+//!
+//! ## 5. Reading another agent's resources
+//!
+//! The catalog and negotiation agents publish what others read from them as a contract here:
+//! the trait, the records that cross ([`catalog::CatalogDataset`], [`negotiation::StoredAgreement`]
+//! and friends) and the remote adapter over their API. The owning agent ships the in-process
+//! adapter over its services; consumers never depend on the owning agent.
+//!
+//! ```rust,ignore
+//! use common::facades::catalog::{remote::CatalogRemoteFacade, CatalogFacadeTrait};
+//! use common::facades::negotiation::remote::NegotiationRemoteFacade;
+//!
+//! // Standalone transfer agent:
+//! let catalog: Arc<dyn CatalogFacadeTrait> = Arc::new(CatalogRemoteFacade::new(config.catalog()));
+//! let negotiation = Arc::new(NegotiationRemoteFacade::new(config.contracts()));
+//!
+//! // Monolith: the owners' local adapters.
+//! let catalog = catalog_module.catalog_facade();
+//! let agreement = negotiation.get_agreement(&agreement_id).await?; // an OdrlAgreement
+//! ```
 
 use serde::{Deserialize, Serialize};
 
+pub mod catalog;
 pub mod grants_facade;
 pub mod mates_facade;
+pub mod negotiation;
 pub mod ports;
 // Thin wrapper over ymir's `http_client()`, left over from the client-credentials service
 // token; remote facades call `http_client()` directly. Kept as it was, out of the module tree.
@@ -105,3 +128,6 @@ pub use ports::AuthPorts;
 pub struct VerifyTokenRequest {
     pub token: String,
 }
+
+#[cfg(test)]
+mod tests;

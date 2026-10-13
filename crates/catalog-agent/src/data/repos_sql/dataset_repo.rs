@@ -158,6 +158,27 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
     }
 
     #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn get_datasets_by_catalog_ids(
+        &self,
+        scope: &OwnerScope,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<dataset::Model>> {
+        let catalog_ids = catalog_ids.iter().map(Urn::to_string).collect::<Vec<_>>();
+        let datasets = dataset::Entity::find()
+            .filter(scope.condition(dataset::Column::UserId, dataset::Column::UserRole, dataset::Column::Visibility))
+            .filter(dataset::Column::CatalogId.is_in(catalog_ids))
+            .all(&self.db_connection)
+            .await;
+        match datasets {
+            Ok(datasets) => Ok(datasets),
+            Err(err) => Err(CatalogAgentRepoErrors::DatasetRepoErrors(
+                DatasetRepoErrors::ErrorFetchingDataset(err.into()),
+            )
+            .into_errors()),
+        }
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
     async fn get_dataset_by_id(
         &self,
         scope: &OwnerScope,

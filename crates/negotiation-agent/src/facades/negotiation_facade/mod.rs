@@ -15,19 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use catalog_agent::OdrlPolicyDto;
-use urn::Urn;
-use ymir::errors::Outcome;
+//! In-process adapter of `common::facades::negotiation::NegotiationFacadeTrait`.
 
 pub mod local;
-pub mod remote;
-
-/// The provider's catalog, as the negotiation agent needs it: checking that an offer
-/// referenced by a contract request is really published there.
-#[mockall::automock]
-#[async_trait::async_trait]
-pub trait CatalogFacadeTrait: Send + Sync {
-    /// Fails with a missing-resource error unless the catalog holds the offer (by id, whoever
-    /// owns it: an offer a peer refers to is one it was shown).
-    async fn get_offer(&self, offer_id: &Urn) -> Outcome<OdrlPolicyDto>;
-}

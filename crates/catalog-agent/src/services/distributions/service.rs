@@ -112,6 +112,19 @@ impl DistributionServiceTrait for DistributionService {
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
+    async fn get_distributions_by_dataset_ids(&self, user: &UserInfo, dataset_ids: &[Urn]) -> Outcome<Vec<DistributionDto>> {
+        if dataset_ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let models = self
+            .repo
+            .get_distribution_repo()
+            .get_distributions_by_dataset_ids(&OwnerScope::seeing(user), dataset_ids)
+            .await?;
+        Ok(models.into_iter().map(DistributionDto::from).collect())
+    }
+
+    #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     async fn get_distributions_by_dataset_id(
         &self,
         user: &UserInfo,

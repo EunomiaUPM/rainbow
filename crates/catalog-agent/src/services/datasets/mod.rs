@@ -50,6 +50,12 @@ pub trait DatasetServiceTrait: Send + Sync {
         user: &UserInfo,
         catalog_id: &Urn,
     ) -> Outcome<Vec<DatasetDto>>;
+    /// Datasets of any of the catalogs, read in one query and not cached.
+    async fn get_datasets_by_catalog_ids(
+        &self,
+        user: &UserInfo,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<DatasetDto>>;
     /// 404 when the dataset is not visible to the caller.
     async fn get_dataset_by_id(&self, user: &UserInfo, dataset_id: &Urn)
         -> Outcome<DatasetDto>;

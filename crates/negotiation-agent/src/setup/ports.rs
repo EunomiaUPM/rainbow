@@ -20,17 +20,14 @@
 
 use std::sync::Arc;
 
-use catalog_agent::services::odrl_policies::OdrlPolicyServiceTrait;
 use common::config::services::ContractsConfig;
 use common::config::services::traits::ContractsConfigTrait;
 use common::facades::AuthPorts;
+use common::facades::catalog::CatalogFacadeTrait;
+use common::facades::catalog::remote::CatalogRemoteFacade;
 use common::module_loader::root_context::RootContext;
 
-use crate::facades::catalog_facade::CatalogFacadeTrait;
-use crate::facades::catalog_facade::local::CatalogLocalFacade;
-use crate::facades::catalog_facade::remote::CatalogRemoteFacade;
-
-/// Ports the negotiation agent consumes: auth and the catalog's ODRL policies.
+/// Ports the negotiation agent consumes: auth and the catalog's published contract.
 #[derive(Clone)]
 pub struct NegotiationPorts {
     pub auth: AuthPorts,
@@ -46,12 +43,9 @@ impl NegotiationPorts {
         }
     }
 
-    /// Monolith: the auth module's adapters and the catalog's offer service, in-process.
-    pub fn local(auth: AuthPorts, offers: Arc<dyn OdrlPolicyServiceTrait>) -> Self {
-        Self {
-            auth,
-            catalog: Arc::new(CatalogLocalFacade::new(offers)),
-        }
+    /// Monolith: the auth module's adapters and the catalog module's contract, in-process.
+    pub fn local(auth: AuthPorts, catalog: Arc<dyn CatalogFacadeTrait>) -> Self {
+        Self { auth, catalog }
     }
 
     pub fn auth(&self) -> &AuthPorts {

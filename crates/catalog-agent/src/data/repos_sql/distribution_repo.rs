@@ -158,6 +158,27 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
     }
 
     #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn get_distributions_by_dataset_ids(
+        &self,
+        scope: &OwnerScope,
+        dataset_ids: &[Urn],
+    ) -> Outcome<Vec<distribution::Model>> {
+        let dataset_ids = dataset_ids.iter().map(Urn::to_string).collect::<Vec<_>>();
+        let distributions = distribution::Entity::find()
+            .filter(scope.condition(distribution::Column::UserId, distribution::Column::UserRole, distribution::Column::Visibility))
+            .filter(distribution::Column::DatasetId.is_in(dataset_ids))
+            .all(&self.db_connection)
+            .await;
+        match distributions {
+            Ok(distributions) => Ok(distributions),
+            Err(err) => Err(CatalogAgentRepoErrors::DistributionRepoErrors(
+                DistributionRepoErrors::ErrorFetchingDistribution(err.into()),
+            )
+            .into_errors()),
+        }
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
     async fn get_distribution_by_dataset_id_and_dct_format(
         &self,
         scope: &OwnerScope,

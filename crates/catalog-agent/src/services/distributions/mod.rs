@@ -51,6 +51,12 @@ pub trait DistributionServiceTrait: Send + Sync {
         user: &UserInfo,
         dataset_id: &Urn,
     ) -> Outcome<Vec<DistributionDto>>;
+    /// Distributions of any of the datasets, read in one query and not cached.
+    async fn get_distributions_by_dataset_ids(
+        &self,
+        user: &UserInfo,
+        dataset_ids: &[Urn],
+    ) -> Outcome<Vec<DistributionDto>>;
     /// Distribution of the dataset in the given `dct:format`.
     async fn get_distribution_by_dataset_id_and_dct_format(
         &self,

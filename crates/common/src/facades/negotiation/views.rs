@@ -15,35 +15,41 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//! An agreement as the negotiation agent stores it, and its ODRL form.
+
 use std::str::FromStr;
 
-use common::dsp_common::odrl::OdrlAgreement;
-use negotiation_agent::AgreementView;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 
-pub mod local;
-pub mod remote;
+use crate::dsp_common::odrl::OdrlAgreement;
 
-/// The negotiation agent, as transfer needs it: the agreements a transfer runs under.
-#[mockall::automock]
-#[async_trait::async_trait]
-pub trait NegotiationFacadeTrait: Send + Sync {
-    /// The stored agreement by id, whoever owns it: the agreement is what fixes the transfer.
-    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView>;
+/// What other agents read of a stored agreement, in the API's JSON.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredAgreement {
+    pub id: String,
+    pub target: String,
+    pub provider_participant_id: String,
+    pub consumer_participant_id: String,
+    pub agreement_content: Value,
+}
 
-    /// The agreement as ODRL, with the parties and target negotiation recorded.
-    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement> {
-        let stored = self.get_agreement_view(agreement_id).await?.inner;
-        let target = Urn::from_str(&stored.target).map_err(|_| {
+impl StoredAgreement {
+    /// The agreement as ODRL: the provider assigns, the consumer is assigned; the target must
+    /// be a URN.
+    pub fn into_odrl(self, agreement_id: &Urn) -> Outcome<OdrlAgreement> {
+        let target = Urn::from_str(&self.target).map_err(|_| {
             Errors::parse(format!("agreement {agreement_id} has no URN target"), None)
         })?;
         Ok(OdrlAgreement::from_stored(
             agreement_id.clone(),
             target,
-            stored.provider_participant_id,
-            stored.consumer_participant_id,
-            &stored.agreement_content,
+            self.provider_participant_id,
+            self.consumer_participant_id,
+            &self.agreement_content,
         ))
     }
 }

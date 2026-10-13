@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! In-process adapters of ports other components consume from the catalog.
+//! The catalog's published contract (`common::facades::catalog`) served in-process.
 
 pub mod catalog_facade;
 

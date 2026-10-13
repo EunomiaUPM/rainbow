@@ -49,6 +49,12 @@ pub trait DataServiceRepositoryTrait: Send + Sync {
         scope: &OwnerScope,
         catalog_id: &Urn,
     ) -> Outcome<Vec<dataservice::Model>>;
+    /// Data services of any of the catalogs, in one query.
+    async fn get_data_services_by_catalog_ids(
+        &self,
+        scope: &OwnerScope,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<dataservice::Model>>;
     /// The connector's main data service.
     async fn get_main_data_service(&self) -> Outcome<Option<dataservice::Model>>;
 

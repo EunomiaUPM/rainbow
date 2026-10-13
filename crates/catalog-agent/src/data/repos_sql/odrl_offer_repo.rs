@@ -154,6 +154,27 @@ impl OdrlOfferRepositoryTrait for OdrlOfferRepositoryForSql {
     }
 
     #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn get_odrl_offers_by_entities(
+        &self,
+        scope: &OwnerScope,
+        entities: &[Urn],
+    ) -> Outcome<Vec<odrl_offer::Model>> {
+        let entities = entities.iter().map(Urn::to_string).collect::<Vec<_>>();
+        let odrl_offers = odrl_offer::Entity::find()
+            .filter(scope.condition(odrl_offer::Column::UserId, odrl_offer::Column::UserRole, odrl_offer::Column::Visibility))
+            .filter(odrl_offer::Column::Entity.is_in(entities))
+            .all(&self.db_connection)
+            .await;
+        match odrl_offers {
+            Ok(odrl_offers) => Ok(odrl_offers),
+            Err(err) => Err(CatalogAgentRepoErrors::OdrlOfferRepoErrors(
+                OdrlOfferRepoErrors::ErrorFetchingOdrlOffer(err.into()),
+            )
+            .into_errors()),
+        }
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
     async fn get_odrl_offer_by_id(
         &self,
         scope: &OwnerScope,

@@ -51,6 +51,12 @@ pub trait DataServiceServiceTrait: Send + Sync {
         user: &UserInfo,
         catalog_id: &Urn,
     ) -> Outcome<Vec<DataServiceDto>>;
+    /// Data services of any of the catalogs, read in one query and not cached.
+    async fn get_data_services_by_catalog_ids(
+        &self,
+        user: &UserInfo,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<DataServiceDto>>;
 
     /// The connector's main data service, if it has one (whoever asks).
     async fn get_main_data_service(&self, user: &UserInfo) -> Outcome<Option<DataServiceDto>>;

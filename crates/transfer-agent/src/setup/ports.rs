@@ -17,34 +17,33 @@
 
 //! Ports transfer consumes from other agents: in-process in the monolith, over HTTP standalone.
 
+use std::str::FromStr;
 use std::sync::Arc;
 
-use catalog_agent::services::datasets::DatasetServiceTrait;
-use catalog_agent::services::distributions::DistributionServiceTrait;
 use common::config::services::TransferConfig;
 use common::config::services::traits::TransferConfigTrait;
 use common::facades::AuthPorts;
+use common::facades::catalog::CatalogFacadeTrait;
+use common::facades::catalog::remote::CatalogRemoteFacade;
+use common::facades::negotiation::NegotiationFacadeTrait;
+use common::facades::negotiation::remote::NegotiationRemoteFacade;
 use common::module_loader::root_context::RootContext;
-use connector::ConnectorInstanceFacadeTrait;
+use connector::{ConnectorInstanceDto, ConnectorInstanceFacadeTrait, ConnectorInstanceRemoteFacade};
 use dataplane::setup::{DataplaneModule, DataplanePorts};
-use negotiation_agent::services::agreement::AgreementServiceTrait;
-use ymir::errors::Outcome;
+use urn::Urn;
+use ymir::errors::{Errors, Outcome};
 
-use crate::protocols::dsp::facades::catalog_facade::CatalogFacadeTrait;
-use crate::protocols::dsp::facades::catalog_facade::local::CatalogLocalFacade;
-use crate::protocols::dsp::facades::catalog_facade::remote::CatalogRemoteFacade;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::facades::dataplane_facade::local::DataPlaneLocalFacade;
-use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
-use crate::protocols::dsp::facades::negotiation_facade::local::NegotiationLocalFacade;
-use crate::protocols::dsp::facades::negotiation_facade::remote::NegotiationRemoteFacade;
 
-/// Ports the transfer agent consumes: auth, negotiation, catalog and its dataplane.
+/// Ports the transfer agent consumes: auth, the negotiation and catalog contracts, the
+/// connector instances the catalog hosts, and its own dataplane.
 #[derive(Clone)]
 pub struct TransferPorts {
     pub auth: AuthPorts,
     pub negotiation: Arc<dyn NegotiationFacadeTrait>,
     pub catalog: Arc<dyn CatalogFacadeTrait>,
+    pub connectors: Arc<dyn ConnectorInstanceFacadeTrait>,
     /// The hooks the DSP flows drive over the dataplane manager.
     pub dataplane: Arc<dyn DataPlaneFacadeTrait>,
     /// The dataplane module transfer registers; none when the dataplane is stubbed.
@@ -60,30 +59,30 @@ impl TransferPorts {
             auth: AuthPorts::remote(config.ssi_auth()),
             negotiation: Arc::new(NegotiationRemoteFacade::new(config.contracts())),
             catalog: Arc::new(CatalogRemoteFacade::new(config.catalog())),
+            connectors: Arc::new(ConnectorInstanceRemoteFacade::new(config.catalog())),
             dataplane: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
             dataplane_module: Some(module),
         })
     }
 
-    /// Monolith: the owning agents' services, reached in-process.
-    #[allow(clippy::too_many_arguments)]
+    /// Monolith: the owning agents' published contracts, served in-process.
     pub async fn local(
         config: &TransferConfig,
         root: &RootContext,
         auth: AuthPorts,
-        agreements: Arc<dyn AgreementServiceTrait>,
-        datasets: Arc<dyn DatasetServiceTrait>,
-        distributions: Arc<dyn DistributionServiceTrait>,
-        connector: Arc<dyn ConnectorInstanceFacadeTrait>,
+        negotiation: Arc<dyn NegotiationFacadeTrait>,
+        catalog: Arc<dyn CatalogFacadeTrait>,
+        connectors: Arc<dyn ConnectorInstanceFacadeTrait>,
     ) -> Outcome<Self> {
         // The dataplane always runs inside transfer; only its connector lookups follow the mode.
         let module =
-            DataplaneModule::compose(config, root, &DataplanePorts::local(connector.clone()))
+            DataplaneModule::compose(config, root, &DataplanePorts::local(connectors.clone()))
                 .await?;
         Ok(Self {
             auth,
-            negotiation: Arc::new(NegotiationLocalFacade::new(agreements)),
-            catalog: Arc::new(CatalogLocalFacade::new(datasets, distributions, connector)),
+            negotiation,
+            catalog,
+            connectors,
             dataplane: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
             dataplane_module: Some(module),
         })
@@ -94,12 +93,14 @@ impl TransferPorts {
         auth: AuthPorts,
         negotiation: Arc<dyn NegotiationFacadeTrait>,
         catalog: Arc<dyn CatalogFacadeTrait>,
+        connectors: Arc<dyn ConnectorInstanceFacadeTrait>,
         dataplane: Arc<dyn DataPlaneFacadeTrait>,
     ) -> Self {
         Self {
             auth,
             negotiation,
             catalog,
+            connectors,
             dataplane,
             dataplane_module: None,
         }
@@ -107,5 +108,23 @@ impl TransferPorts {
 
     pub fn dataplane_module(&self) -> Option<DataplaneModule> {
         self.dataplane_module.clone()
+    }
+
+    /// The connector instance serving `target` in `format`: its dataset, then the distribution
+    /// in that format, then the instance behind it.
+    pub async fn connector_for(&self, target: &Urn, format: &str) -> Outcome<ConnectorInstanceDto> {
+        let dataset = self.catalog.get_dataset(target).await?;
+        let dataset_id = Urn::from_str(&dataset.id)?;
+        let distribution = self.catalog.get_distribution_by_format(&dataset_id, format).await?;
+        let distribution_id = Urn::from_str(&distribution.id)?;
+        self.connectors
+            .get_instance_by_distribution(&distribution_id)
+            .await?
+            .ok_or_else(|| {
+                Errors::crazy(
+                    format!("No connector instance found for distribution {distribution_id}"),
+                    None,
+                )
+            })
     }
 }

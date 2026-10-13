@@ -15,8 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Transfer-agent gRPC services, DSP routes and the negotiation facade, with mocked services
-//! and stores.
+//! Transfer-agent gRPC services and DSP routes, with mocked services and stores.
 
 #[path = "../support/mod.rs"]
 mod support;
@@ -24,4 +23,3 @@ mod support;
 mod grpc_transfer_messages;
 mod grpc_transfer_processes;
 mod http_dsp;
-mod negotiation_facade;

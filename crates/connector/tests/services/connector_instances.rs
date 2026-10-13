@@ -33,7 +33,7 @@ use connector::data::repo_traits::connector_template_repo::{
     ConnectorTemplateRepoTrait, MockConnectorTemplateRepoTrait,
 };
 use connector::entities::connector_template::ConnectorTemplateDto;
-use connector::facades::catalog_facade::MockCatalogFacadeTrait;
+use common::facades::catalog::{CatalogDistribution, MockCatalogFacadeTrait};
 use connector::services::connector_instance::service::ConnectorInstanceService;
 use connector::{
     ConnectorInstanceRepoTrait, ConnectorInstanceServiceTrait, ConnectorInstantiationDto,
@@ -159,10 +159,10 @@ fn mock_service() -> ConnectorInstanceService {
 
     let mut distribution_facade = MockCatalogFacadeTrait::new();
     distribution_facade
-        .expect_resolve_distribution_by_id()
+        .expect_get_distribution()
         .once()
         .with(mockall::predicate::always(), mockall::predicate::always())
-        .returning(|_, _| Ok(()));
+        .returning(|_, id| Ok(distribution(id)));
     let distribution_facade = Arc::new(distribution_facade);
 
     ConnectorInstanceService::new(
@@ -170,6 +170,17 @@ fn mock_service() -> ConnectorInstanceService {
         distribution_facade,
         "http://localhost:8080".to_string(),
     )
+}
+
+
+/// The catalog's view of distribution `id`.
+fn distribution(id: &urn::Urn) -> CatalogDistribution {
+    CatalogDistribution {
+        id: id.to_string(),
+        dataset_id: "urn:dataset:1".into(),
+        dct_format: Some("HttpData-PULL".into()),
+        dcat_access_service: "urn:data-service:1".into(),
+    }
 }
 
 /// An upsert resolves the template, checks the distribution, stores the instance and
@@ -361,10 +372,10 @@ async fn upsert_belongs_to_the_caller() {
 
     let mut distro_facade = MockCatalogFacadeTrait::new();
     distro_facade
-        .expect_resolve_distribution_by_id()
+        .expect_get_distribution()
         .withf(|user, _| user.id() == "tenant-2")
         .times(1)
-        .returning(|_, _| Ok(()));
+        .returning(|_, id| Ok(distribution(id)));
 
     let svc = build_service(template_repo, instance_repo, distro_repo, distro_facade);
 

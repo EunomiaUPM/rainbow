@@ -158,6 +158,27 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
     }
 
     #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn get_data_services_by_catalog_ids(
+        &self,
+        scope: &OwnerScope,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<dataservice::Model>> {
+        let catalog_ids = catalog_ids.iter().map(Urn::to_string).collect::<Vec<_>>();
+        let data_services = dataservice::Entity::find()
+            .filter(scope.condition(dataservice::Column::UserId, dataservice::Column::UserRole, dataservice::Column::Visibility))
+            .filter(dataservice::Column::CatalogId.is_in(catalog_ids))
+            .all(&self.db_connection)
+            .await;
+        match data_services {
+            Ok(data_services) => Ok(data_services),
+            Err(err) => Err(CatalogAgentRepoErrors::DataServiceRepoErrors(
+                DataServiceRepoErrors::ErrorFetchingDataService(err.into()),
+            )
+            .into_errors()),
+        }
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
     async fn get_main_data_service(&self) -> Outcome<Option<dataservice::Model>> {
         let data_service = dataservice::Entity::find()
             .filter(dataservice::Column::DspaceMainDataService.eq(true))

@@ -15,18 +15,19 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//! Agreements read straight from the agreement service, as the system user (any agreement).
+
 use std::sync::Arc;
 
+use common::dsp_common::odrl::OdrlAgreement;
+use common::facades::negotiation::{NegotiationFacadeTrait, StoredAgreement};
 use common::oauth::UserInfo;
-use negotiation_agent::AgreementView;
-use negotiation_agent::services::agreement::AgreementServiceTrait;
 use urn::Urn;
 use ymir::errors::Outcome;
 
-use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
+use crate::services::agreement::AgreementServiceTrait;
 
-/// Agreements read straight from the negotiation service, when it shares the process, as the
-/// system user (any agreement).
+/// The negotiation agent's agreements for the agents sharing its process.
 pub struct NegotiationLocalFacade {
     agreements: Arc<dyn AgreementServiceTrait>,
 }
@@ -40,8 +41,19 @@ impl NegotiationLocalFacade {
 #[async_trait::async_trait]
 impl NegotiationFacadeTrait for NegotiationLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "negotiation"))]
-    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
-        let user = UserInfo::system();
-        self.agreements.get_one(&user, agreement_id).await
+    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement> {
+        let stored = self
+            .agreements
+            .get_one(&UserInfo::system(), agreement_id)
+            .await?
+            .inner;
+        StoredAgreement {
+            id: stored.id,
+            target: stored.target,
+            provider_participant_id: stored.provider_participant_id,
+            consumer_participant_id: stored.consumer_participant_id,
+            agreement_content: stored.agreement_content,
+        }
+        .into_odrl(agreement_id)
     }
 }

@@ -15,40 +15,47 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use common::config::types::min_known_config::MinKnownConfig;
-use common::config::types::traits::MinKnownConfigTrait;
-use negotiation_agent::AgreementView;
+//! The negotiation contract over the negotiation agent's management API.
+
+use async_trait::async_trait;
 use urn::Urn;
 use ymir::config::types::HostType;
+use ymir::errors::Outcome;
 use ymir::services::client::ClientExt;
 use ymir::utils::http_client;
-use ymir::errors::Outcome;
 
-use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
+use crate::config::types::min_known_config::MinKnownConfig;
+use crate::config::types::traits::MinKnownConfigTrait;
+use crate::dsp_common::odrl::OdrlAgreement;
+use crate::facades::negotiation::{NegotiationFacadeTrait, StoredAgreement};
 
-/// Agreements read from the negotiation agent's API.
+/// Reads agreements from the negotiation agent's API.
 pub struct NegotiationRemoteFacade {
     agreements_url: String,
 }
 
 impl NegotiationRemoteFacade {
+    /// Path segment the negotiation agent mounts its API under.
+    const SERVICE: &'static str = "negotiation-agent";
+
     pub fn new(contracts: &MinKnownConfig) -> Self {
         Self {
             agreements_url: format!(
                 "{}{}/{}/agreements",
                 contracts.get_host(HostType::Http),
                 contracts.get_api_version(),
-                negotiation_agent::SERVICE_NAME
+                Self::SERVICE
             ),
         }
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait]
 impl NegotiationFacadeTrait for NegotiationRemoteFacade {
-        #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "negotiation"))]
-    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
+    #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "negotiation"))]
+    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement> {
         let url = format!("{}/{agreement_id}", self.agreements_url);
-        http_client().get_json(&url, None).await
+        let stored: StoredAgreement = http_client().get_json(&url, None).await?;
+        stored.into_odrl(agreement_id)
     }
 }

@@ -22,12 +22,13 @@ use std::sync::Arc;
 
 use crate::SERVICE_NAME;
 use crate::protocols::dsp::setup::DspModule;
-use crate::services::agreement::AgreementServiceTrait;
+use crate::facades::NegotiationLocalFacade;
 use crate::setup::admin_module::NegotiationAdminModule;
 use crate::setup::context::AppContext;
 use crate::setup::ports::NegotiationPorts;
 use axum::Router;
 use common::config::services::ContractsConfig;
+use common::facades::negotiation::NegotiationFacadeTrait;
 use common::module_loader::module_group::ModuleGroup;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;
@@ -56,9 +57,9 @@ impl NegotiationAgentModule {
         Ok(Self { ctx, modules })
     }
 
-    /// Agreement service, for agents that read agreements in-process.
-    pub fn agreement_service(&self) -> Arc<dyn AgreementServiceTrait> {
-        self.ctx.agreement_svc.clone()
+    /// The negotiation agent's published contract, for agents that read it in-process.
+    pub fn negotiation_facade(&self) -> Arc<dyn NegotiationFacadeTrait> {
+        Arc::new(NegotiationLocalFacade::new(self.ctx.agreement_svc.clone()))
     }
 
     /// Static, so the hosting agent's migrator can list them.

@@ -119,6 +119,19 @@ impl OdrlPolicyServiceTrait for OdrlPolicyService {
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
+    async fn get_odrl_offers_by_entities(&self, user: &UserInfo, entities: &[Urn]) -> Outcome<Vec<OdrlPolicyDto>> {
+        if entities.is_empty() {
+            return Ok(vec![]);
+        }
+        let models = self
+            .repo
+            .get_odrl_offer_repo()
+            .get_odrl_offers_by_entities(&OwnerScope::seeing(user), entities)
+            .await?;
+        Ok(models.into_iter().map(OdrlPolicyDto::from).collect())
+    }
+
+    #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     async fn get_all_odrl_offers_by_entity(
         &self,
         user: &UserInfo,

@@ -22,9 +22,6 @@ use std::sync::Arc;
 
 use crate::facades::CatalogLocalFacade;
 use crate::protocols::dsp::setup::DspModule;
-use crate::services::datasets::DatasetServiceTrait;
-use crate::services::distributions::DistributionServiceTrait;
-use crate::services::odrl_policies::OdrlPolicyServiceTrait;
 // Per-tenant main catalogs are gone (one main catalog per connector); kept out of the tree.
 // use crate::services::tenant_provisioning::listener::TenantProvisioningListener;
 use crate::setup::admin_module::CatalogAdminModule;
@@ -37,6 +34,7 @@ use common::boot::seeders::BootSeeder;
 use common::boot::workers::BackgroundWorker;
 use common::config::services::traits::CatalogConfigTrait;
 use common::config::services::CatalogConfig;
+use common::facades::catalog::CatalogFacadeTrait;
 use common::module_loader::module_group::ModuleGroup;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;
@@ -49,6 +47,7 @@ use ymir::errors::Outcome;
 pub struct CatalogAgentModule {
     ctx: Arc<AppContext>,
     modules: ModuleGroup,
+    catalog_facade: Arc<dyn CatalogFacadeTrait>,
     connector_instances: Arc<dyn ConnectorInstanceFacadeTrait>,
 }
 
@@ -61,9 +60,12 @@ impl CatalogAgentModule {
         ports: &CatalogPorts,
     ) -> Outcome<Self> {
         let ctx = Arc::new(AppContext::build(config, root, event_bus.clone(), ports).await?);
-        let connector_ports = ConnectorPorts::local(Arc::new(CatalogLocalFacade::new(
+        let catalog_facade: Arc<dyn CatalogFacadeTrait> = Arc::new(CatalogLocalFacade::new(
+            ctx.dataset_svc.clone(),
             ctx.distribution_svc.clone(),
-        )));
+            ctx.odrl_policy_svc.clone(),
+        ));
+        let connector_ports = ConnectorPorts::local(catalog_facade.clone());
         let connector = ConnectorModule::compose(config, root, event_bus, &connector_ports);
         let connector_instances = connector.local_connector_instances();
         let modules = ModuleGroup::new(SERVICE_NAME)
@@ -73,6 +75,7 @@ impl CatalogAgentModule {
         Ok(Self {
             ctx,
             modules,
+            catalog_facade,
             connector_instances,
         })
     }
@@ -82,19 +85,9 @@ impl CatalogAgentModule {
         self.connector_instances.clone()
     }
 
-    /// Dataset service, for agents that read datasets in-process.
-    pub fn dataset_service(&self) -> Arc<dyn DatasetServiceTrait> {
-        self.ctx.dataset_svc.clone()
-    }
-
-    /// Distribution service, for agents that read distributions in-process.
-    pub fn distribution_service(&self) -> Arc<dyn DistributionServiceTrait> {
-        self.ctx.distribution_svc.clone()
-    }
-
-    /// ODRL offer service, for agents that read policies in-process.
-    pub fn odrl_policy_service(&self) -> Arc<dyn OdrlPolicyServiceTrait> {
-        self.ctx.odrl_policy_svc.clone()
+    /// The catalog's published contract, for agents that read it in-process.
+    pub fn catalog_facade(&self) -> Arc<dyn CatalogFacadeTrait> {
+        self.catalog_facade.clone()
     }
 
     /// Catalog then connector, the FK order the monolith relies on.

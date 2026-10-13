@@ -15,6 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Ports the negotiation agent consumes from other agents.
+//! The negotiation agent's published contract (`common::facades::negotiation`) served
+//! in-process; the catalog it consumes is the contract in `common::facades::catalog`.
 
-pub mod catalog_facade;
+pub mod negotiation_facade;
+
+pub use negotiation_facade::local::NegotiationLocalFacade;

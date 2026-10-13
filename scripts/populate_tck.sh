@@ -1,6 +1,7 @@
 #!/bin/zsh
 # =============================================================================
 # populate_tck.sh — Seeds the provider catalog and agreements for DSP TCK
+# Datasets of the previous run are reused; TCK_PRUNE=1 deletes the other tck-* ones.
 # =============================================================================
 set -euo pipefail
 
@@ -14,6 +15,7 @@ OUTPUT_MAPPING="${OUTPUT_MAPPING:-$ROOT_DIR/tck/tck_mapping.json}"
 # ── helpers ───────────────────────────────────────────────────────────────────
 log()  { echo -e "\033[36m▶ $*\033[0m" >&2; }
 ok()   { echo -e "\033[32m  ✓ $*\033[0m" >&2; }
+warn() { echo -e "\033[33m  ! $*\033[0m" >&2; }
 die()  { echo -e "\033[31m  ✗ $*\033[0m" >&2; exit 1; }
 new_uuid() { uuidgen 2>/dev/null | tr '[:upper:]' '[:lower:]' || cat /proc/sys/kernel/random/uuid; }
 
@@ -78,13 +80,53 @@ seed_catalog() {
     CNC0301 CNC0302 CNC0303 CNC0304 CNC0305 CNC0306
   )
 
-  log "Creating ${#all_keys[@]} datasets..."
+  log "Seeding ${#all_keys[@]} datasets (reusing those of the last run still in the catalog)..."
   for key in "${all_keys[@]}"; do
     local pair
-    pair=$(make_dataset "tck-$key")
+    pair=$(reuse_dataset "$key")
+    if [[ -n "$pair" ]]; then
+      ok "$key - reused ds=${pair:0:30}..."
+    else
+      pair=$(make_dataset "tck-$key")
+      ok "$key - created ds=${pair:0:30}..."
+    fi
     DS[$key]="${pair%% *}"
     OFFER[$key]="${pair##* }"
-    ok "$key - ds=${DS[$key]:0:30}..."
+  done
+}
+
+# The dataset and offer the previous mapping holds for `key`, if both still exist.
+reuse_dataset() {
+  local key=$1 ds offer
+  [[ -f "$OUTPUT_MAPPING" ]] || return 0
+  ds=$(jq -r --arg k "$key" '.datasets[$k] // empty' "$OUTPUT_MAPPING" 2>/dev/null || true)
+  offer=$(jq -r --arg k "$key" '.offers[$k] // empty' "$OUTPUT_MAPPING" 2>/dev/null || true)
+  [[ -n "$ds" && -n "$offer" ]] || return 0
+  curl_j GET "$PROVIDER_URL/api/v1/catalog-agent/datasets/$ds" >/dev/null 2>&1 || return 0
+  curl_j GET "$PROVIDER_URL/api/v1/catalog-agent/odrl-policies/$offer" >/dev/null 2>&1 || return 0
+  echo "$ds $offer"
+}
+
+# With TCK_PRUNE=1, deletes the tck-* datasets the new mapping does not use.
+prune_datasets() {
+  [[ "${TCK_PRUNE:-0}" == "1" ]] || return 0
+  log "Pruning TCK datasets left by earlier runs"
+  local keep cursor="" page ids id
+  keep=" ${DS[*]} "
+  ids=()
+  while :; do
+    page=$(curl_j GET "$PROVIDER_URL/api/v1/catalog-agent/datasets?title=tck-&limit=100${cursor:+&cursor=$cursor}") || break
+    ids+=($(echo "$page" | jq -r '.items[] | select(.dctTitle | startswith("tck-")) | .id'))
+    cursor=$(echo "$page" | jq -r '.nextCursor // empty')
+    [[ -n "$cursor" ]] || break
+  done
+  for id in "${ids[@]}"; do
+    [[ "$keep" == *" $id "* ]] && continue
+    if curl_j DELETE "$PROVIDER_URL/api/v1/catalog-agent/datasets/$id" >/dev/null 2>&1; then
+      ok "pruned $id"
+    else
+      warn "could not delete $id"
+    fi
   done
 }
 
@@ -184,6 +226,7 @@ make_agreement() {
 # ── Write mapping ─────────────────────────────────────────────────────────────
 main() {
   seed_catalog
+  prune_datasets
   seed_agreements
 
   log "Writing mapping to $OUTPUT_MAPPING"

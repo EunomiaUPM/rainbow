@@ -15,7 +15,5 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod catalog_facade;
 pub mod dataplane_facade;
-pub mod negotiation_facade;
 

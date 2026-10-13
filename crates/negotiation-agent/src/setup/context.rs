@@ -36,7 +36,7 @@ use common::facades::mates_facade::MatesFacadeTrait;
 use common::facades::grants_facade::GrantsFacadeTrait;
 use common::module_loader::root_context::RootContext;
 
-use crate::facades::catalog_facade::CatalogFacadeTrait;
+use common::facades::catalog::CatalogFacadeTrait;
 use crate::setup::ports::NegotiationPorts;
 
 #[derive(Clone)]

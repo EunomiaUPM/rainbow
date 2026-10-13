@@ -15,6 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! In-process adapter of `connector::CatalogFacadeTrait`; the connector always runs inside the catalog.
+//! In-process adapter of `common::facades::catalog::CatalogFacadeTrait`, for the connector
+//! and the agents sharing the catalog's process.
 
 pub mod local;

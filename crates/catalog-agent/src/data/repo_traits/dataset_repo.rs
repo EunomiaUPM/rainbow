@@ -49,6 +49,12 @@ pub trait DatasetRepositoryTrait: Send + Sync {
         scope: &OwnerScope,
         catalog_id: &Urn,
     ) -> Outcome<Vec<dataset::Model>>;
+    /// Datasets of any of the catalogs, in one query.
+    async fn get_datasets_by_catalog_ids(
+        &self,
+        scope: &OwnerScope,
+        catalog_ids: &[Urn],
+    ) -> Outcome<Vec<dataset::Model>>;
     async fn get_dataset_by_id(
         &self,
         scope: &OwnerScope,

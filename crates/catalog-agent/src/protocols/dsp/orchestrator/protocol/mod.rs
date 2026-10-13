@@ -26,6 +26,7 @@ use crate::protocols::dsp::types::dataset_definition::Dataset;
 use common::oauth::UserInfo;
 use ymir::errors::Outcome;
 
+#[mockall::automock]
 #[async_trait::async_trait]
 pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
     async fn on_catalog_request(

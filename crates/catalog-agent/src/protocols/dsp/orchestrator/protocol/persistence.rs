@@ -75,171 +75,157 @@ impl OrchestrationPersistenceForProtocol {
         }
     }
 
+    /// The main catalog with its sub-catalogs, datasets and services: one query per kind of
+    /// entity, whatever the number of datasets.
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     pub async fn get_catalog(&self, user: &UserInfo) -> Outcome<Catalog> {
-        // 1. Main catalog
         let main_catalog_dto = self.fetch_main_catalog_dto(user).await?;
         let main_catalog_urn = Urn::from_str(&main_catalog_dto.inner.id)?;
-        // 1b. Main service
-        let main_dataservice_dto = self.fetch_main_dataservice_dto(user).await?;
-        // 2. Sub catalogs
-        let sub_catalogs = self.build_sub_catalogs(user, &main_catalog_urn).await?;
-        // 3. Datasets in main catalog
-        let datasets = self
-            .build_datasets_for_catalog(user, &main_catalog_urn)
+        let main_dataservice = self.map_data_service(self.fetch_main_dataservice_dto(user).await?);
+        let sub_catalogs = self.fetch_sub_catalogs(user, &main_catalog_urn).await?;
+        let sub_ids = sub_catalogs
+            .iter()
+            .map(|c| Urn::from_str(&c.inner.id))
+            .collect::<Result<Vec<_>, _>>()?;
+        let catalog_ids: Vec<Urn> = std::iter::once(main_catalog_urn).chain(sub_ids.clone()).collect();
+
+        let dataset_dtos = self
+            .dataset_entities_service
+            .get_datasets_by_catalog_ids(user, &catalog_ids)
             .await?;
-        // 3b. Dataservice in main catalog
-        let main_dataservice = self.map_data_service(main_dataservice_dto);
-        // 4. Assembly
-        let catalog =
-            self.map_main_catalog(main_catalog_dto, main_dataservice, sub_catalogs, datasets);
-        Ok(catalog)
+        let owners: Vec<String> = dataset_dtos.iter().map(|d| d.inner.catalog_id.clone()).collect();
+        let mut datasets_by_catalog: HashMap<String, Vec<Dataset>> = HashMap::new();
+        for (catalog_id, dataset) in owners.into_iter().zip(self.build_datasets(user, dataset_dtos).await?) {
+            datasets_by_catalog.entry(catalog_id).or_default().push(dataset);
+        }
+        let mut services_by_catalog: HashMap<String, Vec<DataService>> = HashMap::new();
+        for dto in self
+            .data_service_entities_service
+            .get_data_services_by_catalog_ids(user, &sub_ids)
+            .await?
+        {
+            let catalog_id = dto.inner.catalog_id.clone();
+            services_by_catalog.entry(catalog_id).or_default().push(self.map_data_service(dto));
+        }
+
+        let subs = sub_catalogs
+            .into_iter()
+            .map(|dto| {
+                let datasets = datasets_by_catalog.remove(&dto.inner.id).unwrap_or_default();
+                let services = services_by_catalog.remove(&dto.inner.id).unwrap_or_default();
+                self.map_subcatalog(dto, services, datasets)
+            })
+            .collect();
+        let datasets = datasets_by_catalog
+            .remove(&main_catalog_dto.inner.id)
+            .unwrap_or_default();
+        Ok(self.map_main_catalog(main_catalog_dto, main_dataservice, subs, datasets))
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     pub async fn get_dataset(&self, user: &UserInfo, dataset_id: &Urn) -> Outcome<Dataset> {
-        // 1. fetch dataset
         let dataset_dto = self.fetch_dataset_dto(user, dataset_id).await?;
-        // 2. build policies
-        let odrl_offers = self.build_odrl_policies(user, dataset_id).await?;
-        // 3. build distributions
-        let distributions = self
-            .build_distributions_with_services(user, dataset_id)
-            .await?;
-        // 4. final mapping
-        let dataset = self.map_dataset(dataset_dto, odrl_offers, distributions);
-        Ok(dataset)
+        self.build_datasets(user, vec![dataset_dto])
+            .await?
+            .pop()
+            .ok_or_else(|| Errors::crazy("a dataset was built from nothing", None))
     }
 
-    async fn build_sub_catalogs(
-        &self,
-        user: &UserInfo,
-        exclude_id: &Urn,
-    ) -> Outcome<Vec<CatalogMinimized>> {
+    /// Every catalog but the main one; the DSP answer lists them all, so every page is read.
+    async fn fetch_sub_catalogs(&self, user: &UserInfo, main_id: &Urn) -> Outcome<Vec<CatalogDto>> {
         let filter = CatalogFilter {
             with_main_catalog: Some(false),
             ..Default::default()
         };
-        // The DSP answer lists every catalog, so follow the cursor until the last page.
         let mut page = Page {
             limit: MAX_PAGE_LIMIT,
             ..Default::default()
         };
-        let mut dcat_catalogs = Vec::new();
+        let mut subs = Vec::new();
         loop {
             let catalogs = self
                 .catalog_entities_service
                 .get_all_catalogs(user, &filter, &page, &Default::default())
                 .await?;
             for catalog_dto in catalogs.items {
-                let catalog_urn = Urn::from_str(&catalog_dto.inner.id)?;
-                if &catalog_urn == exclude_id {
-                    continue;
+                if &Urn::from_str(&catalog_dto.inner.id)? != main_id {
+                    subs.push(catalog_dto);
                 }
-                let sub_datasets = self.build_datasets_for_catalog(user, &catalog_urn).await?;
-                let sub_dataservice = self
-                    .build_dataservices_for_catalog(user, &catalog_urn)
-                    .await?;
-                dcat_catalogs.push(self.map_subcatalog(catalog_dto, sub_dataservice, sub_datasets));
             }
             match catalogs.next_cursor {
                 Some(cursor) => page.cursor = Some(cursor),
                 None => break,
             }
         }
-        Ok(dcat_catalogs)
+        Ok(subs)
     }
-    async fn build_datasets_for_catalog(
-        &self,
-        user: &UserInfo,
-        catalog_id: &Urn,
-    ) -> Outcome<Vec<Dataset>> {
-        let datasets_dtos = self
-            .dataset_entities_service
-            .get_datasets_by_catalog_id(user, catalog_id)
-            .await?;
-        let mut dcat_datasets = Vec::with_capacity(datasets_dtos.len());
 
-        for dataset_dto in datasets_dtos {
-            let dataset_urn = Urn::from_str(&dataset_dto.inner.id)?;
-            let dcat_dataset = self.get_dataset(user, &dataset_urn).await?;
-            dcat_datasets.push(dcat_dataset);
+    /// The datasets with their offers, distributions and access services, in their order.
+    async fn build_datasets(&self, user: &UserInfo, dtos: Vec<DatasetDto>) -> Outcome<Vec<Dataset>> {
+        if dtos.is_empty() {
+            return Ok(vec![]);
         }
-
-        Ok(dcat_datasets)
-    }
-
-    async fn build_dataservices_for_catalog(
-        &self,
-        user: &UserInfo,
-        catalog_id: &Urn,
-    ) -> Outcome<Vec<DataService>> {
-        let dataservices_dtos = self
-            .data_service_entities_service
-            .get_data_services_by_catalog_id(user, catalog_id)
-            .await?;
-        let mut dcat_dataservices = Vec::with_capacity(dataservices_dtos.len());
-
-        for dataservices_dto in dataservices_dtos {
-            let dcat_dataservice = self.map_data_service(dataservices_dto);
-            dcat_dataservices.push(dcat_dataservice);
-        }
-        Ok(dcat_dataservices)
-    }
-
-    async fn build_odrl_policies(
-        &self,
-        user: &UserInfo,
-        entity_id: &Urn,
-    ) -> Outcome<Vec<OdrlOffer>> {
-        let policies_dtos = self
-            .odrl_policies_service
-            .get_all_odrl_offers_by_entity(user, entity_id)
-            .await
-            .unwrap_or_default();
-        let offers = policies_dtos
-            .into_iter()
-            .map(|dto| self.map_odrl_policy(dto))
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(offers)
-    }
-
-    async fn build_distributions_with_services(
-        &self,
-        user: &UserInfo,
-        dataset_id: &Urn,
-    ) -> Outcome<Vec<Distribution>> {
-        let distributions_dtos = self
-            .distributions_entity_service
-            .get_distributions_by_dataset_id(user, dataset_id)
-            .await?;
-        // batch dataservices
-        let access_services_ids: Vec<Urn> = distributions_dtos
+        let ids = dtos
             .iter()
-            .map(|d| d.inner.dcat_access_service.clone())
-            .map(|id_str| Urn::from_str(&id_str))
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap_or_default();
-
-        let services_batch = self
-            .data_service_entities_service
-            .get_batch_data_services(user, &access_services_ids)
-            .await?;
-        // index indices
-        let services_map: HashMap<String, DataService> = services_batch
-            .into_iter()
-            .map(|dto| (dto.inner.id.clone(), self.map_data_service(dto)))
-            .collect();
-
-        // map distributions
-        let mut distributions = Vec::with_capacity(distributions_dtos.len());
-        for dist_dto in distributions_dtos {
-            let service_id = &dist_dto.inner.dcat_access_service;
-            let linked_service = services_map.get(service_id).cloned();
-
-            distributions.push(self.map_distribution(dist_dto, linked_service)?);
+            .map(|d| Urn::from_str(&d.inner.id))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut offers: HashMap<String, Vec<OdrlOffer>> = HashMap::new();
+        // An offer that cannot be read leaves its dataset without offers, as before.
+        for dto in self
+            .odrl_policies_service
+            .get_odrl_offers_by_entities(user, &ids)
+            .await
+            .unwrap_or_default()
+        {
+            let entity = dto.inner.entity.clone();
+            offers.entry(entity).or_default().push(self.map_odrl_policy(dto)?);
         }
-        Ok(distributions)
+        let mut distributions = self.build_distributions(user, &ids).await?;
+        Ok(dtos
+            .into_iter()
+            .map(|dto| {
+                let id = dto.inner.id.clone();
+                let offers = offers.remove(&id).unwrap_or_default();
+                let distributions = distributions.remove(&id).unwrap_or_default();
+                self.map_dataset(dto, offers, distributions)
+            })
+            .collect())
+    }
+
+    /// Distributions of the datasets by dataset id, each with its access service.
+    async fn build_distributions(
+        &self,
+        user: &UserInfo,
+        dataset_ids: &[Urn],
+    ) -> Outcome<HashMap<String, Vec<Distribution>>> {
+        let dtos = self
+            .distributions_entity_service
+            .get_distributions_by_dataset_ids(user, dataset_ids)
+            .await?;
+        let service_ids: Vec<Urn> = dtos
+            .iter()
+            .filter_map(|d| Urn::from_str(&d.inner.dcat_access_service).ok())
+            .collect();
+        let services: HashMap<String, DataService> = if service_ids.is_empty() {
+            HashMap::new()
+        } else {
+            self.data_service_entities_service
+                .get_batch_data_services(user, &service_ids)
+                .await?
+                .into_iter()
+                .map(|dto| (dto.inner.id.clone(), self.map_data_service(dto)))
+                .collect()
+        };
+        let mut by_dataset: HashMap<String, Vec<Distribution>> = HashMap::new();
+        for dto in dtos {
+            let service = services.get(&dto.inner.dcat_access_service).cloned();
+            let dataset_id = dto.inner.dataset_id.clone();
+            by_dataset
+                .entry(dataset_id)
+                .or_default()
+                .push(self.map_distribution(dto, service)?);
+        }
+        Ok(by_dataset)
     }
 
     async fn fetch_main_catalog_dto(&self, user: &UserInfo) -> Outcome<CatalogDto> {

@@ -17,13 +17,14 @@
 
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
-    CatalogMessageType, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
+    CatalogErrorDto, CatalogMessageType, CatalogMessageWrapper, CatalogRequestMessageDto,
+    DatasetRequestMessage,
 };
 use axum::http::StatusCode;
 use axum::{
     extract::{rejection::JsonRejection, FromRef, Path, State},
     middleware,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::get,
     routing::post,
     Extension, Json, Router,
@@ -33,9 +34,11 @@ use common::dsp_common::context_field::ContextField;
 use common::dsp_common::normalizer::dsp_namespace_normalizer;
 use common::dsp_common::PeerAuth;
 use common::facades::grants_facade::VerifiedPeer;
+use common::flow::FlowError;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
+use ymir::errors::Errors;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -82,7 +85,7 @@ impl DspRouter {
     ) -> impl IntoResponse {
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+            Err(e) => return Self::catalog_error(StatusCode::BAD_REQUEST, vec![e.body_text()]),
         };
         let user = Self::peer_user(&peer);
         match state
@@ -92,7 +95,7 @@ impl DspRouter {
             .await
         {
             Ok(catalog) => (StatusCode::OK, Json(catalog)).into_response(),
-            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+            Err(e) => Self::catalog_failure(e),
         }
     }
 
@@ -105,8 +108,10 @@ impl DspRouter {
         let dataset_id = match Urn::from_str(&id) {
             Ok(urn) => urn,
             Err(_) => {
-                return (StatusCode::BAD_REQUEST, format!("Invalid dataset ID: {id}"))
-                    .into_response()
+                return Self::catalog_error(
+                    StatusCode::BAD_REQUEST,
+                    vec![format!("Invalid dataset ID: {id}")],
+                )
             }
         };
         let request_msg = CatalogMessageWrapper {
@@ -123,7 +128,28 @@ impl DspRouter {
             .await
         {
             Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
-            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+            Err(e) => Self::catalog_failure(e),
         }
+    }
+
+    /// A `CatalogError` (DSP 6.3.3) with the status as its code.
+    fn catalog_error(status: StatusCode, reasons: Vec<String>) -> Response {
+        let body = CatalogMessageWrapper {
+            context: ContextField::default(),
+            _type: CatalogMessageType::CatalogError,
+            dto: CatalogErrorDto {
+                code: Some(status.as_u16().to_string()),
+                reason: Some(reasons),
+            },
+        };
+        (status, Json(body)).into_response()
+    }
+
+    /// A failed lookup as a `CatalogError`: an unknown dataset is a 404, internals stay hidden.
+    fn catalog_failure(error: Errors) -> Response {
+        let error = FlowError::from(error);
+        let status =
+            StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        Self::catalog_error(status, error.reasons())
     }
 }

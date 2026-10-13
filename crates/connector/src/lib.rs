@@ -46,7 +46,6 @@ pub use entities::connector_instance::{ConnectorInstanceDto, ConnectorInstantiat
 pub use entities::interaction::{InteractionConfig, PullLifecycle, PushLifecycle};
 pub use entities::parameters::TemplateVecString;
 pub use entities::resource::{HttpSpec, ProtocolSpec};
-pub use facades::catalog_facade::CatalogFacadeTrait;
 pub use facades::connector_instance_facade::local::ConnectorInstanceLocalFacade;
 pub use facades::connector_instance_facade::remote::ConnectorInstanceRemoteFacade;
 pub use facades::connector_instance_facade::{

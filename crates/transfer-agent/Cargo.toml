@@ -18,8 +18,6 @@ connector = { version = "0.4.0", path = "../connector", default-features = false
 # oauth = { version = "0.4.0", path = "../oauth" }  # disabled, see the workspace Cargo.toml
 events = { version = "0.4.0", path = "../events", default-features = false }
 dataplane = { version = "0.4.0", path = "../dataplane", default-features = false }
-negotiation_agent = { version = "0.4.0", path = "../negotiation-agent", default-features = false }
-catalog_agent = { version = "0.4.0", path = "../catalog-agent", default-features = false }
 
 
 serde = { workspace = true }

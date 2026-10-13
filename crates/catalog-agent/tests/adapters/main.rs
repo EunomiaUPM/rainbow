@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Catalog-agent gRPC services with mocked domain services and a stub token validator.
+//! Catalog-agent gRPC services and DSP routes with mocked services, orchestrator and auth.
 
 #[path = "../support/mod.rs"]
 mod support;
@@ -26,3 +26,4 @@ mod grpc_datasets;
 mod grpc_distributions;
 mod grpc_odrl_policies;
 mod grpc_policy_templates;
+mod http_dsp;

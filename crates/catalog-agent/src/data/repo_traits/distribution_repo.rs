@@ -50,6 +50,12 @@ pub trait DistributionRepositoryTrait: Send + Sync {
         scope: &OwnerScope,
         dataset_id: &Urn,
     ) -> Outcome<Vec<distribution::Model>>;
+    /// Distributions of any of the datasets, in one query.
+    async fn get_distributions_by_dataset_ids(
+        &self,
+        scope: &OwnerScope,
+        dataset_ids: &[Urn],
+    ) -> Outcome<Vec<distribution::Model>>;
     /// Distribution of the dataset in the given `dct:format`.
     async fn get_distribution_by_dataset_id_and_dct_format(
         &self,

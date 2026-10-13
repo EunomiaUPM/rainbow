@@ -122,6 +122,19 @@ impl DataServiceServiceTrait for DataServiceService {
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
+    async fn get_data_services_by_catalog_ids(&self, user: &UserInfo, catalog_ids: &[Urn]) -> Outcome<Vec<DataServiceDto>> {
+        if catalog_ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let models = self
+            .repo
+            .get_dataservice_repo()
+            .get_data_services_by_catalog_ids(&OwnerScope::seeing(user), catalog_ids)
+            .await?;
+        Ok(models.into_iter().map(DataServiceDto::from).collect())
+    }
+
+    #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
     async fn get_data_services_by_catalog_id(
         &self,
         user: &UserInfo,

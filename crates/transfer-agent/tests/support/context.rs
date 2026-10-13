@@ -19,11 +19,14 @@
 
 use std::sync::Arc;
 
+use common::facades::catalog::{CatalogFacadeTrait, MockCatalogFacadeTrait};
 use common::facades::grants_facade::{GrantsFacadeTrait, MockGrantsFacadeTrait};
 use common::facades::mates_facade::{MatesFacadeTrait, MockMatesFacadeTrait};
+use common::facades::negotiation::{MockNegotiationFacadeTrait, NegotiationFacadeTrait};
 use common::facades::AuthPorts;
 use common::test_utils::config_fixtures::transfer_config_fixture;
 use common::test_utils::grpc::StubTokenValidator;
+use connector::{ConnectorInstanceFacadeTrait, MockConnectorInstanceFacadeTrait};
 use events::NoopEventSink;
 use transfer_agent::data::factory::DataFactory;
 use transfer_agent::data::repo::transfer_message::{
@@ -35,14 +38,8 @@ use transfer_agent::data::repo::transfer_process::{
 use transfer_agent::data::repo::transfer_process_identifier::{
     MockTransferIdentifierRepoTrait, TransferIdentifierRepoTrait,
 };
-use transfer_agent::protocols::dsp::facades::catalog_facade::{
-    CatalogFacadeTrait, MockCatalogFacadeTrait,
-};
 use transfer_agent::protocols::dsp::facades::dataplane_facade::{
     DataPlaneFacadeTrait, MockDataPlaneFacadeTrait,
-};
-use transfer_agent::protocols::dsp::facades::negotiation_facade::{
-    MockNegotiationFacadeTrait, NegotiationFacadeTrait,
 };
 use transfer_agent::services::transfer_message::service::TransferMessageService;
 use transfer_agent::services::transfer_message::TransferMessageServiceTrait;
@@ -79,6 +76,7 @@ pub struct TestContext {
     mates: Arc<dyn MatesFacadeTrait>,
     negotiation: Arc<dyn NegotiationFacadeTrait>,
     catalog: Arc<dyn CatalogFacadeTrait>,
+    connectors: Arc<dyn ConnectorInstanceFacadeTrait>,
     dataplane: Arc<dyn DataPlaneFacadeTrait>,
     processes: Option<Arc<dyn TransferProcessServiceTrait>>,
     messages: Option<Arc<dyn TransferMessageServiceTrait>>,
@@ -96,6 +94,7 @@ impl TestContext {
             mates: Arc::new(MockMatesFacadeTrait::new()),
             negotiation: Arc::new(MockNegotiationFacadeTrait::new()),
             catalog: Arc::new(MockCatalogFacadeTrait::new()),
+            connectors: Arc::new(MockConnectorInstanceFacadeTrait::new()),
             dataplane: Arc::new(MockDataPlaneFacadeTrait::new()),
             processes: None,
             messages: None,
@@ -137,6 +136,11 @@ impl TestContext {
         self
     }
 
+    pub fn connectors(mut self, connectors: impl ConnectorInstanceFacadeTrait + 'static) -> Self {
+        self.connectors = Arc::new(connectors);
+        self
+    }
+
     pub fn dataplane(mut self, dataplane: impl DataPlaneFacadeTrait + 'static) -> Self {
         self.dataplane = Arc::new(dataplane);
         self
@@ -160,6 +164,7 @@ impl TestContext {
             },
             self.negotiation,
             self.catalog,
+            self.connectors,
             self.dataplane,
         );
         let ctx = AppContext::bare(

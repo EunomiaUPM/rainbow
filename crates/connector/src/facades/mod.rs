@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Ports the connector consumes (distributions) and offers (instances) across agent boundaries.
+//! The port the connector offers (instances) across agent boundaries; the catalog it consumes is
+//! the contract published in `common::facades::catalog`.
 
-pub mod catalog_facade;
 pub mod connector_instance_facade;

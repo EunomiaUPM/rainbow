@@ -50,6 +50,12 @@ pub trait OdrlPolicyServiceTrait: Sync + Send {
         user: &UserInfo,
         entity: &Urn,
     ) -> Outcome<Vec<OdrlPolicyDto>>;
+    /// Offers attached to any of the entities, read in one query and not cached.
+    async fn get_odrl_offers_by_entities(
+        &self,
+        user: &UserInfo,
+        entities: &[Urn],
+    ) -> Outcome<Vec<OdrlPolicyDto>>;
     /// 404 when the offer is not visible to the caller.
     async fn get_odrl_offer_by_id(
         &self,
