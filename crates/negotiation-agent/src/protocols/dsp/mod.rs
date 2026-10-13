@@ -66,9 +66,11 @@ use crate::services::agreement::AgreementServiceTrait;
 use crate::services::negotiation_message::NegotiationMessageServiceTrait;
 use crate::services::negotiation_process::NegotiationProcessServiceTrait;
 use crate::services::offer::OfferServiceTrait;
+use axum::http::StatusCode;
 use axum::Router;
 use common::oauth::OauthTokenValidatorTrait;
 use common::config::services::ContractsConfig;
+use common::dsp_common::PeerAuth;
 use common::facades::mates_facade::MatesFacadeTrait;
 use common::facades::AuthPorts;
 use common::facades::grants_facade::GrantsFacadeTrait;
@@ -197,11 +199,11 @@ impl ProtocolPluginTrait for NegotiationDSP {
         ));
 
         // router
-        let dsp_router = DspRouter::new(
-            orchestrator_service.clone(),
-            self.config.clone(),
-            self.grants_service.clone(),
-        );
+        // Unknown peers keep getting the 401 negotiation answered before the shared layer.
+        let peer_auth = PeerAuth::new(self.grants_service.clone(), self.mates_service.clone())
+            .rejecting_with(StatusCode::UNAUTHORIZED);
+        let dsp_router =
+            DspRouter::new(orchestrator_service.clone(), self.config.clone(), peer_auth);
         let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
         let bff_rcp_router = BffRpcRouter::new(orchestrator_service.clone(), self.config.clone());
 

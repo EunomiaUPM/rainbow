@@ -21,8 +21,8 @@ use crate::protocols::dsp::protocol_types::{
 };
 use axum::http::StatusCode;
 use axum::{
-    extract::{rejection::JsonRejection, FromRef, Path, Request, State},
-    middleware::{self, Next},
+    extract::{rejection::JsonRejection, FromRef, Path, State},
+    middleware,
     response::IntoResponse,
     routing::get,
     routing::post,
@@ -31,7 +31,8 @@ use axum::{
 use common::oauth::UserInfo;
 use common::dsp_common::context_field::ContextField;
 use common::dsp_common::normalizer::dsp_namespace_normalizer;
-use common::facades::grants_facade::{GrantsFacadeTrait, VerifiedPeer};
+use common::dsp_common::PeerAuth;
+use common::facades::grants_facade::VerifiedPeer;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -39,7 +40,7 @@ use urn::Urn;
 #[derive(Clone)]
 pub struct DspRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
-    grants: Arc<dyn GrantsFacadeTrait>,
+    peer_auth: PeerAuth,
 }
 
 impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
@@ -49,10 +50,10 @@ impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
 }
 
 impl DspRouter {
-    pub fn new(service: Arc<dyn OrchestratorTrait>, grants: Arc<dyn GrantsFacadeTrait>) -> Self {
+    pub fn new(service: Arc<dyn OrchestratorTrait>, peer_auth: PeerAuth) -> Self {
         Self {
             orchestrator: service,
-            grants,
+            peer_auth,
         }
     }
 
@@ -62,34 +63,13 @@ impl DspRouter {
         peer.to_user()
     }
 
-    async fn auth_middleware(
-        State(state): State<DspRouter>,
-        mut request: Request,
-        next: Next,
-    ) -> Result<impl IntoResponse, StatusCode> {
-        let headers = request.headers();
-        let auth_header = headers.get("Authorization");
-        let token = match auth_header {
-            Some(header) => header.to_str().unwrap_or("").to_string(),
-            None => return Err(StatusCode::UNAUTHORIZED),
-        };
-        let token = token.replace("Bearer ", "");
-        match state.grants.verify_token(token).await {
-            Ok(peer) => {
-                request.extensions_mut().insert(peer);
-                Ok(next.run(request).await)
-            }
-            Err(_) => Err(StatusCode::UNAUTHORIZED),
-        }
-    }
-
     pub fn router(self) -> Router {
         Router::new()
             .route("/request", post(Self::handle_catalog_request))
             .route("/datasets/{id}", get(Self::handle_dataset_request))
             .layer(middleware::from_fn_with_state(
-                self.clone(),
-                Self::auth_middleware,
+                self.peer_auth.clone(),
+                PeerAuth::run,
             ))
             .layer(middleware::from_fn(dsp_namespace_normalizer))
             .with_state(self)

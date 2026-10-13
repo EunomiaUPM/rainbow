@@ -24,8 +24,6 @@ use axum::Router;
 use common::module_loader::service_module::ServiceModuleTrait;
 use ymir::errors::Outcome;
 
-const DSP_BASE_PATH: &str = "/dsp/current/catalog";
-
 pub struct DspModule {
     router: Router,
 }
@@ -55,6 +53,9 @@ impl ServiceModuleTrait for DspModule {
     }
 
     fn http(&self) -> Option<(String, Router)> {
-        Some((DSP_BASE_PATH.to_string(), self.router.clone()))
+        Some((
+            common::dsp_common::paths::CATALOG.to_string(),
+            self.router.clone(),
+        ))
     }
 }

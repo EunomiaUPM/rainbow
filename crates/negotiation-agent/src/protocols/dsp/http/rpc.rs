@@ -309,7 +309,8 @@ impl RpcRouter {
             .and_then(|host| host.to_str().ok())
             .map(|host| format!("http://{host}"))
             .unwrap_or_else(|| state.config.ssi_auth().hosts.get_host(HostType::Http));
-        let callback_address = format!("{callback_base}/dsp/current/negotiations");
+        let callback_address =
+            format!("{callback_base}{}", common::dsp_common::paths::NEGOTIATIONS);
         let rpc_dto = RpcNegotiationRequestInitMessageDto::new(
             input.provider_id,
             input.connector_address,

@@ -25,15 +25,15 @@ use crate::protocols::dsp::protocol_types::{
 };
 use axum::{
     Extension, Json, Router,
-    extract::{FromRef, Path, Request, State, rejection::JsonRejection},
-    http::{HeaderMap, StatusCode},
-    middleware::{self, Next},
-    response::{IntoResponse, Response},
+    extract::{FromRef, Path, State, rejection::JsonRejection},
+    http::StatusCode,
+    middleware,
+    response::IntoResponse,
     routing::{get, post},
 };
 use common::config::services::ContractsConfig;
 use common::dsp_common::normalizer::dsp_namespace_normalizer;
-use common::facades::grants_facade::GrantsFacadeTrait;
+use common::dsp_common::PeerAuth;
 use serde::Serialize;
 use std::future::Future;
 use std::sync::Arc;
@@ -44,7 +44,7 @@ use ymir::errors::Errors;
 pub struct DspRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
     config: Arc<ContractsConfig>,
-    grants: Arc<dyn GrantsFacadeTrait>,
+    peer_auth: PeerAuth,
 }
 
 impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
@@ -63,12 +63,12 @@ impl DspRouter {
     pub fn new(
         service: Arc<dyn OrchestratorTrait>,
         config: Arc<ContractsConfig>,
-        grants: Arc<dyn GrantsFacadeTrait>,
+        peer_auth: PeerAuth,
     ) -> Self {
         Self {
             orchestrator: service,
             config,
-            grants,
+            peer_auth,
         }
     }
 
@@ -100,37 +100,11 @@ impl DspRouter {
                 post(Self::handle_negotiation_termination),
             )
             .layer(middleware::from_fn_with_state(
-                self.clone(),
-                Self::auth_middleware,
+                self.peer_auth.clone(),
+                PeerAuth::run,
             ))
             .layer(middleware::from_fn(dsp_namespace_normalizer))
             .with_state(self)
-    }
-
-    async fn auth_middleware(
-        State(state): State<DspRouter>,
-        headers: HeaderMap,
-        mut request: Request,
-        next: Next,
-    ) -> Result<Response, StatusCode> {
-        let auth_header = headers
-            .get("Authorization")
-            .and_then(|header| header.to_str().ok())
-            .ok_or(StatusCode::UNAUTHORIZED)?;
-
-        if !auth_header.starts_with("Bearer ") {
-            return Err(StatusCode::UNAUTHORIZED);
-        }
-
-        let token = auth_header.trim_start_matches("Bearer ").to_string();
-
-        match state.grants.verify_token(token).await {
-            Ok(peer) => {
-                request.extensions_mut().insert(peer);
-                Ok(next.run(request).await)
-            }
-            Err(_) => Err(StatusCode::UNAUTHORIZED),
-        }
     }
 
     // --- Helpers ---

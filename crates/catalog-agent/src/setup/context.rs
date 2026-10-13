@@ -121,8 +121,9 @@ impl AppContext {
             data_service_svc.clone(),
             mates_facade.clone(),
             format!(
-                "{}/dsp/current",
-                config.contracts().get_host(HostType::Http)
+                "{}{}",
+                config.contracts().get_host(HostType::Http),
+                common::dsp_common::paths::DSP_CURRENT
             ),
         ));
 

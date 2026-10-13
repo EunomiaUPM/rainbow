@@ -31,7 +31,9 @@ use crate::services::datasets::DatasetServiceTrait;
 use crate::services::distributions::DistributionServiceTrait;
 use crate::services::odrl_policies::OdrlPolicyServiceTrait;
 use crate::services::peer_catalogs::PeerCatalogServiceTrait;
+use axum::http::StatusCode;
 use axum::Router;
+use common::dsp_common::PeerAuth;
 use common::oauth::OauthTokenValidatorTrait;
 use ymir::http::OauthHttpMiddleware;
 use common::facades::mates_facade::MatesFacadeTrait;
@@ -132,7 +134,10 @@ impl ProtocolPluginTrait for CatalogDSP {
         ));
 
         // router
-        let dsp_router = DspRouter::new(orchestrator_service.clone(), self.grants_facade.clone());
+        // Unknown peers keep getting the 401 catalog answered before the shared layer.
+        let peer_auth = PeerAuth::new(self.grants_facade.clone(), self.mates_facade.clone())
+            .rejecting_with(StatusCode::UNAUTHORIZED);
+        let dsp_router = DspRouter::new(orchestrator_service.clone(), peer_auth);
         let rpc_router = RpcRouter::new(orchestrator_service.clone())
             .router()
             .route_layer(axum::middleware::from_fn_with_state(
