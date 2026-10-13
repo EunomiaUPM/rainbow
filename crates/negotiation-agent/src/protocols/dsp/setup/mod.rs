@@ -15,47 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::Arc;
+//! The DSP plane: what it builds over the agent context, and the module that serves it.
 
-use crate::protocols::dsp::NegotiationDSP;
-use crate::protocols::protocol::ProtocolPluginTrait;
-use crate::setup::context::AppContext;
-use axum::Router;
-use common::module_loader::service_module::ServiceModuleTrait;
-use ymir::errors::Outcome;
+pub mod composition;
+pub mod context;
 
-pub struct DspModule {
-    router: Router,
-}
-
-impl DspModule {
-    pub async fn build(ctx: Arc<AppContext>) -> Outcome<Self> {
-        let router = NegotiationDSP::new(
-            ctx.process_repo.clone(),
-            ctx.process_svc.clone(),
-            ctx.message_svc.clone(),
-            ctx.offer_svc.clone(),
-            ctx.agreement_svc.clone(),
-            ctx.config.clone(),
-            ctx.grants_facade.clone(),
-            ctx.mates_facade.clone(),
-            ctx.oauth_validator.clone(),
-        )
-        .build_router()
-        .await?;
-        Ok(Self { router })
-    }
-}
-
-impl ServiceModuleTrait for DspModule {
-    fn name(&self) -> &'static str {
-        "dsp-negotiations"
-    }
-
-    fn http(&self) -> Option<(String, Router)> {
-        Some((
-            common::dsp_common::paths::NEGOTIATIONS.to_string(),
-            self.router.clone(),
-        ))
-    }
-}
+pub use composition::DspModule;

@@ -19,6 +19,7 @@
 
 use crate::entities::filters::NegotiationProcessFilter;
 use crate::entities::negotiation_process::{EditNegotiationProcessDto, NewNegotiationProcessDto};
+use crate::setup::context::AppContext;
 use crate::services::negotiation_process::NegotiationProcessServiceTrait;
 use crate::services::negotiation_process::views::NegotiationProcessView;
 use axum::extract::rejection::JsonRejection;
@@ -38,18 +39,18 @@ pub type NegotiationProcessQuery = QuerySpec<NegotiationProcessFilter, Sort>;
 
 #[derive(Clone)]
 pub struct NegotiationAgentProcessesRouter {
-    service: Arc<dyn NegotiationProcessServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<NegotiationAgentProcessesRouter> for Arc<dyn NegotiationProcessServiceTrait> {
     fn from_ref(state: &NegotiationAgentProcessesRouter) -> Self {
-        state.service.clone()
+        state.ctx.processes().clone()
     }
 }
 
 impl NegotiationAgentProcessesRouter {
-    pub fn new(service: Arc<dyn NegotiationProcessServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -73,7 +74,7 @@ impl NegotiationAgentProcessesRouter {
         Query(q): Query<NegotiationProcessQuery>,
     ) -> AppResult<(HeaderMap, Json<Paginated<NegotiationProcessView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.processes().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -85,7 +86,7 @@ impl NegotiationAgentProcessesRouter {
         payload: Result<Json<BatchRequests>, JsonRejection>,
     ) -> AppResult<(HeaderMap, Json<Vec<NegotiationProcessView>>)> {
         let payload = extract_payload(payload)?;
-        let views = state.service.batch(&user, &payload).await?;
+        let views = state.ctx.processes().batch(&user, &payload).await?;
         let count = views.len() as u64;
         Ok((headers.response_headers_paged(Some(count)), Json(views)))
     }
@@ -97,7 +98,7 @@ impl NegotiationAgentProcessesRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<NegotiationProcessView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.processes().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -108,7 +109,7 @@ impl NegotiationAgentProcessesRouter {
         payload: Result<Json<NewNegotiationProcessDto>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<NegotiationProcessView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.processes().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -122,7 +123,7 @@ impl NegotiationAgentProcessesRouter {
     ) -> AppResult<(HeaderMap, Json<NegotiationProcessView>)> {
         let urn = extract_path_urn(&id)?;
         let payload = extract_payload(payload)?;
-        let view = state.service.edit(&user, &urn, &payload).await?;
+        let view = state.ctx.processes().edit(&user, &urn, &payload).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -133,7 +134,7 @@ impl NegotiationAgentProcessesRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.processes().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 
@@ -144,7 +145,7 @@ impl NegotiationAgentProcessesRouter {
         Path((id, key_id)): Path<(String, String)>,
     ) -> AppResult<(HeaderMap, Json<NegotiationProcessView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.processes().get_one(&user, &urn).await?;
         if view.identifiers.contains_key(&key_id) {
             Ok((headers.response_headers(), Json(view)))
         } else {

@@ -27,8 +27,7 @@ use crate::grpc::api::negotiation_agent::{
     GetMessagesByProcessIdRequest, GetNegotiationMessageByIdRequest,
     ListNegotiationMessagesRequest, NegotiationMessageListResponse, NegotiationMessageResponse,
 };
-use crate::services::negotiation_message::NegotiationMessageServiceTrait;
-use common::oauth::OauthTokenValidatorTrait;
+use crate::setup::context::AppContext;
 use common::oauth::grpc::GrpcAuth;
 use common::grpc::{IntoStatus, ListParams, ProtoField};
 use tonic::{Request, Response, Status};
@@ -36,18 +35,15 @@ use ymir::errors::Errors;
 
 /// gRPC adapter of the message service.
 pub struct NegotiationAgentMessagesGrpc {
-    service: Arc<dyn NegotiationMessageServiceTrait>,
+    ctx: Arc<AppContext>,
     auth: GrpcAuth,
 }
 
 impl NegotiationAgentMessagesGrpc {
-    pub fn new(
-        service: Arc<dyn NegotiationMessageServiceTrait>,
-        validator: Arc<dyn OauthTokenValidatorTrait>,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            service,
-            auth: GrpcAuth::new(validator),
+            auth: GrpcAuth::new(ctx.oauth_validator.clone()),
+            ctx,
         }
     }
 }
@@ -60,8 +56,7 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
     ) -> Result<Response<NegotiationMessageListResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let params = ListParams::try_from(request.into_inner())?;
-        let result = self
-            .service
+        let result = self.ctx.messages()
             .get_all(&user, &params.filter, &params.page, &params.sort)
             .await
             .map_err(Errors::into_status)?;
@@ -74,8 +69,7 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
     ) -> Result<Response<NegotiationMessageListResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let params = ListParams::try_from(request.into_inner())?;
-        let result = self
-            .service
+        let result = self.ctx.messages()
             .get_all(&user, &params.filter, &params.page, &params.sort)
             .await
             .map_err(Errors::into_status)?;
@@ -88,8 +82,7 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
     ) -> Result<Response<NegotiationMessageResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
-        let view = self
-            .service
+        let view = self.ctx.messages()
             .get_one(&user, &id)
             .await
             .map_err(Errors::into_status)?;
@@ -102,8 +95,7 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
     ) -> Result<Response<NegotiationMessageResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let dto = request.into_inner().try_into()?;
-        let view = self
-            .service
+        let view = self.ctx.messages()
             .create(&user, &dto)
             .await
             .map_err(Errors::into_status)?;
@@ -116,7 +108,7 @@ impl NegotiationAgentMessagesService for NegotiationAgentMessagesGrpc {
     ) -> Result<Response<()>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
-        self.service
+        self.ctx.messages()
             .delete(&user, &id)
             .await
             .map_err(Errors::into_status)?;

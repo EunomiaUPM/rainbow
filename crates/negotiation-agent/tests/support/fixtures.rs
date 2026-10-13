@@ -19,7 +19,9 @@
 
 use chrono::Utc;
 use common::test_utils::grpc::TENANT;
-use negotiation_agent::data::entities::{agreement, negotiation_message, offer};
+use negotiation_agent::data::sea_orm::orm::{
+    agreement, negotiation_message, negotiation_process, negotiation_process_identifier, offer,
+};
 use serde_json::json;
 
 pub fn urn(n: u32) -> String {
@@ -72,5 +74,40 @@ pub fn agreement_row(n: u32) -> agreement::Model {
         state: "ACTIVE".into(),
         created_at: Utc::now().into(),
         updated_at: None,
+    }
+}
+
+pub fn process_row(n: u32, role: &str, state: &str) -> negotiation_process::Model {
+    negotiation_process::Model {
+        id: urn(n),
+        user_id: TENANT.to_string(),
+        user_role: common::oauth::RolePath::root(),
+        visibility: common::oauth::Visibility::Private,
+        state: state.into(),
+        state_attribute: None,
+        associated_agent_peer: "did:web:peer".into(),
+        protocol: "DSP".into(),
+        callback_address: Some("http://peer/dsp/current".into()),
+        role: role.into(),
+        properties: json!({}),
+        error_details: None,
+        created_at: Utc::now().into(),
+        updated_at: None,
+    }
+}
+
+pub fn identifier_row(
+    process: u32,
+    key: &str,
+    value: &str,
+) -> negotiation_process_identifier::Model {
+    negotiation_process_identifier::Model {
+        id: format!("{}-{key}", urn(process)),
+        user_id: TENANT.to_string(),
+        user_role: common::oauth::RolePath::root(),
+        visibility: common::oauth::Visibility::Private,
+        negotiation_agent_process_id: urn(process),
+        id_key: key.into(),
+        id_value: Some(value.into()),
     }
 }

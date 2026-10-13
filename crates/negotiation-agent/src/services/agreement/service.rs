@@ -27,31 +27,26 @@ use common::query::{MAX_BATCH_IDS, Page, Paginated, QueryFilter, Sort};
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
-use crate::data::entities::agreement::{EditAgreementModel, NewAgreementModel};
-use crate::data::repo_traits::agreement_repo::AgreementRepoTrait;
+use crate::data::sea_orm::orm::agreement::{EditAgreementModel, NewAgreementModel};
+use crate::data::repo::agreement::AgreementRepoTrait;
 use crate::entities::agreement::{EditAgreementDto, NewAgreementDto};
 use crate::entities::filters::AgreementFilter;
+use crate::setup::context::AppContext;
 use crate::services::agreement::AgreementServiceTrait;
 use crate::services::agreement::views::AgreementView;
 
-/// Agreement service over a repository, emitting `negotiations:` events when a bus is set.
+/// Agreement service over the context's repos, emitting `negotiations:` events.
 pub struct AgreementService {
-    agreement_repo: Arc<dyn AgreementRepoTrait>,
-    event_bus: Option<events::EventBus>,
+    ctx: Arc<AppContext>,
 }
 
 impl AgreementService {
-    pub fn new(agreement_repo: Arc<dyn AgreementRepoTrait>) -> Self {
-        Self {
-            agreement_repo,
-            event_bus: None,
-        }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
-    /// Publishes create, edit and delete events on `event_bus`.
-    pub fn with_event_bus(mut self, event_bus: Option<events::EventBus>) -> Self {
-        self.event_bus = event_bus;
-        self
+    fn agreement_repo(&self) -> Arc<dyn AgreementRepoTrait> {
+        self.ctx.repos.agreement_repo()
     }
 }
 
@@ -69,7 +64,7 @@ impl AgreementServiceTrait for AgreementService {
 
         let page = page.clamped();
         let (agreements, total) = self
-            .agreement_repo
+            .agreement_repo()
             .get_all_agreements(&OwnerScope::seeing(user), filters, &page, sort)
             .await?;
 
@@ -91,7 +86,7 @@ impl AgreementServiceTrait for AgreementService {
     )]
     async fn get_one(&self, user: &UserInfo, id: &Urn) -> Outcome<AgreementView> {
         let agreement = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreement_by_id(&OwnerScope::seeing(user), id)
             .await?
             .or_not_found(id, "agreement")?;
@@ -111,7 +106,7 @@ impl AgreementServiceTrait for AgreementService {
         process_id: &Urn,
     ) -> Outcome<AgreementView> {
         let agreement = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreement_by_negotiation_process(
                 &OwnerScope::seeing(user),
                 process_id,
@@ -134,7 +129,7 @@ impl AgreementServiceTrait for AgreementService {
         message_id: &Urn,
     ) -> Outcome<AgreementView> {
         let agreement = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreement_by_negotiation_message(
                 &OwnerScope::seeing(user),
                 message_id,
@@ -157,7 +152,7 @@ impl AgreementServiceTrait for AgreementService {
         assignee: &str,
     ) -> Outcome<Vec<AgreementView>> {
         let agreements = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreements_by_assignee(&OwnerScope::seeing(user), assignee)
             .await?;
 
@@ -179,7 +174,7 @@ impl AgreementServiceTrait for AgreementService {
         assigner: &str,
     ) -> Outcome<Vec<AgreementView>> {
         let agreements = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreements_by_assigner(&OwnerScope::seeing(user), assigner)
             .await?;
 
@@ -203,7 +198,7 @@ impl AgreementServiceTrait for AgreementService {
         }
 
         let agreements = self
-            .agreement_repo
+            .agreement_repo()
             .get_batch_agreements(&OwnerScope::seeing(user), &req.ids)
             .await?;
 
@@ -217,11 +212,11 @@ impl AgreementServiceTrait for AgreementService {
     async fn create(&self, user: &UserInfo, cmd: &NewAgreementDto) -> Outcome<AgreementView> {
         let owner = Owner::for_new(user, cmd.owner.clone(), cmd.visibility.clone());
         let new_model: NewAgreementModel = cmd.clone().into_model(owner);
-        let created = self.agreement_repo.create_agreement(&new_model).await?;
+        let created = self.agreement_repo().create_agreement(&new_model).await?;
 
         let view = AgreementView::assemble(created);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &view.inner.owner(),
             crate::EVENT_PREFIX,
             "agreement",
@@ -241,13 +236,13 @@ impl AgreementServiceTrait for AgreementService {
 
         let edit_model: EditAgreementModel = cmd.clone().into();
         let updated = self
-            .agreement_repo
+            .agreement_repo()
             .put_agreement(&OwnerScope::acting(user), id, &edit_model)
             .await?;
 
         let view = AgreementView::assemble(updated);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &view.inner.owner(),
             crate::EVENT_PREFIX,
             "agreement",
@@ -265,11 +260,11 @@ impl AgreementServiceTrait for AgreementService {
     )]
     async fn delete(&self, user: &UserInfo, id: &Urn) -> Outcome<()> {
         let owner = self
-            .agreement_repo
+            .agreement_repo()
             .delete_agreement(&OwnerScope::acting(user), id)
             .await?;
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "agreement",

@@ -19,6 +19,7 @@
 
 use crate::entities::filters::OfferFilter;
 use crate::entities::offer::NewOfferDto;
+use crate::setup::context::AppContext;
 use crate::services::offer::OfferServiceTrait;
 use crate::services::offer::views::OfferView;
 use axum::extract::rejection::JsonRejection;
@@ -38,18 +39,18 @@ pub type OfferQuery = QuerySpec<OfferFilter, Sort>;
 
 #[derive(Clone)]
 pub struct NegotiationAgentOffersRouter {
-    service: Arc<dyn OfferServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<NegotiationAgentOffersRouter> for Arc<dyn OfferServiceTrait> {
     fn from_ref(state: &NegotiationAgentOffersRouter) -> Self {
-        state.service.clone()
+        state.ctx.offers().clone()
     }
 }
 
 impl NegotiationAgentOffersRouter {
-    pub fn new(service: Arc<dyn OfferServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -72,7 +73,7 @@ impl NegotiationAgentOffersRouter {
         Query(q): Query<OfferQuery>,
     ) -> AppResult<(HeaderMap, Json<Paginated<OfferView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.offers().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -87,7 +88,7 @@ impl NegotiationAgentOffersRouter {
         let process_urn = extract_path_urn(&process_id)?;
         let (mut filter, page, sort) = q.into_domain();
         filter.process_id = Some(process_urn.to_string());
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.offers().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -101,7 +102,7 @@ impl NegotiationAgentOffersRouter {
     ) -> AppResult<(HeaderMap, Json<Paginated<OfferView>>)> {
         let (mut filter, page, sort) = q.into_domain();
         filter.offer_id = Some(offer_id);
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.offers().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -113,7 +114,7 @@ impl NegotiationAgentOffersRouter {
         payload: Result<Json<BatchRequests>, JsonRejection>,
     ) -> AppResult<(HeaderMap, Json<Vec<OfferView>>)> {
         let payload = extract_payload(payload)?;
-        let views = state.service.batch(&user, &payload).await?;
+        let views = state.ctx.offers().batch(&user, &payload).await?;
         let count = views.len() as u64;
         Ok((headers.response_headers_paged(Some(count)), Json(views)))
     }
@@ -125,7 +126,7 @@ impl NegotiationAgentOffersRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<OfferView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.offers().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -136,7 +137,7 @@ impl NegotiationAgentOffersRouter {
         payload: Result<Json<NewOfferDto>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<OfferView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.offers().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -148,7 +149,7 @@ impl NegotiationAgentOffersRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.offers().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 }

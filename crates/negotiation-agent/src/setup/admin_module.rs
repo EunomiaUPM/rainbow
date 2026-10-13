@@ -70,19 +70,19 @@ impl ServiceModuleTrait for NegotiationAdminModule {
         let router = Router::new()
             .nest(
                 "/negotiation-messages",
-                NegotiationAgentMessagesRouter::new(ctx.message_svc.clone()).router(),
+                NegotiationAgentMessagesRouter::new(ctx.clone()).router(),
             )
             .nest(
                 "/negotiation-processes",
-                NegotiationAgentProcessesRouter::new(ctx.process_svc.clone()).router(),
+                NegotiationAgentProcessesRouter::new(ctx.clone()).router(),
             )
             .nest(
                 "/offers",
-                NegotiationAgentOffersRouter::new(ctx.offer_svc.clone()).router(),
+                NegotiationAgentOffersRouter::new(ctx.clone()).router(),
             )
             .nest(
                 "/agreements",
-                NegotiationAgentAgreementsRouter::new(ctx.agreement_svc.clone()).router(),
+                NegotiationAgentAgreementsRouter::new(ctx.clone()).router(),
             )
             .route_layer(axum::middleware::from_fn_with_state(
                 ctx.oauth_validator.clone(),
@@ -93,19 +93,18 @@ impl ServiceModuleTrait for NegotiationAdminModule {
 
     fn grpc(&self, routes: &mut RoutesBuilder) {
         let ctx = &self.ctx;
-        let validator = || ctx.oauth_validator.clone();
         routes
             .add_service(NegotiationAgentProcessesServiceServer::new(
-                NegotiationAgentProcessesGrpc::new(ctx.process_svc.clone(), validator()),
+                NegotiationAgentProcessesGrpc::new(ctx.clone()),
             ))
             .add_service(NegotiationAgentMessagesServiceServer::new(
-                NegotiationAgentMessagesGrpc::new(ctx.message_svc.clone(), validator()),
+                NegotiationAgentMessagesGrpc::new(ctx.clone()),
             ))
             .add_service(NegotiationAgentOffersServiceServer::new(
-                NegotiationAgentOfferGrpc::new(ctx.offer_svc.clone(), validator()),
+                NegotiationAgentOfferGrpc::new(ctx.clone()),
             ))
             .add_service(NegotiationAgentAgreementsServiceServer::new(
-                NegotiationAgentAgreementGrpc::new(ctx.agreement_svc.clone(), validator()),
+                NegotiationAgentAgreementGrpc::new(ctx.clone()),
             ));
     }
 

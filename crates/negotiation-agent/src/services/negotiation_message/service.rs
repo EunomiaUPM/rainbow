@@ -27,41 +27,36 @@ use common::query::{MAX_BATCH_IDS, Page, Paginated, QueryFilter, Sort};
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
-use crate::data::entities::negotiation_message::NewNegotiationMessageModel;
-use crate::data::repo_traits::agreement_repo::AgreementRepoTrait;
-use crate::data::repo_traits::negotiation_message_repo::NegotiationMessageRepoTrait;
-use crate::data::repo_traits::offer_repo::OfferRepoTrait;
+use crate::data::sea_orm::orm::negotiation_message::NewNegotiationMessageModel;
+use crate::data::repo::agreement::AgreementRepoTrait;
+use crate::data::repo::negotiation_message::NegotiationMessageRepoTrait;
+use crate::data::repo::offer::OfferRepoTrait;
 use crate::entities::filters::NegotiationMessageFilter;
 use crate::entities::negotiation_message::NewNegotiationMessageDto;
+use crate::setup::context::AppContext;
 use crate::services::negotiation_message::NegotiationMessageServiceTrait;
 use crate::services::negotiation_message::views::NegotiationMessageView;
 
-/// Message service, emitting `negotiations:` events when a bus is set.
+/// Message service over the context's repos, emitting `negotiations:` events.
 pub struct NegotiationMessageService {
-    message_repo: Arc<dyn NegotiationMessageRepoTrait>,
-    offer_repo: Arc<dyn OfferRepoTrait>,
-    agreement_repo: Arc<dyn AgreementRepoTrait>,
-    event_bus: Option<events::EventBus>,
+    ctx: Arc<AppContext>,
 }
 
 impl NegotiationMessageService {
-    pub fn new(
-        message_repo: Arc<dyn NegotiationMessageRepoTrait>,
-        offer_repo: Arc<dyn OfferRepoTrait>,
-        agreement_repo: Arc<dyn AgreementRepoTrait>,
-    ) -> Self {
-        Self {
-            message_repo,
-            offer_repo,
-            agreement_repo,
-            event_bus: None,
-        }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
-    /// Publishes create and delete events on `event_bus`.
-    pub fn with_event_bus(mut self, event_bus: Option<events::EventBus>) -> Self {
-        self.event_bus = event_bus;
-        self
+    fn message_repo(&self) -> Arc<dyn NegotiationMessageRepoTrait> {
+        self.ctx.repos.negotiation_message_repo()
+    }
+
+    fn offer_repo(&self) -> Arc<dyn OfferRepoTrait> {
+        self.ctx.repos.offer_repo()
+    }
+
+    fn agreement_repo(&self) -> Arc<dyn AgreementRepoTrait> {
+        self.ctx.repos.agreement_repo()
     }
 }
 
@@ -79,7 +74,7 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
 
         let page = page.clamped();
         let (messages, total) = self
-            .message_repo
+            .message_repo()
             .get_all_negotiation_messages(&OwnerScope::seeing(user), filters, &page, sort)
             .await?;
 
@@ -101,18 +96,18 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
     )]
     async fn get_one(&self, user: &UserInfo, id: &Urn) -> Outcome<NegotiationMessageView> {
         let message = self
-            .message_repo
+            .message_repo()
             .get_negotiation_message_by_id(&OwnerScope::seeing(user), id)
             .await?
             .or_not_found(id, "negotiation message")?;
 
         let offer = self
-            .offer_repo
+            .offer_repo()
             .get_offer_by_negotiation_message(&OwnerScope::seeing(user), id)
             .await?;
 
         let agreement = self
-            .agreement_repo
+            .agreement_repo()
             .get_agreement_by_negotiation_message(&OwnerScope::seeing(user), id)
             .await?;
 
@@ -137,7 +132,7 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
         }
 
         let messages = self
-            .message_repo
+            .message_repo()
             .get_batch_negotiation_messages(&OwnerScope::seeing(user), &req.ids)
             .await?;
 
@@ -158,13 +153,13 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
         let owner = Owner::for_new(user, cmd.owner.clone(), cmd.visibility.clone());
         let new_model: NewNegotiationMessageModel = cmd.clone().into_model(owner);
         let created = self
-            .message_repo
+            .message_repo()
             .create_negotiation_message(&new_model)
             .await?;
 
         let view = NegotiationMessageView::assemble(created, None, None);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &view.inner.owner(),
             crate::EVENT_PREFIX,
             "message",
@@ -182,11 +177,11 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
     )]
     async fn delete(&self, user: &UserInfo, id: &Urn) -> Outcome<()> {
         let owner = self
-            .message_repo
+            .message_repo()
             .delete_negotiation_message(&OwnerScope::acting(user), id)
             .await?;
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "message",

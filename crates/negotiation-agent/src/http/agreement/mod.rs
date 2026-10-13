@@ -19,6 +19,7 @@
 
 use crate::entities::agreement::{EditAgreementDto, NewAgreementDto};
 use crate::entities::filters::AgreementFilter;
+use crate::setup::context::AppContext;
 use crate::services::agreement::AgreementServiceTrait;
 use crate::services::agreement::views::AgreementView;
 use axum::extract::rejection::JsonRejection;
@@ -38,18 +39,18 @@ pub type AgreementQuery = QuerySpec<AgreementFilter, Sort>;
 
 #[derive(Clone)]
 pub struct NegotiationAgentAgreementsRouter {
-    service: Arc<dyn AgreementServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<NegotiationAgentAgreementsRouter> for Arc<dyn AgreementServiceTrait> {
     fn from_ref(state: &NegotiationAgentAgreementsRouter) -> Self {
-        state.service.clone()
+        state.ctx.agreements().clone()
     }
 }
 
 impl NegotiationAgentAgreementsRouter {
-    pub fn new(service: Arc<dyn AgreementServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -75,7 +76,7 @@ impl NegotiationAgentAgreementsRouter {
         Query(q): Query<AgreementQuery>,
     ) -> AppResult<(HeaderMap, Json<Paginated<AgreementView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.agreements().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -90,7 +91,7 @@ impl NegotiationAgentAgreementsRouter {
         let process_urn = extract_path_urn(&process_id)?;
         let (mut filter, page, sort) = q.into_domain();
         filter.process_id = Some(process_urn.to_string());
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.agreements().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -104,7 +105,7 @@ impl NegotiationAgentAgreementsRouter {
     ) -> AppResult<(HeaderMap, Json<Paginated<AgreementView>>)> {
         let (mut filter, page, sort) = q.into_domain();
         filter.consumer_id = Some(assignee);
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.agreements().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -118,7 +119,7 @@ impl NegotiationAgentAgreementsRouter {
     ) -> AppResult<(HeaderMap, Json<Paginated<AgreementView>>)> {
         let (mut filter, page, sort) = q.into_domain();
         filter.provider_id = Some(assigner);
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.agreements().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -130,7 +131,7 @@ impl NegotiationAgentAgreementsRouter {
         payload: Result<Json<BatchRequests>, JsonRejection>,
     ) -> AppResult<(HeaderMap, Json<Vec<AgreementView>>)> {
         let payload = extract_payload(payload)?;
-        let views = state.service.batch(&user, &payload).await?;
+        let views = state.ctx.agreements().batch(&user, &payload).await?;
         let count = views.len() as u64;
         Ok((headers.response_headers_paged(Some(count)), Json(views)))
     }
@@ -142,7 +143,7 @@ impl NegotiationAgentAgreementsRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<AgreementView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.agreements().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -153,7 +154,7 @@ impl NegotiationAgentAgreementsRouter {
         payload: Result<Json<NewAgreementDto>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<AgreementView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.agreements().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -167,7 +168,7 @@ impl NegotiationAgentAgreementsRouter {
     ) -> AppResult<(HeaderMap, Json<AgreementView>)> {
         let urn = extract_path_urn(&id)?;
         let payload = extract_payload(payload)?;
-        let view = state.service.edit(&user, &urn, &payload).await?;
+        let view = state.ctx.agreements().edit(&user, &urn, &payload).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -178,7 +179,7 @@ impl NegotiationAgentAgreementsRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.agreements().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 }

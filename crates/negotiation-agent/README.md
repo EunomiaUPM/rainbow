@@ -17,38 +17,41 @@ src/
 ├── main.rs          AgentCli::<NegotiationAgentBoot>
 ├── entities/        Negotiation processes, messages, offers, agreements, filters
 ├── services/        One use case per entity
-├── data/            Repository traits, SQL repositories and migrations
+├── data/            Repository ports (repo/), SeaORM adapter (sea_orm/), DataFactory
 ├── http/            Management routers
 ├── grpc/            gRPC mirror of the management API
 ├── protocols/dsp/
-│   ├── http/            DSP endpoints, RPC endpoints, BFF RPC endpoints
-│   ├── orchestrator/    protocol/ (peer messages), rpc/ (outgoing messages), bff/ (chained steps)
-│   ├── validator/       Payload, state transition and role checks
-│   ├── persistence/     RPC persistence and process lookup by pid
-│   ├── facades/         Well-known lookup of peer DSP addresses
-│   └── protocol_types.rs  DSP messages and NegotiationProcessState
-├── facades/         Catalog facade: checks that a requested offer is published
+│   ├── entities/        Message types, states (DSP 8.1 table), roles, the hydrated process,
+│   │                    DSP and RPC stages, RDF extractors, ACK, error, TCK messages
+│   ├── services/        dsp_flow/ (peer messages), rpc_flow/ (our messages), dsp_persistence/,
+│   │                    validator/ (rules, dsp, rpc), tck/ (script, guard, player)
+│   ├── http/            dsp/, rpc/ and bff/ routers with their flow adapters
+│   └── setup/           DspContext (persistence, runners, TCK queue) and DspModule
+├── facades/         The published contract served in-process (agreements as ODRL)
 └── setup/           NegotiationAgentModule, admin module, AppContext, ports, boot
 tests/
 ├── entities/        Filters
-├── services/        Every service with mocked repositories
-├── adapters/        gRPC services with mocked services and a stub validator
-└── support/         Fixtures
+├── services/        Every service, the DSP persistence and the TCK script
+├── protocols/       Message types, state machine, RDF extraction, stages and rules
+├── adapters/        gRPC services, and the DSP routes end to end over an in-memory store
+└── support/         TestContext and fixtures
 ```
 
 ## Negotiation
 
 States: `REQUESTED`, `OFFERED`, `ACCEPTED`, `AGREED`, `VERIFIED`, `FINALIZED`, `TERMINATED`.
-Every incoming message is validated against the JSON-LD payload, the process's current state and
-the role the agent holds in it before anything is stored. A process is identified by its
-`consumerPid` and `providerPid`.
+A process is identified by its `consumerPid` and `providerPid`; pids are opaque.
 
-Each step goes through one orchestrator step (`step_*.rs`). The step validates the message,
-stores the process change, the message and the offer or agreement it carries, then answers
-with the process ACK or an error message.
+Every message, received or sent, runs through a `common::flow` runner. A peer's message is read
+stage by stage (request, JSON, RDF expansion, typed fields), checked for its DSP shape, loaded
+(process, our role, offers), checked against the DSP 8.1 table, our role and the pids, and
+applied by one handler per message, which stores the state change, the message and the offer or
+agreement it carries. A repeated message gets the first answer. Our own messages go the same
+way: the RPC body is read through the eunomia context, the DSP message is built and checked,
+sent with the peer token, and stored once the peer accepts it.
 
-When a peer's contract request names an offer, the provider checks through the catalog facade
-that the offer is published in the tenant's catalog.
+When a peer's contract request opens a negotiation, its offer must be one the catalog publishes,
+on the target the request names.
 
 ## DSP
 
@@ -67,40 +70,46 @@ auth agent; the peer acts on the tenant it is associated with.
 | POST | `/{id}/offers` | DSP 8.3.4 | Consumer: the provider counters |
 | POST | `/{id}/agreement` | DSP 8.3.5 | Consumer |
 
-A first request or offer answers 201 with the ACK, or 200 if that process already exists; the
-rest answer 200. Errors carry the DSP error message: 404 for a missing or foreign process, so a
-peer cannot probe other negotiations, and 400 otherwise. A missing or invalid peer token answers
-401, although DSP 8.1.2.3 asks for 404.
+A first request or offer answers 201 with the ACK; the rest answer 200 with it. Errors carry the
+`ContractNegotiationError`: 404 for a missing or foreign process or an unknown peer, so a peer
+cannot probe other negotiations, 400 for a broken rule and 409 for a stale or conflicting
+repeat.
 
 ## RPC
 
 Under the same prefix, bearer required. Each endpoint sends one DSP message to the peer on behalf
-of the tenant, stores the result locally and returns `{ request, response, negotiationAgentModel }`.
+of the user, stores the result locally and answers an eunomia `RpcNegotiationResult`
+(`request`, `response`, `negotiationAgentModel`): 201 when it opened a negotiation, 200 otherwise.
+Bodies are eunomia JSON-LD: `@context` `https://w3id.org/eunomia/v1/context.jsonld` and `@type`
+the RPC; continuations name the negotiation by `providerPid` or `consumerPid`.
 
-| Path | Message sent |
-|---|---|
-| `/rpc/setup-request-init` | First contract request, to `providerAddress` |
-| `/rpc/setup-request` | Counter request |
-| `/rpc/setup-offer-init` | First contract offer |
-| `/rpc/setup-offer` | Counter offer |
-| `/rpc/setup-acceptance` | `ACCEPTED` event |
-| `/rpc/setup-agreement` | Agreement |
-| `/rpc/setup-verification` | Agreement verification |
-| `/rpc/setup-finalization` | `FINALIZED` event |
-| `/rpc/setup-termination` | Termination |
-| `/tck/negotiations/requests` | Starts a negotiation from `datasetId`, `offerId`, `providerId`, `connectorAddress`, for the DSP TCK |
+| Path | `@type` | Message sent |
+|---|---|---|
+| `/rpc/setup-request-init` | `RpcNegotiationRequestInitMessage` | First request, to `providerAddress`, with `offer` |
+| `/rpc/setup-request` | `RpcNegotiationRequestMessage` | Counter request, with `offer` |
+| `/rpc/setup-offer-init` | `RpcNegotiationOfferInitMessage` | First offer, to `consumerAddress`, with `offer` |
+| `/rpc/setup-offer` | `RpcNegotiationOfferMessage` | Counter offer, with `offer` |
+| `/rpc/setup-acceptance` | `RpcNegotiationAcceptanceMessage` | `ACCEPTED` event |
+| `/rpc/setup-agreement` | `RpcNegotiationAgreementMessage` | Agreement on the last offer |
+| `/rpc/setup-verification` | `RpcNegotiationVerificationMessage` | Agreement verification |
+| `/rpc/setup-finalization` | `RpcNegotiationFinalizationMessage` | `FINALIZED` event |
+| `/rpc/setup-termination` | `RpcNegotiationTerminationMessage` | Termination, with `code` and `reason` |
 
 `/bff-rpc/setup-{request-init,offer-init,acceptance,agreement,termination}` are what the admin
-GUI calls. They run the same steps, and `setup-agreement` chains agreement, verification and
-finalization in one call.
+GUI calls; each sends one message, as its RPC does. The consumer verifies and the provider
+finalizes with their own RPCs.
+
+With `DSP_TCK_MAPPING` set, `/tck/negotiations/requests` makes the consumer open a negotiation
+for the DSP TCK (`datasetId`, `offerId`, `providerId`, `connectorAddress`), and a worker plays
+the connector's part of each CN and CN_C test, keyed by the offer seeded for it.
 
 ## Integration
 
-- `NegotiationAgentModule::agreement_service()` gives the agreements in-process to the transfer
-  agent in the monolith; `AgreementView` and `OfferView` are exported for it.
-- `NegotiationPorts::local(auth, offers)` uses the auth module and the catalog's ODRL offer
-  service in-process; `NegotiationPorts::remote` calls the auth and catalog agents' APIs
-  (`ssi_auth` and `catalog` in the config) with the service token.
+- `NegotiationAgentModule::negotiation_facade()` serves the published contract
+  (`common::facades::negotiation`: agreements as ODRL) in-process to the transfer agent.
+- `NegotiationPorts::local(auth, catalog)` takes the auth module and the catalog module's
+  contract in-process; `NegotiationPorts::remote` calls the auth and catalog agents' APIs
+  (`ssi_auth` and `catalog` in the config). The agent does not depend on the catalog crate.
 - With an event bus, the services publish `negotiations:process:{create,edit,delete}`,
   `negotiations:message:{create,delete}`, `negotiations:offer:{create,delete}` and
   `negotiations:agreement:{create,edit,delete}`.
@@ -115,7 +124,7 @@ modules:
 | `DspModule` | `/dsp/current/negotiations` (DSP, RPC and BFF RPC) |
 | `NegotiationAdminModule` | `{api}/negotiation-agent` and the gRPC services |
 
-It has no workers or seeders. Standalone, `NegotiationAgentBoot` composes it with remote ports
+It has no seeders; in TCK mode `DspModule` runs the TCK scenario worker. Standalone, `NegotiationAgentBoot` composes it with remote ports
 and validates tokens with `OAuthModule::validator`:
 
 ```
@@ -145,7 +154,8 @@ The gRPC services mirror the four resources, with the bearer token in the metada
 cargo test -p negotiation_agent
 ```
 
-`tests/services` covers tenant isolation and roles in the four services. `tests/entities` covers
-the filters. `tests/adapters` covers each gRPC service: auth, parsing, error mapping, nesting and
-paging. No database is needed. The DSP flow between two agents runs in
-`crates/monolith/tests/dsp/`; the orchestrators and validators have no crate tests.
+`tests/services` covers tenant isolation and roles in the four services, the DSP persistence and
+the TCK script. `tests/entities` covers the filters. `tests/protocols` covers message types, the
+state machine, RDF extraction, the DSP and RPC stages and their rules. `tests/adapters` covers
+each gRPC service and the DSP routes end to end over an in-memory store. No database is needed.
+The DSP flow between two agents runs in `crates/monolith/tests/dsp/`.

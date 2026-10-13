@@ -17,7 +17,7 @@
 
 //! Negotiation processes.
 
-use crate::data::entities::negotiation_process::{
+use crate::data::sea_orm::orm::negotiation_process::{
     EditNegotiationProcessModel, NewNegotiationProcessModel,
 };
 use serde::{Deserialize, Serialize};

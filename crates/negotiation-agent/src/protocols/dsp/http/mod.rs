@@ -15,6 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod bff_rpc;
-pub mod protocol;
+//! HTTP adapters of the DSP plane: the DSP routes peers call, and the RPC and BFF routes users call.
+
+pub mod bff;
+pub mod dsp;
 pub mod rpc;

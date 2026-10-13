@@ -17,7 +17,7 @@
 
 //! Agreement output views.
 
-use crate::data::entities::agreement as agreement_model;
+use crate::data::sea_orm::orm::agreement as agreement_model;
 use serde::{Deserialize, Serialize};
 
 /// Management view of an agreement.

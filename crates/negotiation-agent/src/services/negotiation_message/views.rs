@@ -17,9 +17,9 @@
 
 //! Negotiation message output views.
 
-use crate::data::entities::agreement as agreement_model;
-use crate::data::entities::negotiation_message as negotiation_message_model;
-use crate::data::entities::offer as offer_model;
+use crate::data::sea_orm::orm::agreement as agreement_model;
+use crate::data::sea_orm::orm::negotiation_message as negotiation_message_model;
+use crate::data::sea_orm::orm::offer as offer_model;
 use serde::{Deserialize, Serialize};
 
 /// Management view of a negotiation message with linked offer and agreement.

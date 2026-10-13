@@ -17,9 +17,6 @@
 
 //! Tables, repositories and migrations.
 
-pub mod entities;
-pub mod factory_sql;
-pub mod factory_trait;
-pub mod migrations;
-pub mod repo_traits;
-pub mod repos_sql;
+pub mod factory;
+pub mod repo;
+pub mod sea_orm;

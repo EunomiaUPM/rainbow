@@ -17,7 +17,12 @@
 
 //! Negotiation-agent services with mocked repositories.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod agreements;
+mod dsp_persistence;
 mod negotiation_messages;
 mod negotiation_processes;
 mod offers;
+mod tck_scenarios;

@@ -17,7 +17,7 @@
 
 //! Offer output views.
 
-use crate::data::entities::offer as offer_model;
+use crate::data::sea_orm::orm::offer as offer_model;
 use serde::{Deserialize, Serialize};
 
 /// Management view of an offer.

@@ -17,7 +17,7 @@
 
 //! Agreements.
 
-use crate::data::entities::agreement::{EditAgreementModel, NewAgreementModel};
+use crate::data::sea_orm::orm::agreement::{EditAgreementModel, NewAgreementModel};
 use common::oauth::{Owner, Visibility};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

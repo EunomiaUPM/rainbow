@@ -32,6 +32,7 @@ use common::facades::negotiation::NegotiationFacadeTrait;
 use common::module_loader::module_group::ModuleGroup;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;
+use events::NoopEventSink;
 use sea_orm_migration::MigrationTrait;
 use tonic::service::RoutesBuilder;
 use ymir::errors::Outcome;
@@ -50,21 +51,22 @@ impl NegotiationAgentModule {
         event_bus: Option<events::EventBus>,
         ports: &NegotiationPorts,
     ) -> Outcome<Self> {
-        let ctx = Arc::new(AppContext::build(config, root, event_bus, ports));
+        let events = NoopEventSink::or_bus(event_bus);
+        let ctx = AppContext::build(config, root, events, ports.clone());
         let modules = ModuleGroup::new(SERVICE_NAME)
-            .register(DspModule::build(ctx.clone()).await?)
+            .register(DspModule::new(ctx.clone()))
             .register(NegotiationAdminModule::new(ctx.clone()));
         Ok(Self { ctx, modules })
     }
 
     /// The negotiation agent's published contract, for agents that read it in-process.
     pub fn negotiation_facade(&self) -> Arc<dyn NegotiationFacadeTrait> {
-        Arc::new(NegotiationLocalFacade::new(self.ctx.agreement_svc.clone()))
+        Arc::new(NegotiationLocalFacade::new(self.ctx.agreements().clone()))
     }
 
     /// Static, so the hosting agent's migrator can list them.
     pub fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        crate::data::migrations::get_negotiation_agent_migrations()
+        crate::data::sea_orm::migrations::get_negotiation_agent_migrations()
     }
 }
 
@@ -87,5 +89,9 @@ impl ServiceModuleTrait for NegotiationAgentModule {
 
     fn grpc_descriptors(&self) -> Vec<&'static [u8]> {
         self.modules.grpc_descriptors()
+    }
+
+    fn workers(&self) -> Vec<Box<dyn common::boot::workers::BackgroundWorker>> {
+        self.modules.workers()
     }
 }

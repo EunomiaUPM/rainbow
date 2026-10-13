@@ -15,6 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP negotiation layer: inbound messages as the DSP TCK and other peers send them.
+//! The DSP negotiation layer: message types, states, RDF extraction, inbound stages and rules,
+//! and the offer the consumer sends when the TCK starts a negotiation.
 
-mod messages;
+mod context_dsp;
+mod context_rpc;
+mod dsp_rules;
+mod message_types;
+mod rdf_extractor_dsp;
+mod rpc_rules;
+mod state_machine;
+mod tck_offer;

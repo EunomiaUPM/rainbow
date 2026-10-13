@@ -17,17 +17,17 @@
 
 //! OfferService with a mocked repository: tenant isolation and role checks.
 
+use crate::support::context::TestContext;
 use chrono::Utc;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Sort};
 use common::oauth::OwnerScope;
 use common::test_utils::scopes::TestUsers;
-use negotiation_agent::data::entities::offer::Model as OfferModel;
-use negotiation_agent::data::repo_traits::offer_repo::{MockOfferRepoTrait, OfferRepoErrors};
+use negotiation_agent::data::sea_orm::orm::offer::Model as OfferModel;
+use negotiation_agent::data::repo::offer::{MockOfferRepoTrait, OfferRepoErrors};
 use negotiation_agent::entities::filters::OfferFilter;
 use negotiation_agent::entities::offer::NewOfferDto;
 use negotiation_agent::services::offer::OfferServiceTrait;
-use negotiation_agent::services::offer::service::OfferService;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -54,8 +54,8 @@ fn make_offer_model(id: &Urn, tenant_id: &str) -> OfferModel {
     }
 }
 
-fn make_service(offer_repo: MockOfferRepoTrait) -> OfferService {
-    OfferService::new(Arc::new(offer_repo))
+fn make_service(offer_repo: MockOfferRepoTrait) -> Arc<dyn OfferServiceTrait> {
+    TestContext::new().offer_repo(offer_repo).build().offers().clone()
 }
 
 /// Reading a record of another tenant is not found: the lookup only searches the

@@ -17,8 +17,8 @@
 
 //! Negotiation agent: the DSP contract negotiation state machine, with its offers and agreements.
 //!
-//! Peers drive it through the DSP negotiation endpoints and the owner through a management API
-//! over HTTP and gRPC. Policies come from the catalog through a facade.
+//! Peers drive it through the DSP negotiation endpoints, users through eunomia RPC, and the owner
+//! through a management API over HTTP and gRPC. Published offers come from the catalog contract.
 //! [`setup::NegotiationAgentModule`] composes it into a larger process and
 //! [`setup::NegotiationAgentBoot`] runs it as its own service. Other crates get its migrations,
 //! [`AgreementView`] and [`OfferView`] from the root; its events use the `negotiations:` prefix.
@@ -44,6 +44,6 @@ pub const SERVICE_NAME: &str = "negotiation-agent";
 /// Name shown in the boot banner.
 pub const SERVICE_BIG_NAME: &str = "Negotiation Agent Ref";
 
-pub use data::migrations::get_negotiation_agent_migrations;
+pub use data::sea_orm::migrations::get_negotiation_agent_migrations;
 pub use services::agreement::views::AgreementView;
 pub use services::offer::views::OfferView;

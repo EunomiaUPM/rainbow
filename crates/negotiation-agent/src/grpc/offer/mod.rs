@@ -27,8 +27,7 @@ use crate::grpc::api::negotiation_agent::{
     GetOfferByNegotiationMessageRequest, GetOfferByOfferIdRequest,
     GetOffersByNegotiationProcessRequest, ListOffersRequest, OfferListResponse, OfferResponse,
 };
-use crate::services::offer::OfferServiceTrait;
-use common::oauth::OauthTokenValidatorTrait;
+use crate::setup::context::AppContext;
 use common::oauth::grpc::GrpcAuth;
 use common::batch_requests::BatchRequests;
 use common::grpc::{IntoStatus, ListParams, ProtoField};
@@ -37,18 +36,15 @@ use ymir::errors::Errors;
 
 /// gRPC adapter of the offer service.
 pub struct NegotiationAgentOfferGrpc {
-    service: Arc<dyn OfferServiceTrait>,
+    ctx: Arc<AppContext>,
     auth: GrpcAuth,
 }
 
 impl NegotiationAgentOfferGrpc {
-    pub fn new(
-        service: Arc<dyn OfferServiceTrait>,
-        validator: Arc<dyn OauthTokenValidatorTrait>,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            service,
-            auth: GrpcAuth::new(validator),
+            auth: GrpcAuth::new(ctx.oauth_validator.clone()),
+            ctx,
         }
     }
 }
@@ -61,8 +57,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferListResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let params = ListParams::try_from(request.into_inner())?;
-        let result = self
-            .service
+        let result = self.ctx.offers()
             .get_all(&user, &params.filter, &params.page, &params.sort)
             .await
             .map_err(Errors::into_status)?;
@@ -75,8 +70,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferListResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let batch = BatchRequests::try_from(request.into_inner())?;
-        let views = self
-            .service
+        let views = self.ctx.offers()
             .batch(&user, &batch)
             .await
             .map_err(Errors::into_status)?;
@@ -89,8 +83,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferListResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let process_id = request.into_inner().process_id.urn("process_id")?;
-        let views = self
-            .service
+        let views = self.ctx.offers()
             .get_by_process(&user, &process_id)
             .await
             .map_err(Errors::into_status)?;
@@ -103,8 +96,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
-        let view = self
-            .service
+        let view = self.ctx.offers()
             .get_one(&user, &id)
             .await
             .map_err(Errors::into_status)?;
@@ -117,8 +109,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let message_id = request.into_inner().message_id.urn("message_id")?;
-        let view = self
-            .service
+        let view = self.ctx.offers()
             .get_by_negotiation_message(&user, &message_id)
             .await
             .map_err(Errors::into_status)?;
@@ -131,8 +122,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let offer_id = request.into_inner().offer_id.urn("offer_id")?;
-        let view = self
-            .service
+        let view = self.ctx.offers()
             .get_by_offer_id(&user, &offer_id)
             .await
             .map_err(Errors::into_status)?;
@@ -145,8 +135,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<OfferResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let dto = request.into_inner().try_into()?;
-        let view = self
-            .service
+        let view = self.ctx.offers()
             .create(&user, &dto)
             .await
             .map_err(Errors::into_status)?;
@@ -159,7 +148,7 @@ impl NegotiationAgentOffersService for NegotiationAgentOfferGrpc {
     ) -> Result<Response<()>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
-        self.service
+        self.ctx.offers()
             .delete(&user, &id)
             .await
             .map_err(Errors::into_status)?;

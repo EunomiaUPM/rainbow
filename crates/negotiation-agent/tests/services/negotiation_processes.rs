@@ -17,25 +17,25 @@
 
 //! NegotiationProcessService with mocked repositories: tenant isolation and role checks.
 
+use crate::support::context::TestContext;
 use chrono::Utc;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Sort};
 use common::oauth::OwnerScope;
 use common::test_utils::scopes::TestUsers;
-use negotiation_agent::data::entities::negotiation_process::Model as NegotiationProcessModel;
-use negotiation_agent::data::repo_traits::agreement_repo::MockAgreementRepoTrait;
-use negotiation_agent::data::repo_traits::negotiation_message_repo::MockNegotiationMessageRepoTrait;
-use negotiation_agent::data::repo_traits::negotiation_process_identifiers_repo::MockNegotiationIdentifierRepoTrait;
-use negotiation_agent::data::repo_traits::negotiation_process_repo::{
+use negotiation_agent::data::sea_orm::orm::negotiation_process::Model as NegotiationProcessModel;
+use negotiation_agent::data::repo::agreement::MockAgreementRepoTrait;
+use negotiation_agent::data::repo::negotiation_message::MockNegotiationMessageRepoTrait;
+use negotiation_agent::data::repo::negotiation_process_identifier::MockNegotiationIdentifierRepoTrait;
+use negotiation_agent::data::repo::negotiation_process::{
     MockNegotiationProcessRepoTrait, NegotiationProcessRepoErrors,
 };
-use negotiation_agent::data::repo_traits::offer_repo::MockOfferRepoTrait;
+use negotiation_agent::data::repo::offer::MockOfferRepoTrait;
 use negotiation_agent::entities::filters::NegotiationProcessFilter;
 use negotiation_agent::entities::negotiation_process::{
     EditNegotiationProcessDto, NewNegotiationProcessDto,
 };
 use negotiation_agent::services::negotiation_process::NegotiationProcessServiceTrait;
-use negotiation_agent::services::negotiation_process::service::NegotiationProcessService;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -73,14 +73,16 @@ fn make_service(
     messages_repo: MockNegotiationMessageRepoTrait,
     offers_repo: MockOfferRepoTrait,
     agreements_repo: MockAgreementRepoTrait,
-) -> NegotiationProcessService {
-    NegotiationProcessService::new(
-        Arc::new(process_repo),
-        Arc::new(identifiers_repo),
-        Arc::new(messages_repo),
-        Arc::new(offers_repo),
-        Arc::new(agreements_repo),
-    )
+) -> Arc<dyn NegotiationProcessServiceTrait> {
+    TestContext::new()
+        .process_repo(process_repo)
+        .identifier_repo(identifiers_repo)
+        .message_repo(messages_repo)
+        .offer_repo(offers_repo)
+        .agreement_repo(agreements_repo)
+        .build()
+        .processes()
+        .clone()
 }
 
 /// Reading a record of another tenant is not found: the lookup only searches the

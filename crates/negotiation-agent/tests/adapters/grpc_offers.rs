@@ -17,12 +17,11 @@
 
 //! NegotiationAgentOfferGrpc: auth, URN parsing, content mapping and paging.
 
-use std::sync::Arc;
 
 use common::errors::ResourceError;
 use common::grpc::JsonValueExt;
 use common::paginated_spec::Paginated;
-use common::test_utils::grpc::{GrpcRequests, StubTokenValidator};
+use common::test_utils::grpc::GrpcRequests;
 use negotiation_agent::grpc::api::negotiation_agent::negotiation_agent_offers_service_server::NegotiationAgentOffersService;
 use negotiation_agent::grpc::api::negotiation_agent::{
     CreateOfferRequest, GetBatchOffersRequest, GetOfferByIdRequest,
@@ -34,10 +33,11 @@ use negotiation_agent::services::offer::views::OfferView;
 use serde_json::json;
 use tonic::Code;
 
+use crate::support::context::TestContext;
 use crate::support::fixtures::{offer_row, urn};
 
 fn grpc(service: MockOfferServiceTrait) -> NegotiationAgentOfferGrpc {
-    NegotiationAgentOfferGrpc::new(Arc::new(service), Arc::new(StubTokenValidator))
+    NegotiationAgentOfferGrpc::new(TestContext::new().offers(service).build())
 }
 
 fn view(n: u32) -> OfferView {

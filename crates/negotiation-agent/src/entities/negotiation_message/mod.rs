@@ -17,7 +17,7 @@
 
 //! Negotiation messages.
 
-use crate::data::entities::negotiation_message::NewNegotiationMessageModel;
+use crate::data::sea_orm::orm::negotiation_message::NewNegotiationMessageModel;
 use common::oauth::{Owner, Visibility};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

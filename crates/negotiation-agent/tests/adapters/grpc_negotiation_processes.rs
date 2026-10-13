@@ -18,14 +18,13 @@
 //! NegotiationAgentProcessesGrpc: auth, parsing, error mapping, nesting and paging.
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use chrono::Utc;
 use common::errors::ResourceError;
 use common::grpc::JsonValueExt;
 use common::paginated_spec::Paginated;
-use common::test_utils::grpc::{GrpcRequests, StubTokenValidator, TENANT};
-use negotiation_agent::data::entities::negotiation_process;
+use common::test_utils::grpc::{GrpcRequests, TENANT};
+use negotiation_agent::data::sea_orm::orm::negotiation_process;
 use negotiation_agent::grpc::api::negotiation_agent::negotiation_agent_processes_service_server::NegotiationAgentProcessesService;
 use negotiation_agent::grpc::api::negotiation_agent::{
     CreateNegotiationProcessRequest, DeleteNegotiationProcessRequest,
@@ -39,10 +38,11 @@ use serde_json::json;
 use tonic::Code;
 use ymir::errors::Errors;
 
+use crate::support::context::TestContext;
 use crate::support::fixtures::{agreement_row, message_row, offer_row, urn};
 
 fn grpc(service: MockNegotiationProcessServiceTrait) -> NegotiationAgentProcessesGrpc {
-    NegotiationAgentProcessesGrpc::new(Arc::new(service), Arc::new(StubTokenValidator))
+    NegotiationAgentProcessesGrpc::new(TestContext::new().processes(service).build())
 }
 
 fn view(n: u32) -> NegotiationProcessView {

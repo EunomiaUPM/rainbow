@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Negotiation-agent gRPC services with mocked domain services and a stub token validator.
+//! Negotiation-agent gRPC services and DSP routes over mocked services and repositories.
 
 #[path = "../support/mod.rs"]
 mod support;
@@ -24,3 +24,4 @@ mod grpc_agreements;
 mod grpc_negotiation_messages;
 mod grpc_negotiation_processes;
 mod grpc_offers;
+mod http_dsp;

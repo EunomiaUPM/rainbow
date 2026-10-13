@@ -15,89 +15,119 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Wires the negotiation data layer and management services once, for every driving adapter.
+//! What every negotiation module uses: config, repos, events, ports and the services built on them.
 
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
-use crate::data::factory_sql::NegotiationAgentRepoForSql;
-use crate::data::factory_trait::NegotiationAgentRepoTrait;
-use crate::data::repo_traits::negotiation_process_repo::NegotiationProcessRepoTrait;
-use crate::services::agreement::AgreementServiceTrait;
-use crate::services::agreement::service::AgreementService;
-use crate::services::negotiation_message::NegotiationMessageServiceTrait;
-use crate::services::negotiation_message::service::NegotiationMessageService;
-use crate::services::negotiation_process::NegotiationProcessServiceTrait;
-use crate::services::negotiation_process::service::NegotiationProcessService;
-use crate::services::offer::OfferServiceTrait;
-use crate::services::offer::service::OfferService;
-use common::oauth::OauthTokenValidatorTrait;
 use common::config::services::ContractsConfig;
-use common::facades::mates_facade::MatesFacadeTrait;
-use common::facades::grants_facade::GrantsFacadeTrait;
 use common::module_loader::root_context::RootContext;
+use common::oauth::OauthTokenValidatorTrait;
+use events::EventSinkTrait;
 
-use common::facades::catalog::CatalogFacadeTrait;
+use crate::data::factory::DataFactory;
+use crate::data::sea_orm::factory::SeaOrmDataFactory;
+use crate::services::agreement::service::AgreementService;
+use crate::services::agreement::AgreementServiceTrait;
+use crate::services::negotiation_message::service::NegotiationMessageService;
+use crate::services::negotiation_message::NegotiationMessageServiceTrait;
+use crate::services::negotiation_process::service::NegotiationProcessService;
+use crate::services::negotiation_process::NegotiationProcessServiceTrait;
+use crate::services::offer::service::OfferService;
+use crate::services::offer::OfferServiceTrait;
 use crate::setup::ports::NegotiationPorts;
 
-#[derive(Clone)]
+/// The negotiation agent's context; every service, router, flow and loader keeps it whole.
 pub struct AppContext {
     pub config: Arc<ContractsConfig>,
-    pub process_repo: Arc<dyn NegotiationProcessRepoTrait>,
-    pub process_svc: Arc<dyn NegotiationProcessServiceTrait>,
-    pub message_svc: Arc<dyn NegotiationMessageServiceTrait>,
-    pub offer_svc: Arc<dyn OfferServiceTrait>,
-    pub agreement_svc: Arc<dyn AgreementServiceTrait>,
-    pub grants_facade: Arc<dyn GrantsFacadeTrait>,
-    pub mates_facade: Arc<dyn MatesFacadeTrait>,
-    /// Offer checks against the provider catalog, for contract-request validation.
-    pub catalog_facade: Arc<dyn CatalogFacadeTrait>,
+    pub repos: Arc<dyn DataFactory>,
+    pub events: Arc<dyn EventSinkTrait>,
+    pub ports: NegotiationPorts,
     pub oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
+    services: OnceLock<NegotiationServices>,
+}
+
+/// The agent's own services; they keep the context, so they are attached once it exists.
+#[derive(Clone)]
+pub struct NegotiationServices {
+    pub processes: Arc<dyn NegotiationProcessServiceTrait>,
+    pub messages: Arc<dyn NegotiationMessageServiceTrait>,
+    pub offers: Arc<dyn OfferServiceTrait>,
+    pub agreements: Arc<dyn AgreementServiceTrait>,
+}
+
+impl NegotiationServices {
+    /// The real services over the context's repos and events.
+    pub fn own(ctx: &Arc<AppContext>) -> Self {
+        Self {
+            processes: Arc::new(NegotiationProcessService::new(ctx.clone())),
+            messages: Arc::new(NegotiationMessageService::new(ctx.clone())),
+            offers: Arc::new(OfferService::new(ctx.clone())),
+            agreements: Arc::new(AgreementService::new(ctx.clone())),
+        }
+    }
 }
 
 impl AppContext {
+    /// SeaORM repos on the shared pool, the given events and ports, and the own services.
     pub fn build(
         config: &ContractsConfig,
         root: &RootContext,
-        event_bus: Option<events::EventBus>,
-        ports: &NegotiationPorts,
-    ) -> Self {
-        let repo = Arc::new(NegotiationAgentRepoForSql::create_repo(root.db.clone()));
-
-        // Domain services
-        let process_svc = Arc::new(
-            NegotiationProcessService::new(
-                repo.get_negotiation_process_repo(),
-                repo.get_negotiation_process_identifiers_repo(),
-                repo.get_negotiation_message_repo(),
-                repo.get_offer_repo(),
-                repo.get_agreement_repo(),
-            )
-            .with_event_bus(event_bus.clone()),
+        events: Arc<dyn EventSinkTrait>,
+        ports: NegotiationPorts,
+    ) -> Arc<Self> {
+        let ctx = Self::bare(
+            Arc::new(config.clone()),
+            Arc::new(SeaOrmDataFactory::new(root.db.clone())),
+            events,
+            ports,
+            root.validator.clone(),
         );
-        let message_svc = Arc::new(
-            NegotiationMessageService::new(
-                repo.get_negotiation_message_repo(),
-                repo.get_offer_repo(),
-                repo.get_agreement_repo(),
-            )
-            .with_event_bus(event_bus.clone()),
-        );
-        let offer_svc =
-            Arc::new(OfferService::new(repo.get_offer_repo()).with_event_bus(event_bus.clone()));
-        let agreement_svc =
-            Arc::new(AgreementService::new(repo.get_agreement_repo()).with_event_bus(event_bus));
+        ctx.attach(NegotiationServices::own(&ctx));
+        ctx
+    }
 
-        Self {
-            config: Arc::new(config.clone()),
-            process_repo: repo.get_negotiation_process_repo(),
-            process_svc,
-            message_svc,
-            offer_svc,
-            agreement_svc,
-            grants_facade: ports.auth.grants.clone(),
-            mates_facade: ports.auth.mates.clone(),
-            catalog_facade: ports.catalog.clone(),
-            oauth_validator: root.validator.clone(),
-        }
+    /// The context without services; `attach` completes it (tests attach mocks).
+    pub fn bare(
+        config: Arc<ContractsConfig>,
+        repos: Arc<dyn DataFactory>,
+        events: Arc<dyn EventSinkTrait>,
+        ports: NegotiationPorts,
+        oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
+    ) -> Arc<Self> {
+        Arc::new(Self {
+            config,
+            repos,
+            events,
+            ports,
+            oauth_validator,
+            services: OnceLock::new(),
+        })
+    }
+
+    /// Attaches the services; only the first call counts.
+    pub fn attach(&self, services: NegotiationServices) {
+        let _ = self.services.set(services);
+    }
+
+    pub fn processes(&self) -> &Arc<dyn NegotiationProcessServiceTrait> {
+        &self.services().processes
+    }
+
+    pub fn messages(&self) -> &Arc<dyn NegotiationMessageServiceTrait> {
+        &self.services().messages
+    }
+
+    pub fn offers(&self) -> &Arc<dyn OfferServiceTrait> {
+        &self.services().offers
+    }
+
+    pub fn agreements(&self) -> &Arc<dyn AgreementServiceTrait> {
+        &self.services().agreements
+    }
+
+    fn services(&self) -> &NegotiationServices {
+        self.services
+            .get()
+            .expect("services are attached before any module runs")
     }
 }

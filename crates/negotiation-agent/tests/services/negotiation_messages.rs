@@ -17,21 +17,21 @@
 
 //! NegotiationMessageService with mocked repositories: tenant isolation and role checks.
 
+use crate::support::context::TestContext;
 use chrono::Utc;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Sort};
 use common::oauth::OwnerScope;
 use common::test_utils::scopes::TestUsers;
-use negotiation_agent::data::entities::negotiation_message::Model as NegotiationMessageModel;
-use negotiation_agent::data::repo_traits::agreement_repo::MockAgreementRepoTrait;
-use negotiation_agent::data::repo_traits::negotiation_message_repo::{
+use negotiation_agent::data::sea_orm::orm::negotiation_message::Model as NegotiationMessageModel;
+use negotiation_agent::data::repo::agreement::MockAgreementRepoTrait;
+use negotiation_agent::data::repo::negotiation_message::{
     MockNegotiationMessageRepoTrait, NegotiationMessageRepoErrors,
 };
-use negotiation_agent::data::repo_traits::offer_repo::MockOfferRepoTrait;
+use negotiation_agent::data::repo::offer::MockOfferRepoTrait;
 use negotiation_agent::entities::filters::NegotiationMessageFilter;
 use negotiation_agent::entities::negotiation_message::NewNegotiationMessageDto;
 use negotiation_agent::services::negotiation_message::NegotiationMessageServiceTrait;
-use negotiation_agent::services::negotiation_message::service::NegotiationMessageService;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -65,12 +65,14 @@ fn make_service(
     message_repo: MockNegotiationMessageRepoTrait,
     offer_repo: MockOfferRepoTrait,
     agreement_repo: MockAgreementRepoTrait,
-) -> NegotiationMessageService {
-    NegotiationMessageService::new(
-        Arc::new(message_repo),
-        Arc::new(offer_repo),
-        Arc::new(agreement_repo),
-    )
+) -> Arc<dyn NegotiationMessageServiceTrait> {
+    TestContext::new()
+        .message_repo(message_repo)
+        .offer_repo(offer_repo)
+        .agreement_repo(agreement_repo)
+        .build()
+        .messages()
+        .clone()
 }
 
 /// Reading a record of another tenant is not found: the lookup only searches the

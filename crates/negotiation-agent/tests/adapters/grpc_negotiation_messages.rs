@@ -18,11 +18,10 @@
 //! NegotiationAgentMessagesGrpc: auth, parsing, by-process paging and nested offer and
 //! agreement.
 
-use std::sync::Arc;
 
 use common::errors::ResourceError;
 use common::paginated_spec::Paginated;
-use common::test_utils::grpc::{GrpcRequests, StubTokenValidator};
+use common::test_utils::grpc::GrpcRequests;
 use negotiation_agent::grpc::api::negotiation_agent::negotiation_agent_messages_service_server::NegotiationAgentMessagesService;
 use negotiation_agent::grpc::api::negotiation_agent::{
     CreateNegotiationMessageRequest, GetMessagesByProcessIdRequest,
@@ -34,10 +33,11 @@ use negotiation_agent::services::negotiation_message::views::NegotiationMessageV
 use serde_json::json;
 use tonic::Code;
 
+use crate::support::context::TestContext;
 use crate::support::fixtures::{agreement_row, message_row, offer_row, urn};
 
 fn grpc(service: MockNegotiationMessageServiceTrait) -> NegotiationAgentMessagesGrpc {
-    NegotiationAgentMessagesGrpc::new(Arc::new(service), Arc::new(StubTokenValidator))
+    NegotiationAgentMessagesGrpc::new(TestContext::new().messages(service).build())
 }
 
 fn view(n: u32) -> NegotiationMessageView {

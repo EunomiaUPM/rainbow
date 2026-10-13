@@ -27,31 +27,26 @@ use common::query::{MAX_BATCH_IDS, Page, Paginated, QueryFilter, Sort};
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
-use crate::data::entities::offer::NewOfferModel;
-use crate::data::repo_traits::offer_repo::OfferRepoTrait;
+use crate::data::sea_orm::orm::offer::NewOfferModel;
+use crate::data::repo::offer::OfferRepoTrait;
 use crate::entities::filters::OfferFilter;
 use crate::entities::offer::NewOfferDto;
+use crate::setup::context::AppContext;
 use crate::services::offer::OfferServiceTrait;
 use crate::services::offer::views::OfferView;
 
-/// Offer service over a repository, emitting `negotiations:` events when a bus is set.
+/// Offer service over the context's repos, emitting `negotiations:` events.
 pub struct OfferService {
-    offer_repo: Arc<dyn OfferRepoTrait>,
-    event_bus: Option<events::EventBus>,
+    ctx: Arc<AppContext>,
 }
 
 impl OfferService {
-    pub fn new(offer_repo: Arc<dyn OfferRepoTrait>) -> Self {
-        Self {
-            offer_repo,
-            event_bus: None,
-        }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
-    /// Publishes create and delete events on `event_bus`.
-    pub fn with_event_bus(mut self, event_bus: Option<events::EventBus>) -> Self {
-        self.event_bus = event_bus;
-        self
+    fn offer_repo(&self) -> Arc<dyn OfferRepoTrait> {
+        self.ctx.repos.offer_repo()
     }
 }
 
@@ -69,7 +64,7 @@ impl OfferServiceTrait for OfferService {
 
         let page = page.clamped();
         let (offers, total) = self
-            .offer_repo
+            .offer_repo()
             .get_all_offers(&OwnerScope::seeing(user), filters, &page, sort)
             .await?;
 
@@ -88,7 +83,7 @@ impl OfferServiceTrait for OfferService {
     )]
     async fn get_one(&self, user: &UserInfo, id: &Urn) -> Outcome<OfferView> {
         let offer = self
-            .offer_repo
+            .offer_repo()
             .get_offer_by_id(&OwnerScope::seeing(user), id)
             .await?
             .or_not_found(id, "offer")?;
@@ -108,7 +103,7 @@ impl OfferServiceTrait for OfferService {
         message_id: &Urn,
     ) -> Outcome<OfferView> {
         let offer = self
-            .offer_repo
+            .offer_repo()
             .get_offer_by_negotiation_message(&OwnerScope::seeing(user), message_id)
             .await?
             .or_not_found(message_id, "offer")?;
@@ -124,7 +119,7 @@ impl OfferServiceTrait for OfferService {
     )]
     async fn get_by_offer_id(&self, user: &UserInfo, offer_id: &Urn) -> Outcome<OfferView> {
         let offer = self
-            .offer_repo
+            .offer_repo()
             .get_offer_by_offer_id(&OwnerScope::seeing(user), offer_id)
             .await?
             .or_not_found(offer_id, "offer")?;
@@ -144,7 +139,7 @@ impl OfferServiceTrait for OfferService {
         process_id: &Urn,
     ) -> Outcome<Vec<OfferView>> {
         let offers = self
-            .offer_repo
+            .offer_repo()
             .get_offers_by_negotiation_process(
                 &OwnerScope::seeing(user),
                 process_id,
@@ -166,7 +161,7 @@ impl OfferServiceTrait for OfferService {
         process_id: &Urn,
     ) -> Outcome<OfferView> {
         let offer = self
-            .offer_repo
+            .offer_repo()
             .get_last_offer_by_negotiation_process(
                 &OwnerScope::seeing(user),
                 process_id,
@@ -190,7 +185,7 @@ impl OfferServiceTrait for OfferService {
         }
 
         let offers = self
-            .offer_repo
+            .offer_repo()
             .get_batch_offers(&OwnerScope::seeing(user), &req.ids)
             .await?;
 
@@ -201,11 +196,11 @@ impl OfferServiceTrait for OfferService {
     async fn create(&self, user: &UserInfo, cmd: &NewOfferDto) -> Outcome<OfferView> {
         let owner = Owner::for_new(user, cmd.owner.clone(), cmd.visibility.clone());
         let new_model: NewOfferModel = cmd.clone().into_model(owner);
-        let created = self.offer_repo.create_offer(&new_model).await?;
+        let created = self.offer_repo().create_offer(&new_model).await?;
 
         let view = OfferView::assemble(created);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &view.inner.owner(),
             crate::EVENT_PREFIX,
             "offer",
@@ -223,11 +218,11 @@ impl OfferServiceTrait for OfferService {
     )]
     async fn delete(&self, user: &UserInfo, id: &Urn) -> Outcome<()> {
         let owner = self
-            .offer_repo
+            .offer_repo()
             .delete_offer(&OwnerScope::acting(user), id)
             .await?;
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "offer",

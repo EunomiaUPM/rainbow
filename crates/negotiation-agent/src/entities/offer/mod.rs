@@ -17,7 +17,7 @@
 
 //! Offers.
 
-use crate::data::entities::offer::NewOfferModel;
+use crate::data::sea_orm::orm::offer::NewOfferModel;
 use common::oauth::{Owner, Visibility};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

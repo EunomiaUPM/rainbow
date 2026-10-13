@@ -15,8 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! DSP contract negotiation: endpoints, orchestration and validation.
+//! The Dataspace Protocol plane of the agent: contract negotiation (DSP 8).
 
-pub mod deasy;
 pub mod dsp;
-pub mod protocol;

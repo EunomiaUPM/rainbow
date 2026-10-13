@@ -32,6 +32,10 @@ mockall = { workspace = true }
 async-trait = { workspace = true }
 tokio-util = { workspace = true }
 uuid = { workspace = true }
+bytes = { workspace = true }
+sha2 = { workspace = true }
+hex = "0.4"
+http = "1.3.1"
 tower-http = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
@@ -45,3 +49,4 @@ tonic-prost-build = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
+tower = { workspace = true, features = ["util"] }

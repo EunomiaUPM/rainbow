@@ -18,4 +18,5 @@
 //! Helpers shared by the negotiation-agent test targets. Each target uses a different subset.
 #![allow(dead_code)]
 
+pub mod context;
 pub mod fixtures;

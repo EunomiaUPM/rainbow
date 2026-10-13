@@ -19,6 +19,7 @@
 
 use crate::entities::filters::NegotiationMessageFilter;
 use crate::entities::negotiation_message::NewNegotiationMessageDto;
+use crate::setup::context::AppContext;
 use crate::services::negotiation_message::NegotiationMessageServiceTrait;
 use crate::services::negotiation_message::views::NegotiationMessageView;
 use axum::extract::rejection::JsonRejection;
@@ -38,18 +39,18 @@ pub type NegotiationMessageQuery = QuerySpec<NegotiationMessageFilter, Sort>;
 
 #[derive(Clone)]
 pub struct NegotiationAgentMessagesRouter {
-    service: Arc<dyn NegotiationMessageServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<NegotiationAgentMessagesRouter> for Arc<dyn NegotiationMessageServiceTrait> {
     fn from_ref(state: &NegotiationAgentMessagesRouter) -> Self {
-        state.service.clone()
+        state.ctx.messages().clone()
     }
 }
 
 impl NegotiationAgentMessagesRouter {
-    pub fn new(service: Arc<dyn NegotiationMessageServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -71,7 +72,7 @@ impl NegotiationAgentMessagesRouter {
         Query(q): Query<NegotiationMessageQuery>,
     ) -> AppResult<(HeaderMap, Json<Paginated<NegotiationMessageView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.messages().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -86,7 +87,7 @@ impl NegotiationAgentMessagesRouter {
         let process_urn = extract_path_urn(&process_id)?;
         let (mut filter, page, sort) = q.into_domain();
         filter.process_id = Some(process_urn.to_string());
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state.ctx.messages().get_all(&user, &filter, &page, &sort).await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -98,7 +99,7 @@ impl NegotiationAgentMessagesRouter {
         payload: Result<Json<BatchRequests>, JsonRejection>,
     ) -> AppResult<(HeaderMap, Json<Vec<NegotiationMessageView>>)> {
         let payload = extract_payload(payload)?;
-        let views = state.service.batch(&user, &payload).await?;
+        let views = state.ctx.messages().batch(&user, &payload).await?;
         let count = views.len() as u64;
         Ok((headers.response_headers_paged(Some(count)), Json(views)))
     }
@@ -110,7 +111,7 @@ impl NegotiationAgentMessagesRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<NegotiationMessageView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.messages().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -121,7 +122,7 @@ impl NegotiationAgentMessagesRouter {
         payload: Result<Json<NewNegotiationMessageDto>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<NegotiationMessageView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.messages().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -133,7 +134,7 @@ impl NegotiationAgentMessagesRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.messages().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 }

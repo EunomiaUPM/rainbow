@@ -17,19 +17,19 @@
 
 //! AgreementService with a mocked repository: tenant isolation and role checks.
 
+use crate::support::context::TestContext;
 use chrono::Utc;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Sort};
 use common::oauth::OwnerScope;
 use common::test_utils::scopes::TestUsers;
-use negotiation_agent::data::entities::agreement::Model as AgreementModel;
-use negotiation_agent::data::repo_traits::agreement_repo::{
+use negotiation_agent::data::sea_orm::orm::agreement::Model as AgreementModel;
+use negotiation_agent::data::repo::agreement::{
     AgreementRepoErrors, MockAgreementRepoTrait,
 };
 use negotiation_agent::entities::agreement::{EditAgreementDto, NewAgreementDto};
 use negotiation_agent::entities::filters::AgreementFilter;
 use negotiation_agent::services::agreement::AgreementServiceTrait;
-use negotiation_agent::services::agreement::service::AgreementService;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -60,8 +60,12 @@ fn make_agreement_model(id: &Urn, tenant_id: &str) -> AgreementModel {
     }
 }
 
-fn make_service(agreement_repo: MockAgreementRepoTrait) -> AgreementService {
-    AgreementService::new(Arc::new(agreement_repo))
+fn make_service(agreement_repo: MockAgreementRepoTrait) -> Arc<dyn AgreementServiceTrait> {
+    TestContext::new()
+        .agreement_repo(agreement_repo)
+        .build()
+        .agreements()
+        .clone()
 }
 
 /// Reading a record of another tenant is not found: the lookup only searches the
