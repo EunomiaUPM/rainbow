@@ -15,20 +15,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! DSP over HTTP for the transfer flow: request bytes in, `TransferProcess` or `TransferError` out.
+//! The inbound flow's HTTP adapter: the request through its extraction stages in, the
+//! `TransferProcess` ACK or a `TransferError` out.
 
 use axum::extract::Request;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use common::flow::{FlowCodecTrait, FlowError};
+use common::flow::{FlowAdapterTrait, FlowError};
 use http::StatusCode;
 
 use crate::entities::protocol::ProtocolId;
-use crate::protocols::dsp::entities::context_dsp::TransferDspInput;
+use crate::protocols::dsp::entities::context_dsp::{
+    TransferDspOutcome, TransferDspParsed, TransferDspRaw, TransferDspRdf, TransferDspTyped,
+};
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
-use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 
 /// Pids a `TransferError` names, taken from the input before the flow runs.
 #[derive(Debug, Default)]
@@ -37,34 +39,36 @@ pub struct TransferErrorPids {
     provider_pid: String,
 }
 
-/// Reads a DSP 2025-1 transfer message through RDF and writes the answer.
-pub struct TransferDspCodec;
+/// Extracts a DSP 2025-1 transfer message stage by stage and answers with its outcome.
+pub struct TransferDspAdapter;
 
 #[async_trait::async_trait]
-impl FlowCodecTrait<TransferDspFlow> for TransferDspCodec {
+impl FlowAdapterTrait<TransferDspFlow> for TransferDspAdapter {
     type Raw = Request;
     type Response = Response;
     type ErrorContext = TransferErrorPids;
 
-    async fn decode(
+    /// Raw request, JSON, RDF expansion, then the typed fields and idempotency key.
+    async fn extract(
         &self,
         key: &TransferDSPMessageType,
         raw: Request,
-    ) -> Result<TransferDspInput, FlowError> {
-        TransferDspInput::read(&ProtocolId::Dsp2025_1, key, raw)
-            .await
-            .map_err(FlowError::from)
+    ) -> Result<TransferDspTyped, FlowError> {
+        let raw = TransferDspRaw::from_request(raw).await?;
+        let parsed = TransferDspParsed::from_raw(raw, &ProtocolId::Dsp2025_1, key)?;
+        let rdf = TransferDspRdf::from_parsed(parsed).await?;
+        Ok(TransferDspTyped::from_rdf(rdf)?)
     }
 
-    fn error_context(&self, input: &TransferDspInput) -> TransferErrorPids {
+    fn error_context(&self, input: &TransferDspTyped) -> TransferErrorPids {
         TransferErrorPids {
-            consumer_pid: input.body.fields.consumer_pid.clone().unwrap_or_default(),
-            provider_pid: input.body.fields.provider_pid.clone().unwrap_or_default(),
+            consumer_pid: input.fields.consumer_pid.clone().unwrap_or_default(),
+            provider_pid: input.fields.provider_pid.clone().unwrap_or_default(),
         }
     }
 
     /// DSP 10.2: 201 with the `TransferProcess` for a request, 200 for a state change.
-    fn encode(&self, _key: &TransferDSPMessageType, output: TransferDspReply) -> Response {
+    fn respond(&self, _key: &TransferDSPMessageType, output: TransferDspOutcome) -> Response {
         if output.created {
             (StatusCode::CREATED, Json(output.ack)).into_response()
         } else {
@@ -72,7 +76,7 @@ impl FlowCodecTrait<TransferDspFlow> for TransferDspCodec {
         }
     }
 
-    fn encode_error(
+    fn reject(
         &self,
         _key: &TransferDSPMessageType,
         pids: TransferErrorPids,

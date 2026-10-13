@@ -18,7 +18,7 @@
 //! Eunomia RPC routes a local user calls to make the agent send transfer messages, and the endpoint
 //! the DSP TCK uses to make a consumer open a transfer (TCK mode only).
 
-pub mod codec;
+pub mod adapter;
 
 use std::sync::Arc;
 
@@ -29,13 +29,14 @@ use axum::routing::post;
 use axum::{Json, Router};
 use common::flow::FlowRunner;
 use common::oauth::UserInfo;
-use http::StatusCode;
+use http::header::HOST;
+use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::protocols::dsp::entities::context_rpc::TransferRpcBody;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::http::rpc::codec::TransferRpcCodec;
+use crate::protocols::dsp::http::rpc::adapter::TransferRpcAdapter;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
 
 /// What the TCK posts to `dataspacetck.dsp.connector.transfer.initiate.url`.
@@ -54,6 +55,9 @@ pub struct TransferRpcRouter {
 }
 
 impl TransferRpcRouter {
+    /// The DSP base under the agent's host, as callbacks name it.
+    const DSP_BASE_PATH: &'static str = "/dsp/current";
+
     pub fn new(runner: Arc<FlowRunner<TransferRpcFlow>>) -> Self {
         Self { runner }
     }
@@ -86,7 +90,7 @@ impl TransferRpcRouter {
         body: Result<Json<Value>, JsonRejection>,
     ) -> Response {
         match body {
-            Ok(Json(body)) => self.runner.serve(&TransferRpcCodec, user, key, body).await,
+            Ok(Json(body)) => self.runner.serve(&TransferRpcAdapter, user, key, body).await,
             Err(rejection) => (StatusCode::BAD_REQUEST, rejection.body_text()).into_response(),
         }
     }
@@ -148,9 +152,11 @@ impl TransferRpcRouter {
         .await
     }
 
-    /// The TCK's consumer trigger, translated to a request towards the TCK as provider.
+    /// The TCK's consumer trigger, translated to a request towards the TCK as provider. The
+    /// callback is where the TCK reached us, which our configured host may not be (Docker).
     async fn handle_tck_initiate(
         State(s): State<Self>,
+        headers: HeaderMap,
         body: Result<Json<TckTransferInitiateRequest>, JsonRejection>,
     ) -> Response {
         let tck = match body {
@@ -164,6 +170,10 @@ impl TransferRpcRouter {
             agreement_id: Some(tck.agreement_id),
             format: Some(tck.format),
             provider_address: Some(tck.connector_address),
+            callback_address: headers
+                .get(HOST)
+                .and_then(|host| host.to_str().ok())
+                .map(|host| format!("http://{host}{}", Self::DSP_BASE_PATH)),
             ..TransferRpcBody::default()
         }
         .to_json_ld(&TransferDSPMessageType::TransferRequestMessage);

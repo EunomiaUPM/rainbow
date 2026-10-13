@@ -190,13 +190,13 @@ impl TransferProcessRepoTrait for SeaOrmTransferProcessRepo {
     async fn get_transfer_process_by_key_value(
         &self,
         scope: &OwnerScope,
-        id: &Urn,
+        value: &str,
     ) -> Outcome<Option<TransferProcess>> {
         use crate::data::sea_orm::orm::transfer_identifier as ident_orm;
 
         // Pids are global: find the identifier whoever owns it, then the process in `scope`.
         let ident = ident_orm::Entity::find()
-            .filter(ident_orm::Column::Value.eq(id.to_string()))
+            .filter(ident_orm::Column::Value.eq(value))
             .one(self.db.as_ref())
             .await
             .map_err(Self::fetch_err)?;

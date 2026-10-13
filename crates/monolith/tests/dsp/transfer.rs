@@ -130,7 +130,7 @@ async fn transfer_request_opens_a_process_and_the_consumer_terminates_it() {
     );
 
     let mut broken = body.clone();
-    broken["consumerPid"] = json!("not-a-urn");
+    broken["agreementId"] = json!("not-a-urn");
     broken.as_object_mut().unwrap().remove("format");
     let (status, error) = ds
         .provider

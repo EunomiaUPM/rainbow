@@ -25,14 +25,14 @@ src/
 │   ├── entities/        Message types, states, ACK and error, the inbound input and facts,
 │   │                    the eunomia RPC command and facts, RDF extractors, TCK steps
 │   ├── services/
-│   │   ├── dsp_flow/              Inbound flow: load, then the request and transition handlers
-│   │   ├── rpc_flow/              Outbound flow: build the DSP message, send it, apply the answer
+│   │   ├── dsp_flow/              Inbound flow: loader, one handler per message
+│   │   ├── rpc_flow/              Outbound flow: loader, send, one handler per message, result view
+│   │   ├── transfer_writer/       Process writes and message history shared by both flows
 │   │   ├── validator/             Shape and fact rules of both flows
-│   │   ├── dsp_domain_loader/     Process, agreement, connector and role of a message
-│   │   ├── connector_resolver/    Agreement to dataset, distribution and connector instance
 │   │   └── tck/                   TCK scenarios and the worker that plays them
-│   ├── http/            DSP routes and RPC routes, each with its codec
-│   └── facades/         Catalog, negotiation and dataplane (one strategy per role and mode)
+│   ├── http/            DSP routes and RPC routes, each with its flow adapter
+│   └── facades/         Negotiation (agreement as ODRL), catalog (connector for a target and
+│                        format) and dataplane (one strategy per role and mode)
 └── setup/           TransferAgentModule, admin module, AppContext, ports, boot
 proto/               transfer_process.proto, transfer_messages.proto
 tests/
@@ -58,11 +58,11 @@ Mounted at `/dsp/current/transfers`:
 The peer's token is checked with the auth agent. A missing or rejected token answers 404, the
 same as a missing process, so probing cannot reveal which processes exist (DSP 10.1.2.3).
 
-Each message is read into a `TransferDspInput`: the peer, the route's pid, the body expanded
-and extracted through RDF (`RdfMessage<DspTransfer>`) and an idempotency key. The flow then:
+Each message is extracted stage by stage: raw request, JSON, RDF expansion, then the typed
+fields with the idempotency key (`TransferDspRaw` → `Parsed` → `Rdf` → `Typed`). The flow then:
 
 1. Checks the shape: the body's type is the route's, pids and agreement are URNs.
-2. Loads the facts (`DspDomainLoader`): process, agreement, connector, role and direction. An
+2. Loads the domain stage (`TransferDspLoader`): process, agreement, connector, role and direction. An
    unknown process answers 404.
 3. Replays a repeated message (`common::flow::IdempotencyGuard`): keyed on peer, version, type
    and pids, guarded by the canonical hash, with the process version telling a restart from a

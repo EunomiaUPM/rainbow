@@ -40,7 +40,7 @@ impl NegotiationLocalFacade {
 #[async_trait::async_trait]
 impl NegotiationFacadeTrait for NegotiationLocalFacade {
     #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "negotiation"))]
-    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
+    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
         let user = UserInfo::system();
         self.agreements.get_one(&user, agreement_id).await
     }

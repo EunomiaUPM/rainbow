@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP transfer routes end to end through the flow runner: real codec, rules, loader and
+//! The DSP transfer routes end to end through the flow runner: real adapter, rules, loader and
 //! handlers over an in-memory process store, with the agreement, connector and dataplane mocked.
 
 use axum::extract::Request;
@@ -45,12 +45,12 @@ use transfer_agent::entities::protocol::{
 use transfer_agent::entities::transfer_message::Direction;
 use transfer_agent::entities::transfer_process::TransferProcess;
 use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
-use transfer_agent::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use transfer_agent::protocols::dsp::facades::catalog_facade::MockCatalogFacadeTrait;
+use transfer_agent::protocols::dsp::facades::negotiation_facade::MockNegotiationFacadeTrait;
+use transfer_agent::protocols::dsp::services::dsp_flow::loader::TransferDspLoader;
 use transfer_agent::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
-use transfer_agent::protocols::dsp::services::connector_resolver::MockConnectorResolverTrait;
-use transfer_agent::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
-use transfer_agent::protocols::dsp::services::dsp_domain_loader::MockDspDomainLoaderTrait;
+use transfer_agent::protocols::dsp::services::transfer_writer::service::TransferWriter;
 use transfer_agent::protocols::dsp::services::validator::TransferValidators;
 use transfer_agent::services::transfer_message::views::TransferMessageView;
 use transfer_agent::services::transfer_message::MockTransferMessageServiceTrait;
@@ -85,15 +85,14 @@ fn store() -> Store {
     Arc::new(Mutex::new(Vec::new()))
 }
 
-fn find_by_pid(store: &Store, pid: &Urn) -> Option<TransferProcess> {
-    let pid = pid.to_string();
+fn find_by_pid(store: &Store, pid: &str) -> Option<TransferProcess> {
     store
         .lock()
         .unwrap()
         .iter()
         .find(|p| {
             let c = p.correlation();
-            c.consumer_pid.as_deref() == Some(&pid) || c.provider_pid.as_deref() == Some(&pid)
+            c.consumer_pid.as_deref() == Some(pid) || c.provider_pid.as_deref() == Some(pid)
         })
         .cloned()
 }
@@ -212,20 +211,20 @@ fn connector() -> ConnectorInstanceDto {
 }
 
 fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
-    let mut connectors = MockConnectorResolverTrait::new();
-    connectors
-        .expect_resolve_connector_by_agreement_id()
+    let mut catalog = MockCatalogFacadeTrait::new();
+    catalog
+        .expect_get_connector_for()
         .returning(|_, _| Ok(connector()));
-    let mut agreements = MockDspDomainLoaderTrait::new();
-    agreements.expect_resolve_agreement().returning(|id| {
+    let mut negotiation = MockNegotiationFacadeTrait::new();
+    negotiation.expect_get_agreement().returning(|id| {
         Ok(OdrlAgreement {
             id: id.clone(),
             ..Default::default()
         })
     });
     let repo: Arc<MockTransferProcessRepoTrait> = Arc::new(repo(store));
-    let loader = DspDomainLoader::new(repo.clone(), Arc::new(connectors), Arc::new(agreements));
-    let deps = TransferHandlerDeps {
+    let loader = TransferDspLoader::new(repo.clone(), Arc::new(negotiation), Arc::new(catalog));
+    let writer = TransferWriter {
         processes: Arc::new(processes(store)),
         process_repo: repo,
         messages: Arc::new(messages()),
@@ -233,7 +232,7 @@ fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
     };
     Arc::new(
         FlowRunner::builder(
-            Arc::new(TransferDspFlow::new(Arc::new(loader), deps)),
+            Arc::new(TransferDspFlow::new(loader, writer)),
             Arc::new(AutocommitUnitOfWorkFactory),
             Arc::new(TransferValidators::input_rules()),
             Arc::new(TransferValidators::fact_rules()),
@@ -331,6 +330,20 @@ async fn transfer_request_answers_201_with_a_transfer_process() {
     assert!(body["@context"].is_array(), "@context is REQUIRED: {body}");
 }
 
+/// Pids are opaque: a bare UUID consumerPid, as the DSP TCK sends, opens the process and comes
+/// back exactly as sent.
+#[tokio::test]
+async fn a_bare_uuid_consumer_pid_is_accepted_as_sent() {
+    let body = REQUEST_BODY.replace(CONSUMER_PID, "2c066edf-0a95-49eb-bc5e-a85beea59645");
+    let response = router(true)
+        .oneshot(post("/request", &body, Some("tok")))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let ack = body_json(response).await;
+    assert_eq!(ack["consumerPid"], "2c066edf-0a95-49eb-bc5e-a85beea59645", "{ack}");
+}
+
 /// DSP 9.2.1: a repeated request for a known consumerPid gets the first answer, not a second process.
 #[tokio::test]
 async fn a_repeated_transfer_request_replays_the_same_ack() {
@@ -364,7 +377,7 @@ async fn a_malformed_request_reports_every_violation() {
     let body = r#"{
         "@context": ["https://w3id.org/dspace/2025/1/context.jsonld"],
         "@type": "TransferRequestMessage",
-        "consumerPid": "not-a-urn",
+        "agreementId": "not-a-urn",
         "callbackAddress": "https://example.com/callback"
     }"#;
     let response = router_as(&store, Some("did:example:consumer"))

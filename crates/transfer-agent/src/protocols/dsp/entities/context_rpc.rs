@@ -15,8 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! An outbound transfer message: the eunomia RPC body a local user sends, and everything
-//! resolved to send it.
+//! An outbound transfer message stage by stage: the eunomia RPC body as sent (raw), expanded
+//! (RDF) and read (typed), then everything resolved to send it (domain), and what it produced.
 
 use std::str::FromStr;
 
@@ -74,36 +74,68 @@ impl TransferRpcBody {
     }
 }
 
-/// The message to send, fixed by the route, its body and the JSON-LD it was read from.
+/// The RPC body as it arrived, with the message its route sends.
 #[derive(Debug, Clone)]
-pub struct TransferRpcCommand {
-    pub message: TransferDSPMessageType,
-    pub body: TransferRpcBody,
+pub struct TransferRpcRaw {
+    pub route: TransferDSPMessageType,
     pub json: Value,
 }
 
-impl TransferRpcCommand {
-    /// A command built in process, such as the TCK's, with its JSON-LD rendered from the body.
-    pub fn new(message: TransferDSPMessageType, body: TransferRpcBody) -> Self {
-        let json = body.to_json_ld(&message);
+impl TransferRpcRaw {
+    pub fn new(route: &TransferDSPMessageType, json: Value) -> Self {
         Self {
-            message,
-            body,
+            route: route.clone(),
             json,
         }
     }
+}
 
-    /// Reads a eunomia RPC body; its `@type` must be the RPC of the route's `message`.
-    pub async fn read(message: &TransferDSPMessageType, json: Value) -> Outcome<Self> {
-        let read = RdfMessage::<EunomiaTransfer>::read_as(message, json).await?;
+/// The body expanded through the eunomia context.
+#[derive(Debug, Clone)]
+pub struct TransferRpcRdf {
+    pub raw: TransferRpcRaw,
+    pub expanded: Value,
+    pub canonical_n_quads: String,
+    pub canonical_hash: [u8; 32],
+}
+
+impl TransferRpcRdf {
+    pub async fn from_raw(raw: TransferRpcRaw) -> Outcome<Self> {
+        let expansion = EunomiaTransfer::engine().expand(&raw.json).await?;
         Ok(Self {
-            message: read.message,
-            body: read.fields,
-            json: read.json,
+            canonical_hash: expansion.canonical_hash(),
+            canonical_n_quads: expansion.canonical_n_quads,
+            expanded: expansion.expanded,
+            raw,
         })
     }
+}
 
-    /// The pid of an existing process the command refers to, ours or the peer's.
+/// The body's fields and the RPC type it declares; agreeing with the route is a shape rule.
+#[derive(Debug, Clone)]
+pub struct TransferRpcTyped {
+    pub rdf: TransferRpcRdf,
+    pub message: TransferDSPMessageType,
+    pub body: TransferRpcBody,
+}
+
+impl TransferRpcTyped {
+    pub fn from_rdf(rdf: TransferRpcRdf) -> Outcome<Self> {
+        let (message, body) = EunomiaTransfer::read_expanded(&rdf.expanded)?;
+        Ok(Self { rdf, message, body })
+    }
+
+    /// Runs the stages on a body built in process, such as the TCK's.
+    pub async fn from_body(route: &TransferDSPMessageType, body: &TransferRpcBody) -> Outcome<Self> {
+        let raw = TransferRpcRaw::new(route, body.to_json_ld(route));
+        Self::from_rdf(TransferRpcRdf::from_raw(raw).await?)
+    }
+
+    pub fn route(&self) -> &TransferDSPMessageType {
+        &self.rdf.raw.route
+    }
+
+    /// The pid of an existing process the body refers to, ours or the peer's.
     pub fn pid(&self) -> Option<&str> {
         self.body
             .provider_pid
@@ -112,9 +144,9 @@ impl TransferRpcCommand {
     }
 }
 
-/// The command plus everything resolved to send it: process, role, peer and the message.
-pub struct TransferRpcFacts {
-    pub command: TransferRpcCommand,
+/// The typed body plus everything resolved to send it: process, role, peer and the message.
+pub struct TransferRpcDomain {
+    pub typed: TransferRpcTyped,
     pub process: Option<TransferProcess>,
     pub process_id: Urn,
     pub role: TransferRole,
@@ -126,13 +158,14 @@ pub struct TransferRpcFacts {
     pub is_restart: bool,
 }
 
-impl TransferRpcFacts {
+impl TransferRpcDomain {
     pub fn current_state(&self) -> Option<TransferDSPState> {
         self.process
             .as_ref()
             .and_then(|p| TransferDSPState::from_str(p.state().0.as_str()).ok())
     }
 
+    /// What the dataplane hooks need; `data_address` is the one this side hands the peer.
     pub fn hooks(&self, data_address: Option<DataAddress>) -> DataplaneHookContext {
         DataplaneHookContext {
             process_id: self.process_id.clone(),
@@ -143,6 +176,35 @@ impl TransferRpcFacts {
             resolved_data_address: data_address.clone(),
             data_address,
             is_restart: self.is_restart,
+        }
+    }
+}
+
+/// What sending produced: what was asked, the peer's answer, the process as it stands, and the
+/// agreement and role the TCK continues from.
+#[derive(Debug)]
+pub struct TransferRpcOutcome {
+    pub request: Value,
+    pub response: Value,
+    pub process: TransferProcess,
+    pub agreement_id: String,
+    pub role: TransferRole,
+}
+
+impl TransferRpcOutcome {
+    /// What sending `domain`'s message produced, given the peer's `reply` and the process it left.
+    pub fn sent(domain: TransferRpcDomain, reply: &Value, process: TransferProcess) -> Self {
+        Self {
+            request: domain.typed.rdf.raw.json,
+            response: reply["raw"].clone(),
+            agreement_id: process
+                .correlation()
+                .agreement_id
+                .as_ref()
+                .map(Urn::to_string)
+                .unwrap_or_default(),
+            role: domain.role,
+            process,
         }
     }
 }

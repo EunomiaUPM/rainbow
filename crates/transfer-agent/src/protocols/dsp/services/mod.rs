@@ -15,12 +15,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Use cases of the DSP transfer process: the inbound and outbound flows, the domain loader,
-//! the validators and the TCK scenarios.
+//! Use cases of the DSP transfer process: the inbound and outbound flows, the writer they
+//! share, the validators and the TCK scenarios.
 
-pub mod connector_resolver;
-pub mod dsp_domain_loader;
 pub mod dsp_flow;
 pub mod rpc_flow;
 pub mod tck;
+pub mod transfer_writer;
 pub mod validator;

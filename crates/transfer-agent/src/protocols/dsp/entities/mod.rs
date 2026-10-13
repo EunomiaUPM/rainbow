@@ -27,6 +27,7 @@ pub mod protocol_fields;
 pub mod rdf_extractor_dsp;
 pub mod rdf_extractor_rpc;
 pub mod state;
+pub mod state_change;
 pub mod state_metadata;
 pub mod tck;
 pub mod transfer_error;

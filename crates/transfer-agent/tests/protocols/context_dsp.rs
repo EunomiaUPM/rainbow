@@ -15,14 +15,16 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The inbound DSP input: reading the request, RDF canonicalization, field extraction and the
-//! idempotency key.
+//! The inbound DSP stages: reading the request, JSON, RDF canonicalization, typed field
+//! extraction and the idempotency key.
 
 use axum::extract::Request;
 use common::facades::grants_facade::VerifiedPeer;
 use common::oauth::RolePath;
 use transfer_agent::entities::protocol::ProtocolId;
-use transfer_agent::protocols::dsp::entities::context_dsp::TransferDspInput;
+use transfer_agent::protocols::dsp::entities::context_dsp::{
+    TransferDspParsed, TransferDspRaw, TransferDspRdf, TransferDspTyped,
+};
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use ymir::errors::Outcome;
 
@@ -45,40 +47,40 @@ fn request_with_mate(body: &'static str) -> Request {
     req
 }
 
-async fn try_input(body: &'static str, route: TransferDSPMessageType) -> Outcome<TransferDspInput> {
-    TransferDspInput::read(&ProtocolId::Dsp2025_1, &route, request_with_mate(body)).await
+async fn typed_from(request: Request, route: TransferDSPMessageType) -> Outcome<TransferDspTyped> {
+    let raw = TransferDspRaw::from_request(request).await?;
+    let parsed = TransferDspParsed::from_raw(raw, &ProtocolId::Dsp2025_1, &route)?;
+    TransferDspTyped::from_rdf(TransferDspRdf::from_parsed(parsed).await?)
 }
 
-async fn rdf_from_typed(body: &'static str, route: TransferDSPMessageType) -> TransferDspInput {
+async fn try_input(body: &'static str, route: TransferDSPMessageType) -> Outcome<TransferDspTyped> {
+    typed_from(request_with_mate(body), route).await
+}
+
+async fn rdf_from_typed(body: &'static str, route: TransferDSPMessageType) -> TransferDspTyped {
     try_input(body, route).await.unwrap()
 }
 
-async fn rdf_from(body: &'static str) -> TransferDspInput {
+async fn rdf_from(body: &'static str) -> TransferDspTyped {
     rdf_from_typed(body, TransferDSPMessageType::TransferStartMessage).await
 }
 
-/// The input keeps the peer the auth middleware resolved and the route's message type.
+/// The stages keep the peer the auth middleware resolved and the route's message type.
 #[tokio::test]
-async fn read_keeps_the_resolved_peer_and_the_route() {
+async fn stages_keep_the_resolved_peer_and_the_route() {
     let input = rdf_from(
         r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"TransferStartMessage","providerPid":"urn:uuid:pp","consumerPid":"urn:uuid:cc"}"#,
     )
     .await;
-    assert_eq!(input.peer.participant_id, "did:example:provider");
-    assert_eq!(input.route, TransferDSPMessageType::TransferStartMessage);
+    assert_eq!(input.peer().participant_id, "did:example:provider");
+    assert_eq!(input.route(), &TransferDSPMessageType::TransferStartMessage);
 }
 
 /// Without the peer in the extensions this is a wiring error, not a silent default.
 #[tokio::test]
-async fn read_fails_without_auth_middleware() {
+async fn raw_fails_without_auth_middleware() {
     let req = Request::builder().body(axum::body::Body::from("{}")).unwrap();
-    let read = TransferDspInput::read(
-        &ProtocolId::Dsp2025_1,
-        &TransferDSPMessageType::TransferStartMessage,
-        req,
-    )
-    .await;
-    assert!(read.is_err());
+    assert!(TransferDspRaw::from_request(req).await.is_err());
 }
 
 /// Expansion resolves everything to full IRIs, so field order does not change the canonical
@@ -94,11 +96,11 @@ async fn canonical_hash_is_deterministic_and_key_order_independent() {
     )
     .await;
     assert!(
-        !a.body.canonical_n_quads.is_empty(),
+        !a.rdf.canonical_n_quads.is_empty(),
         "expansion must yield quads"
     );
     assert_eq!(
-        a.body.canonical_hash, b.body.canonical_hash,
+        a.rdf.canonical_hash, b.rdf.canonical_hash,
         "canonicalization must be key-order independent"
     );
 
@@ -108,7 +110,7 @@ async fn canonical_hash_is_deterministic_and_key_order_independent() {
     )
     .await;
     assert_ne!(
-        a.body.canonical_hash, c.body.canonical_hash,
+        a.rdf.canonical_hash, c.rdf.canonical_hash,
         "different content must hash differently"
     );
 }
@@ -121,18 +123,18 @@ async fn extractor_pulls_pids_message_and_data_address() {
     )
     .await;
     let typed = rdf;
-    assert_eq!(typed.body.fields.provider_pid.as_deref(), Some("urn:uuid:pp"));
-    assert_eq!(typed.body.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
+    assert_eq!(typed.fields.provider_pid.as_deref(), Some("urn:uuid:pp"));
+    assert_eq!(typed.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
     assert!(
         !typed.idempotency_key.as_str().is_empty(),
         "the effective key is always derived, never left empty"
     );
     assert_eq!(
-        typed.body.fields.data_address.unwrap().endpoint.as_deref(),
+        typed.fields.data_address.unwrap().endpoint.as_deref(),
         Some("http://example.com/data")
     );
     assert!(matches!(
-        typed.body.message,
+        typed.message,
         TransferDSPMessageType::TransferStartMessage
     ));
 }
@@ -147,12 +149,12 @@ async fn typed_carries_the_request_message_fields() {
     )
     .await;
     let typed = rdf;
-    assert_eq!(typed.body.fields.agreement_id.as_deref(), Some("urn:uuid:ag"));
+    assert_eq!(typed.fields.agreement_id.as_deref(), Some("urn:uuid:ag"));
     assert_eq!(
-        typed.body.fields.callback_address.as_deref(),
+        typed.fields.callback_address.as_deref(),
         Some("https://example.com/callback")
     );
-    assert_eq!(typed.body.fields.format.as_deref(), Some("example:HTTP_PUSH"));
+    assert_eq!(typed.fields.format.as_deref(), Some("example:HTTP_PUSH"));
 }
 
 /// A message as one nested object and as an `@graph` of referencing nodes is the same graph,
@@ -197,16 +199,16 @@ async fn graph_form_extracts_the_same_as_the_nested_form() {
     let nested = rdf_from_typed(NESTED, TransferDSPMessageType::TransferRequestMessage).await;
     let graph = rdf_from_typed(GRAPH, TransferDSPMessageType::TransferRequestMessage).await;
     assert_eq!(
-        nested.body.canonical_hash, graph.body.canonical_hash,
+        nested.rdf.canonical_hash, graph.rdf.canonical_hash,
         "the two forms are the same graph"
     );
 
-    assert_eq!(graph.body.fields, nested.body.fields, "both forms extract the same");
+    assert_eq!(graph.fields, nested.fields, "both forms extract the same");
     assert_eq!(graph.idempotency_key, nested.idempotency_key);
 
     // The dataAddress arrives as a bare `{"@id": …}` reference in the graph
     // form, so it only resolves if references are followed.
-    let address = graph.body.fields.data_address.expect("dataAddress must resolve");
+    let address = graph.fields.data_address.expect("dataAddress must resolve");
     assert_eq!(address.endpoint.as_deref(), Some("http://example.com"));
     assert_eq!(address.endpoint_type, "https://w3id.org/idsa/v4.1/HTTP");
     let mut properties: Vec<(String, String)> = address
@@ -235,13 +237,13 @@ async fn the_body_type_is_read_even_when_the_route_disagrees() {
     )
     .await;
     let typed = rdf;
-    assert_eq!(typed.body.message, TransferDSPMessageType::TransferProcess);
+    assert_eq!(typed.message, TransferDSPMessageType::TransferProcess);
     assert_eq!(
-        typed.route,
-        TransferDSPMessageType::TransferRequestMessage,
+        typed.route(),
+        &TransferDSPMessageType::TransferRequestMessage,
         "the route's own type stays available to compare against"
     );
-    assert_eq!(typed.body.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
+    assert_eq!(typed.fields.consumer_pid.as_deref(), Some("urn:uuid:cc"));
 }
 
 /// The one thing extraction still cannot do: build fields out of a body that
@@ -262,6 +264,6 @@ async fn extractor_tolerates_missing_optional_fields() {
     let rdf =
         rdf_from(r#"{"@context":"https://w3id.org/dspace/2025/1/context.jsonld","@type":"TransferStartMessage"}"#).await;
     let typed = rdf;
-    assert!(typed.body.fields.provider_pid.is_none());
-    assert!(typed.body.fields.data_address.is_none());
+    assert!(typed.fields.provider_pid.is_none());
+    assert!(typed.fields.data_address.is_none());
 }

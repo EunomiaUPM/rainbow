@@ -15,8 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Inbound DSP transfer messages as a flow: the runner validates, this loads and applies.
+//! Inbound DSP transfer messages as a flow: the runner validates, the loader resolves the
+//! facts and one handler per message applies it.
 
 pub mod handlers;
+pub mod loader;
 pub mod service;
-pub mod views;

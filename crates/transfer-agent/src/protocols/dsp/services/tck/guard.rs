@@ -26,11 +26,11 @@ use tokio::sync::mpsc::UnboundedSender;
 use ymir::errors::Outcome;
 
 use crate::entities::protocol::TransferRole;
+use crate::protocols::dsp::entities::context_dsp::TransferDspOutcome;
+use crate::protocols::dsp::entities::context_rpc::TransferRpcOutcome;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
-use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
-use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
 use crate::protocols::dsp::services::tck::worker::TckJob;
 use crate::protocols::dsp::entities::tck::TckEvent;
 use crate::protocols::dsp::services::tck::service::TckScenarios;
@@ -63,7 +63,7 @@ impl FlowGuardTrait<TransferDspFlow> for TckGuard {
         &self,
         _peer: &VerifiedPeer,
         key: &TransferDSPMessageType,
-        out: &TransferDspReply,
+        out: &TransferDspOutcome,
     ) -> Outcome<()> {
         let pid = out.ack.provider_pid.clone();
         match (key, out.role) {
@@ -87,14 +87,14 @@ impl FlowGuardTrait<TransferRpcFlow> for TckGuard {
         &self,
         _user: &UserInfo,
         key: &TransferDSPMessageType,
-        out: &TransferRpcReply,
+        out: &TransferRpcOutcome,
     ) -> Outcome<()> {
         if *key == TransferDSPMessageType::TransferRequestMessage
             && out.role == TransferRole::Consumer
         {
             let pid = out
-                .transfer_agent_model
-                .correlation
+                .process
+                .correlation()
                 .consumer_pid
                 .clone()
                 .unwrap_or_default();

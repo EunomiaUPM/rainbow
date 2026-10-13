@@ -29,7 +29,9 @@ use common::flow::idempotency::{IdempotencyRecord, IdempotencyVerdict};
 use common::flow::{IdempotencyGuard, IdempotencyKey, InMemoryIdempotencyStore};
 use common::oauth::RolePath;
 use transfer_agent::entities::protocol::ProtocolId;
-use transfer_agent::protocols::dsp::entities::context_dsp::TransferDspInput;
+use transfer_agent::protocols::dsp::entities::context_dsp::{
+    TransferDspParsed, TransferDspRaw, TransferDspRdf, TransferDspTyped,
+};
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use ymir::errors::Outcome;
 
@@ -45,21 +47,21 @@ impl Guard {
 
     async fn check(
         &self,
-        input: &TransferDspInput,
+        input: &TransferDspTyped,
         version: Option<u64>,
     ) -> Outcome<IdempotencyVerdict> {
         self.0
-            .check(&input.idempotency_key, &input.body.canonical_hash, version)
+            .check(&input.idempotency_key, &input.rdf.canonical_hash, version)
             .await
     }
 
     async fn claim(
         &self,
         key: IdempotencyKey,
-        input: &TransferDspInput,
+        input: &TransferDspTyped,
         version: Option<u64>,
     ) -> Outcome<IdempotencyRecord> {
-        self.0.claim(key, input.body.canonical_hash, version).await
+        self.0.claim(key, input.rdf.canonical_hash, version).await
     }
 
     async fn record_response(
@@ -82,8 +84,8 @@ fn mate(participant_id: &str) -> VerifiedPeer {
     }
 }
 
-/// The input a handler would get, for a body sent by `peer`.
-async fn typed_from(peer: &str, body: String) -> TransferDspInput {
+/// The typed stage a handler would get, for a body sent by `peer`.
+async fn typed_from(peer: &str, body: String) -> TransferDspTyped {
     typed_from_with_key(peer, body, None).await
 }
 
@@ -91,7 +93,7 @@ async fn typed_from_with_key(
     peer: &str,
     body: String,
     supplied_key: Option<&str>,
-) -> TransferDspInput {
+) -> TransferDspTyped {
     typed_at(
         peer,
         body,
@@ -108,7 +110,7 @@ async fn typed_at(
     supplied_key: Option<&str>,
     uri: &str,
     message_type: TransferDSPMessageType,
-) -> TransferDspInput {
+) -> TransferDspTyped {
     typed_versioned(
         peer,
         body,
@@ -127,16 +129,16 @@ async fn typed_versioned(
     uri: &str,
     message_type: TransferDSPMessageType,
     dsp_version: ProtocolId,
-) -> TransferDspInput {
+) -> TransferDspTyped {
     let mut builder = Request::builder().method("POST").uri(uri.to_string());
     if let Some(key) = supplied_key {
         builder = builder.header("idempotency-key", key);
     }
     let mut req = builder.body(axum::body::Body::from(body)).unwrap();
     req.extensions_mut().insert(mate(peer));
-    TransferDspInput::read(&dsp_version, &message_type, req)
-        .await
-        .unwrap()
+    let raw = TransferDspRaw::from_request(req).await.unwrap();
+    let parsed = TransferDspParsed::from_raw(raw, &dsp_version, &message_type).unwrap();
+    TransferDspTyped::from_rdf(TransferDspRdf::from_parsed(parsed).await.unwrap()).unwrap()
 }
 
 fn message(consumer_pid: &str, callback: &str) -> String {
@@ -147,7 +149,7 @@ fn message(consumer_pid: &str, callback: &str) -> String {
 
 /// A `TransferStartMessage` on the state-transition route: same pids every
 /// time, so protocol identity alone cannot tell a retry from a restart.
-async fn start_message() -> TransferDspInput {
+async fn start_message() -> TransferDspTyped {
     typed_at(
         "did:example:consumer",
         format!(

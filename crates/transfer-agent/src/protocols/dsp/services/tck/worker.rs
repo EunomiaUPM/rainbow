@@ -28,7 +28,7 @@ use tokio::task::JoinSet;
 use tokio_util::sync::CancellationToken;
 use ymir::errors::Outcome;
 
-use crate::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcCommand};
+use crate::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcTyped};
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
 use crate::protocols::dsp::entities::tck::{TckMessage, TckStep};
 
@@ -67,13 +67,17 @@ impl TckWorker {
     /// Sends one message, retrying while the peer is not ready for it yet.
     async fn send(runner: &FlowRunner<TransferRpcFlow>, pid: &str, message: TckMessage) {
         for attempt in 1..=Self::ATTEMPTS {
-            let command = TransferRpcCommand::new(
-                message.message_type(),
-                TransferRpcBody {
-                    provider_pid: Some(pid.to_string()),
-                    ..TransferRpcBody::default()
-                },
-            );
+            let body = TransferRpcBody {
+                provider_pid: Some(pid.to_string()),
+                ..TransferRpcBody::default()
+            };
+            let command = match TransferRpcTyped::from_body(&message.message_type(), &body).await {
+                Ok(command) => command,
+                Err(err) => {
+                    tracing::error!(pid, ?message, error = %err, "TCK scenario step is malformed");
+                    return;
+                }
+            };
             match runner.run(&UserInfo::system(), command).await {
                 Ok(_) => return,
                 Err(err) => {

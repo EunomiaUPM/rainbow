@@ -21,6 +21,9 @@ use connector::ConnectorInstanceDto;
 
 use crate::entities::transfer_process::TransferProcess;
 
+/// Process property where the direction fixed by the request is kept.
+pub const DIRECTION_PROPERTY: &str = "transferDirection";
+
 /// Whether the local process for this transfer already exists or must be minted.
 #[derive(Debug)]
 pub enum TransferContextProcessSlot {

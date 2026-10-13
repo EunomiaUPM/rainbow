@@ -115,8 +115,8 @@ async fn different_content_conflicts_even_when_superseded() {
     )
     .await;
     assert_ne!(
-        start_message().await.body.canonical_hash,
-        tampered.body.canonical_hash,
+        start_message().await.rdf.canonical_hash,
+        tampered.rdf.canonical_hash,
         "a differing dataAddress really is different content"
     );
     assert!(matches!(

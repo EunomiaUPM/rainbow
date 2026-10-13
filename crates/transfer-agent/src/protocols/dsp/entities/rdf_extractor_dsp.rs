@@ -67,9 +67,9 @@ impl RdfProtocolTrait for DspTransfer {
 
     fn extract(node: &RdfNode<'_, '_>) -> Outcome<TransferProtocolFields> {
         Ok(TransferProtocolFields {
-            consumer_pid: Self::owned(node, &Self::dspace("consumerPid")),
-            provider_pid: Self::owned(node, &Self::dspace("providerPid")),
-            agreement_id: Self::owned(node, &Self::dspace("agreementId")),
+            consumer_pid: Self::id(node, &Self::dspace("consumerPid")),
+            provider_pid: Self::id(node, &Self::dspace("providerPid")),
+            agreement_id: Self::id(node, &Self::dspace("agreementId")),
             callback_address: Self::owned(node, &Self::dspace("callbackAddress")),
             format: node.iri_or_literal(DCT_FORMAT).map(Self::compact_format),
             data_address: Self::data_address(node)?,
@@ -123,13 +123,23 @@ impl DspTransfer {
     /// `format` is `@vocab`-typed, so a bare term (`http+pull`) expands to an IRI under the
     /// document base; it is read back as sent, which is what a distribution stores.
     fn compact_format(expanded: &str) -> String {
-        let below_base = expanded
-            .strip_prefix(RdfCanonicalizer::DOCUMENT_BASE)
-            .map(|rest| rest.trim_start_matches('/'));
-        below_base
+        Self::below_base(expanded)
             .or_else(|| expanded.strip_prefix(DSPACE))
             .unwrap_or(expanded)
             .to_string()
+    }
+
+    /// An `@id`-typed member (pids, agreement) read back as sent: a value that is not an
+    /// absolute IRI, such as a bare UUID pid, expands under the document base.
+    fn id(node: &RdfNode<'_, '_>, predicate: &str) -> Option<String> {
+        node.iri_or_literal(predicate)
+            .map(|value| Self::below_base(value).unwrap_or(value).to_string())
+    }
+
+    fn below_base(expanded: &str) -> Option<&str> {
+        expanded
+            .strip_prefix(RdfCanonicalizer::DOCUMENT_BASE)
+            .map(|rest| rest.trim_start_matches('/'))
     }
 
     /// The full IRI a DSP term expands to.

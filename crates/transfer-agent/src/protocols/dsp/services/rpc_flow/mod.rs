@@ -15,8 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Outbound DSP transfer messages, sent by a local user or by the agent itself, as a flow:
-//! load the process and build the message, check it, send it, then record what changed.
+//! Outbound DSP transfer messages, sent by a local user or by the agent itself, as a flow: the
+//! loader builds the message, the runner checks it, this sends it and a handler applies it.
 
+pub mod handlers;
+pub mod loader;
 pub mod service;
 pub mod views;

@@ -15,20 +15,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! JSON-LD over HTTP for the outbound flow: the eunomia RPC body in, the eunomia result or a
-//! `TransferError` out.
+//! The outbound flow's HTTP adapter: the eunomia body through its stages in, the
+//! `RpcTransferResult` or a `TransferError` out.
 
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use common::flow::{FlowCodecTrait, FlowError};
+use common::flow::{FlowAdapterTrait, FlowError};
 use http::StatusCode;
 use serde_json::Value;
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
-use crate::protocols::dsp::entities::context_rpc::TransferRpcCommand;
+use crate::protocols::dsp::entities::context_rpc::{
+    TransferRpcOutcome, TransferRpcRaw, TransferRpcRdf, TransferRpcTyped,
+};
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
-use crate::protocols::dsp::services::rpc_flow::views::TransferRpcReply;
+use crate::protocols::dsp::services::rpc_flow::views::TransferRpcResult;
 
 /// Pids the error names, as the caller sent them.
 #[derive(Debug, Default)]
@@ -37,26 +39,27 @@ pub struct TransferRpcErrorPids {
     provider_pid: String,
 }
 
-/// Reads the RPC body for the route's message and writes the answer.
-pub struct TransferRpcCodec;
+/// Extracts the RPC body for the route's message and answers with the result.
+pub struct TransferRpcAdapter;
 
 #[async_trait::async_trait]
-impl FlowCodecTrait<TransferRpcFlow> for TransferRpcCodec {
+impl FlowAdapterTrait<TransferRpcFlow> for TransferRpcAdapter {
     type Raw = Value;
     type Response = Response;
     type ErrorContext = TransferRpcErrorPids;
 
-    async fn decode(
+    /// Raw body, expanded through the eunomia context, then read into its fields.
+    async fn extract(
         &self,
         key: &TransferDSPMessageType,
         raw: Value,
-    ) -> Result<TransferRpcCommand, FlowError> {
-        TransferRpcCommand::read(key, raw)
-            .await
-            .map_err(FlowError::from)
+    ) -> Result<TransferRpcTyped, FlowError> {
+        let raw = TransferRpcRaw::new(key, raw);
+        let rdf = TransferRpcRdf::from_raw(raw).await?;
+        Ok(TransferRpcTyped::from_rdf(rdf)?)
     }
 
-    fn error_context(&self, input: &TransferRpcCommand) -> TransferRpcErrorPids {
+    fn error_context(&self, input: &TransferRpcTyped) -> TransferRpcErrorPids {
         TransferRpcErrorPids {
             consumer_pid: input.body.consumer_pid.clone().unwrap_or_default(),
             provider_pid: input.body.provider_pid.clone().unwrap_or_default(),
@@ -64,15 +67,15 @@ impl FlowCodecTrait<TransferRpcFlow> for TransferRpcCodec {
     }
 
     /// 201 when a request opened a process, 200 for a state change.
-    fn encode(&self, key: &TransferDSPMessageType, output: TransferRpcReply) -> Response {
+    fn respond(&self, key: &TransferDSPMessageType, output: TransferRpcOutcome) -> Response {
         let status = match key {
             TransferDSPMessageType::TransferRequestMessage => StatusCode::CREATED,
             _ => StatusCode::OK,
         };
-        (status, Json(output)).into_response()
+        (status, Json(TransferRpcResult::assemble(output))).into_response()
     }
 
-    fn encode_error(
+    fn reject(
         &self,
         _key: &TransferDSPMessageType,
         pids: TransferRpcErrorPids,

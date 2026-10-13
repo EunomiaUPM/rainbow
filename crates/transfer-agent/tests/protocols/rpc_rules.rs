@@ -18,17 +18,25 @@
 //! Outbound transfer rules: what the RPC body needs and what each role may send.
 
 use transfer_agent::entities::protocol::TransferRole::{Consumer, Provider, Relay};
+use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType::{
     TransferRequestMessage, TransferStartMessage, TransferTerminationMessage,
 };
-use transfer_agent::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcCommand};
+use serde_json::json;
+use transfer_agent::protocols::dsp::entities::context_rpc::{
+    TransferRpcBody, TransferRpcRaw, TransferRpcRdf, TransferRpcTyped,
+};
 use transfer_agent::protocols::dsp::services::validator::rpc_registry::TransferRpcRules;
 use transfer_agent::protocols::dsp::services::validator::TransferRules;
 
+async fn typed(route: TransferDSPMessageType, body: TransferRpcBody) -> TransferRpcTyped {
+    TransferRpcTyped::from_body(&route, &body).await.unwrap()
+}
+
 /// A request without peer, address, format or agreement reports all four at once.
-#[test]
-fn an_empty_request_reports_every_missing_field() {
-    let command = TransferRpcCommand::new(TransferRequestMessage, TransferRpcBody::default());
+#[tokio::test]
+async fn an_empty_request_reports_every_missing_field() {
+    let command = typed(TransferRequestMessage, TransferRpcBody::default()).await;
     let err = TransferRpcRules::input_rules()
         .validate(&TransferRequestMessage, &command)
         .unwrap_err();
@@ -36,22 +44,41 @@ fn an_empty_request_reports_every_missing_field() {
 }
 
 /// A state change needs the pid of the process it moves.
-#[test]
-fn a_state_change_needs_a_pid() {
-    let without = TransferRpcCommand::new(TransferTerminationMessage, TransferRpcBody::default());
+#[tokio::test]
+async fn a_state_change_needs_a_pid() {
+    let without = typed(TransferTerminationMessage, TransferRpcBody::default()).await;
     assert!(TransferRpcRules::input_rules()
         .validate(&TransferTerminationMessage, &without)
         .is_err());
-    let with = TransferRpcCommand::new(
+    let with = typed(
         TransferTerminationMessage,
         TransferRpcBody {
             provider_pid: Some("urn:uuid:p".into()),
             ..TransferRpcBody::default()
         },
-    );
+    )
+    .await;
     assert!(TransferRpcRules::input_rules()
         .validate(&TransferTerminationMessage, &with)
         .is_ok());
+}
+
+/// A body typed as another RPC than the route's is rejected by a shape rule.
+#[tokio::test]
+async fn a_body_for_another_route_is_rejected() {
+    let raw = TransferRpcRaw::new(
+        &TransferStartMessage,
+        json!({
+            "@context": "https://w3id.org/eunomia/v1/context.jsonld",
+            "@type": "RpcTransferTerminationMessage",
+            "providerPid": "urn:uuid:p"
+        }),
+    );
+    let command = TransferRpcTyped::from_rdf(TransferRpcRdf::from_raw(raw).await.unwrap()).unwrap();
+    let err = TransferRpcRules::input_rules()
+        .validate(&TransferStartMessage, &command)
+        .unwrap_err();
+    assert!(err.to_string().contains("@type"), "{err}");
 }
 
 /// Only a consumer requests, only a provider starts, and a relay sends nothing.

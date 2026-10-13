@@ -15,23 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Provider side of a transfer request: the connector instance serving what an agreement
-//! grants, through its dataset and distribution.
-
-use connector::ConnectorInstanceDto;
-use urn::Urn;
-use ymir::errors::Outcome;
+//! What both transfer flows write through: processes, their message history and the dataplane.
 
 pub mod service;
-
-/// Finding the connector instance that serves an agreement.
-#[mockall::automock]
-#[async_trait::async_trait]
-pub trait ConnectorResolverTrait: Send + Sync {
-    /// Connector of the agreement's distribution in `format`; fails without a format.
-    async fn resolve_connector_by_agreement_id(
-        &self,
-        agreement_id: &Urn,
-        format: Option<String>,
-    ) -> Outcome<ConnectorInstanceDto>;
-}

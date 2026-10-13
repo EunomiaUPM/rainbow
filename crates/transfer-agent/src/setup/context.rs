@@ -22,8 +22,7 @@ use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::data::sea_orm::factory::SeaOrmDataFactory;
 use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
-use crate::protocols::dsp::services::connector_resolver::ConnectorResolverTrait;
-use crate::protocols::dsp::services::connector_resolver::service::ConnectorResolver;
+use crate::protocols::dsp::facades::catalog_facade::CatalogFacadeTrait;
 use crate::services::transfer_message::service::TransferMessageService;
 use crate::services::transfer_process::service::TransferProcessService;
 use crate::setup::ports::TransferPorts;
@@ -40,8 +39,8 @@ pub struct AppContext {
     pub transfer_process_repo: Arc<dyn TransferProcessRepoTrait>,
     pub oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
     pub grants_facade: Arc<dyn GrantsFacadeTrait>,
-    /// What the DSP flow loads facts from and drives while it applies.
-    pub connector_resolver: Arc<dyn ConnectorResolverTrait>,
+    /// What the DSP flows load facts from and drive while they apply.
+    pub catalog: Arc<dyn CatalogFacadeTrait>,
     pub negotiation: Arc<dyn NegotiationFacadeTrait>,
     pub dataplane: Arc<dyn DataPlaneFacadeTrait>,
 }
@@ -76,10 +75,7 @@ impl AppContext {
             transfer_process_repo: db_factory.transfer_process_repo(),
             oauth_validator: root.validator.clone(),
             grants_facade: ports.auth.grants.clone(),
-            connector_resolver: Arc::new(ConnectorResolver::new(
-                ports.negotiation.clone(),
-                ports.catalog.clone(),
-            )),
+            catalog: ports.catalog.clone(),
             negotiation: ports.negotiation.clone(),
             dataplane: ports.dataplane.facade.clone(),
         }

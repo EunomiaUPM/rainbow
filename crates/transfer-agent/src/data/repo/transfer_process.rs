@@ -45,10 +45,11 @@ pub trait TransferProcessRepoTrait: Send + Sync {
         scope: &OwnerScope,
         id: &Urn,
     ) -> Outcome<Option<TransferProcess>>;
+    /// The process one of whose identifiers (a pid, ours or the peer's) is `value`.
     async fn get_transfer_process_by_key_value(
         &self,
         scope: &OwnerScope,
-        id: &Urn,
+        value: &str,
     ) -> Outcome<Option<TransferProcess>>;
     async fn create_transfer_process(
         &self,

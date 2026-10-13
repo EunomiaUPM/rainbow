@@ -22,8 +22,7 @@ use common::validation::{Rule, Stage, ValidationRegistry, Validator};
 use serde_json::Value;
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::entities::context_rpc::TransferRpcCommand;
-use crate::protocols::dsp::entities::context_rpc::TransferRpcFacts;
+use crate::protocols::dsp::entities::context_rpc::{TransferRpcDomain, TransferRpcTyped};
 use crate::protocols::dsp::services::validator::{TransferRules, TransferValidators};
 
 /// Rule registries of the outbound transfer flow.
@@ -38,20 +37,22 @@ impl TransferRpcRules {
     ];
 
     /// What the RPC body must carry before anything is looked up.
-    pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferRpcCommand> {
+    pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferRpcTyped> {
         let request = Validator::new()
-            .ensure_not_empty("associatedAgentPeer", |c: &TransferRpcCommand| {
+            .ensure_not_empty("associatedAgentPeer", |c: &TransferRpcTyped| {
                 c.body.associated_agent_peer.as_deref()
             })
-            .ensure_not_empty("providerAddress", |c: &TransferRpcCommand| {
+            .ensure_not_empty("providerAddress", |c: &TransferRpcTyped| {
                 c.body.provider_address.as_deref()
             })
-            .ensure_not_empty("format", |c: &TransferRpcCommand| c.body.format.as_deref())
-            .ensure_urn("agreementId", |c: &TransferRpcCommand| {
+            .ensure_not_empty("format", |c: &TransferRpcTyped| c.body.format.as_deref())
+            .ensure_urn("agreementId", |c: &TransferRpcTyped| {
                 c.body.agreement_id.as_deref()
             });
         Self::CONTINUATIONS.into_iter().fold(
-            ValidationRegistry::new("transfer.rpc.input").with(
+            ValidationRegistry::new("transfer.rpc.input")
+                .with_any(Stage::Shape, Self::route_matches_body())
+                .with(
                 TransferDSPMessageType::TransferRequestMessage,
                 Stage::Shape,
                 request,
@@ -61,26 +62,26 @@ impl TransferRpcRules {
                     message,
                     Stage::Shape,
                     Validator::new()
-                        .ensure_urn("providerPid|consumerPid", |c: &TransferRpcCommand| c.pid()),
+                        .ensure_not_empty("providerPid|consumerPid", |c: &TransferRpcTyped| c.pid()),
                 )
             },
         )
     }
 
     /// Our role and state must allow sending it, and the message must have the DSP shape.
-    pub fn fact_rules() -> ValidationRegistry<TransferDSPMessageType, TransferRpcFacts> {
+    pub fn fact_rules() -> ValidationRegistry<TransferDSPMessageType, TransferRpcDomain> {
         use TransferDSPMessageType::*;
         ValidationRegistry::new("transfer.rpc.facts")
             .with_any(
                 Stage::Domain,
                 Validator::new()
-                    .rule(|f: &TransferRpcFacts| {
-                        TransferRules::role_may_send(&f.role, &f.command.message, "role")
+                    .rule(|f: &TransferRpcDomain| {
+                        TransferRules::role_may_send(&f.role, &f.typed.message, "role")
                     })
-                    .rule(|f: &TransferRpcFacts| {
+                    .rule(|f: &TransferRpcDomain| {
                         TransferRules::state_transition(
                             f.current_state().as_ref(),
-                            &f.command.message,
+                            &f.typed.message,
                             "state",
                         )
                     }),
@@ -120,7 +121,7 @@ impl TransferRpcRules {
                 "the provider must answer with a TransferProcess",
                 |v: &Value| v["type"] == "TransferProcess",
             )
-            .ensure_urn("providerPid", |v: &Value| {
+            .ensure_not_empty("providerPid", |v: &Value| {
                 v["fields"]["providerPid"].as_str()
             });
         Self::CONTINUATIONS.into_iter().fold(
@@ -133,10 +134,19 @@ impl TransferRpcRules {
         )
     }
 
+    /// The body's `@type` must be the RPC of the message the route sends.
+    fn route_matches_body() -> Validator<TransferRpcTyped> {
+        Validator::new().ensure(
+            "@type",
+            "RPC type does not match the endpoint",
+            |c: &TransferRpcTyped| &c.message == c.route(),
+        )
+    }
+
     /// Runs a message-shape validator on the message as it will be sent.
     fn outgoing(
         fields: Validator<crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields>,
-    ) -> Validator<TransferRpcFacts> {
-        Validator::new().rule(move |f: &TransferRpcFacts| fields.check(&f.outgoing.fields))
+    ) -> Validator<TransferRpcDomain> {
+        Validator::new().rule(move |f: &TransferRpcDomain| fields.check(&f.outgoing.fields))
     }
 }

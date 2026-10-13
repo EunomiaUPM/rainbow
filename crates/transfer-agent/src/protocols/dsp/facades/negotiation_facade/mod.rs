@@ -15,9 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::str::FromStr;
+
+use common::dsp_common::odrl::OdrlAgreement;
 use negotiation_agent::AgreementView;
 use urn::Urn;
-use ymir::errors::Outcome;
+use ymir::errors::{Errors, Outcome};
 
 pub mod local;
 pub mod remote;
@@ -26,6 +29,21 @@ pub mod remote;
 #[mockall::automock]
 #[async_trait::async_trait]
 pub trait NegotiationFacadeTrait: Send + Sync {
-    /// By id, whoever owns it: the agreement is what fixes the transfer.
-    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<AgreementView>;
+    /// The stored agreement by id, whoever owns it: the agreement is what fixes the transfer.
+    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView>;
+
+    /// The agreement as ODRL, with the parties and target negotiation recorded.
+    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<OdrlAgreement> {
+        let stored = self.get_agreement_view(agreement_id).await?.inner;
+        let target = Urn::from_str(&stored.target).map_err(|_| {
+            Errors::parse(format!("agreement {agreement_id} has no URN target"), None)
+        })?;
+        Ok(OdrlAgreement::from_stored(
+            agreement_id.clone(),
+            target,
+            stored.provider_participant_id,
+            stored.consumer_participant_id,
+            &stored.agreement_content,
+        ))
+    }
 }

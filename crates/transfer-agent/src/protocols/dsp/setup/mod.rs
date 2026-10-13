@@ -26,14 +26,14 @@ use common::module_loader::service_module::ServiceModuleTrait;
 use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
 
-use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
+use crate::protocols::dsp::services::dsp_flow::loader::TransferDspLoader;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use crate::protocols::dsp::http::dsp::DspRouter;
 use crate::protocols::dsp::http::rpc::TransferRpcRouter;
 use crate::protocols::dsp::services::validator::rpc_registry::TransferRpcRules;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
-use crate::protocols::dsp::services::dsp_domain_loader::agreement_resolver::NegotiationAgreementResolver;
-use crate::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
+use crate::protocols::dsp::services::rpc_flow::loader::TransferRpcLoader;
+use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
 use crate::protocols::dsp::services::validator::TransferValidators;
 use crate::protocols::dsp::services::tck::guard::TckGuard;
 use crate::protocols::dsp::services::tck::worker::TckWorker;
@@ -54,7 +54,7 @@ pub struct DspModule {
 
 impl DspModule {
     pub fn new(ctx: Arc<AppContext>) -> Self {
-        let deps = TransferHandlerDeps {
+        let writer = TransferWriter {
             processes: ctx.transfer_process_svc.clone(),
             process_repo: ctx.transfer_process_repo.clone(),
             messages: ctx.transfer_message_svc.clone(),
@@ -70,9 +70,13 @@ impl DspModule {
         );
         let mut outbound = FlowRunner::builder(
             Arc::new(TransferRpcFlow::new(
-                deps.clone(),
+                TransferRpcLoader::new(
+                    ctx.transfer_process_repo.clone(),
+                    ctx.dataplane.clone(),
+                    own_dsp_base,
+                ),
+                writer.clone(),
                 ctx.grants_facade.clone(),
-                own_dsp_base,
             )),
             Arc::new(AutocommitUnitOfWorkFactory),
             Arc::new(TransferRpcRules::input_rules()),
@@ -84,13 +88,13 @@ impl DspModule {
         }
         let outbound = Arc::new(outbound.build());
 
-        let loader = Arc::new(DspDomainLoader::new(
+        let loader = TransferDspLoader::new(
             ctx.transfer_process_repo.clone(),
-            ctx.connector_resolver.clone(),
-            Arc::new(NegotiationAgreementResolver::new(ctx.negotiation.clone())),
-        ));
+            ctx.negotiation.clone(),
+            ctx.catalog.clone(),
+        );
         let mut inbound = FlowRunner::builder(
-            Arc::new(TransferDspFlow::new(loader, deps)),
+            Arc::new(TransferDspFlow::new(loader, writer)),
             Arc::new(AutocommitUnitOfWorkFactory),
             Arc::new(TransferValidators::input_rules()),
             Arc::new(TransferValidators::fact_rules()),

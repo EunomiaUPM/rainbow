@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2026 - Universidad Politécnica de Madrid - UPM
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+//! `TransferSuspensionMessage` sent (DSP 9.2.3): the peer accepted our suspension.
+
+use serde_json::Value;
+use ymir::errors::Outcome;
+
+use crate::protocols::dsp::entities::context_rpc::{TransferRpcDomain, TransferRpcOutcome};
+use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
+use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+
+/// Moves our process to SUSPENDED between the dataplane's suspension hooks.
+pub struct SuspensionHandler;
+
+impl SuspensionHandler {
+    #[tracing::instrument(level = "info", skip_all, err)]
+    pub async fn handle(
+        writer: &TransferWriter,
+        domain: TransferRpcDomain,
+        reply: &Value,
+    ) -> Outcome<TransferRpcOutcome> {
+        let hooks = OutboundTransition::hooks(&domain);
+        writer.dataplane.on_transfer_suspension_pre(&hooks).await?;
+        let process = OutboundTransition::apply(writer, &domain, TransferDSPState::SUSPENDED).await?;
+        writer.dataplane.on_transfer_suspension_post(&hooks).await?;
+        Ok(TransferRpcOutcome::sent(domain, reply, process))
+    }
+}

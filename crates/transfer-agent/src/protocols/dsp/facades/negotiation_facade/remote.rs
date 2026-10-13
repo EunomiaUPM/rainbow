@@ -47,7 +47,7 @@ impl NegotiationRemoteFacade {
 #[async_trait::async_trait]
 impl NegotiationFacadeTrait for NegotiationRemoteFacade {
         #[tracing::instrument(level = "info", skip_all, err, fields(peer.service = "negotiation"))]
-    async fn get_agreement(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
+    async fn get_agreement_view(&self, agreement_id: &Urn) -> Outcome<AgreementView> {
         let url = format!("{}/{agreement_id}", self.agreements_url);
         http_client().get_json(&url, None).await
     }

@@ -21,23 +21,22 @@ use std::collections::HashMap;
 
 use serde_json::json;
 use url::Url;
-use ymir::errors::Outcome;
+use ymir::errors::{Errors, Outcome};
 
 use crate::entities::commands::NewTransferProcessCommand;
 use crate::entities::ids::{ParticipantId, TransferProcessId};
 use crate::entities::protocol::{
     ProtocolId, ProtocolState, StateMetadata, TransferRole, CONSUMER_PID_KEY, PROVIDER_PID_KEY,
 };
-use crate::protocols::dsp::entities::ack::TransferProcessAck;
+use crate::entities::message_envelope::MessageEnvelope;
+use crate::entities::transfer_message::Direction;
 use crate::protocols::dsp::entities::context_common::{
-    TransferContextConnectorRole, TransferContextProcessSlot,
+    TransferContextConnectorRole, TransferContextProcessSlot, DIRECTION_PROPERTY,
 };
-use crate::protocols::dsp::entities::context_dsp::TransferDspFacts;
+use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
-use crate::protocols::dsp::services::dsp_domain_loader::service::DIRECTION_PROPERTY;
+use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
 
 /// Creates the process with a new `providerPid`, records the message and starts the dataplane.
 pub struct RequestHandler;
@@ -45,57 +44,66 @@ pub struct RequestHandler;
 impl RequestHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        deps: &TransferHandlerDeps,
-        mut facts: TransferDspFacts,
-    ) -> Outcome<TransferDspReply> {
-        let consumer_pid = facts.process_urn()?.to_string();
+        writer: &TransferWriter,
+        mut domain: TransferDspDomain,
+    ) -> Outcome<TransferDspOutcome> {
+        let TransferContextProcessSlot::New { consumer_pid } = &domain.process else {
+            return Err(Errors::crazy("a request opens a new process", None));
+        };
+        let consumer_pid = consumer_pid.clone();
         let provider_pid = format!("urn:uuid:{}", uuid::Uuid::new_v4());
         let requested = ProtocolState(TransferDSPState::REQUESTED.to_string().into());
 
-        let cmd = Self::command(&facts, &consumer_pid, &provider_pid, &requested)?;
-        let created = deps
+        let cmd = Self::command(&domain, &consumer_pid, &provider_pid, &requested)?;
+        let created = writer
             .processes
-            .create(&TransferHandlerDeps::actor(), &cmd)
+            .create(&TransferWriter::actor(), &cmd)
             .await?;
-        let process = deps.reload(created.id.as_urn()).await?;
-        deps.record_message(&process, &facts, &requested, &requested)
+        let process = writer.reload(created.id.as_urn()).await?;
+        let envelope: MessageEnvelope = domain.typed.envelope();
+        writer
+            .record(
+                &process,
+                Direction::Inbound,
+                &domain.typed.message,
+                envelope,
+                (&requested, &requested),
+            )
             .await?;
 
         // The provider side of the dataplane needs the stored process, so it runs after the write.
-        facts.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
-        deps.dataplane
-            .on_transfer_request_post(&facts.dataplane_hooks()?)
+        domain.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
+        writer
+            .dataplane
+            .on_transfer_request_post(&domain.dataplane_hooks()?)
             .await?;
-
-        Ok(TransferDspReply {
-            ack: TransferProcessAck::new(consumer_pid, provider_pid, TransferDSPState::REQUESTED),
-            created: true,
-            process_version: process.version(),
-            idempotency_key: facts.input.idempotency_key.clone(),
-            agreement_id: facts.agreement.id.to_string(),
-            role: TransferRole::Provider,
-        })
+        Ok(TransferDspOutcome::applied(
+            &domain,
+            &process,
+            TransferDSPState::REQUESTED,
+            true,
+        ))
     }
 
     fn command(
-        facts: &TransferDspFacts,
+        domain: &TransferDspDomain,
         consumer_pid: &str,
         provider_pid: &str,
         requested: &ProtocolState,
     ) -> Outcome<NewTransferProcessCommand> {
-        let fields = &facts.input.body.fields;
+        let fields = &domain.typed.fields;
         let identifiers = HashMap::from([
             (CONSUMER_PID_KEY.to_string(), consumer_pid.to_string()),
             (PROVIDER_PID_KEY.to_string(), provider_pid.to_string()),
         ]);
-        let connector_instance_id = match &facts.connector_instance {
+        let connector_instance_id = match &domain.connector_instance {
             TransferContextConnectorRole::ProviderHavingConnector(c) => Some(c.id.to_string()),
             TransferContextConnectorRole::ConsumerNotHavingConnector => None,
         };
         Ok(NewTransferProcessCommand {
             id: Some(TransferProcessId::generate()),
             visibility: None,
-            owner: Some(facts.owner()),
+            owner: Some(domain.owner()),
             role: TransferRole::Provider,
             protocol: ProtocolId::Dsp2025_1,
             initial_state: requested.clone(),
@@ -109,14 +117,12 @@ impl RequestHandler {
                 .as_deref()
                 .and_then(|u| Url::parse(u).ok()),
             connector_instance_id,
-            agreement_id: facts.agreement.id.clone(),
+            agreement_id: domain.agreement.id.clone(),
             peer_participant_id: ParticipantId::new(
-                facts.input.peer
-                    .participant_id
-                    .clone(),
+                domain.typed.peer().participant_id.clone(),
             ),
             identifiers: Some(identifiers),
-            properties: Some(json!({ DIRECTION_PROPERTY: facts.transfer_direction })),
+            properties: Some(json!({ DIRECTION_PROPERTY: domain.transfer_direction })),
         })
     }
 }

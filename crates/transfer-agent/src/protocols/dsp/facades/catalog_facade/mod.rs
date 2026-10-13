@@ -15,10 +15,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::str::FromStr;
+
 use catalog_agent::{DatasetDto, DistributionDto};
+use common::utils::get_urn_from_string;
 use connector::ConnectorInstanceDto;
 use urn::Urn;
-use ymir::errors::Outcome;
+use ymir::errors::{Errors, Outcome};
 
 pub mod local;
 pub mod remote;
@@ -40,4 +43,21 @@ pub trait CatalogFacadeTrait: Send + Sync {
         &self,
         distribution_id: &Urn,
     ) -> Outcome<Option<ConnectorInstanceDto>>;
+
+    /// The connector instance serving `target` in `format`: its dataset, then the distribution
+    /// in that format, then the instance behind it.
+    async fn get_connector_for(&self, target: &Urn, format: &str) -> Outcome<ConnectorInstanceDto> {
+        let dataset = self.get_dataset(target).await?;
+        let dataset_id = get_urn_from_string(&dataset.inner.id)?;
+        let distribution = self.get_distribution_by_format(&dataset_id, format).await?;
+        let distribution_id = Urn::from_str(distribution.inner.id.as_str())?;
+        self.get_instance_by_distribution(&distribution_id)
+            .await?
+            .ok_or_else(|| {
+                Errors::crazy(
+                    format!("No connector instance found for distribution {distribution_id}"),
+                    None,
+                )
+            })
+    }
 }

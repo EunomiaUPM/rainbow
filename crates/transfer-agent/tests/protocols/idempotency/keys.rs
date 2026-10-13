@@ -69,11 +69,11 @@ async fn reserialized_retry_is_a_replay_not_a_second_execution() {
     .await;
 
     assert_ne!(
-        a.body.json, b.body.json,
+        a.rdf.parsed.json, b.rdf.parsed.json,
         "the bodies really do differ — a key on the bytes would miss the retry"
     );
     assert_eq!(
-        a.body.canonical_hash, b.body.canonical_hash,
+        a.rdf.canonical_hash, b.rdf.canonical_hash,
         "but it is the same statement"
     );
 

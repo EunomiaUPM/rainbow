@@ -17,7 +17,7 @@
 
 //! DSP transfer routes (DSP 10.2): every message goes through the transfer flow runner.
 
-pub mod codec;
+pub mod adapter;
 
 use std::str::FromStr;
 use std::sync::Arc;
@@ -32,7 +32,6 @@ use common::facades::grants_facade::{GrantsFacadeTrait, VerifiedPeer};
 use common::flow::FlowRunner;
 use common::oauth::OwnerScope;
 use http::StatusCode;
-use urn::Urn;
 use ymir::http::OauthHttpMiddleware;
 
 use crate::data::repo::transfer_process::TransferProcessRepoTrait;
@@ -40,7 +39,7 @@ use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
-use crate::protocols::dsp::http::dsp::codec::TransferDspCodec;
+use crate::protocols::dsp::http::dsp::adapter::TransferDspAdapter;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 
 #[derive(Clone)]
@@ -105,7 +104,7 @@ impl DspRouter {
         request: Request,
     ) -> Response {
         self.runner
-            .serve(&TransferDspCodec, peer, key, request)
+            .serve(&TransferDspAdapter, peer, key, request)
             .await
     }
 
@@ -196,10 +195,9 @@ impl DspRouter {
     }
 
     async fn find_for_peer(&self, peer: &VerifiedPeer, pid: &str) -> Option<TransferProcessAck> {
-        let urn = Urn::from_str(pid).ok()?;
         let process = self
             .processes
-            .get_transfer_process_by_key_value(&OwnerScope::All, &urn)
+            .get_transfer_process_by_key_value(&OwnerScope::All, pid)
             .await
             .ok()??;
         let correlation = process.correlation();
@@ -209,7 +207,7 @@ impl DspRouter {
             .map(|p| p.as_str())
             .unwrap_or_default();
         DspActor::peer(peer)
-            .authorize(process.owner(), counterparty, &urn)
+            .authorize(process.owner(), counterparty, process.id().as_urn())
             .ok()?;
         Some(TransferProcessAck::new(
             correlation.consumer_pid.clone().unwrap_or_default(),

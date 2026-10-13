@@ -17,18 +17,19 @@
 
 //! What the outbound transfer RPC answers, as a eunomia `RpcTransferResult`.
 
+use std::collections::HashMap;
+
 use common::eunomia::EUNOMIA_CONTEXT_URL;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::entities::protocol::TransferRole;
-use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::context_rpc::TransferRpcOutcome;
 use crate::services::transfer_process::views::TransferProcessView;
 
-/// What the RPC answers: what was asked, what the peer said and the process as it stands.
+/// What was asked, what the peer said and the process as it stands.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TransferRpcReply {
+pub struct TransferRpcResult {
     #[serde(rename = "@context")]
     pub context: &'static str,
     #[serde(rename = "@type")]
@@ -36,15 +37,18 @@ pub struct TransferRpcReply {
     pub request: Value,
     pub response: Value,
     pub transfer_agent_model: TransferProcessView,
-    #[serde(skip)]
-    pub agreement_id: String,
-    #[serde(skip)]
-    pub role: TransferRole,
-    #[serde(skip)]
-    pub message: TransferDSPMessageType,
 }
 
-impl TransferRpcReply {
-    pub const CONTEXT: &'static str = EUNOMIA_CONTEXT_URL;
+impl TransferRpcResult {
     pub const TYPE: &'static str = "RpcTransferResult";
+
+    pub fn assemble(outcome: TransferRpcOutcome) -> Self {
+        Self {
+            context: EUNOMIA_CONTEXT_URL,
+            kind: Self::TYPE,
+            request: outcome.request,
+            response: outcome.response,
+            transfer_agent_model: TransferProcessView::assemble(outcome.process, HashMap::new()),
+        }
+    }
 }

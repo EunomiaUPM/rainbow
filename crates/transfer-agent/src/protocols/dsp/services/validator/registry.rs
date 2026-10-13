@@ -22,8 +22,9 @@ use common::validation::{Rule, Stage, ValidationRegistry, Validator, Violations}
 use std::str::FromStr;
 
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
-use crate::protocols::dsp::entities::context_dsp::{TransferDspFacts, TransferDspInput};
+use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspTyped};
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType::{TransferCompletionMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage};
 use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::validator::rules::TransferRules;
@@ -33,20 +34,19 @@ pub struct TransferValidators;
 
 impl TransferValidators {
     /// Inbound DSP shape rules over the extracted fields, before any lookup.
-    pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDspInput> {
-        use TransferDSPMessageType::*;
+    pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDspTyped> {
         let pids = || Self::on_fields(Self::pids_message());
         ValidationRegistry::new("transfer.dsp.input")
             .with_any(Stage::Shape, Self::route_matches_body())
             .with(TransferRequestMessage, Stage::Shape, Self::on_fields(Self::request_message()))
-            .with(TransferStartMessage, Stage::Shape, pids().rule(Self::path_id_is_urn))
+            .with(TransferStartMessage, Stage::Shape, pids())
             .with(TransferCompletionMessage, Stage::Shape, pids())
             .with(TransferSuspensionMessage, Stage::Shape, pids())
             .with(TransferTerminationMessage, Stage::Shape, pids())
     }
 
     /// Inbound DSP rules over loaded facts: state machine, role, semaphore and correlation.
-    pub fn fact_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDspFacts> {
+    pub fn fact_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDspDomain> {
         use TransferDSPMessageType::*;
         let correlated = || {
             Validator::new()
@@ -73,10 +73,10 @@ impl TransferValidators {
             .with(TransferTerminationMessage, Stage::Domain, correlated())
     }
 
-    /// Shape of a request message, sent or received.
+    /// Shape of a request message, sent or received; pids are opaque, DSP does not type them.
     pub fn request_message() -> Validator<TransferProtocolFields> {
         Validator::new()
-            .ensure_urn("consumerPid", |f: &TransferProtocolFields| {
+            .ensure_not_empty("consumerPid", |f: &TransferProtocolFields| {
                 f.consumer_pid.as_deref()
             })
             .ensure_urn("agreementId", |f: &TransferProtocolFields| {
@@ -85,70 +85,63 @@ impl TransferValidators {
             .ensure_not_empty("format", |f: &TransferProtocolFields| f.format.as_deref())
     }
 
-    /// Shape of a start, completion, suspension or termination message: both pids, as URNs.
+    /// Shape of a start, completion, suspension or termination message: both pids.
     pub fn pids_message() -> Validator<TransferProtocolFields> {
         Validator::new()
-            .ensure_urn("consumerPid", |f: &TransferProtocolFields| {
+            .ensure_not_empty("consumerPid", |f: &TransferProtocolFields| {
                 f.consumer_pid.as_deref()
             })
-            .ensure_urn("providerPid", |f: &TransferProtocolFields| {
+            .ensure_not_empty("providerPid", |f: &TransferProtocolFields| {
                 f.provider_pid.as_deref()
             })
     }
 
     /// Runs a message-shape validator on the fields extracted from an inbound message.
-    fn on_fields(fields: Validator<TransferProtocolFields>) -> Validator<TransferDspInput> {
-        Validator::new().rule(move |input: &TransferDspInput| fields.check(&input.body.fields))
+    fn on_fields(fields: Validator<TransferProtocolFields>) -> Validator<TransferDspTyped> {
+        Validator::new().rule(move |typed: &TransferDspTyped| fields.check(&typed.fields))
     }
 
     /// The body's `@type` must be the message the route handles.
-    fn route_matches_body() -> Validator<TransferDspInput> {
+    fn route_matches_body() -> Validator<TransferDspTyped> {
         Validator::new().ensure(
             "@type",
             "message type does not match the endpoint",
-            |input: &TransferDspInput| input.body.message == input.route,
+            |typed: &TransferDspTyped| &typed.message == typed.route(),
         )
     }
 
-    fn path_id_is_urn(input: &TransferDspInput) -> Result<(), Violations> {
-        match input.path_id.as_deref() {
-            Some(id) => DspRules::is_urn(id, "uriId"),
-            None => Ok(()),
-        }
-    }
-
-    fn transition(facts: &TransferDspFacts) -> Result<(), Violations> {
+    fn transition(facts: &TransferDspDomain) -> Result<(), Violations> {
         TransferRules::state_transition(
             TransferRules::current_state(&facts.process).as_ref(),
-            &facts.input.body.message,
+            &facts.typed.message,
             "state",
         )
     }
 
-    fn role(facts: &TransferDspFacts) -> Result<(), Violations> {
-        TransferRules::role_for_message(&facts.role, &facts.input.body.message, "role")
+    fn role(facts: &TransferDspDomain) -> Result<(), Violations> {
+        TransferRules::role_for_message(&facts.role, &facts.typed.message, "role")
     }
 
-    fn semaphore(facts: &TransferDspFacts) -> Result<(), Violations> {
+    fn semaphore(facts: &TransferDspDomain) -> Result<(), Violations> {
         TransferRules::semaphore(
             &Self::stored_attribute(&facts.process),
-            &facts.input.body.message,
+            &facts.typed.message,
             &facts.role,
             "stateAttribute",
         )
     }
 
-    fn data_address(facts: &TransferDspFacts) -> Result<(), Violations> {
+    fn data_address(facts: &TransferDspDomain) -> Result<(), Violations> {
         TransferRules::data_address_format(
-            facts.input.body.fields.data_address.is_some(),
+            facts.typed.fields.data_address.is_some(),
             &facts.role,
             "dataAddress",
         )
     }
 
-    fn path_matches_pid(facts: &TransferDspFacts) -> Result<(), Violations> {
-        let fields = &facts.input.body.fields;
-        match facts.input.path_id.as_deref() {
+    fn path_matches_pid(facts: &TransferDspDomain) -> Result<(), Violations> {
+        let fields = &facts.typed.fields;
+        match facts.typed.path_id() {
             Some(id) => TransferRules::uri_and_pid(
                 id,
                 fields.consumer_pid.as_deref(),
@@ -160,8 +153,8 @@ impl TransferValidators {
         }
     }
 
-    fn correlated(facts: &TransferDspFacts) -> Result<(), Violations> {
-        let fields = &facts.input.body.fields;
+    fn correlated(facts: &TransferDspDomain) -> Result<(), Violations> {
+        let fields = &facts.typed.fields;
         DspRules::correlate_process_pids(
             Self::stored_pids(&facts.process),
             (fields.consumer_pid.as_deref(), fields.provider_pid.as_deref()),

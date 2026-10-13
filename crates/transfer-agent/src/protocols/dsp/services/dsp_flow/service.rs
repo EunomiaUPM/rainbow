@@ -15,34 +15,34 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Inbound DSP transfer messages as a flow: the runner validates, this loads and applies.
-
-use std::sync::Arc;
+//! The inbound transfer flow: load with the loader, apply with the message's handler.
 
 use common::facades::grants_facade::VerifiedPeer;
 use common::flow::{FlowCx, FlowTrait};
 use serde_json::Value;
-use ymir::errors::Outcome;
+use ymir::errors::{Errors, Outcome};
 
 use crate::protocols::dsp::entities::context_dsp::{
-    TransferDspFacts, TransferDspInput,
+    TransferDspDomain, TransferDspOutcome, TransferDspTyped,
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
+use crate::protocols::dsp::services::dsp_flow::handlers::completion::CompletionHandler;
 use crate::protocols::dsp::services::dsp_flow::handlers::request::RequestHandler;
-use crate::protocols::dsp::services::dsp_flow::handlers::transition::TransitionHandler;
-use crate::protocols::dsp::services::dsp_flow::handlers::TransferHandlerDeps;
-use crate::protocols::dsp::services::dsp_domain_loader::service::DspDomainLoader;
-use crate::protocols::dsp::services::dsp_flow::views::TransferDspReply;
+use crate::protocols::dsp::services::dsp_flow::handlers::start::StartHandler;
+use crate::protocols::dsp::services::dsp_flow::handlers::suspension::SuspensionHandler;
+use crate::protocols::dsp::services::dsp_flow::handlers::termination::TerminationHandler;
+use crate::protocols::dsp::services::dsp_flow::loader::TransferDspLoader;
+use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
 
-/// The five inbound transfer messages; `apply` picks the handler by message type.
+/// The five inbound transfer messages.
 pub struct TransferDspFlow {
-    loader: Arc<DspDomainLoader>,
-    deps: TransferHandlerDeps,
+    loader: TransferDspLoader,
+    writer: TransferWriter,
 }
 
 impl TransferDspFlow {
-    pub fn new(loader: Arc<DspDomainLoader>, deps: TransferHandlerDeps) -> Self {
-        Self { loader, deps }
+    pub fn new(loader: TransferDspLoader, writer: TransferWriter) -> Self {
+        Self { loader, writer }
     }
 }
 
@@ -50,34 +50,38 @@ impl TransferDspFlow {
 impl FlowTrait for TransferDspFlow {
     type Key = TransferDSPMessageType;
     type Caller = VerifiedPeer;
-    type Input = TransferDspInput;
-    type Facts = TransferDspFacts;
-    type Output = TransferDspReply;
+    type Input = TransferDspTyped;
+    type Facts = TransferDspDomain;
+    type Output = TransferDspOutcome;
 
     /// The route's message type; the body's own type is checked against it by a shape rule.
-    fn key(&self, input: &TransferDspInput) -> TransferDSPMessageType {
-        input.route.clone()
+    fn key(&self, typed: &TransferDspTyped) -> TransferDSPMessageType {
+        typed.route().clone()
     }
 
     async fn load(
         &self,
         _cx: &FlowCx<'_, VerifiedPeer>,
-        input: TransferDspInput,
-    ) -> Outcome<TransferDspFacts> {
-        self.loader.load(input).await
+        typed: TransferDspTyped,
+    ) -> Outcome<TransferDspDomain> {
+        self.loader.load(typed).await
     }
 
     async fn apply(
         &self,
         _cx: &FlowCx<'_, VerifiedPeer>,
-        facts: TransferDspFacts,
+        domain: TransferDspDomain,
         _reply: Option<Value>,
-    ) -> Outcome<TransferDspReply> {
-        match facts.input.body.message {
-            TransferDSPMessageType::TransferRequestMessage => {
-                RequestHandler::handle(&self.deps, facts).await
-            }
-            _ => TransitionHandler::handle(&self.deps, facts).await,
+    ) -> Outcome<TransferDspOutcome> {
+        use TransferDSPMessageType::*;
+        let writer = &self.writer;
+        match domain.typed.message {
+            TransferRequestMessage => RequestHandler::handle(writer, domain).await,
+            TransferStartMessage => StartHandler::handle(writer, domain).await,
+            TransferCompletionMessage => CompletionHandler::handle(writer, domain).await,
+            TransferSuspensionMessage => SuspensionHandler::handle(writer, domain).await,
+            TransferTerminationMessage => TerminationHandler::handle(writer, domain).await,
+            other => Err(Errors::crazy(format!("{other} is not an inbound message"), None)),
         }
     }
 }
