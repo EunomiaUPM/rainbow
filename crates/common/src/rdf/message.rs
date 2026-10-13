@@ -44,6 +44,19 @@ pub trait RdfProtocolTrait: Send + Sync + 'static {
     /// Reads the fields off the message node; extraction is total, requiredness is a rule.
     fn extract(node: &RdfNode<'_, '_>) -> Outcome<Self::Fields>;
 
+    /// The message type and fields of an already expanded message.
+    fn read_expanded(expanded: &Value) -> Outcome<(Self::MessageType, Self::Fields)> {
+        let doc = ExpandedDoc::new(expanded).ok_or_else(|| {
+            Errors::format(
+                BadFormat::Received,
+                "expanded JSON-LD is not an array of node objects",
+                None,
+            )
+        })?;
+        let (message, node) = Self::root_message(&doc)?;
+        Ok((message, Self::extract(&node)?))
+    }
+
     /// The one node declaring a message type of this protocol.
     fn root_message<'d, 'a>(
         doc: &'d ExpandedDoc<'a>,
@@ -96,15 +109,7 @@ impl<P: RdfProtocolTrait> RdfMessage<P> {
     pub async fn read(json: Value) -> Outcome<Self> {
         let expansion = P::engine().expand(&json).await?;
         let canonical_hash = expansion.canonical_hash();
-        let doc = ExpandedDoc::new(&expansion.expanded).ok_or_else(|| {
-            Errors::format(
-                BadFormat::Received,
-                "expanded JSON-LD is not an array of node objects",
-                None,
-            )
-        })?;
-        let (message, node) = P::root_message(&doc)?;
-        let fields = P::extract(&node)?;
+        let (message, fields) = P::read_expanded(&expansion.expanded)?;
         Ok(Self {
             json,
             message,

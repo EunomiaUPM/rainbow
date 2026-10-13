@@ -15,27 +15,24 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The transport side of a flow: one codec per agent and transport.
+//! The driving side of a flow: one adapter per agent and transport extracts the input in
+//! stages and turns the output or the error into the transport's response.
 
 use crate::flow::{FlowError, FlowTrait};
 
-/// Turns transport input into the flow's input, and its output or error back.
+/// Extracts the flow's input from what the transport hands over, and answers with its outcome.
 #[async_trait::async_trait]
-pub trait FlowCodecTrait<F: FlowTrait>: Send + Sync {
+pub trait FlowAdapterTrait<F: FlowTrait>: Send + Sync {
     /// What the transport hands over (an axum request, a gRPC message, a JSON body).
     type Raw: Send;
     type Response;
-    /// What an error body needs from the input (pids, ids); `Default` when decoding failed.
+    /// What an error body needs from the input (pids, ids); `Default` when extraction failed.
     type ErrorContext: Default + Send;
 
     /// `key` is what the route expects; checking the body against it is a shape rule.
-    async fn decode(&self, key: &F::Key, raw: Self::Raw) -> Result<F::Input, FlowError>;
+    async fn extract(&self, key: &F::Key, raw: Self::Raw) -> Result<F::Input, FlowError>;
     fn error_context(&self, input: &F::Input) -> Self::ErrorContext;
-    fn encode(&self, key: &F::Key, output: F::Output) -> Self::Response;
-    fn encode_error(
-        &self,
-        key: &F::Key,
-        context: Self::ErrorContext,
-        error: FlowError,
-    ) -> Self::Response;
+    fn respond(&self, key: &F::Key, output: F::Output) -> Self::Response;
+    fn reject(&self, key: &F::Key, context: Self::ErrorContext, error: FlowError)
+        -> Self::Response;
 }

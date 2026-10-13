@@ -137,6 +137,33 @@ fn correlate_pids_rejects_a_mismatch() {
     assert_eq!(mismatch.code(), Some(codes::NOT_ALLOWED));
 }
 
+/// A stored agreement keeps its parties and target with partial content, and its rules when
+/// the content has well-formed ones.
+#[test]
+fn stored_agreement_reads_rules_leniently() {
+    let id: urn::Urn = "urn:agreement:1".parse().unwrap();
+    let target: urn::Urn = "urn:dataset:1".parse().unwrap();
+    let partial = crate::dsp_common::odrl::OdrlAgreement::from_stored(
+        id.clone(),
+        target.clone(),
+        "did:web:provider".into(),
+        "did:web:consumer".into(),
+        &json!({"uid": "urn:agreement:1", "permission": "not a list"}),
+    );
+    assert_eq!(partial.assigner, "did:web:provider");
+    assert_eq!(partial.target, target);
+    assert!(partial.permission.is_none());
+
+    let ruled = crate::dsp_common::odrl::OdrlAgreement::from_stored(
+        id,
+        target,
+        "did:web:provider".into(),
+        "did:web:consumer".into(),
+        &json!({"permission": [{"action": "use"}]}),
+    );
+    assert_eq!(ruled.permission.map(|p| p.len()), Some(1));
+}
+
 /// A message's pids must be the stored ones on both sides, absent ones included.
 #[test]
 fn process_pids_must_match_the_stored_ones() {
@@ -182,6 +209,21 @@ fn context_and_type_accept_string_or_array_forms() {
 
     let bad_type = json!({ "@type": "TransferStartMessage" });
     assert!(DspRules::expected_type(&bad_type, "TransferRequestMessage", "@type").is_err());
+}
+
+/// A data address without properties leaves the member out, and reads back without it.
+#[test]
+fn data_address_omits_empty_endpoint_properties() {
+    let address = crate::dsp_common::data_address::DataAddress {
+        _type: "DataAddress".into(),
+        endpoint_type: "HTTP".into(),
+        endpoint: Some("http://provider/data".into()),
+        endpoint_properties: vec![],
+    };
+    let json = serde_json::to_value(&address).unwrap();
+    assert!(json.get("endpointProperties").is_none(), "{json}");
+    let back: crate::dsp_common::data_address::DataAddress = serde_json::from_value(json).unwrap();
+    assert_eq!(back, address);
 }
 
 /// A DSP error body carries one reason per violation, in order.

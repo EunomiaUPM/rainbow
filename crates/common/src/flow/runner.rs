@@ -18,7 +18,7 @@
 //! Runs a flow in the fixed order; every controller goes through here.
 
 use crate::flow::{
-    FlowCodecTrait, FlowCx, FlowError, FlowGuardTrait, FlowTrait, GuardVerdict,
+    FlowAdapterTrait, FlowCx, FlowError, FlowGuardTrait, FlowTrait, GuardVerdict,
     UnitOfWorkFactoryTrait,
 };
 use crate::validation::ValidationRegistry;
@@ -85,23 +85,23 @@ impl<F: FlowTrait> FlowRunner<F> {
         &self.fact_rules
     }
 
-    /// Decode with `codec`, run, and encode the output or the error.
-    pub async fn serve<C: FlowCodecTrait<F>>(
+    /// Extract with `adapter`, run, and answer with the output or the error.
+    pub async fn serve<A: FlowAdapterTrait<F>>(
         &self,
-        codec: &C,
+        adapter: &A,
         caller: &F::Caller,
         key: F::Key,
-        raw: C::Raw,
-    ) -> C::Response {
-        let (context, result) = match codec.decode(&key, raw).await {
-            Ok(input) => (codec.error_context(&input), self.run(caller, input).await),
-            Err(err) => (C::ErrorContext::default(), Err(err)),
+        raw: A::Raw,
+    ) -> A::Response {
+        let (context, result) = match adapter.extract(&key, raw).await {
+            Ok(input) => (adapter.error_context(&input), self.run(caller, input).await),
+            Err(err) => (A::ErrorContext::default(), Err(err)),
         };
         match result {
-            Ok(output) => codec.encode(&key, output),
+            Ok(output) => adapter.respond(&key, output),
             Err(err) => {
                 Self::log(&key, &err);
-                codec.encode_error(&key, context, err)
+                adapter.reject(&key, context, err)
             }
         }
     }

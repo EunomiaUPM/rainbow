@@ -15,32 +15,32 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! One skeleton for every controller: decode, check shape, load facts, check invariants,
-//! apply, commit, encode.
+//! One skeleton for every controller: extract, check shape, load facts, check invariants,
+//! apply, commit, respond.
 //!
 //! A [`FlowTrait`] holds only what varies per agent: how to load the facts a message needs and
 //! how to apply it. The [`FlowRunner`] owns the order, so no controller can apply before
 //! validating or validate against facts it did not load:
 //!
 //! ```text
-//! codec.decode → Input ─input rules─▶ begin unit of work → load → Facts ─guards─▶
-//!   ─fact rules─▶ send (optional) ─reply rules─▶ apply → commit → guards → codec.encode
+//! adapter.extract → Input ─input rules─▶ begin unit of work → load → Facts ─guards─▶
+//!   ─fact rules─▶ send (optional) ─reply rules─▶ apply → commit → guards → adapter.respond
 //! ```
 //!
 //! ```rust,ignore
 //! let runner = FlowRunner::builder(flow, uow, Arc::new(MyRules::input()), Arc::new(MyRules::facts()))
 //!     .guard(Arc::new(IdempotencyGuard::new(store)))
 //!     .build();
-//! let response = runner.serve(&codec, &peer, MessageType::Request, request).await;
+//! let response = runner.serve(&adapter, &peer, MessageType::Request, request).await;
 //! ```
 
-mod codec;
+mod adapter;
 mod error;
 pub mod idempotency;
 mod runner;
 mod uow;
 
-pub use codec::FlowCodecTrait;
+pub use adapter::FlowAdapterTrait;
 pub use error::FlowError;
 pub use idempotency::{
     IdempotencyGuard, IdempotencyKey, IdempotencyStoreTrait, IdempotentFactsTrait,
@@ -60,7 +60,7 @@ pub trait FlowTrait: Send + Sync + 'static {
     type Key: RegistryKey;
     /// Who acts: a verified peer over DSP, a user over RPC or management.
     type Caller: Send + Sync;
-    /// What arrived, decoded but not checked against anything stored.
+    /// What arrived, extracted but not checked against anything stored.
     type Input: Send + Sync;
     /// The input plus everything loaded for it; what invariants are checked on.
     type Facts: Send + Sync;

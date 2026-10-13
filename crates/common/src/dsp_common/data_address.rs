@@ -30,7 +30,8 @@ pub struct DataAddress {
     /// Whether a message needs one depends on the connector behind `format`, not on its shape.
     #[serde(rename = "endpoint", skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
-    #[serde(rename = "endpointProperties")]
+    /// Optional too (DSP Appendix A); an empty list is left out, the schema wants at least one.
+    #[serde(rename = "endpointProperties", default, skip_serializing_if = "Vec::is_empty")]
     pub endpoint_properties: Vec<EndpointProperty>,
 }
 

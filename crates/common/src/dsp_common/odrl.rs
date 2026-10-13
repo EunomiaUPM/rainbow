@@ -45,8 +45,9 @@ pub enum ContractRequestMessageOfferTypes {
 /// Offer referenced by id only.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ContractRequestMessageOfferOfferId {
+    /// An IRI, not necessarily a URN (the DSP TCK sends `offer` + the dataset id).
     #[serde(rename = "@id")]
-    pub id: Urn,
+    pub id: String,
 }
 
 /// Offer sent inside a DSP message, where `target` is required.
@@ -170,6 +171,36 @@ pub struct OdrlAgreement {
     #[serde(rename = "description")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+}
+
+impl OdrlAgreement {
+    /// An agreement as an agent stores it: parties, target and id as recorded, and the rules
+    /// read leniently from its ODRL content, which peers and seeders often store partially.
+    pub fn from_stored(
+        id: Urn,
+        target: Urn,
+        assigner: String,
+        assignee: String,
+        content: &Value,
+    ) -> Self {
+        Self {
+            id,
+            target,
+            assigner,
+            assignee,
+            permission: Self::rules(content, "permission"),
+            obligation: Self::rules(content, "obligation"),
+            prohibition: Self::rules(content, "prohibition"),
+            ..Self::default()
+        }
+    }
+
+    /// A rule list from the content, when it is there and well formed.
+    fn rules<T: serde::de::DeserializeOwned>(content: &Value, key: &str) -> Option<T> {
+        content
+            .get(key)
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+    }
 }
 
 impl Default for OdrlAgreement {
