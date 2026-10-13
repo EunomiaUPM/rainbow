@@ -26,7 +26,7 @@ export interface DspDistribution {
   modified?: string;
   title?: string;
   description?: string[];
-  formats: string;
+  format: string;
   hasPolicy?: OdrlOffer[];
   extraFields?: unknown;
 }

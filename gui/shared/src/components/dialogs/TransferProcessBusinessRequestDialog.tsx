@@ -92,7 +92,7 @@ export const TransferProcessBusinessRequestDialog = ({
       callbackAddress: myDspPath || "",
       agreementId: process.id,
       // @ts-ignore
-      format: distribution.formats || "",
+      format: distribution.format || "",
       ...(dataAddress ? { dataAddress } : {}),
     });
 
@@ -136,7 +136,7 @@ export const TransferProcessBusinessRequestDialog = ({
                       {distributions.map((d) => (
                         <SelectItem value={d["@id"] || ""} key={d["@id"]}>
                           {/* @ts-ignore */}
-                          {d.formats} - {d["@id"]}
+                          {d.format} - {d["@id"]}
                         </SelectItem>
                       ))}
                     </SelectContent>

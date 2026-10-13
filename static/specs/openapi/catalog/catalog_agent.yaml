@@ -1857,7 +1857,7 @@ components:
       - '@type'
       - '@id'
       - issued
-      - formats
+      - format
       properties:
         '@context':
           $ref: '#/components/schemas/ContextField'
@@ -1885,7 +1885,7 @@ components:
           type: array
           items:
             type: string
-        formats:
+        format:
           type: string
           examples:
           - HttpData-PULL

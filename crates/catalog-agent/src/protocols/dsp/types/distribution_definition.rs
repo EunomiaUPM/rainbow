@@ -79,6 +79,7 @@ pub struct DistributionDctDeclaration {
     #[serde(rename = "description")]
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub description: Vec<String>,
-    #[serde(rename = "formats")]
+    /// `format` (DSP 2025-1); older peers wrote `formats`, still read.
+    #[serde(rename = "format", alias = "formats")]
     pub formats: String,
 }

@@ -14524,7 +14524,7 @@
           "@type",
           "@id",
           "issued",
-          "formats"
+          "format"
         ],
         "properties": {
           "@context": {
@@ -14571,7 +14571,7 @@
               "type": "string"
             }
           },
-          "formats": {
+          "format": {
             "type": "string",
             "examples": [
               "HttpData-PULL"
