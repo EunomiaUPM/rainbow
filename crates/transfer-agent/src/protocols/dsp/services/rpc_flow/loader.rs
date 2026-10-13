@@ -15,20 +15,28 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The outbound flow's load step: the process, peer and target of a message, and the DSP
-//! message itself, built in JSON-LD and read back through RDF.
+//! The outbound flow's load step: the process, peer, agreement and target of a message, and
+//! the DSP message itself, built in JSON-LD and read back through RDF.
 
+use std::str::FromStr;
 use std::sync::Arc;
+use common::config::types::traits::CommonConfigTrait;
 
 use common::dsp_common::data_address::DataAddress;
-use common::dsp_common::DspActor;
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::dsp_common::odrl::OdrlAgreement;
+use common::dsp_common::paths;
+use common::dsp_common::persistence::DspPersistenceTrait;
+use common::dsp_common::{DspActor, DspCaller};
+use common::oauth::{Owner, UserInfo};
 use common::rdf::RdfMessage;
 use serde_json::{json, Map, Value};
 use url::Url;
-use ymir::errors::{Errors, Outcome};
+use urn::Urn;
+use ymir::config::traits::HostsConfigTrait;
+use ymir::config::types::HostType;
+use ymir::data::entities::shared::participant::Model as Mates;
+use ymir::errors::{BadFormat, Errors, Outcome};
 
-use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::entities::ids::TransferProcessId;
 use crate::entities::protocol::{TransferDirection, TransferRole};
 use crate::protocols::dsp::entities::context_common::DIRECTION_PROPERTY;
@@ -36,39 +44,74 @@ use crate::protocols::dsp::entities::context_rpc::{TransferRpcDomain, TransferRp
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
 use crate::protocols::dsp::entities::state::TransferDSPState;
-use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Resolves what an outbound message needs before it can be checked and sent.
 pub struct TransferRpcLoader {
-    process_repo: Arc<dyn TransferProcessRepoTrait>,
-    dataplane: Arc<dyn DataPlaneFacadeTrait>,
-    /// This agent's DSP base, the default callback a provider answers to.
-    own_dsp_base: String,
+    ctx: Arc<AppContext>,
+    persistence: TransferDspPersistence,
 }
 
 impl TransferRpcLoader {
-    pub fn new(
-        process_repo: Arc<dyn TransferProcessRepoTrait>,
-        dataplane: Arc<dyn DataPlaneFacadeTrait>,
-        own_dsp_base: String,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            process_repo,
-            dataplane,
-            own_dsp_base,
+            persistence: TransferDspPersistence::new(ctx.clone()),
+            ctx,
         }
     }
 
     /// Resolves the domain stage of a typed RPC body.
-    pub async fn load(&self, caller: &UserInfo, typed: TransferRpcTyped) -> Outcome<TransferRpcDomain> {
+    pub async fn load(
+        &self,
+        caller: &DspCaller,
+        typed: TransferRpcTyped,
+    ) -> Outcome<TransferRpcDomain> {
+        let user = caller.user()?;
         match typed.message {
-            TransferDSPMessageType::TransferRequestMessage => self.load_request(caller, typed).await,
-            _ => self.load_continuation(caller, typed).await,
+            TransferDSPMessageType::TransferRequestMessage => self.load_request(user, typed).await,
+            _ => self.load_continuation(user, typed).await,
         }
     }
 
+    /// This agent's DSP base, the default callback a provider answers to.
+    fn own_dsp_base(&self) -> String {
+        let host = self.ctx.config.common().get_host(HostType::Http);
+        format!("{host}{}", paths::DSP_CURRENT)
+    }
+
+    /// The agreement a message runs under, from the negotiation agent.
+    async fn agreement(&self, id: &str) -> Outcome<OdrlAgreement> {
+        let id = Urn::from_str(id).map_err(|_| {
+            Errors::format(
+                BadFormat::Received,
+                format!("agreementId is not a URN: {id}"),
+                None,
+            )
+        })?;
+        self.ctx.ports.negotiation.get_agreement(&id).await
+    }
+
+    /// The peer's participant record, when `user` sees it; an unknown peer is no error here.
+    async fn peer_mate(&self, user: &UserInfo, peer_id: &str) -> Option<Mates> {
+        self.ctx
+            .ports
+            .auth
+            .mates
+            .get_mate_by_id(user, peer_id.to_string())
+            .await
+            .inspect_err(
+                |e| tracing::debug!(peer = peer_id, error = %e, "peer is not a known mate"),
+            )
+            .ok()
+    }
+
     /// A request opens a new consumer process; nothing is stored until the provider accepts.
-    async fn load_request(&self, caller: &UserInfo, typed: TransferRpcTyped) -> Outcome<TransferRpcDomain> {
+    async fn load_request(
+        &self,
+        caller: &UserInfo,
+        typed: TransferRpcTyped,
+    ) -> Outcome<TransferRpcDomain> {
         let body = typed.body.clone();
         let process_id = TransferProcessId::generate().as_urn().clone();
         let consumer_pid = format!("urn:uuid:{}", uuid::Uuid::new_v4());
@@ -79,15 +122,20 @@ impl TransferRpcLoader {
         let callback = body
             .callback_address
             .clone()
-            .unwrap_or_else(|| self.own_dsp_base.clone());
+            .unwrap_or_else(|| self.own_dsp_base());
         let message = typed.message.clone();
+        let peer_id = body.associated_agent_peer.clone().unwrap_or_default();
         let mut domain = TransferRpcDomain {
             process: None,
             process_id,
             role: TransferRole::Consumer,
             transfer_direction,
             owner: Owner::for_new(caller, None, None),
-            peer_id: body.associated_agent_peer.clone().unwrap_or_default(),
+            agreement: self
+                .agreement(body.agreement_id.as_deref().unwrap_or_default())
+                .await?,
+            peer_mate: self.peer_mate(caller, &peer_id).await,
+            peer_id,
             target_url: format!(
                 "{}/transfers/request",
                 Self::base(body.provider_address.as_deref().unwrap_or_default())
@@ -99,6 +147,8 @@ impl TransferRpcLoader {
         // A push consumer sets its sink up first: the request carries its address.
         let sink = body.data_address.clone().map(DataAddress::from);
         let sink = self
+            .ctx
+            .ports
             .dataplane
             .on_transfer_request_pre(&domain.hooks(sink.clone()))
             .await?
@@ -126,8 +176,8 @@ impl TransferRpcLoader {
     ) -> Outcome<TransferRpcDomain> {
         let pid = typed.pid().unwrap_or_default().to_string();
         let process = self
-            .process_repo
-            .get_transfer_process_by_key_value(&OwnerScope::All, &pid)
+            .persistence
+            .hydrate_process(&pid)
             .await?
             .ok_or_else(|| {
                 Errors::missing_resource(pid.clone(), "transfer process not found", None)
@@ -158,7 +208,18 @@ impl TransferRpcLoader {
         let is_restart = process.state().0 == TransferDSPState::SUSPENDED.to_string()
             && message == TransferDSPMessageType::TransferStartMessage;
         let (code, reason) = (typed.body.code.clone(), typed.body.reason.clone());
+        let agreement_id = correlation
+            .agreement_id
+            .as_ref()
+            .ok_or_else(|| Errors::crazy("stored transfer process has no agreement", None))?;
         let mut domain = TransferRpcDomain {
+            agreement: self
+                .ctx
+                .ports
+                .negotiation
+                .get_agreement(agreement_id)
+                .await?,
+            peer_mate: self.peer_mate(caller, &peer_id).await,
             target_url: format!(
                 "{}/transfers/{peer_pid}/{}",
                 Self::base(&base),
@@ -181,6 +242,8 @@ impl TransferRpcLoader {
         // A provider starting a pull hands the consumer its endpoint in the start message.
         let endpoint = match (&message, role) {
             (TransferDSPMessageType::TransferStartMessage, TransferRole::Provider) => self
+                .ctx
+                .ports
                 .dataplane
                 .on_transfer_start_pre(&domain.hooks(None))
                 .await?

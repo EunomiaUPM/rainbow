@@ -15,78 +15,21 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Which scenario the TCK expects for each agreement, read from the mapping
-//! `scripts/populate_tck.sh` writes; lookups read the file because the TCK seeds it after boot.
+//! The connector's part of each transfer test of the DSP TCK 1.0.0-RC6.
 
-use std::collections::HashMap;
-use std::path::PathBuf;
+use common::tck::{TckScriptTrait, TckStep};
+use crate::protocols::dsp::entities::tck::{TckEvent, TckMessage};
 
-use serde::Deserialize;
-use ymir::errors::{Errors, Outcome};
+/// What transfer plays in each TCK test, keyed by the agreement seeded for it.
+pub struct TransferTckScript;
 
-use crate::protocols::dsp::entities::tck::{TckEvent, TckMessage, TckStep};
+impl TckScriptTrait for TransferTckScript {
+    type Message = TckMessage;
+    type Event = TckEvent;
+    const SECTIONS: &'static [&'static str] = &["provider_agreements", "consumer_agreements"];
 
-/// Environment variable naming the TCK mapping file.
-pub const TCK_MAPPING_ENV: &str = "DSP_TCK_MAPPING";
-
-#[derive(Debug, Default, Deserialize)]
-struct TckMapping {
-    #[serde(default)]
-    provider_agreements: HashMap<String, String>,
-    #[serde(default)]
-    consumer_agreements: HashMap<String, String>,
-}
-
-/// Scenario lookup over the mapping file, read on each lookup: the TCK seeds it after start.
-#[derive(Debug, Clone)]
-pub struct TckScenarios {
-    mapping: PathBuf,
-}
-
-impl TckScenarios {
-    /// TCK mode when `DSP_TCK_MAPPING` is set; the file itself may not exist yet.
-    pub fn from_env() -> Option<Self> {
-        std::env::var(TCK_MAPPING_ENV).ok().map(Self::new)
-    }
-
-    pub fn new(mapping: impl Into<PathBuf>) -> Self {
-        Self {
-            mapping: mapping.into(),
-        }
-    }
-
-    /// What to do after `event` on a process under `agreement`; empty when not a TCK test.
-    pub fn steps(&self, agreement: &str, event: TckEvent) -> &'static [TckStep] {
-        match self.test_of(agreement) {
-            Ok(Some(test)) => Self::script(&test, event),
-            Ok(None) => &[],
-            Err(err) => {
-                tracing::warn!(error = %err.reason(), "TCK mapping unreadable");
-                &[]
-            }
-        }
-    }
-
-    /// The test an agreement was seeded for, from the current mapping.
-    fn test_of(&self, agreement: &str) -> Outcome<Option<String>> {
-        let text = std::fs::read_to_string(&self.mapping).map_err(|e| {
-            Errors::env_var(
-                format!("{TCK_MAPPING_ENV}={}: {e}", self.mapping.display()),
-                None,
-            )
-        })?;
-        let mapping: TckMapping = serde_json::from_str(&text)
-            .map_err(|e| Errors::parse(format!("invalid TCK mapping: {e}"), None))?;
-        Ok(mapping
-            .provider_agreements
-            .into_iter()
-            .chain(mapping.consumer_agreements)
-            .find(|(_, seeded)| seeded == agreement)
-            .map(|(test, _)| test))
-    }
-
-    /// The connector's part of each scenario, as the TCK's own mocks play it.
-    fn script(test: &str, event: TckEvent) -> &'static [TckStep] {
+    /// As the TCK's own mocks play it.
+    fn script(test: &str, event: TckEvent) -> &'static [TckStep<TckMessage>] {
         use TckMessage::*;
         use TckStep::*;
         match (test, event) {

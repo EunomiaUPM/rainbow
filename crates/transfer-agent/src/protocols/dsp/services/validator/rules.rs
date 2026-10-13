@@ -17,6 +17,7 @@
 
 //! Atomic pure rules enforcing DSP 2025-1 transfer state machine and protocol invariants.
 
+use common::dsp_common::odrl::OdrlAgreement;
 use common::dsp_common::DspRules;
 use common::validation::{Path, Violations, codes, violation};
 use std::str::FromStr;
@@ -41,44 +42,34 @@ impl TransferRules {
         }
     }
 
-    /// DSP state machine transitions according to DSP 2025-1.
+    /// DSP 9.1 state machine, as the table next to the states.
     pub fn state_transition(
         current: Option<&TransferDSPState>,
         message: &TransferDSPMessageType,
         path: impl Into<Path>,
     ) -> Result<(), Violations> {
-        use TransferDSPMessageType::*;
-        use TransferDSPState::*;
+        TransferDSPState::MACHINE.check(current, message, path)
+    }
 
-        let p = path.into();
-        let reject = || {
-            let from = current
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| "<new>".to_string());
-            Err(violation(
-                p.clone(),
-                codes::NOT_ALLOWED,
-                format!("{message} is not allowed from state {from}"),
-            ))
+    /// The peer must be the agreement's other party: its provider when we consume, and back.
+    pub fn agreement_counterparty(
+        agreement: &OdrlAgreement,
+        our_role: &TransferRole,
+        peer_id: &str,
+        path: impl Into<Path>,
+    ) -> Result<(), Violations> {
+        let expected = match our_role {
+            TransferRole::Consumer => &agreement.assigner,
+            _ => &agreement.assignee,
         };
-
-        match (message, current) {
-            (TransferRequestMessage, None) => Ok(()),
-            (TransferRequestMessage, Some(_)) => reject(),
-            (TransferStartMessage, Some(REQUESTED | SUSPENDED)) => Ok(()),
-            (TransferStartMessage, _) => reject(),
-            (TransferCompletionMessage, Some(STARTED)) => Ok(()),
-            (TransferCompletionMessage, _) => reject(),
-            (TransferSuspensionMessage, Some(STARTED)) => Ok(()),
-            (TransferSuspensionMessage, _) => reject(),
-            (TransferTerminationMessage, Some(REQUESTED | STARTED | SUSPENDED)) => Ok(()),
-            (TransferTerminationMessage, _) => reject(),
-            (TransferProcess | TransferError, _) => Err(violation(
-                p,
-                codes::NOT_ALLOWED,
-                format!("{message} is not a lifecycle transition"),
-            )),
+        if expected == peer_id {
+            return Ok(());
         }
+        Err(violation(
+            path,
+            codes::NOT_ALLOWED,
+            format!("{peer_id} is not a party to agreement {}", agreement.id),
+        ))
     }
 
     /// Verify whether a peer role is legally permitted to receive the message.

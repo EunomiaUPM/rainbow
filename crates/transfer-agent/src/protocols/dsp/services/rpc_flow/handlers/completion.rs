@@ -22,8 +22,9 @@ use ymir::errors::Outcome;
 
 use crate::protocols::dsp::entities::context_rpc::{TransferRpcDomain, TransferRpcOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::setup::context::AppContext;
 
 /// Moves our process to COMPLETED between the dataplane's completion hooks.
 pub struct CompletionHandler;
@@ -31,14 +32,16 @@ pub struct CompletionHandler;
 impl CompletionHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        writer: &TransferWriter,
+        ctx: &AppContext,
+        persistence: &TransferDspPersistence,
         domain: TransferRpcDomain,
         reply: &Value,
     ) -> Outcome<TransferRpcOutcome> {
         let hooks = OutboundTransition::hooks(&domain);
-        writer.dataplane.on_transfer_completion_pre(&hooks).await?;
-        let process = OutboundTransition::apply(writer, &domain, TransferDSPState::COMPLETED).await?;
-        writer.dataplane.on_transfer_completion_post(&hooks).await?;
+        ctx.ports.dataplane.on_transfer_completion_pre(&hooks).await?;
+        let process =
+            OutboundTransition::apply(persistence, &domain, TransferDSPState::COMPLETED).await?;
+        ctx.ports.dataplane.on_transfer_completion_post(&hooks).await?;
         Ok(TransferRpcOutcome::sent(domain, reply, process))
     }
 }

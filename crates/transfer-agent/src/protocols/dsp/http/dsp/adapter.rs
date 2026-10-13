@@ -21,6 +21,7 @@
 use axum::extract::Request;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use common::dsp_common::DspCaller;
 use common::flow::{FlowAdapterTrait, FlowError};
 use http::StatusCode;
 
@@ -48,16 +49,18 @@ impl FlowAdapterTrait<TransferDspFlow> for TransferDspAdapter {
     type Response = Response;
     type ErrorContext = TransferErrorPids;
 
-    /// Raw request, JSON, RDF expansion, then the typed fields and idempotency key.
+    /// The peer `PeerAuth` resolved, then raw request, JSON, RDF expansion, and the typed
+    /// fields with the idempotency key.
     async fn extract(
         &self,
         key: &TransferDSPMessageType,
         raw: Request,
-    ) -> Result<TransferDspTyped, FlowError> {
-        let raw = TransferDspRaw::from_request(raw).await?;
+    ) -> Result<(DspCaller, TransferDspTyped), FlowError> {
+        let caller = DspCaller::from_extensions(raw.extensions())?;
+        let raw = TransferDspRaw::from_request(caller.peer()?.clone(), raw).await?;
         let parsed = TransferDspParsed::from_raw(raw, &ProtocolId::Dsp2025_1, key)?;
         let rdf = TransferDspRdf::from_parsed(parsed).await?;
-        Ok(TransferDspTyped::from_rdf(rdf)?)
+        Ok((caller, TransferDspTyped::from_rdf(rdf)?))
     }
 
     fn error_context(&self, input: &TransferDspTyped) -> TransferErrorPids {

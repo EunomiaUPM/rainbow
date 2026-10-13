@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! DSP transfer routes (DSP 10.2): every message goes through the transfer flow runner.
+//! DSP transfer routes (DSP 10.2): every message goes through the inbound flow runner.
 
 pub mod adapter;
 
@@ -23,65 +23,34 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use axum::extract::{Path, Request, State};
-use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{middleware, Extension, Json, Router};
-use common::dsp_common::DspActor;
-use common::facades::grants_facade::{GrantsFacadeTrait, VerifiedPeer};
-use common::flow::FlowRunner;
-use common::oauth::OwnerScope;
+use common::dsp_common::persistence::DspPersistenceTrait;
+use common::dsp_common::{DspCaller, PeerAuth};
 use http::StatusCode;
-use ymir::http::OauthHttpMiddleware;
 
-use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::protocols::dsp::entities::ack::TransferProcessAck;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
 use crate::protocols::dsp::http::dsp::adapter::TransferDspAdapter;
-use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
+use crate::protocols::dsp::setup::context::DspContext;
 
 #[derive(Clone)]
 pub struct DspRouter {
-    grants: Arc<dyn GrantsFacadeTrait>,
-    runner: Arc<FlowRunner<TransferDspFlow>>,
-    processes: Arc<dyn TransferProcessRepoTrait>,
+    ctx: Arc<DspContext>,
 }
 
 impl DspRouter {
-    pub fn new(
-        grants: Arc<dyn GrantsFacadeTrait>,
-        runner: Arc<FlowRunner<TransferDspFlow>>,
-        processes: Arc<dyn TransferProcessRepoTrait>,
-    ) -> Self {
-        Self {
-            grants,
-            runner,
-            processes,
-        }
+    pub fn new(ctx: Arc<DspContext>) -> Self {
+        Self { ctx }
     }
 
-    async fn auth_middleware(
-        State(state): State<DspRouter>,
-        mut request: Request,
-        next: Next,
-    ) -> Result<impl IntoResponse, StatusCode> {
-        // DSP 10.1.2.3: an unauthorized client gets a 404 like a missing process (10.1.2.2),
-        // so probing cannot reveal which Transfer Processes exist.
-        let token = OauthHttpMiddleware::bearer(request.headers())
-            .map_err(|_| StatusCode::NOT_FOUND)?
-            .to_owned();
-        match state.grants.verify_token(token).await {
-            Ok(peer) => {
-                request.extensions_mut().insert(peer);
-                Ok(next.run(request).await)
-            }
-            Err(_) => Err(StatusCode::NOT_FOUND),
-        }
-    }
-
+    /// Every route behind `PeerAuth`: an unknown peer gets the 404 of a missing process.
     pub fn router(self) -> Router {
+        let auth = &self.ctx.app.ports.auth;
+        let peer_auth = PeerAuth::new(auth.grants.clone(), auth.mates.clone());
         Router::new()
             .route("/request", post(Self::handle_transfer_request))
             .route("/{id}", get(Self::handle_get_transfer_process))
@@ -89,98 +58,63 @@ impl DspRouter {
             .route("/{id}/completion", post(Self::handle_transfer_completion))
             .route("/{id}/termination", post(Self::handle_transfer_termination))
             .route("/{id}/suspension", post(Self::handle_transfer_suspension))
-            .layer(middleware::from_fn_with_state(
-                self.clone(),
-                Self::auth_middleware,
-            ))
+            .layer(middleware::from_fn_with_state(peer_auth, PeerAuth::run))
             .with_state(self)
     }
 
-    /// Decode, run and encode: the same three steps for every message route.
-    async fn dispatch(
-        &self,
-        peer: &VerifiedPeer,
-        key: TransferDSPMessageType,
-        request: Request,
-    ) -> Response {
-        self.runner
-            .serve(&TransferDspAdapter, peer, key, request)
+    async fn dispatch(&self, key: TransferDSPMessageType, request: Request) -> Response {
+        self.ctx
+            .inbound
+            .serve(&TransferDspAdapter, key, request)
             .await
     }
 
-    async fn handle_transfer_request(
-        State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
-        request: Request,
-    ) -> Response {
+    async fn handle_transfer_request(State(state): State<DspRouter>, request: Request) -> Response {
         state
-            .dispatch(
-                &peer,
-                TransferDSPMessageType::TransferRequestMessage,
-                request,
-            )
+            .dispatch(TransferDSPMessageType::TransferRequestMessage, request)
             .await
     }
 
-    async fn handle_transfer_start(
-        State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
-        request: Request,
-    ) -> Response {
+    async fn handle_transfer_start(State(state): State<DspRouter>, request: Request) -> Response {
         state
-            .dispatch(&peer, TransferDSPMessageType::TransferStartMessage, request)
+            .dispatch(TransferDSPMessageType::TransferStartMessage, request)
             .await
     }
 
     async fn handle_transfer_completion(
         State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
         request: Request,
     ) -> Response {
         state
-            .dispatch(
-                &peer,
-                TransferDSPMessageType::TransferCompletionMessage,
-                request,
-            )
+            .dispatch(TransferDSPMessageType::TransferCompletionMessage, request)
             .await
     }
 
     async fn handle_transfer_termination(
         State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
         request: Request,
     ) -> Response {
         state
-            .dispatch(
-                &peer,
-                TransferDSPMessageType::TransferTerminationMessage,
-                request,
-            )
+            .dispatch(TransferDSPMessageType::TransferTerminationMessage, request)
             .await
     }
 
     async fn handle_transfer_suspension(
         State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
         request: Request,
     ) -> Response {
         state
-            .dispatch(
-                &peer,
-                TransferDSPMessageType::TransferSuspensionMessage,
-                request,
-            )
+            .dispatch(TransferDSPMessageType::TransferSuspensionMessage, request)
             .await
     }
 
     /// DSP 10.2.1: the process as the peer knows it; unknown and foreign answer alike (404).
     async fn handle_get_transfer_process(
         State(state): State<DspRouter>,
-        Extension(peer): Extension<VerifiedPeer>,
+        Extension(caller): Extension<DspCaller>,
         Path(id): Path<String>,
     ) -> Response {
-        match state.find_for_peer(&peer, &id).await {
+        match state.find_for(&caller, &id).await {
             Some(ack) => (StatusCode::OK, Json(ack)).into_response(),
             None => {
                 let body = TransferErrorDto::new(
@@ -194,19 +128,16 @@ impl DspRouter {
         }
     }
 
-    async fn find_for_peer(&self, peer: &VerifiedPeer, pid: &str) -> Option<TransferProcessAck> {
-        let process = self
-            .processes
-            .get_transfer_process_by_key_value(&OwnerScope::All, pid)
-            .await
-            .ok()??;
+    async fn find_for(&self, caller: &DspCaller, pid: &str) -> Option<TransferProcessAck> {
+        let process = self.ctx.persistence.hydrate_process(pid).await.ok()??;
         let correlation = process.correlation();
         let counterparty = correlation
             .peer_participant_id
             .as_ref()
             .map(|p| p.as_str())
             .unwrap_or_default();
-        DspActor::peer(peer)
+        caller
+            .actor()
             .authorize(process.owner(), counterparty, process.id().as_urn())
             .ok()?;
         Some(TransferProcessAck::new(

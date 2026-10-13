@@ -15,69 +15,102 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::Arc;
+//! What every transfer module uses: config, repos, events, ports and the services built on them.
+
+use std::sync::{Arc, OnceLock};
 
 use crate::data::factory::DataFactory;
-use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::data::sea_orm::factory::SeaOrmDataFactory;
-use crate::protocols::dsp::facades::dataplane_facade::DataPlaneFacadeTrait;
-use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
-use crate::protocols::dsp::facades::catalog_facade::CatalogFacadeTrait;
 use crate::services::transfer_message::service::TransferMessageService;
+use crate::services::transfer_message::TransferMessageServiceTrait;
 use crate::services::transfer_process::service::TransferProcessService;
+use crate::services::transfer_process::TransferProcessServiceTrait;
 use crate::setup::ports::TransferPorts;
 use common::oauth::OauthTokenValidatorTrait;
+use events::EventSinkTrait;
 use common::config::services::TransferConfig;
-use common::facades::grants_facade::GrantsFacadeTrait;
 use common::module_loader::root_context::RootContext;
 
-#[derive(Clone)]
+/// The transfer agent's context; every service, router, flow and loader keeps it whole.
 pub struct AppContext {
     pub config: Arc<TransferConfig>,
-    pub transfer_process_svc: Arc<TransferProcessService>,
-    pub transfer_message_svc: Arc<TransferMessageService>,
-    pub transfer_process_repo: Arc<dyn TransferProcessRepoTrait>,
+    pub repos: Arc<dyn DataFactory>,
+    pub events: Arc<dyn EventSinkTrait>,
+    pub ports: TransferPorts,
     pub oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
-    pub grants_facade: Arc<dyn GrantsFacadeTrait>,
-    /// What the DSP flows load facts from and drive while they apply.
-    pub catalog: Arc<dyn CatalogFacadeTrait>,
-    pub negotiation: Arc<dyn NegotiationFacadeTrait>,
-    pub dataplane: Arc<dyn DataPlaneFacadeTrait>,
+    services: OnceLock<TransferServices>,
+}
+
+/// The agent's own services; they keep the context, so they are attached once it exists.
+#[derive(Clone)]
+pub struct TransferServices {
+    pub processes: Arc<dyn TransferProcessServiceTrait>,
+    pub messages: Arc<dyn TransferMessageServiceTrait>,
+}
+
+impl TransferServices {
+    /// The real services over the context's repos and events.
+    pub fn own(ctx: &Arc<AppContext>) -> Self {
+        Self {
+            processes: Arc::new(TransferProcessService::new(ctx.clone())),
+            messages: Arc::new(TransferMessageService::new(ctx.clone())),
+        }
+    }
 }
 
 impl AppContext {
+    /// SeaORM repos on the shared pool, the given events and ports, and the own services.
     pub fn build(
         config: &TransferConfig,
         root: &RootContext,
-        event_bus: Option<events::EventBus>,
-        ports: &TransferPorts,
-    ) -> Self {
-        let config = Arc::new(config.clone());
-        let db_factory = SeaOrmDataFactory::new(root.db.clone());
-
-        // Domain services
-        let transfer_process_svc = Arc::new(
-            TransferProcessService::new(
-                db_factory.transfer_process_repo(),
-                db_factory.transfer_identifier_repo(),
-            )
-            .with_event_bus(event_bus.clone()),
+        events: Arc<dyn EventSinkTrait>,
+        ports: TransferPorts,
+    ) -> Arc<Self> {
+        let ctx = Self::bare(
+            Arc::new(config.clone()),
+            Arc::new(SeaOrmDataFactory::new(root.db.clone())),
+            events,
+            ports,
+            root.validator.clone(),
         );
-        let transfer_message_svc = Arc::new(
-            TransferMessageService::new(db_factory.transfer_message_repo())
-                .with_event_bus(event_bus),
-        );
+        ctx.attach(TransferServices::own(&ctx));
+        ctx
+    }
 
-        Self {
+    /// The context without services; `attach` completes it (tests attach mocks).
+    pub fn bare(
+        config: Arc<TransferConfig>,
+        repos: Arc<dyn DataFactory>,
+        events: Arc<dyn EventSinkTrait>,
+        ports: TransferPorts,
+        oauth_validator: Arc<dyn OauthTokenValidatorTrait>,
+    ) -> Arc<Self> {
+        Arc::new(Self {
             config,
-            transfer_process_svc,
-            transfer_message_svc,
-            transfer_process_repo: db_factory.transfer_process_repo(),
-            oauth_validator: root.validator.clone(),
-            grants_facade: ports.auth.grants.clone(),
-            catalog: ports.catalog.clone(),
-            negotiation: ports.negotiation.clone(),
-            dataplane: ports.dataplane.facade.clone(),
-        }
+            repos,
+            events,
+            ports,
+            oauth_validator,
+            services: OnceLock::new(),
+        })
+    }
+
+    /// Attaches the services; only the first call counts.
+    pub fn attach(&self, services: TransferServices) {
+        let _ = self.services.set(services);
+    }
+
+    pub fn processes(&self) -> &Arc<dyn TransferProcessServiceTrait> {
+        &self.services().processes
+    }
+
+    pub fn messages(&self) -> &Arc<dyn TransferMessageServiceTrait> {
+        &self.services().messages
+    }
+
+    fn services(&self) -> &TransferServices {
+        self.services
+            .get()
+            .expect("services are attached before any module runs")
     }
 }

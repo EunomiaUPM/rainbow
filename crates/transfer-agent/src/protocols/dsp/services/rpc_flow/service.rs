@@ -19,10 +19,10 @@
 //! message's handler.
 
 use std::sync::Arc;
+use common::dsp_common::DspCaller;
+use common::facades::grants_facade::send_with_peer_token;
 
-use common::facades::grants_facade::{send_with_peer_token, GrantsFacadeTrait};
 use common::flow::{FlowCx, FlowTrait};
-use common::oauth::UserInfo;
 use common::rdf::RdfMessage;
 use serde_json::{json, Value};
 use ymir::errors::{Errors, Outcome, PetitionFailure};
@@ -36,31 +36,28 @@ use crate::protocols::dsp::entities::context_rpc::{
 };
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::rdf_extractor_dsp::DspTransfer;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::completion::CompletionHandler;
 use crate::protocols::dsp::services::rpc_flow::handlers::request::RequestHandler;
 use crate::protocols::dsp::services::rpc_flow::handlers::start::StartHandler;
 use crate::protocols::dsp::services::rpc_flow::handlers::suspension::SuspensionHandler;
 use crate::protocols::dsp::services::rpc_flow::handlers::termination::TerminationHandler;
 use crate::protocols::dsp::services::rpc_flow::loader::TransferRpcLoader;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::setup::context::AppContext;
 
 /// Sends the five transfer messages to the peer and moves the local process with them.
 pub struct TransferRpcFlow {
+    ctx: Arc<AppContext>,
     loader: TransferRpcLoader,
-    writer: TransferWriter,
-    grants: Arc<dyn GrantsFacadeTrait>,
+    persistence: TransferDspPersistence,
 }
 
 impl TransferRpcFlow {
-    pub fn new(
-        loader: TransferRpcLoader,
-        writer: TransferWriter,
-        grants: Arc<dyn GrantsFacadeTrait>,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            loader,
-            writer,
-            grants,
+            loader: TransferRpcLoader::new(ctx.clone()),
+            persistence: TransferDspPersistence::new(ctx.clone()),
+            ctx,
         }
     }
 
@@ -88,7 +85,7 @@ impl TransferRpcFlow {
 #[async_trait::async_trait]
 impl FlowTrait for TransferRpcFlow {
     type Key = TransferDSPMessageType;
-    type Caller = UserInfo;
+    type Caller = DspCaller;
     type Input = TransferRpcTyped;
     type Facts = TransferRpcDomain;
     type Output = TransferRpcOutcome;
@@ -100,7 +97,7 @@ impl FlowTrait for TransferRpcFlow {
 
     async fn load(
         &self,
-        cx: &FlowCx<'_, UserInfo>,
+        cx: &FlowCx<'_, DspCaller>,
         typed: TransferRpcTyped,
     ) -> Outcome<TransferRpcDomain> {
         self.loader.load(cx.caller, typed).await
@@ -109,14 +106,14 @@ impl FlowTrait for TransferRpcFlow {
     /// Sends the message as built; the answer to a request is read back through RDF.
     async fn send(
         &self,
-        cx: &FlowCx<'_, UserInfo>,
+        cx: &FlowCx<'_, DspCaller>,
         domain: &TransferRpcDomain,
     ) -> Outcome<Option<Value>> {
         let (url, body) = (domain.target_url.clone(), domain.outgoing.json.clone());
         let requested = domain.role == TransferRole::Consumer;
         let raw = send_with_peer_token(
-            self.grants.as_ref(),
-            cx.caller,
+            self.ctx.ports.auth.grants.as_ref(),
+            cx.caller.user()?,
             &domain.peer_id,
             requested,
             |headers| Self::post(url.clone(), headers, body.clone()),
@@ -136,20 +133,32 @@ impl FlowTrait for TransferRpcFlow {
 
     async fn apply(
         &self,
-        cx: &FlowCx<'_, UserInfo>,
+        cx: &FlowCx<'_, DspCaller>,
         domain: TransferRpcDomain,
         reply: Option<Value>,
     ) -> Outcome<TransferRpcOutcome> {
         use TransferDSPMessageType::*;
         let reply = reply.unwrap_or(Value::Null);
-        let writer = &self.writer;
+        let (ctx, persistence) = (self.ctx.as_ref(), &self.persistence);
         match domain.typed.message {
-            TransferRequestMessage => RequestHandler::handle(writer, cx.caller, domain, &reply).await,
-            TransferStartMessage => StartHandler::handle(writer, domain, &reply).await,
-            TransferCompletionMessage => CompletionHandler::handle(writer, domain, &reply).await,
-            TransferSuspensionMessage => SuspensionHandler::handle(writer, domain, &reply).await,
-            TransferTerminationMessage => TerminationHandler::handle(writer, domain, &reply).await,
-            other => Err(Errors::crazy(format!("{other} is not an outbound message"), None)),
+            TransferRequestMessage => {
+                let user = cx.caller.user()?;
+                RequestHandler::handle(ctx, persistence, user, domain, &reply).await
+            }
+            TransferStartMessage => StartHandler::handle(ctx, persistence, domain, &reply).await,
+            TransferCompletionMessage => {
+                CompletionHandler::handle(ctx, persistence, domain, &reply).await
+            }
+            TransferSuspensionMessage => {
+                SuspensionHandler::handle(ctx, persistence, domain, &reply).await
+            }
+            TransferTerminationMessage => {
+                TerminationHandler::handle(ctx, persistence, domain, &reply).await
+            }
+            other => Err(Errors::crazy(
+                format!("{other} is not an outbound message"),
+                None,
+            )),
         }
     }
 }

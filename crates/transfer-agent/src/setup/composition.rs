@@ -21,8 +21,8 @@ use common::module_loader::module_group::ModuleGroup;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;
 use dataplane::setup::DataplaneModule;
+use events::NoopEventSink;
 use sea_orm_migration::MigrationTrait;
-use std::sync::Arc;
 use tonic::service::RoutesBuilder;
 
 use crate::SERVICE_NAME;
@@ -44,11 +44,14 @@ impl TransferAgentModule {
         event_bus: Option<events::EventBus>,
         ports: &TransferPorts,
     ) -> Self {
-        let ctx = Arc::new(AppContext::build(config, root, event_bus, ports));
-        let modules = ModuleGroup::new(SERVICE_NAME)
+        let events = NoopEventSink::or_bus(event_bus);
+        let ctx = AppContext::build(config, root, events, ports.clone());
+        let mut modules = ModuleGroup::new(SERVICE_NAME)
             .register(DspModule::new(ctx.clone()))
-            .register(TransferAdminModule::new(ctx))
-            .register(ports.dataplane.module.clone());
+            .register(TransferAdminModule::new(ctx));
+        if let Some(dataplane) = ports.dataplane_module() {
+            modules = modules.register(dataplane);
+        }
         Self { modules }
     }
 

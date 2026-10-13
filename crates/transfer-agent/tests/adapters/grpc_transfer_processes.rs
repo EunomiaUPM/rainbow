@@ -18,8 +18,8 @@
 //! TransferProcessGrpc: auth, field parsing, enum and identifier mapping, error mapping and
 //! response shaping.
 
-use common::test_utils::grpc::{GrpcRequests, StubTokenValidator, TENANT};
-use std::sync::Arc;
+use common::test_utils::grpc::{GrpcRequests, TENANT};
+use crate::support::context::TestContext;
 use transfer_agent::grpc::api::transfer_processes::{
     BatchTransferProcessesRequest, CreateTransferProcessRequest, EditTransferProcessRequest,
     ListTransferProcessesRequest, ResourceIdRequest,
@@ -48,7 +48,7 @@ use transfer_agent::services::transfer_process::MockTransferProcessServiceTrait;
 use transfer_agent::services::transfer_process::views::TransferProcessView;
 
 fn grpc(service: MockTransferProcessServiceTrait) -> TransferProcessGrpc {
-    TransferProcessGrpc::new(Arc::new(service), Arc::new(StubTokenValidator))
+    TransferProcessGrpc::new(TestContext::new().processes(service).build())
 }
 
 fn view() -> TransferProcessView {

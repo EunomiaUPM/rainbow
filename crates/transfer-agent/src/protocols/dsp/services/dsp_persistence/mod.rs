@@ -15,6 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! What both transfer flows write through: processes, their message history and the dataplane.
+//! Transfer's `DspPersistenceTrait`: processes and their message history, for both flows.
 
 pub mod service;

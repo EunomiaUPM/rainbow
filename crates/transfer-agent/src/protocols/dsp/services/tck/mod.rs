@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! TCK mode: scripted transfer scenarios the connector plays on its own when
-//! `DSP_TCK_MAPPING` is set, run by a worker after each committed message.
+//! TCK mode: the transfer script table, the guard that queues what follows a commit and the
+//! player that sends it, over `common::tck`.
 
 pub mod guard;
+pub mod player;
 pub mod service;
-pub mod worker;

@@ -20,13 +20,12 @@
 
 use std::str::FromStr;
 use std::sync::Arc;
+use common::dsp_common::persistence::DspPersistenceTrait;
+use common::dsp_common::DspCaller;
 
-use common::dsp_common::DspActor;
-use common::oauth::OwnerScope;
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
-use crate::data::repo::transfer_process::TransferProcessRepoTrait;
 use crate::entities::protocol::{TransferDirection, TransferRole};
 use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::context_common::{
@@ -34,33 +33,31 @@ use crate::protocols::dsp::entities::context_common::{
 };
 use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspTyped};
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::facades::catalog_facade::CatalogFacadeTrait;
-use crate::protocols::dsp::facades::negotiation_facade::NegotiationFacadeTrait;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Loads or mints the process an inbound message refers to, with its agreement and connector.
 pub struct TransferDspLoader {
-    process_repo: Arc<dyn TransferProcessRepoTrait>,
-    negotiation: Arc<dyn NegotiationFacadeTrait>,
-    catalog: Arc<dyn CatalogFacadeTrait>,
+    ctx: Arc<AppContext>,
+    persistence: TransferDspPersistence,
 }
 
 impl TransferDspLoader {
-    pub fn new(
-        process_repo: Arc<dyn TransferProcessRepoTrait>,
-        negotiation: Arc<dyn NegotiationFacadeTrait>,
-        catalog: Arc<dyn CatalogFacadeTrait>,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            process_repo,
-            negotiation,
-            catalog,
+            persistence: TransferDspPersistence::new(ctx.clone()),
+            ctx,
         }
     }
 
     /// Resolves the domain stage of a typed message.
     #[tracing::instrument(level = "info", skip_all, err)]
-    pub async fn load(&self, typed: TransferDspTyped) -> Outcome<TransferDspDomain> {
-        let process = self.process_slot(&typed).await?;
+    pub async fn load(
+        &self,
+        caller: &DspCaller,
+        typed: TransferDspTyped,
+    ) -> Outcome<TransferDspDomain> {
+        let process = self.process_slot(caller, &typed).await?;
         let role = match &process {
             TransferContextProcessSlot::Existing(p) => p.role(),
             // Only a request opens a process, and only a provider receives one.
@@ -69,13 +66,23 @@ impl TransferDspLoader {
         let transfer_direction = Self::transfer_direction(&typed, &process);
         let is_restart = Self::is_restart(&typed, &process);
         let agreement_id = Self::agreement_id(&typed, &process)?;
-        let agreement = self.negotiation.get_agreement(&agreement_id).await?;
+        let agreement = self
+            .ctx
+            .ports
+            .negotiation
+            .get_agreement(&agreement_id)
+            .await?;
         let connector_instance = match (&process, role) {
             (TransferContextProcessSlot::New { .. }, TransferRole::Provider) => {
                 let format = typed.fields.format.as_deref().ok_or_else(|| {
                     Errors::format(BadFormat::Received, "format is required", None)
                 })?;
-                let connector = self.catalog.get_connector_for(&agreement.target, format).await?;
+                let connector = self
+                    .ctx
+                    .ports
+                    .catalog
+                    .get_connector_for(&agreement.target, format)
+                    .await?;
                 TransferContextConnectorRole::ProviderHavingConnector(Box::new(connector))
             }
             _ => TransferContextConnectorRole::ConsumerNotHavingConnector,
@@ -94,9 +101,9 @@ impl TransferDspLoader {
     /// The existing process by either pid, checked against the peer; a request may open one.
     async fn process_slot(
         &self,
+        caller: &DspCaller,
         typed: &TransferDspTyped,
     ) -> Outcome<TransferContextProcessSlot> {
-        let peer = DspActor::peer(typed.peer());
         for pid in [
             typed.fields.provider_pid.as_deref(),
             typed.fields.consumer_pid.as_deref(),
@@ -104,18 +111,16 @@ impl TransferDspLoader {
         .into_iter()
         .flatten()
         {
-            if let Some(found) = self
-                .process_repo
-                .get_transfer_process_by_key_value(&OwnerScope::All, pid)
-                .await?
-            {
+            if let Some(found) = self.persistence.hydrate_process(pid).await? {
                 let counterparty = found
                     .correlation()
                     .peer_participant_id
                     .as_ref()
                     .map(|p| p.as_str())
                     .unwrap_or_default();
-                peer.authorize(found.owner(), counterparty, found.id().as_urn())?;
+                caller
+                    .actor()
+                    .authorize(found.owner(), counterparty, found.id().as_urn())?;
                 return Ok(TransferContextProcessSlot::Existing(Box::new(found)));
             }
         }

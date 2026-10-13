@@ -15,14 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Guards that tell the TCK worker what just committed, so a scenario can carry on.
+//! The guard that tells the TCK queue what just committed, so a scenario can carry on.
 
-use std::sync::Arc;
+use common::dsp_common::DspCaller;
 
-use common::facades::grants_facade::VerifiedPeer;
 use common::flow::FlowGuardTrait;
-use common::oauth::UserInfo;
-use tokio::sync::mpsc::UnboundedSender;
+use common::tck::TckQueue;
 use ymir::errors::Outcome;
 
 use crate::entities::protocol::TransferRole;
@@ -31,29 +29,18 @@ use crate::protocols::dsp::entities::context_rpc::TransferRpcOutcome;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
-use crate::protocols::dsp::services::tck::worker::TckJob;
+use crate::protocols::dsp::services::tck::service::TransferTckScript;
 use crate::protocols::dsp::entities::tck::TckEvent;
-use crate::protocols::dsp::services::tck::service::TckScenarios;
 
-/// Turns committed changes into scenario jobs for the worker.
+/// Turns committed changes of both flows into TCK events.
 #[derive(Clone)]
 pub struct TckGuard {
-    scenarios: Arc<TckScenarios>,
-    jobs: UnboundedSender<TckJob>,
+    queue: TckQueue<TransferTckScript>,
 }
 
 impl TckGuard {
-    pub fn new(scenarios: Arc<TckScenarios>, jobs: UnboundedSender<TckJob>) -> Self {
-        Self { scenarios, jobs }
-    }
-
-    fn enqueue(&self, agreement: &str, event: TckEvent, pid: String) {
-        let steps = self.scenarios.steps(agreement, event);
-        if steps.is_empty() {
-            return;
-        }
-        tracing::info!(agreement, ?event, pid, "TCK scenario continues");
-        let _ = self.jobs.send(TckJob { pid, steps });
+    pub fn new(queue: TckQueue<TransferTckScript>) -> Self {
+        Self { queue }
     }
 }
 
@@ -61,20 +48,26 @@ impl TckGuard {
 impl FlowGuardTrait<TransferDspFlow> for TckGuard {
     async fn after_commit(
         &self,
-        _peer: &VerifiedPeer,
+        _caller: &DspCaller,
         key: &TransferDSPMessageType,
         out: &TransferDspOutcome,
     ) -> Outcome<()> {
-        let pid = out.ack.provider_pid.clone();
+        let (agreement, ack) = (&out.agreement_id, &out.ack);
         match (key, out.role) {
             (TransferDSPMessageType::TransferRequestMessage, TransferRole::Provider) => {
-                self.enqueue(&out.agreement_id, TckEvent::ProviderRequested, pid)
+                self.queue.enqueue(
+                    agreement,
+                    TckEvent::ProviderRequested,
+                    ack.provider_pid.clone(),
+                )
             }
-            (TransferDSPMessageType::TransferStartMessage, TransferRole::Consumer) => self.enqueue(
-                &out.agreement_id,
-                TckEvent::ConsumerStarted,
-                out.ack.consumer_pid.clone(),
-            ),
+            (TransferDSPMessageType::TransferStartMessage, TransferRole::Consumer) => {
+                self.queue.enqueue(
+                    agreement,
+                    TckEvent::ConsumerStarted,
+                    ack.consumer_pid.clone(),
+                )
+            }
             _ => {}
         }
         Ok(())
@@ -85,7 +78,7 @@ impl FlowGuardTrait<TransferDspFlow> for TckGuard {
 impl FlowGuardTrait<TransferRpcFlow> for TckGuard {
     async fn after_commit(
         &self,
-        _user: &UserInfo,
+        _caller: &DspCaller,
         key: &TransferDSPMessageType,
         out: &TransferRpcOutcome,
     ) -> Outcome<()> {
@@ -98,7 +91,8 @@ impl FlowGuardTrait<TransferRpcFlow> for TckGuard {
                 .consumer_pid
                 .clone()
                 .unwrap_or_default();
-            self.enqueue(&out.agreement_id, TckEvent::ConsumerRequested, pid);
+            self.queue
+                .enqueue(&out.agreement_id, TckEvent::ConsumerRequested, pid);
         }
         Ok(())
     }

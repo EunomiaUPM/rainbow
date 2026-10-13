@@ -15,12 +15,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Validation registries of the transfer flows: inbound message and facts rules, and the
-//! outbound RPC rules.
+//! Rules of the transfer flows: the pure rules, and the registries of the inbound DSP flow and
+//! the outbound RPC flow.
 
-pub mod registry;
-pub mod rpc_registry;
+pub mod dsp;
+pub mod rpc;
 pub mod rules;
 
-pub use registry::TransferValidators;
+pub use dsp::TransferDspRules;
+pub use rpc::TransferRpcRules;
 pub use rules::TransferRules;

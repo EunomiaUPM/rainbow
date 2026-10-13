@@ -18,6 +18,7 @@
 //! `TransferRequestMessage` received by the provider (DSP 9.2.1): opens the process.
 
 use std::collections::HashMap;
+use common::dsp_common::persistence::{DspPersistenceTrait, RecordedMessage};
 
 use serde_json::json;
 use url::Url;
@@ -28,15 +29,16 @@ use crate::entities::ids::{ParticipantId, TransferProcessId};
 use crate::entities::protocol::{
     ProtocolId, ProtocolState, StateMetadata, TransferRole, CONSUMER_PID_KEY, PROVIDER_PID_KEY,
 };
-use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::transfer_message::Direction;
 use crate::protocols::dsp::entities::context_common::{
     TransferContextConnectorRole, TransferContextProcessSlot, DIRECTION_PROPERTY,
 };
 use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::entities::state_change::TransferMessageRecord;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Creates the process with a new `providerPid`, records the message and starts the dataplane.
 pub struct RequestHandler;
@@ -44,7 +46,8 @@ pub struct RequestHandler;
 impl RequestHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        writer: &TransferWriter,
+        ctx: &AppContext,
+        persistence: &TransferDspPersistence,
         mut domain: TransferDspDomain,
     ) -> Outcome<TransferDspOutcome> {
         let TransferContextProcessSlot::New { consumer_pid } = &domain.process else {
@@ -55,25 +58,28 @@ impl RequestHandler {
         let requested = ProtocolState(TransferDSPState::REQUESTED.to_string().into());
 
         let cmd = Self::command(&domain, &consumer_pid, &provider_pid, &requested)?;
-        let created = writer
-            .processes
-            .create(&TransferWriter::actor(), &cmd)
+        let process = persistence
+            .open_process(&TransferDspPersistence::actor(), &cmd)
             .await?;
-        let process = writer.reload(created.id.as_urn()).await?;
-        let envelope: MessageEnvelope = domain.typed.envelope();
-        writer
-            .record(
+        let record = TransferMessageRecord {
+            message: domain.typed.message.clone(),
+            direction: Direction::Inbound,
+            envelope: domain.typed.envelope(),
+        };
+        persistence
+            .record_message(
                 &process,
-                Direction::Inbound,
-                &domain.typed.message,
-                envelope,
-                (&requested, &requested),
+                RecordedMessage {
+                    message: record,
+                    from: TransferDSPState::REQUESTED,
+                    to: TransferDSPState::REQUESTED,
+                },
             )
             .await?;
 
         // The provider side of the dataplane needs the stored process, so it runs after the write.
         domain.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
-        writer
+        ctx.ports
             .dataplane
             .on_transfer_request_post(&domain.dataplane_hooks()?)
             .await?;

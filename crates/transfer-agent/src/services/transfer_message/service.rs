@@ -27,24 +27,20 @@ use crate::data::repo::transfer_message::TransferMessageRepoTrait;
 use crate::entities::commands::NewTransferMessageCommand;
 use crate::entities::filters::TransferMessageFilter;
 use crate::services::transfer_message::TransferMessageServiceTrait;
+use crate::setup::context::AppContext;
 use crate::services::transfer_message::views::TransferMessageView;
 
 pub struct TransferMessageService {
-    message_repo: Arc<dyn TransferMessageRepoTrait>,
-    event_bus: Option<events::EventBus>,
+    ctx: Arc<AppContext>,
 }
 
 impl TransferMessageService {
-    pub fn new(message_repo: Arc<dyn TransferMessageRepoTrait>) -> Self {
-        Self {
-            message_repo,
-            event_bus: None,
-        }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
-    pub fn with_event_bus(mut self, event_bus: Option<events::EventBus>) -> Self {
-        self.event_bus = event_bus;
-        self
+    fn message_repo(&self) -> Arc<dyn TransferMessageRepoTrait> {
+        self.ctx.repos.transfer_message_repo()
     }
 
     // Refactors
@@ -77,10 +73,10 @@ impl TransferMessageServiceTrait for TransferMessageService {
         let (filters, page) = Self::scoped_query(filters, page)?;
         // Hit db concurrently
         let scope = OwnerScope::seeing(user);
+        let repo = self.message_repo();
         let (messages, total) = tokio::try_join!(
-            self.message_repo
-                .get_all_transfer_messages(&scope, &filters, &page, sort),
-            self.message_repo.count_transfer_messages(&scope, &filters),
+            repo.get_all_transfer_messages(&scope, &filters, &page, sort),
+            repo.count_transfer_messages(&scope, &filters),
         )?;
         // Assemble into view
         let items = messages
@@ -112,10 +108,10 @@ impl TransferMessageServiceTrait for TransferMessageService {
         let (filters, page) = Self::scoped_query(filters, page)?;
         // Hit db concurrently
         let scope = OwnerScope::seeing(user);
+        let repo = self.message_repo();
         let (messages, total) = tokio::try_join!(
-            self.message_repo
-                .get_messages_by_process_id(&scope, process_id, &filters, &page, sort),
-            self.message_repo.count_transfer_messages(&scope, &filters),
+            repo.get_messages_by_process_id(&scope, process_id, &filters, &page, sort),
+            repo.count_transfer_messages(&scope, &filters),
         )?;
         // Assemble into view
         let items = messages
@@ -136,7 +132,7 @@ impl TransferMessageServiceTrait for TransferMessageService {
     )]
     async fn get_one(&self, user: &UserInfo, id: &Urn) -> Outcome<TransferMessageView> {
         let message = self
-            .message_repo
+            .message_repo()
             .get_transfer_message_by_id(&OwnerScope::seeing(user), id)
             .await?
             .or_not_found(id, "transfer message")?;
@@ -154,12 +150,12 @@ impl TransferMessageServiceTrait for TransferMessageService {
         let mut cmd = cmd.clone();
         cmd.owner = Some(Owner::for_new(user, cmd.owner.take(), cmd.visibility.clone()));
         // Create in db
-        let message = self.message_repo.create_transfer_message(&cmd).await?;
+        let message = self.message_repo().create_transfer_message(&cmd).await?;
         // Assemble into view
         let owner = message.owner().clone();
         let view = TransferMessageView::assemble(message);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "message",
@@ -179,11 +175,11 @@ impl TransferMessageServiceTrait for TransferMessageService {
     async fn delete(&self, user: &UserInfo, id: &Urn) -> Outcome<()> {
         // Hit db
         let owner = self
-            .message_repo
+            .message_repo()
             .delete_transfer_message(&OwnerScope::acting(user), id)
             .await?;
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "message",

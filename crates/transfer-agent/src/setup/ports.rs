@@ -45,25 +45,23 @@ pub struct TransferPorts {
     pub auth: AuthPorts,
     pub negotiation: Arc<dyn NegotiationFacadeTrait>,
     pub catalog: Arc<dyn CatalogFacadeTrait>,
-    pub dataplane: DataplanePort,
-}
-
-/// The composed dataplane: the facade the DSP pipeline drives over its manager, and the
-/// module transfer registers to serve its routes.
-#[derive(Clone)]
-pub struct DataplanePort {
-    pub facade: Arc<dyn DataPlaneFacadeTrait>,
-    pub module: DataplaneModule,
+    /// The hooks the DSP flows drive over the dataplane manager.
+    pub dataplane: Arc<dyn DataPlaneFacadeTrait>,
+    /// The dataplane module transfer registers; none when the dataplane is stubbed.
+    dataplane_module: Option<DataplaneModule>,
 }
 
 impl TransferPorts {
     /// Microservices: every agent is reached through its API.
     pub async fn remote(config: &TransferConfig, root: &RootContext) -> Outcome<Self> {
+        let module =
+            DataplaneModule::compose(config, root, &DataplanePorts::remote(config, root)).await?;
         Ok(Self {
             auth: AuthPorts::remote(config.ssi_auth()),
             negotiation: Arc::new(NegotiationRemoteFacade::new(config.contracts())),
             catalog: Arc::new(CatalogRemoteFacade::new(config.catalog())),
-            dataplane: Self::dataplane(config, root, &DataplanePorts::remote(config, root)).await?,
+            dataplane: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
+            dataplane_module: Some(module),
         })
     }
 
@@ -78,29 +76,36 @@ impl TransferPorts {
         distributions: Arc<dyn DistributionServiceTrait>,
         connector: Arc<dyn ConnectorInstanceFacadeTrait>,
     ) -> Outcome<Self> {
-        let dataplane_ports = DataplanePorts::local(connector.clone());
+        // The dataplane always runs inside transfer; only its connector lookups follow the mode.
+        let module =
+            DataplaneModule::compose(config, root, &DataplanePorts::local(connector.clone()))
+                .await?;
         Ok(Self {
             auth,
             negotiation: Arc::new(NegotiationLocalFacade::new(agreements)),
             catalog: Arc::new(CatalogLocalFacade::new(datasets, distributions, connector)),
-            dataplane: Self::dataplane(config, root, &dataplane_ports).await?,
+            dataplane: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
+            dataplane_module: Some(module),
         })
     }
 
-    pub fn auth(&self) -> &AuthPorts {
-        &self.auth
+    /// Ports over the given facades and no dataplane module, for tests.
+    pub fn stubbed(
+        auth: AuthPorts,
+        negotiation: Arc<dyn NegotiationFacadeTrait>,
+        catalog: Arc<dyn CatalogFacadeTrait>,
+        dataplane: Arc<dyn DataPlaneFacadeTrait>,
+    ) -> Self {
+        Self {
+            auth,
+            negotiation,
+            catalog,
+            dataplane,
+            dataplane_module: None,
+        }
     }
 
-    /// The dataplane always runs inside transfer; only its connector lookups follow the mode.
-    async fn dataplane(
-        config: &TransferConfig,
-        root: &RootContext,
-        ports: &DataplanePorts,
-    ) -> Outcome<DataplanePort> {
-        let module = DataplaneModule::compose(config, root, ports).await?;
-        Ok(DataplanePort {
-            facade: Arc::new(DataPlaneLocalFacade::new(module.local_manager())),
-            module,
-        })
+    pub fn dataplane_module(&self) -> Option<DataplaneModule> {
+        self.dataplane_module.clone()
     }
 }

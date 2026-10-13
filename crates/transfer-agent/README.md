@@ -27,19 +27,21 @@ src/
 │   ├── services/
 │   │   ├── dsp_flow/              Inbound flow: loader, one handler per message
 │   │   ├── rpc_flow/              Outbound flow: loader, send, one handler per message, result view
-│   │   ├── transfer_writer/       Process writes and message history shared by both flows
-│   │   ├── validator/             Shape and fact rules of both flows
-│   │   └── tck/                   TCK scenarios and the worker that plays them
+│   │   ├── dsp_persistence/       DspPersistenceTrait: process writes and message history
+│   │   ├── validator/             Pure rules, and the rules of the DSP and RPC flows
+│   │   └── tck/                   TCK script table, guard and player over `common::tck`
 │   ├── http/            DSP routes and RPC routes, each with its flow adapter
+│   ├── setup/           DspContext (persistence and runners) and DspModule (routes, TCK worker)
 │   └── facades/         Negotiation (agreement as ODRL), catalog (connector for a target and
 │                        format) and dataplane (one strategy per role and mode)
 └── setup/           TransferAgentModule, admin module, AppContext, ports, boot
 proto/               transfer_process.proto, transfer_messages.proto
 tests/
 ├── entities/        Message envelopes
-├── services/        Process and message services by operation, agreement resolver, TCK scenarios
-├── protocols/       Inputs, RDF extraction, ACK, idempotency keys, validators, RPC rules
-└── adapters/        gRPC services and the DSP routes over the flow
+├── services/        Process and message services by operation, TCK script
+├── protocols/       Inputs, RDF extraction, ACK, idempotency keys, DSP and RPC rules
+├── adapters/        gRPC services and the DSP routes over the flow
+└── support/         An AppContext over mocks
 ```
 
 ## DSP
@@ -55,8 +57,9 @@ Mounted at `/dsp/current/transfers`:
 | POST | `/{id}/suspension` | TransferSuspensionMessage |
 | GET | `/{id}` | The `TransferProcess` of a process the peer takes part in |
 
-The peer's token is checked with the auth agent. A missing or rejected token answers 404, the
-same as a missing process, so probing cannot reveal which processes exist (DSP 10.1.2.3).
+`common::dsp_common::PeerAuth` checks the peer's token with the auth agent and looks its
+participant up. A missing or rejected token answers 404, the same as a missing process, so
+probing cannot reveal which processes exist (DSP 10.1.2.3).
 
 Each message is extracted stage by stage: raw request, JSON, RDF expansion, then the typed
 fields with the idempotency key (`TransferDspRaw` → `Parsed` → `Rdf` → `Typed`). The flow then:
@@ -79,7 +82,8 @@ Failures answer a `TransferError` with every violation.
 `/dsp/current/transfers/rpc/setup-{request,start,completion,suspension,termination}` make the
 agent send a message. Bodies are JSON-LD in the eunomia context (`common::eunomia`), typed
 `RpcTransfer{Request,Start,…}Message`; the answer is an `RpcTransferResult` with the request, the
-peer's answer and the process. With `DSP_TCK_MAPPING` set, a worker plays the connector's part of
+peer's answer and the process. The loader reads the process and the agreement it runs under;
+a request must go to the agreement's provider. With `DSP_TCK_MAPPING` set, a worker plays the connector's part of
 each TCK scenario and `/tck/transfers/requests` is mounted.
 
 ## Integration
@@ -100,8 +104,9 @@ With an event bus, the services publish `transfers:process:{create,edit,delete}`
 
 ## Setup
 
-`TransferAgentModule::compose(config, root, bus, ports)` builds `AppContext` and groups three
-modules:
+`TransferAgentModule::compose(config, root, bus, ports)` builds `AppContext` (config, repos,
+event sink, ports and the two services; every service, router, flow and loader keeps it whole)
+and groups three modules:
 
 | Module | Mounts |
 |---|---|

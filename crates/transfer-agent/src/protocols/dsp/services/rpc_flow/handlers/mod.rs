@@ -23,18 +23,17 @@ pub mod start;
 pub mod suspension;
 pub mod termination;
 
+use common::dsp_common::persistence::{DspPersistenceTrait, StateChange};
 use ymir::errors::{Errors, Outcome};
 
 use crate::entities::message_envelope::MessageEnvelope;
-use crate::entities::protocol::TransferRole;
 use crate::entities::transfer_message::Direction;
 use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::context_rpc::TransferRpcDomain;
 use crate::protocols::dsp::entities::state::TransferDSPState;
-use crate::protocols::dsp::entities::state_change::TransferStateChange;
-use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
+use crate::protocols::dsp::entities::state_change::TransferMessageRecord;
 use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
 
 /// The state change our own message causes on an existing process.
 pub struct OutboundTransition;
@@ -42,7 +41,7 @@ pub struct OutboundTransition;
 impl OutboundTransition {
     /// Moves the process to `target` and keeps the message as sent.
     pub async fn apply(
-        writer: &TransferWriter,
+        persistence: &TransferDspPersistence,
         domain: &TransferRpcDomain,
         target: TransferDSPState,
     ) -> Outcome<TransferProcess> {
@@ -50,28 +49,21 @@ impl OutboundTransition {
             .process
             .as_ref()
             .ok_or_else(|| Errors::crazy("a state change needs a process", None))?;
-        let change = TransferStateChange {
+        let change = StateChange {
             target,
-            attribute: Self::caused_by(domain.role),
-            reason: domain.typed.body.reason.clone(),
             code: domain.typed.body.code.clone(),
-            direction: Direction::Outbound,
-            message: domain.typed.message.clone(),
-            envelope: MessageEnvelope::from_rdf(&domain.outgoing),
+            reason: domain.typed.body.reason.clone(),
+            message: TransferMessageRecord {
+                message: domain.typed.message.clone(),
+                direction: Direction::Outbound,
+                envelope: MessageEnvelope::from_rdf(&domain.outgoing),
+            },
         };
-        writer.change_state(current, change).await
+        persistence.change_process_state(current, change).await
     }
 
     /// The hooks around a change, with the data address the message hands the peer.
     pub fn hooks(domain: &TransferRpcDomain) -> DataplaneHookContext {
         domain.hooks(domain.outgoing.fields.data_address.clone())
-    }
-
-    /// We sent the message, so the change is caused by our own role.
-    fn caused_by(our_role: TransferRole) -> TransferDSPStateAttribute {
-        match our_role {
-            TransferRole::Provider => TransferDSPStateAttribute::ByProvider,
-            _ => TransferDSPStateAttribute::ByConsumer,
-        }
     }
 }

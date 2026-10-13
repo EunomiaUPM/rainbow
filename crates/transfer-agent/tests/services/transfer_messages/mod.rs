@@ -29,7 +29,7 @@ use transfer_agent::entities::filters::TransferMessageFilter;
 use urn::Urn;
 
 use std::str::FromStr;
-use std::sync::Arc;
+use crate::support::context::TestContext;
 
 use base64::Engine;
 use chrono::{Duration, Utc};
@@ -104,7 +104,7 @@ fn make_cmd() -> NewTransferMessageCommand {
 }
 
 fn make_svc(repo: MockTransferMessageRepoTrait) -> TransferMessageService {
-    TransferMessageService::new(Arc::new(repo))
+    TransferMessageService::new(TestContext::new().message_repo(repo).build())
 }
 
 fn io_err() -> Box<dyn std::error::Error + Send + Sync> {

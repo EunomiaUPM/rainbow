@@ -15,22 +15,21 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! A state change to write on a transfer process, with the message that caused it.
+//! How the transfer flows record a message, and the persistence shapes built on it.
 
+use common::dsp_common::persistence::{RecordedMessage, StateChange};
 use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::transfer_message::Direction;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::state::TransferDSPState;
-use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 
-/// The target state, who caused it and why, and the message kept in the history.
-#[derive(Debug)]
-pub struct TransferStateChange {
-    pub target: TransferDSPState,
-    pub attribute: TransferDSPStateAttribute,
-    pub reason: Option<Vec<String>>,
-    pub code: Option<String>,
-    pub direction: Direction,
+/// A message as kept in the process history: which one, which way and how it read.
+#[derive(Debug, Clone)]
+pub struct TransferMessageRecord {
     pub message: TransferDSPMessageType,
+    pub direction: Direction,
     pub envelope: MessageEnvelope,
 }
+
+pub type TransferStateChange = StateChange<TransferDSPState, TransferMessageRecord>;
+pub type TransferRecordedMessage = RecordedMessage<TransferDSPState, TransferMessageRecord>;

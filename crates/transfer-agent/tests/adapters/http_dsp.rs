@@ -24,7 +24,7 @@ use axum::Router;
 use chrono::Utc;
 use common::dsp_common::odrl::OdrlAgreement;
 use common::facades::grants_facade::{MockGrantsFacadeTrait, VerifiedPeer};
-use common::flow::{AutocommitUnitOfWorkFactory, FlowRunner};
+use common::facades::mates_facade::MockMatesFacadeTrait;
 use common::oauth::{RolePath, Visibility};
 use connector::{
     AuthenticationConfig, ConnectorInstanceDto, ConnectorMetadata, HttpSpec, InteractionConfig,
@@ -37,7 +37,6 @@ use std::sync::{Arc, Mutex};
 use tower::ServiceExt;
 use transfer_agent::data::repo::transfer_process::MockTransferProcessRepoTrait;
 use transfer_agent::entities::ids::{MessageId, TransferProcessId};
-use common::flow::{IdempotencyGuard, InMemoryIdempotencyStore};
 use transfer_agent::entities::message_envelope::MessageEnvelope;
 use transfer_agent::entities::protocol::{
     ProtocolId, ProtocolMessageType, TransferCorrelation, CONSUMER_PID_KEY, PROVIDER_PID_KEY,
@@ -47,17 +46,16 @@ use transfer_agent::entities::transfer_process::TransferProcess;
 use transfer_agent::protocols::dsp::facades::dataplane_facade::MockDataPlaneFacadeTrait;
 use transfer_agent::protocols::dsp::facades::catalog_facade::MockCatalogFacadeTrait;
 use transfer_agent::protocols::dsp::facades::negotiation_facade::MockNegotiationFacadeTrait;
-use transfer_agent::protocols::dsp::services::dsp_flow::loader::TransferDspLoader;
-use transfer_agent::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use transfer_agent::protocols::dsp::http::dsp::DspRouter;
-use transfer_agent::protocols::dsp::services::transfer_writer::service::TransferWriter;
-use transfer_agent::protocols::dsp::services::validator::TransferValidators;
+use transfer_agent::protocols::dsp::setup::DspContext;
 use transfer_agent::services::transfer_message::views::TransferMessageView;
 use transfer_agent::services::transfer_message::MockTransferMessageServiceTrait;
 use transfer_agent::services::transfer_process::views::TransferProcessView;
 use transfer_agent::services::transfer_process::MockTransferProcessServiceTrait;
+use transfer_agent::setup::context::AppContext;
 use urn::Urn;
 use ymir::errors::Errors;
+use crate::support::context::TestContext;
 
 const CONSUMER_PID: &str = "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833";
 
@@ -210,7 +208,9 @@ fn connector() -> ConnectorInstanceDto {
     }
 }
 
-fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
+/// The agent context on `store`, whose auth facade accepts every token as `as_peer`, or
+/// rejects them all; no peer is a known mate.
+fn context(store: &Store, as_peer: Option<&str>) -> Arc<AppContext> {
     let mut catalog = MockCatalogFacadeTrait::new();
     catalog
         .expect_get_connector_for()
@@ -222,30 +222,6 @@ fn runner(store: &Store) -> Arc<FlowRunner<TransferDspFlow>> {
             ..Default::default()
         })
     });
-    let repo: Arc<MockTransferProcessRepoTrait> = Arc::new(repo(store));
-    let loader = TransferDspLoader::new(repo.clone(), Arc::new(negotiation), Arc::new(catalog));
-    let writer = TransferWriter {
-        processes: Arc::new(processes(store)),
-        process_repo: repo,
-        messages: Arc::new(messages()),
-        dataplane: Arc::new(dataplane()),
-    };
-    Arc::new(
-        FlowRunner::builder(
-            Arc::new(TransferDspFlow::new(loader, writer)),
-            Arc::new(AutocommitUnitOfWorkFactory),
-            Arc::new(TransferValidators::input_rules()),
-            Arc::new(TransferValidators::fact_rules()),
-        )
-        .guard(Arc::new(IdempotencyGuard::new(Arc::new(
-            InMemoryIdempotencyStore::new(),
-        ))))
-        .build(),
-    )
-}
-
-/// A router on `store` whose auth facade accepts every token as `as_peer`, or rejects them all.
-fn router_as(store: &Store, as_peer: Option<&str>) -> Router {
     let mut grants = MockGrantsFacadeTrait::new();
     match as_peer.map(str::to_string) {
         Some(id) => {
@@ -259,7 +235,25 @@ fn router_as(store: &Store, as_peer: Option<&str>) -> Router {
                 .returning(|_| Err(Errors::unauthorized("nope", None)));
         }
     }
-    DspRouter::new(Arc::new(grants), runner(store), Arc::new(repo(store))).router()
+    let mut mates = MockMatesFacadeTrait::new();
+    mates
+        .expect_get_mate_by_id()
+        .returning(|_, id| Err(Errors::missing_resource(id, "not a mate", None)));
+    TestContext::new()
+        .process_repo(repo(store))
+        .processes(processes(store))
+        .messages(messages())
+        .dataplane(dataplane())
+        .catalog(catalog)
+        .negotiation(negotiation)
+        .grants(grants)
+        .mates(mates)
+        .build()
+}
+
+fn router_as(store: &Store, as_peer: Option<&str>) -> Router {
+    let (ctx, _) = DspContext::build(context(store, as_peer));
+    DspRouter::new(ctx).router()
 }
 
 fn router(authorized: bool) -> Router {

@@ -49,7 +49,7 @@ use crate::protocols::dsp::facades::dataplane_facade::DataplaneHookContext;
 /// The request as it arrived: who sent it, where, and the body bytes.
 #[derive(Debug)]
 pub struct TransferDspRaw {
-    /// The peer the auth middleware resolved.
+    /// The peer the auth layer resolved.
     pub peer: VerifiedPeer,
     pub request_path: String,
     /// The pid in the route, on the routes that carry one.
@@ -63,14 +63,9 @@ impl TransferDspRaw {
     /// Cap on inbound bodies: control-plane messages are tiny, this only bounds a hostile peer.
     const MAX_BODY_BYTES: usize = 1024 * 1024;
 
-    pub async fn from_request(request: Request) -> Outcome<Self> {
+    /// The request `peer` sent, as the auth layer resolved it.
+    pub async fn from_request(peer: VerifiedPeer, request: Request) -> Outcome<Self> {
         let (mut parts, body) = request.into_parts();
-        let peer = parts.extensions.get::<VerifiedPeer>().cloned().ok_or_else(|| {
-            Errors::crazy(
-                "auth middleware did not resolve the peer (VerifiedPeer missing)",
-                None,
-            )
-        })?;
         let body = axum::body::to_bytes(body, Self::MAX_BODY_BYTES)
             .await
             .map_err(|_| {

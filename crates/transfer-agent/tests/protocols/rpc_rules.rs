@@ -15,18 +15,19 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Outbound transfer rules: what the RPC body needs and what each role may send.
+//! Outbound transfer rules: what the RPC body needs, what each role may send and to whom.
 
+use common::dsp_common::odrl::OdrlAgreement;
 use transfer_agent::entities::protocol::TransferRole::{Consumer, Provider, Relay};
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use transfer_agent::protocols::dsp::entities::message_types::TransferDSPMessageType::{
     TransferRequestMessage, TransferStartMessage, TransferTerminationMessage,
 };
+use transfer_agent::protocols::dsp::services::validator::TransferRpcRules;
 use serde_json::json;
 use transfer_agent::protocols::dsp::entities::context_rpc::{
     TransferRpcBody, TransferRpcRaw, TransferRpcRdf, TransferRpcTyped,
 };
-use transfer_agent::protocols::dsp::services::validator::rpc_registry::TransferRpcRules;
 use transfer_agent::protocols::dsp::services::validator::TransferRules;
 
 async fn typed(route: TransferDSPMessageType, body: TransferRpcBody) -> TransferRpcTyped {
@@ -90,4 +91,23 @@ fn each_role_sends_only_its_messages() {
     assert!(TransferRules::role_may_send(&Consumer, &TransferStartMessage, "role").is_err());
     assert!(TransferRules::role_may_send(&Consumer, &TransferTerminationMessage, "role").is_ok());
     assert!(TransferRules::role_may_send(&Relay, &TransferTerminationMessage, "role").is_err());
+}
+
+fn agreement() -> OdrlAgreement {
+    OdrlAgreement {
+        assigner: "did:example:provider".into(),
+        assignee: "did:example:consumer".into(),
+        ..Default::default()
+    }
+}
+
+/// A consumer sends to the agreement's provider, a provider to its consumer.
+#[test]
+fn the_peer_is_the_agreements_other_party() {
+    let agreement = agreement();
+    let party = |role, peer| TransferRules::agreement_counterparty(&agreement, role, peer, "peer");
+    assert!(party(&Consumer, "did:example:provider").is_ok());
+    assert!(party(&Provider, "did:example:consumer").is_ok());
+    assert!(party(&Consumer, "did:example:consumer").is_err());
+    assert!(party(&Consumer, "did:example:intruder").is_err());
 }

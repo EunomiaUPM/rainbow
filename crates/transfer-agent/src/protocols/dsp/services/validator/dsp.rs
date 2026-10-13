@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Rule registries for inbound DSP messages: shape over the input, then the loaded facts.
+//! Rules of the inbound DSP flow: shape over the input, then the loaded facts.
 
 use common::dsp_common::DspRules;
 use common::validation::{Rule, Stage, ValidationRegistry, Validator, Violations};
@@ -24,21 +24,28 @@ use std::str::FromStr;
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
 use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspTyped};
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-use crate::protocols::dsp::entities::message_types::TransferDSPMessageType::{TransferCompletionMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage};
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType::{
+    TransferCompletionMessage, TransferRequestMessage, TransferStartMessage,
+    TransferSuspensionMessage, TransferTerminationMessage,
+};
 use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
 use crate::protocols::dsp::services::validator::rules::TransferRules;
 
-/// Validator registries for inbound DSP messages and the message shapes the RPC side reuses.
-pub struct TransferValidators;
+/// Registries of the inbound DSP flow, and the message shapes the RPC flow reuses.
+pub struct TransferDspRules;
 
-impl TransferValidators {
+impl TransferDspRules {
     /// Inbound DSP shape rules over the extracted fields, before any lookup.
     pub fn input_rules() -> ValidationRegistry<TransferDSPMessageType, TransferDspTyped> {
         let pids = || Self::on_fields(Self::pids_message());
         ValidationRegistry::new("transfer.dsp.input")
             .with_any(Stage::Shape, Self::route_matches_body())
-            .with(TransferRequestMessage, Stage::Shape, Self::on_fields(Self::request_message()))
+            .with(
+                TransferRequestMessage,
+                Stage::Shape,
+                Self::on_fields(Self::request_message()),
+            )
             .with(TransferStartMessage, Stage::Shape, pids())
             .with(TransferCompletionMessage, Stage::Shape, pids())
             .with(TransferSuspensionMessage, Stage::Shape, pids())
@@ -157,7 +164,10 @@ impl TransferValidators {
         let fields = &facts.typed.fields;
         DspRules::correlate_process_pids(
             Self::stored_pids(&facts.process),
-            (fields.consumer_pid.as_deref(), fields.provider_pid.as_deref()),
+            (
+                fields.consumer_pid.as_deref(),
+                fields.provider_pid.as_deref(),
+            ),
             "pids",
         )
     }

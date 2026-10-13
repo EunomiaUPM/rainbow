@@ -134,9 +134,8 @@ async fn typed_versioned(
     if let Some(key) = supplied_key {
         builder = builder.header("idempotency-key", key);
     }
-    let mut req = builder.body(axum::body::Body::from(body)).unwrap();
-    req.extensions_mut().insert(mate(peer));
-    let raw = TransferDspRaw::from_request(req).await.unwrap();
+    let req = builder.body(axum::body::Body::from(body)).unwrap();
+    let raw = TransferDspRaw::from_request(mate(peer), req).await.unwrap();
     let parsed = TransferDspParsed::from_raw(raw, &dsp_version, &message_type).unwrap();
     TransferDspTyped::from_rdf(TransferDspRdf::from_parsed(parsed).await.unwrap()).unwrap()
 }

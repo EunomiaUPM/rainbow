@@ -18,11 +18,12 @@
 //! The outbound flow's HTTP adapter: the eunomia body through its stages in, the
 //! `RpcTransferResult` or a `TransferError` out.
 
+use axum::extract::Request;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use common::dsp_common::DspCaller;
 use common::flow::{FlowAdapterTrait, FlowError};
 use http::StatusCode;
-use serde_json::Value;
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
@@ -44,19 +45,22 @@ pub struct TransferRpcAdapter;
 
 #[async_trait::async_trait]
 impl FlowAdapterTrait<TransferRpcFlow> for TransferRpcAdapter {
-    type Raw = Value;
+    type Raw = Request;
     type Response = Response;
     type ErrorContext = TransferRpcErrorPids;
 
-    /// Raw body, expanded through the eunomia context, then read into its fields.
+    /// The user OAuth resolved, then the JSON body, expanded through the eunomia context and
+    /// read into its fields.
     async fn extract(
         &self,
         key: &TransferDSPMessageType,
-        raw: Value,
-    ) -> Result<TransferRpcTyped, FlowError> {
-        let raw = TransferRpcRaw::new(key, raw);
+        raw: Request,
+    ) -> Result<(DspCaller, TransferRpcTyped), FlowError> {
+        let caller = DspCaller::from_extensions(raw.extensions())?;
+        caller.user()?;
+        let raw = TransferRpcRaw::from_request(key, raw).await?;
         let rdf = TransferRpcRdf::from_raw(raw).await?;
-        Ok(TransferRpcTyped::from_rdf(rdf)?)
+        Ok((caller, TransferRpcTyped::from_rdf(rdf)?))
     }
 
     fn error_context(&self, input: &TransferRpcTyped) -> TransferRpcErrorPids {

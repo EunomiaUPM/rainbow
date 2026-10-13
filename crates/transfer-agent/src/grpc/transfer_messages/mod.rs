@@ -25,26 +25,22 @@ use crate::grpc::api::transfer_messages::{
     TransferMessageResponse, transfer_messages_ref_server::TransferMessagesRef,
 };
 use crate::grpc::transfer_messages::mappers::ListByProcessParams;
-use crate::services::transfer_message::TransferMessageServiceTrait;
-use common::oauth::OauthTokenValidatorTrait;
+use crate::setup::context::AppContext;
 use common::oauth::grpc::GrpcAuth;
 use common::grpc::{IntoStatus, ListParams, ProtoField};
 use tonic::{Request, Response, Status};
 use ymir::errors::Errors;
 
 pub struct TransferMessagesGrpc {
-    service: Arc<dyn TransferMessageServiceTrait>,
+    ctx: Arc<AppContext>,
     auth: GrpcAuth,
 }
 
 impl TransferMessagesGrpc {
-    pub fn new(
-        service: Arc<dyn TransferMessageServiceTrait>,
-        validator: Arc<dyn OauthTokenValidatorTrait>,
-    ) -> Self {
+    pub fn new(ctx: Arc<AppContext>) -> Self {
         Self {
-            service,
-            auth: GrpcAuth::new(validator),
+            auth: GrpcAuth::new(ctx.oauth_validator.clone()),
+            ctx,
         }
     }
 }
@@ -58,7 +54,8 @@ impl TransferMessagesRef for TransferMessagesGrpc {
         let user = self.auth.user(request.metadata()).await?;
         let params = ListParams::try_from(request.into_inner())?;
         let result = self
-            .service
+            .ctx
+            .messages()
             .get_all(&user, &params.filter, &params.page, &params.sort)
             .await
             .map_err(Errors::into_status)?;
@@ -72,7 +69,8 @@ impl TransferMessagesRef for TransferMessagesGrpc {
         let user = self.auth.user(request.metadata()).await?;
         let ListByProcessParams { process_id, params } = request.into_inner().try_into()?;
         let result = self
-            .service
+            .ctx
+            .messages()
             .get_all_by_process(
                 &user,
                 &process_id,
@@ -92,7 +90,8 @@ impl TransferMessagesRef for TransferMessagesGrpc {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
         let view = self
-            .service
+            .ctx
+            .messages()
             .get_one(&user, &id)
             .await
             .map_err(Errors::into_status)?;
@@ -106,7 +105,8 @@ impl TransferMessagesRef for TransferMessagesGrpc {
         let user = self.auth.user(request.metadata()).await?;
         let cmd = request.into_inner().try_into()?;
         let view = self
-            .service
+            .ctx
+            .messages()
             .create(&user, &cmd)
             .await
             .map_err(Errors::into_status)?;
@@ -119,7 +119,8 @@ impl TransferMessagesRef for TransferMessagesGrpc {
     ) -> Result<Response<DeleteResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
         let id = request.into_inner().id.urn("id")?;
-        self.service
+        self.ctx
+            .messages()
             .delete(&user, &id)
             .await
             .map_err(Errors::into_status)?;

@@ -18,6 +18,9 @@
 //! Transfer-agent gRPC services, DSP routes and the negotiation facade, with mocked services
 //! and stores.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod grpc_transfer_messages;
 mod grpc_transfer_processes;
 mod http_dsp;

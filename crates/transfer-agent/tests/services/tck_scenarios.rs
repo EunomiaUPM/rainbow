@@ -15,10 +15,15 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! TCK scenarios: the connector's part of each test, looked up through the seeded mapping.
+//! The transfer TCK script: the connector's part of each test, through the seeded mapping.
 
-use transfer_agent::protocols::dsp::entities::tck::{TckEvent, TckMessage, TckStep};
-use transfer_agent::protocols::dsp::services::tck::service::TckScenarios;
+use common::tck::{TckMapping, TckScenarios, TckStep};
+use transfer_agent::protocols::dsp::entities::tck::{TckEvent, TckMessage};
+use transfer_agent::protocols::dsp::services::tck::service::TransferTckScript;
+
+fn scenarios(path: &std::path::Path) -> TckScenarios<TransferTckScript> {
+    TckScenarios::new(TckMapping::new(path))
+}
 
 fn mapping_file() -> std::path::PathBuf {
     std::env::temp_dir().join(format!("tck-mapping-{}.json", uuid::Uuid::new_v4()))
@@ -38,7 +43,7 @@ fn write_mapping(path: &std::path::Path) {
 fn provider_scenario_follows_the_tck_script() {
     let path = mapping_file();
     write_mapping(&path);
-    let steps = TckScenarios::new(&path).steps("urn:agreement:p1", TckEvent::ProviderRequested);
+    let steps = scenarios(&path).steps("urn:agreement:p1", TckEvent::ProviderRequested);
     assert_eq!(
         steps,
         &[
@@ -54,7 +59,7 @@ fn provider_scenario_follows_the_tck_script() {
 fn passive_tests_have_no_steps() {
     let path = mapping_file();
     write_mapping(&path);
-    let scenarios = TckScenarios::new(&path);
+    let scenarios = scenarios(&path);
     assert!(scenarios
         .steps("urn:agreement:p2", TckEvent::ProviderRequested)
         .is_empty());
@@ -71,7 +76,7 @@ fn passive_tests_have_no_steps() {
 fn consumer_scenario_can_follow_the_request() {
     let path = mapping_file();
     write_mapping(&path);
-    let steps = TckScenarios::new(&path).steps("urn:agreement:c5", TckEvent::ConsumerRequested);
+    let steps = scenarios(&path).steps("urn:agreement:c5", TckEvent::ConsumerRequested);
     assert_eq!(
         steps,
         &[TckStep::Pause, TckStep::Send(TckMessage::Terminate)]
@@ -82,7 +87,7 @@ fn consumer_scenario_can_follow_the_request() {
 #[test]
 fn the_mapping_is_read_when_needed() {
     let path = mapping_file();
-    let scenarios = TckScenarios::new(&path);
+    let scenarios = scenarios(&path);
     assert!(scenarios
         .steps("urn:agreement:p1", TckEvent::ProviderRequested)
         .is_empty());

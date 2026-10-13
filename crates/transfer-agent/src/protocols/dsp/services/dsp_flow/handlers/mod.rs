@@ -23,17 +23,16 @@ pub mod start;
 pub mod suspension;
 pub mod termination;
 
+use common::dsp_common::persistence::{DspPersistenceTrait, StateChange};
 use ymir::errors::{Errors, Outcome};
 
-use crate::entities::protocol::TransferRole;
 use crate::entities::transfer_message::Direction;
 use crate::entities::transfer_process::TransferProcess;
 use crate::protocols::dsp::entities::context_common::TransferContextProcessSlot;
 use crate::protocols::dsp::entities::context_dsp::TransferDspDomain;
 use crate::protocols::dsp::entities::state::TransferDSPState;
-use crate::protocols::dsp::entities::state_change::TransferStateChange;
-use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::entities::state_change::TransferMessageRecord;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
 
 /// The state change a peer's message causes on an existing process.
 pub struct InboundTransition;
@@ -41,7 +40,7 @@ pub struct InboundTransition;
 impl InboundTransition {
     /// Moves the process to `target`, keeps the message, and leaves the new process in `domain`.
     pub async fn apply(
-        writer: &TransferWriter,
+        persistence: &TransferDspPersistence,
         domain: &mut TransferDspDomain,
         target: TransferDSPState,
     ) -> Outcome<TransferProcess> {
@@ -52,25 +51,18 @@ impl InboundTransition {
             ));
         };
         let fields = &domain.typed.fields;
-        let change = TransferStateChange {
+        let change = StateChange {
             target,
-            attribute: Self::caused_by(domain.role),
-            reason: (!fields.reason.is_empty()).then(|| fields.reason.clone()),
             code: fields.code.clone(),
-            direction: Direction::Inbound,
-            message: domain.typed.message.clone(),
-            envelope: domain.typed.envelope(),
+            reason: (!fields.reason.is_empty()).then(|| fields.reason.clone()),
+            message: TransferMessageRecord {
+                message: domain.typed.message.clone(),
+                direction: Direction::Inbound,
+                envelope: domain.typed.envelope(),
+            },
         };
-        let process = writer.change_state(current, change).await?;
+        let process = persistence.change_process_state(current, change).await?;
         domain.process = TransferContextProcessSlot::Existing(Box::new(process.clone()));
         Ok(process)
-    }
-
-    /// The peer sent the message, so the change is caused by the role opposite to ours.
-    fn caused_by(our_role: TransferRole) -> TransferDSPStateAttribute {
-        match our_role {
-            TransferRole::Provider => TransferDSPStateAttribute::ByConsumer,
-            _ => TransferDSPStateAttribute::ByProvider,
-        }
     }
 }

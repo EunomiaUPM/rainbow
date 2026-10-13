@@ -21,23 +21,23 @@
 pub mod adapter;
 
 use std::sync::Arc;
+use axum::body::Body;
 
 use axum::extract::rejection::JsonRejection;
-use axum::extract::State;
+use axum::extract::{Request, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Json, Router};
-use common::flow::FlowRunner;
+use common::dsp_common::{paths, DspCaller};
 use common::oauth::UserInfo;
 use http::header::HOST;
 use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
-use serde_json::Value;
 
 use crate::protocols::dsp::entities::context_rpc::TransferRpcBody;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::http::rpc::adapter::TransferRpcAdapter;
-use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
+use crate::protocols::dsp::setup::context::DspContext;
 
 /// What the TCK posts to `dataspacetck.dsp.connector.transfer.initiate.url`.
 #[derive(Debug, Deserialize)]
@@ -51,15 +51,12 @@ pub struct TckTransferInitiateRequest {
 
 #[derive(Clone)]
 pub struct TransferRpcRouter {
-    runner: Arc<FlowRunner<TransferRpcFlow>>,
+    ctx: Arc<DspContext>,
 }
 
 impl TransferRpcRouter {
-    /// The DSP base under the agent's host, as callbacks name it.
-    const DSP_BASE_PATH: &'static str = "/dsp/current";
-
-    pub fn new(runner: Arc<FlowRunner<TransferRpcFlow>>) -> Self {
-        Self { runner }
+    pub fn new(ctx: Arc<DspContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -82,74 +79,37 @@ impl TransferRpcRouter {
             .with_state(self)
     }
 
-    /// Runs the outbound flow for `key` on the JSON body; a body that is not JSON is a 400.
-    async fn dispatch(
-        &self,
-        user: &UserInfo,
-        key: TransferDSPMessageType,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        match body {
-            Ok(Json(body)) => self.runner.serve(&TransferRpcAdapter, user, key, body).await,
-            Err(rejection) => (StatusCode::BAD_REQUEST, rejection.body_text()).into_response(),
-        }
-    }
-
-    async fn handle_setup_request(
-        State(s): State<Self>,
-        user: UserInfo,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        s.dispatch(&user, TransferDSPMessageType::TransferRequestMessage, body)
+    /// Runs the outbound flow for `key`; the adapter reads the user and the JSON body.
+    async fn dispatch(&self, key: TransferDSPMessageType, request: Request) -> Response {
+        self.ctx
+            .outbound
+            .serve(&TransferRpcAdapter, key, request)
             .await
     }
 
-    async fn handle_setup_start(
-        State(s): State<Self>,
-        user: UserInfo,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        s.dispatch(&user, TransferDSPMessageType::TransferStartMessage, body)
+    async fn handle_setup_request(State(s): State<Self>, request: Request) -> Response {
+        s.dispatch(TransferDSPMessageType::TransferRequestMessage, request)
             .await
     }
 
-    async fn handle_setup_completion(
-        State(s): State<Self>,
-        user: UserInfo,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        s.dispatch(
-            &user,
-            TransferDSPMessageType::TransferCompletionMessage,
-            body,
-        )
-        .await
+    async fn handle_setup_start(State(s): State<Self>, request: Request) -> Response {
+        s.dispatch(TransferDSPMessageType::TransferStartMessage, request)
+            .await
     }
 
-    async fn handle_setup_suspension(
-        State(s): State<Self>,
-        user: UserInfo,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        s.dispatch(
-            &user,
-            TransferDSPMessageType::TransferSuspensionMessage,
-            body,
-        )
-        .await
+    async fn handle_setup_completion(State(s): State<Self>, request: Request) -> Response {
+        s.dispatch(TransferDSPMessageType::TransferCompletionMessage, request)
+            .await
     }
 
-    async fn handle_setup_termination(
-        State(s): State<Self>,
-        user: UserInfo,
-        body: Result<Json<Value>, JsonRejection>,
-    ) -> Response {
-        s.dispatch(
-            &user,
-            TransferDSPMessageType::TransferTerminationMessage,
-            body,
-        )
-        .await
+    async fn handle_setup_suspension(State(s): State<Self>, request: Request) -> Response {
+        s.dispatch(TransferDSPMessageType::TransferSuspensionMessage, request)
+            .await
+    }
+
+    async fn handle_setup_termination(State(s): State<Self>, request: Request) -> Response {
+        s.dispatch(TransferDSPMessageType::TransferTerminationMessage, request)
+            .await
     }
 
     /// The TCK's consumer trigger, translated to a request towards the TCK as provider. The
@@ -173,16 +133,15 @@ impl TransferRpcRouter {
             callback_address: headers
                 .get(HOST)
                 .and_then(|host| host.to_str().ok())
-                .map(|host| format!("http://{host}{}", Self::DSP_BASE_PATH)),
+                .map(|host| format!("http://{host}{}", paths::DSP_CURRENT)),
             ..TransferRpcBody::default()
         }
         .to_json_ld(&TransferDSPMessageType::TransferRequestMessage);
-        let agent = UserInfo::system();
-        s.dispatch(
-            &agent,
-            TransferDSPMessageType::TransferRequestMessage,
-            Ok(Json(body)),
-        )
-        .await
+        let mut request = Request::new(Body::from(body.to_string()));
+        request
+            .extensions_mut()
+            .insert(DspCaller::User(UserInfo::system()));
+        s.dispatch(TransferDSPMessageType::TransferRequestMessage, request)
+            .await
     }
 }

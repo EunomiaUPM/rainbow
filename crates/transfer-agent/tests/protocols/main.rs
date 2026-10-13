@@ -21,8 +21,8 @@
 mod ack;
 mod context_dsp;
 mod context_rpc;
+mod dsp_rules;
 mod idempotency;
 mod message_types;
 mod rdf_extractor_dsp;
 mod rpc_rules;
-mod transfer_validators;

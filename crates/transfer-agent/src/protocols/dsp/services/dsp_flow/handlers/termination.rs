@@ -22,7 +22,8 @@ use ymir::errors::Outcome;
 use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::services::dsp_flow::handlers::InboundTransition;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Moves the process to TERMINATED between the dataplane's termination hooks.
 pub struct TerminationHandler;
@@ -30,16 +31,18 @@ pub struct TerminationHandler;
 impl TerminationHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        writer: &TransferWriter,
+        ctx: &AppContext,
+        persistence: &TransferDspPersistence,
         mut domain: TransferDspDomain,
     ) -> Outcome<TransferDspOutcome> {
-        writer
+        ctx.ports
             .dataplane
             .on_transfer_termination_pre(&domain.dataplane_hooks()?)
             .await?;
         let process =
-            InboundTransition::apply(writer, &mut domain, TransferDSPState::TERMINATED).await?;
-        writer
+            InboundTransition::apply(persistence, &mut domain, TransferDSPState::TERMINATED)
+                .await?;
+        ctx.ports
             .dataplane
             .on_transfer_termination_post(&domain.dataplane_hooks()?)
             .await?;

@@ -17,13 +17,15 @@
 
 //! The Transfer Process states (DSP 9.1), as they travel on the wire.
 
+use common::validation::StateMachine;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 use ymir::errors::Errors;
+use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 
 /// DSP transfer process states.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum TransferDSPState {
     #[serde(rename = "REQUESTED")]
     REQUESTED,
@@ -62,4 +64,31 @@ impl fmt::Display for TransferDSPState {
             TransferDSPState::SUSPENDED => f.write_str("SUSPENDED"),
         }
     }
+}
+
+impl TransferDSPState {
+    /// DSP 9.1: the states each message may arrive in, sent or received.
+    pub const MACHINE: StateMachine<Self, TransferDSPMessageType> = StateMachine::new(&[
+        (TransferDSPMessageType::TransferRequestMessage, &[None]),
+        (
+            TransferDSPMessageType::TransferStartMessage,
+            &[Some(Self::REQUESTED), Some(Self::SUSPENDED)],
+        ),
+        (
+            TransferDSPMessageType::TransferCompletionMessage,
+            &[Some(Self::STARTED)],
+        ),
+        (
+            TransferDSPMessageType::TransferSuspensionMessage,
+            &[Some(Self::STARTED)],
+        ),
+        (
+            TransferDSPMessageType::TransferTerminationMessage,
+            &[
+                Some(Self::REQUESTED),
+                Some(Self::STARTED),
+                Some(Self::SUSPENDED),
+            ],
+        ),
+    ]);
 }

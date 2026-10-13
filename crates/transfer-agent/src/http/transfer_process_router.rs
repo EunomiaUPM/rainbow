@@ -20,6 +20,7 @@ use std::sync::Arc;
 use crate::entities::commands::{EditTransferProcessCommand, NewTransferProcessCommand};
 use crate::entities::filters::TransferProcessFilter;
 use crate::services::transfer_process::TransferProcessServiceTrait;
+use crate::setup::context::AppContext;
 use crate::services::transfer_process::views::TransferProcessView;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -35,18 +36,18 @@ use ymir::utils::{extract_path_urn, extract_payload};
 
 #[derive(Clone)]
 pub struct TransferProcessRouter {
-    service: Arc<dyn TransferProcessServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<TransferProcessRouter> for Arc<dyn TransferProcessServiceTrait> {
     fn from_ref(state: &TransferProcessRouter) -> Self {
-        state.service.clone()
+        state.ctx.processes().clone()
     }
 }
 
 impl TransferProcessRouter {
-    pub fn new(service: Arc<dyn TransferProcessServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -69,7 +70,11 @@ impl TransferProcessRouter {
         Query(q): Query<QuerySpec<TransferProcessFilter, Sort>>,
     ) -> AppResult<(HeaderMap, Json<Paginated<TransferProcessView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state
+            .ctx
+            .processes()
+            .get_all(&user, &filter, &page, &sort)
+            .await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -81,7 +86,7 @@ impl TransferProcessRouter {
         payload: Result<Json<BatchRequests>, JsonRejection>,
     ) -> AppResult<(HeaderMap, Json<Vec<TransferProcessView>>)> {
         let payload = extract_payload(payload)?;
-        let views = state.service.batch(&user, &payload).await?;
+        let views = state.ctx.processes().batch(&user, &payload).await?;
         let count = views.len() as u64;
         Ok((headers.response_headers_paged(Some(count)), Json(views)))
     }
@@ -93,7 +98,7 @@ impl TransferProcessRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<TransferProcessView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.processes().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -104,7 +109,7 @@ impl TransferProcessRouter {
         payload: Result<Json<NewTransferProcessCommand>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<TransferProcessView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.processes().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -118,7 +123,7 @@ impl TransferProcessRouter {
     ) -> AppResult<(HeaderMap, Json<TransferProcessView>)> {
         let urn = extract_path_urn(&id)?;
         let payload = extract_payload(payload)?;
-        let view = state.service.edit(&user, &urn, &payload).await?;
+        let view = state.ctx.processes().edit(&user, &urn, &payload).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -129,7 +134,7 @@ impl TransferProcessRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.processes().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 }

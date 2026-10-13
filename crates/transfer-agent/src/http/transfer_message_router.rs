@@ -20,6 +20,7 @@ use std::sync::Arc;
 use crate::entities::commands::NewTransferMessageCommand;
 use crate::entities::filters::TransferMessageFilter;
 use crate::services::transfer_message::TransferMessageServiceTrait;
+use crate::setup::context::AppContext;
 use crate::services::transfer_message::views::TransferMessageView;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -34,18 +35,18 @@ use ymir::utils::{extract_path_urn, extract_payload};
 
 #[derive(Clone)]
 pub struct TransferMessageRouter {
-    service: Arc<dyn TransferMessageServiceTrait>,
+    ctx: Arc<AppContext>,
 }
 
 impl FromRef<TransferMessageRouter> for Arc<dyn TransferMessageServiceTrait> {
     fn from_ref(state: &TransferMessageRouter) -> Self {
-        state.service.clone()
+        state.ctx.messages().clone()
     }
 }
 
 impl TransferMessageRouter {
-    pub fn new(service: Arc<dyn TransferMessageServiceTrait>) -> Self {
-        Self { service }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
     pub fn router(self) -> Router {
@@ -66,7 +67,11 @@ impl TransferMessageRouter {
         Query(q): Query<QuerySpec<TransferMessageFilter, Sort>>,
     ) -> AppResult<(HeaderMap, Json<Paginated<TransferMessageView>>)> {
         let (filter, page, sort) = q.into_domain();
-        let result = state.service.get_all(&user, &filter, &page, &sort).await?;
+        let result = state
+            .ctx
+            .messages()
+            .get_all(&user, &filter, &page, &sort)
+            .await?;
         let response_headers = headers.response_headers_paged(result.total);
         Ok((response_headers, Json(result)))
     }
@@ -81,7 +86,8 @@ impl TransferMessageRouter {
         let process_urn = extract_path_urn(&process_id)?;
         let (filter, page, sort) = q.into_domain();
         let result = state
-            .service
+            .ctx
+            .messages()
             .get_all_by_process(&user, &process_urn, &filter, &page, &sort)
             .await?;
         let response_headers = headers.response_headers_paged(result.total);
@@ -95,7 +101,7 @@ impl TransferMessageRouter {
         Path(id): Path<String>,
     ) -> AppResult<(HeaderMap, Json<TransferMessageView>)> {
         let urn = extract_path_urn(&id)?;
-        let view = state.service.get_one(&user, &urn).await?;
+        let view = state.ctx.messages().get_one(&user, &urn).await?;
         Ok((headers.response_headers(), Json(view)))
     }
 
@@ -106,7 +112,7 @@ impl TransferMessageRouter {
         payload: Result<Json<NewTransferMessageCommand>, JsonRejection>,
     ) -> AppResult<(StatusCode, HeaderMap, Json<TransferMessageView>)> {
         let payload = extract_payload(payload)?;
-        let view = state.service.create(&user, &payload).await?;
+        let view = state.ctx.messages().create(&user, &payload).await?;
         let response_headers = headers.response_headers();
         Ok((StatusCode::CREATED, response_headers, Json(view)))
     }
@@ -118,7 +124,7 @@ impl TransferMessageRouter {
         Path(id): Path<String>,
     ) -> AppResult<(StatusCode, HeaderMap)> {
         let urn = extract_path_urn(&id)?;
-        state.service.delete(&user, &urn).await?;
+        state.ctx.messages().delete(&user, &urn).await?;
         Ok((StatusCode::NO_CONTENT, headers.response_headers()))
     }
 }

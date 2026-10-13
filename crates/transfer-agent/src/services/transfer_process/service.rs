@@ -31,29 +31,24 @@ use crate::entities::commands::{EditTransferProcessCommand, NewTransferProcessCo
 use crate::entities::filters::TransferProcessFilter;
 use crate::entities::transfer_process_identifier::TransferProcessIdentifier;
 use crate::services::transfer_process::TransferProcessServiceTrait;
+use crate::setup::context::AppContext;
 use crate::services::transfer_process::views::TransferProcessView;
 
 pub struct TransferProcessService {
-    process_repo: Arc<dyn TransferProcessRepoTrait>,
-    identifiers_repo: Arc<dyn TransferIdentifierRepoTrait>,
-    event_bus: Option<events::EventBus>,
+    ctx: Arc<AppContext>,
 }
 
 impl TransferProcessService {
-    pub fn new(
-        process_repo: Arc<dyn TransferProcessRepoTrait>,
-        identifiers_repo: Arc<dyn TransferIdentifierRepoTrait>,
-    ) -> Self {
-        Self {
-            process_repo,
-            identifiers_repo,
-            event_bus: None,
-        }
+    pub fn new(ctx: Arc<AppContext>) -> Self {
+        Self { ctx }
     }
 
-    pub fn with_event_bus(mut self, event_bus: Option<events::EventBus>) -> Self {
-        self.event_bus = event_bus;
-        self
+    fn process_repo(&self) -> Arc<dyn TransferProcessRepoTrait> {
+        self.ctx.repos.transfer_process_repo()
+    }
+
+    fn identifiers_repo(&self) -> Arc<dyn TransferIdentifierRepoTrait> {
+        self.ctx.repos.transfer_identifier_repo()
     }
 }
 
@@ -74,10 +69,10 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let page = page.clamped();
         // get entities
         let scope = OwnerScope::seeing(user);
+        let repo = self.process_repo();
         let (processes, total) = tokio::try_join!(
-            self.process_repo
-                .get_all_transfer_processes(&scope, filters, &page, sort),
-            self.process_repo.count_transfer_processes(&scope, filters),
+            repo.get_all_transfer_processes(&scope, filters, &page, sort),
+            repo.count_transfer_processes(&scope, filters),
         )?;
         // get urns
         let urns: Vec<Urn> = processes.iter().map(|p| p.id().as_urn().clone()).collect();
@@ -85,7 +80,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let raw_identifiers = if urns.is_empty() {
             vec![]
         } else {
-            self.identifiers_repo
+            self.identifiers_repo()
                 .get_identifiers_by_batch_process_id(&urns)
                 .await?
         };
@@ -120,13 +115,13 @@ impl TransferProcessServiceTrait for TransferProcessService {
     )]
     async fn get_one(&self, user: &UserInfo, id: &Urn) -> Outcome<TransferProcessView> {
         let process = self
-            .process_repo
+            .process_repo()
             .get_transfer_process_by_id(&OwnerScope::seeing(user), id)
             .await?
             .or_not_found(id, "transfer process")?;
 
         let raw_identifiers = self
-            .identifiers_repo
+            .identifiers_repo()
             .get_identifiers_by_process_id(id)
             .await?;
 
@@ -158,7 +153,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         }
         // Get data from db, within what the caller sees
         let processes = self
-            .process_repo
+            .process_repo()
             .get_batch_transfer_processes(
                 &OwnerScope::seeing(user),
                 &batch_request.ids,
@@ -169,7 +164,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let raw_identifiers = if urns.is_empty() {
             vec![]
         } else {
-            self.identifiers_repo
+            self.identifiers_repo()
                 .get_identifiers_by_batch_process_id(&urns)
                 .await?
         };
@@ -202,7 +197,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let mut cmd = cmd.clone();
         cmd.owner = Some(Owner::for_new(user, cmd.owner.take(), cmd.visibility.clone()));
         // Create in db
-        let process = self.process_repo.create_transfer_process(&cmd).await?;
+        let process = self.process_repo().create_transfer_process(&cmd).await?;
         // if extra identifiers in cmd upsert identifiers
         if let Some(identifiers) = &cmd.identifiers {
             for (key, value) in identifiers {
@@ -212,7 +207,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
                     key.clone(),
                     Some(value.clone()),
                 );
-                self.identifiers_repo
+                self.identifiers_repo()
                     .upsert_identifier(process.id().as_urn(), &identifier)
                     .await?;
             }
@@ -223,7 +218,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let owner = process.owner().clone();
         let view = TransferProcessView::assemble(process, extra);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "process",
@@ -243,7 +238,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
     ) -> Outcome<TransferProcessView> {
         // Hit db
         let process = self
-            .process_repo
+            .process_repo()
             .put_transfer_process(&OwnerScope::acting(user), id, cmd)
             .await?;
         // if extra identifiers in cmd upsert identifiers
@@ -255,14 +250,14 @@ impl TransferProcessServiceTrait for TransferProcessService {
                     key.clone(),
                     Some(value.clone()),
                 );
-                self.identifiers_repo
+                self.identifiers_repo()
                     .upsert_identifier(id, &identifier)
                     .await?;
             }
         }
         // if extra identifiers in cmd upsert identifiers
         let raw_identifiers = self
-            .identifiers_repo
+            .identifiers_repo()
             .get_identifiers_by_process_id(id)
             .await?;
         // Zip identifiers
@@ -274,7 +269,7 @@ impl TransferProcessServiceTrait for TransferProcessService {
         let owner = process.owner().clone();
         let view = TransferProcessView::assemble(process, extra);
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "process",
@@ -294,11 +289,11 @@ impl TransferProcessServiceTrait for TransferProcessService {
     async fn delete(&self, user: &UserInfo, id: &Urn) -> Outcome<()> {
         // Hit db
         let owner = self
-            .process_repo
+            .process_repo()
             .delete_transfer_process(&OwnerScope::acting(user), id)
             .await?;
         events::emit_action!(
-            self.event_bus,
+            self.ctx.events,
             &owner,
             crate::EVENT_PREFIX,
             "process",

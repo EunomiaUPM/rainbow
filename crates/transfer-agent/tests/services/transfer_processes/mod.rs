@@ -34,7 +34,7 @@ use urn::Urn;
 
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
+use crate::support::context::TestContext;
 
 use base64::Engine;
 use chrono::{Duration, Utc};
@@ -140,7 +140,11 @@ fn make_svc(
     proc_repo: MockTransferProcessRepoTrait,
     id_repo: MockTransferIdentifierRepoTrait,
 ) -> TransferProcessService {
-    TransferProcessService::new(Arc::new(proc_repo), Arc::new(id_repo))
+    let ctx = TestContext::new()
+        .process_repo(proc_repo)
+        .identifier_repo(id_repo)
+        .build();
+    TransferProcessService::new(ctx)
 }
 
 fn io_err() -> Box<dyn std::error::Error + Send + Sync> {

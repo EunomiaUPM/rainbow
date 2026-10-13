@@ -18,8 +18,8 @@
 //! TransferMessagesGrpc: auth, field parsing, envelope building, error mapping and response
 //! shaping.
 
-use common::test_utils::grpc::{GrpcRequests, StubTokenValidator, TENANT};
-use std::sync::Arc;
+use common::test_utils::grpc::{GrpcRequests, TENANT};
+use crate::support::context::TestContext;
 use transfer_agent::grpc::api::transfer_messages::{
     CreateTransferMessageRequest, ListTransferMessagesByProcessRequest,
     ListTransferMessagesRequest, ResourceIdRequest,
@@ -42,7 +42,7 @@ use transfer_agent::services::transfer_message::MockTransferMessageServiceTrait;
 use transfer_agent::services::transfer_message::views::TransferMessageView;
 
 fn grpc(service: MockTransferMessageServiceTrait) -> TransferMessagesGrpc {
-    TransferMessagesGrpc::new(Arc::new(service), Arc::new(StubTokenValidator))
+    TransferMessagesGrpc::new(TestContext::new().messages(service).build())
 }
 
 fn view() -> TransferMessageView {

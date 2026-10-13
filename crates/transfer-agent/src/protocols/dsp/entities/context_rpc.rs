@@ -19,14 +19,17 @@
 //! (RDF) and read (typed), then everything resolved to send it (domain), and what it produced.
 
 use std::str::FromStr;
+use axum::extract::Request;
 
 use common::dsp_common::data_address::DataAddress;
+use common::dsp_common::odrl::OdrlAgreement;
 use common::oauth::Owner;
 use common::rdf::{RdfMessage, RdfProtocolTrait};
 use serde::Serialize;
 use serde_json::{json, Value};
 use urn::Urn;
-use ymir::errors::Outcome;
+use ymir::data::entities::shared::participant::Model as Mates;
+use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::entities::protocol::{TransferDirection, TransferRole};
 use crate::entities::transfer_process::TransferProcess;
@@ -82,11 +85,27 @@ pub struct TransferRpcRaw {
 }
 
 impl TransferRpcRaw {
+    /// Cap on RPC bodies, as on the DSP side.
+    const MAX_BODY_BYTES: usize = 1024 * 1024;
+
     pub fn new(route: &TransferDSPMessageType, json: Value) -> Self {
         Self {
             route: route.clone(),
             json,
         }
+    }
+
+    /// The request's body, which must be JSON.
+    pub async fn from_request(route: &TransferDSPMessageType, request: Request) -> Outcome<Self> {
+        let body = axum::body::to_bytes(request.into_body(), Self::MAX_BODY_BYTES)
+            .await
+            .map_err(|_| {
+                Errors::format(BadFormat::Received, "failed to read request body", None)
+            })?;
+        let json = serde_json::from_slice(&body).map_err(|e| {
+            Errors::format(BadFormat::Received, format!("body is not JSON: {e}"), None)
+        })?;
+        Ok(Self::new(route, json))
     }
 }
 
@@ -144,7 +163,8 @@ impl TransferRpcTyped {
     }
 }
 
-/// The typed body plus everything resolved to send it: process, role, peer and the message.
+/// The typed body plus everything resolved to send it: process, role, peer, agreement and the
+/// message.
 pub struct TransferRpcDomain {
     pub typed: TransferRpcTyped,
     pub process: Option<TransferProcess>,
@@ -152,7 +172,10 @@ pub struct TransferRpcDomain {
     pub role: TransferRole,
     pub transfer_direction: TransferDirection,
     pub owner: Owner,
+    pub agreement: OdrlAgreement,
     pub peer_id: String,
+    /// The peer's participant record, when this connector knows it.
+    pub peer_mate: Option<Mates>,
     pub target_url: String,
     pub outgoing: RdfMessage<DspTransfer>,
     pub is_restart: bool,

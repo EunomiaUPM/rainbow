@@ -20,6 +20,7 @@
 
 use std::collections::HashMap;
 use std::str::FromStr;
+use common::dsp_common::persistence::{DspPersistenceTrait, RecordedMessage};
 
 use common::oauth::UserInfo;
 use serde_json::{json, Value};
@@ -37,8 +38,10 @@ use crate::entities::transfer_message::Direction;
 use crate::protocols::dsp::entities::context_common::DIRECTION_PROPERTY;
 use crate::protocols::dsp::entities::context_rpc::{TransferRpcDomain, TransferRpcOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
+use crate::protocols::dsp::entities::state_change::TransferMessageRecord;
 use crate::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Creates the consumer process with the provider's pid, records the request and runs the
 /// dataplane's request hook.
@@ -47,25 +50,31 @@ pub struct RequestHandler;
 impl RequestHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        writer: &TransferWriter,
+        ctx: &AppContext,
+        persistence: &TransferDspPersistence,
         caller: &UserInfo,
         domain: TransferRpcDomain,
         reply: &Value,
     ) -> Outcome<TransferRpcOutcome> {
         let requested = ProtocolState(TransferDSPState::REQUESTED.to_string().into());
         let cmd = Self::command(&domain, reply, &requested)?;
-        writer.processes.create(caller, &cmd).await?;
-        let process = writer.reload(&domain.process_id).await?;
-        writer
-            .record(
+        let process = persistence.open_process(caller, &cmd).await?;
+        let record = TransferMessageRecord {
+            message: domain.typed.message.clone(),
+            direction: Direction::Outbound,
+            envelope: MessageEnvelope::from_rdf(&domain.outgoing),
+        };
+        persistence
+            .record_message(
                 &process,
-                Direction::Outbound,
-                &domain.typed.message,
-                MessageEnvelope::from_rdf(&domain.outgoing),
-                (&requested, &requested),
+                RecordedMessage {
+                    message: record,
+                    from: TransferDSPState::REQUESTED,
+                    to: TransferDSPState::REQUESTED,
+                },
             )
             .await?;
-        writer
+        ctx.ports
             .dataplane
             .on_transfer_request_post(&domain.hooks(domain.outgoing.fields.data_address.clone()))
             .await?;

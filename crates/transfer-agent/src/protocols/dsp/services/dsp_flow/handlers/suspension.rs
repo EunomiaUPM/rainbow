@@ -22,7 +22,8 @@ use ymir::errors::Outcome;
 use crate::protocols::dsp::entities::context_dsp::{TransferDspDomain, TransferDspOutcome};
 use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::services::dsp_flow::handlers::InboundTransition;
-use crate::protocols::dsp::services::transfer_writer::service::TransferWriter;
+use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
+use crate::setup::context::AppContext;
 
 /// Moves the process to SUSPENDED between the dataplane's suspension hooks.
 pub struct SuspensionHandler;
@@ -30,16 +31,17 @@ pub struct SuspensionHandler;
 impl SuspensionHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        writer: &TransferWriter,
+        ctx: &AppContext,
+        persistence: &TransferDspPersistence,
         mut domain: TransferDspDomain,
     ) -> Outcome<TransferDspOutcome> {
-        writer
+        ctx.ports
             .dataplane
             .on_transfer_suspension_pre(&domain.dataplane_hooks()?)
             .await?;
         let process =
-            InboundTransition::apply(writer, &mut domain, TransferDSPState::SUSPENDED).await?;
-        writer
+            InboundTransition::apply(persistence, &mut domain, TransferDSPState::SUSPENDED).await?;
+        ctx.ports
             .dataplane
             .on_transfer_suspension_post(&domain.dataplane_hooks()?)
             .await?;

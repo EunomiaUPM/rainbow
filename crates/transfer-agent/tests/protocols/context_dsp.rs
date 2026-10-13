@@ -37,18 +37,15 @@ fn mate() -> VerifiedPeer {
 }
 
 fn request_with_mate(body: &'static str) -> Request {
-    let mut req = Request::builder()
+    Request::builder()
         .method("POST")
         .uri("/transfers/123/start")
         .body(axum::body::Body::from(body))
-        .unwrap();
-    // The auth middleware would have inserted this before we run.
-    req.extensions_mut().insert(mate());
-    req
+        .unwrap()
 }
 
 async fn typed_from(request: Request, route: TransferDSPMessageType) -> Outcome<TransferDspTyped> {
-    let raw = TransferDspRaw::from_request(request).await?;
+    let raw = TransferDspRaw::from_request(mate(), request).await?;
     let parsed = TransferDspParsed::from_raw(raw, &ProtocolId::Dsp2025_1, &route)?;
     TransferDspTyped::from_rdf(TransferDspRdf::from_parsed(parsed).await?)
 }
@@ -65,7 +62,7 @@ async fn rdf_from(body: &'static str) -> TransferDspTyped {
     rdf_from_typed(body, TransferDSPMessageType::TransferStartMessage).await
 }
 
-/// The stages keep the peer the auth middleware resolved and the route's message type.
+/// The stages keep the peer the auth layer resolved and the route's message type.
 #[tokio::test]
 async fn stages_keep_the_resolved_peer_and_the_route() {
     let input = rdf_from(
@@ -74,13 +71,6 @@ async fn stages_keep_the_resolved_peer_and_the_route() {
     .await;
     assert_eq!(input.peer().participant_id, "did:example:provider");
     assert_eq!(input.route(), &TransferDSPMessageType::TransferStartMessage);
-}
-
-/// Without the peer in the extensions this is a wiring error, not a silent default.
-#[tokio::test]
-async fn raw_fails_without_auth_middleware() {
-    let req = Request::builder().body(axum::body::Body::from("{}")).unwrap();
-    assert!(TransferDspRaw::from_request(req).await.is_err());
 }
 
 /// Expansion resolves everything to full IRIs, so field order does not change the canonical

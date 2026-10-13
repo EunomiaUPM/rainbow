@@ -15,16 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The steps a DSP TCK scenario makes the connector take on its own.
+//! The messages a DSP TCK scenario makes the connector send, and the events it continues from.
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
-
-/// One thing the connector does in a scenario.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TckStep {
-    Send(TckMessage),
-    Pause,
-}
 
 /// The messages a scenario makes the connector send.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

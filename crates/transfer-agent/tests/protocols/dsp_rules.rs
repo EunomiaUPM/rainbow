@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! TransferRules and the DSP, RPC and edge validator registries.
+//! TransferRules and the registries of the inbound DSP flow.
 
 use common::validation::codes;
 use transfer_agent::entities::protocol::TransferRole::{Consumer, Provider, Relay};
@@ -29,7 +29,7 @@ use transfer_agent::protocols::dsp::entities::state::TransferDSPState::{
 use transfer_agent::protocols::dsp::entities::state_metadata::TransferDSPStateAttribute::{
     ByConsumer, ByProvider, OnRequest,
 };
-use transfer_agent::protocols::dsp::services::validator::{TransferRules, TransferValidators};
+use transfer_agent::protocols::dsp::services::validator::{TransferDspRules, TransferRules};
 
 /// Legal transitions
 #[test]
@@ -49,10 +49,12 @@ fn transfer_rules_state_machine_transitions() {
         TransferRules::state_transition(Some(&STARTED), &TransferSuspensionMessage, "state")
             .is_ok()
     );
-    assert!(
-        TransferRules::state_transition(Some(&REQUESTED), &TransferTerminationMessage, "state")
-            .is_ok()
-    );
+    assert!(TransferRules::state_transition(
+        Some(&REQUESTED),
+        &TransferTerminationMessage,
+        "state"
+    )
+    .is_ok());
 
     // Illegal transitions
     let err_req =
@@ -107,9 +109,7 @@ fn transfer_rules_data_address_format() {
         "a resumed pull gets the endpoint again"
     );
     assert!(TransferRules::data_address_format(true, &Provider, "dataAddress").is_err());
-    assert!(
-        TransferRules::data_address_format(false, &Provider, "dataAddress").is_ok()
-    );
+    assert!(TransferRules::data_address_format(false, &Provider, "dataAddress").is_ok());
 }
 
 /// URI and body PID correlation
@@ -132,8 +132,8 @@ fn transfer_rules_pids_and_uri_correlation() {
 /// Every registry has a validator for each DSP transfer message.
 #[test]
 fn registries_are_populated_for_dsp_lifecycle() {
-    let dsp_reg = TransferValidators::fact_rules();
-    let edge_reg = TransferValidators::input_rules();
+    let dsp_reg = TransferDspRules::fact_rules();
+    let edge_reg = TransferDspRules::input_rules();
 
     for msg in [
         TransferRequestMessage,
