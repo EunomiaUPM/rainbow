@@ -15,8 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The event bus, its webhook dispatcher and retry worker.
+//! The event bus, its webhook dispatcher and retry worker, and the sink services emit to.
 
 pub mod event_bus;
+pub mod event_sink;
 
 pub use event_bus::*;
+pub use event_sink::{EventSinkTrait, MockEventSinkTrait, NoopEventSink};

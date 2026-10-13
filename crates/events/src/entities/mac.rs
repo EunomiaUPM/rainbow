@@ -124,19 +124,20 @@ macro_rules! impl_into_event {
 }
 
 /// Publishes an event about a record of `$owner` (an `&Owner`) under the topic
-/// `<prefix><service>:<action>`.
+/// `<prefix><service>:<action>`, through any `EventSinkTrait` (an optional bus included).
 #[macro_export]
 macro_rules! emit_action {
-    ($bus:expr, $owner:expr, $prefix:expr, $service:expr, $action:expr, $payload:expr) => {
-        if let Some(bus) = &$bus {
-            let topic = format!("{}{}:{}", $prefix, $service, $action);
-            let source = $prefix.trim_end_matches(':');
-            if let Err(e) = bus
-                .emit_payload_for($owner, &topic, source, $payload)
-                .await
-            {
-                tracing::warn!("Failed to emit event {topic}: {e}");
+    ($sink:expr, $owner:expr, $prefix:expr, $service:expr, $action:expr, $payload:expr) => {{
+        use $crate::EventSinkTrait as _;
+        let topic = format!("{}{}:{}", $prefix, $service, $action);
+        let source = $prefix.trim_end_matches(':');
+        match $crate::__serde_json::to_value($payload) {
+            Ok(payload) => {
+                if let Err(e) = $sink.emit_action($owner, &topic, source, payload).await {
+                    tracing::warn!("Failed to emit event {topic}: {e}");
+                }
             }
+            Err(e) => tracing::warn!("Failed to serialize event {topic}: {e}"),
         }
-    };
+    }};
 }

@@ -21,6 +21,7 @@ src/
 │   ├── mac.rs           event! and emit_action! macros
 │   ├── subscription.rs, delivery.rs, dead_letter.rs   Stored records
 │   └── commands.rs, queries.rs, dto.rs                API bodies and list filters
+├── services/event_sink/  EventSinkTrait (what services emit to), NoopEventSink
 ├── services/event_bus/
 │   ├── service.rs       EventBus: publish, subscribe, dead letter replay
 │   ├── dispatcher.rs    EventDispatcher: one signed webhook POST
@@ -66,12 +67,14 @@ events::event! {
 }
 bus.publish_event(TransferStarted { tenant_id, process_id }).await?;
 
-// A CRUD action on a record, on an optional bus: topic `<prefix><entity>:<action>`.
-events::emit_action!(self.event_bus, &view.tenant_id, crate::EVENT_PREFIX, "user", "create", &view);
+// A CRUD action on a record, through the context's sink: topic `<prefix><entity>:<action>`.
+events::emit_action!(self.ctx.events, &owner, crate::EVENT_PREFIX, "user", "create", &view);
 ```
 
-`emit_action!` does nothing when the bus is `None` and only logs a failed publish, so a module
-works the same with or without a bus. In-process listeners call `EventBus::subscribe` and get a
+`emit_action!` takes any `EventSinkTrait`: the bus, `NoopEventSink` (agents without a bus, tests)
+or, for services not moved yet, an `Option<EventBus>`. `NoopEventSink::or_bus(bus)` picks one,
+so a context always has a sink. A failed publish is only logged, so a module works the same with
+or without a bus. In-process listeners call `EventBus::subscribe` and get a
 `broadcast::Receiver` of every envelope published after that.
 
 `publish` does three things, in order: it stores the envelope, broadcasts it, and creates a

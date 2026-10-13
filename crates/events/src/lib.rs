@@ -43,3 +43,7 @@ pub use services::event_bus::{
     DeadLetterView, DeliveryView, EventBus, EventBusTrait, EventDispatcher, EventPublisherTrait,
     EventView, RetryPolicy, RetryWorker, SubscriptionView,
 };
+pub use services::event_sink::{EventSinkTrait, MockEventSinkTrait, NoopEventSink};
+
+#[doc(hidden)]
+pub use serde_json as __serde_json;
