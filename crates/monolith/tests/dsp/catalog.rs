@@ -37,5 +37,5 @@ async fn consumer_reads_the_provider_catalog() {
             json!({"associatedAgentPeer": PROVIDER_DID, "filter": [], "noCache": true}),
         )
         .await;
-    assert!(found["response"]["service"].is_object(), "{found}");
+    assert!(found["response"]["service"][0]["endpointURL"].is_string(), "{found}");
 }

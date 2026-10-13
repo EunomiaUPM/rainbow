@@ -84,6 +84,18 @@ fn process_of(answer: &Value) -> &Value {
     &answer["negotiationAgentModel"]
 }
 
+/// An eunomia RPC body of type `RpcNegotiation{kind}Message` with `members`.
+fn rpc(kind: &str, members: Value) -> Value {
+    let mut body = json!({
+        "@context": "https://w3id.org/eunomia/v1/context.jsonld",
+        "@type": format!("RpcNegotiation{kind}Message"),
+    });
+    body.as_object_mut()
+        .unwrap()
+        .extend(members.as_object().unwrap().clone());
+    body
+}
+
 /// Walks the consumer's request to FINALIZED, checking each step's state on the way.
 pub(crate) async fn negotiate_to_finalized(ds: &Dataspace) -> Negotiated {
     let (provider, consumer) = (&ds.provider, &ds.consumer);
@@ -98,7 +110,7 @@ pub(crate) async fn negotiate_to_finalized(ds: &Dataspace) -> Negotiated {
     let dataset = &catalog["response"]["dataset"][0];
     let policy_id = &dataset["hasPolicy"][0]["@id"];
     let target = &dataset["@id"];
-    let provider_dsp = &catalog["response"]["service"]["endpointURL"];
+    let provider_dsp = &catalog["response"]["service"][0]["endpointURL"];
     let version = consumer
         .get_unauthenticated("/.well-known/dspace-version/2025-1")
         .await;
@@ -107,32 +119,36 @@ pub(crate) async fn negotiate_to_finalized(ds: &Dataspace) -> Negotiated {
     let init = consumer
         .post(
             "/dsp/current/negotiations/rpc/setup-request-init",
-            json!({
-                "associatedAgentPeer": PROVIDER_DID,
-                "providerAddress": provider_dsp,
-                "callbackAddress": callback,
-                "offer": offer(policy_id, target, "use"),
-            }),
+            rpc(
+                "RequestInit",
+                json!({
+                    "associatedAgentPeer": PROVIDER_DID,
+                    "providerAddress": provider_dsp,
+                    "callbackAddress": callback,
+                    "offer": offer(policy_id, target, "use"),
+                }),
+            ),
         )
         .await;
     let consumer_process = process_of(&init).clone();
     assert_eq!(consumer_process["state"], "REQUESTED", "{init}");
     let pids = consumer_process["identifiers"].clone();
     assert!(pids["consumerPid"].is_string() && pids["providerPid"].is_string());
-    let with_offer = |action: &str| {
+    let with_offer = |kind: &str| {
         let mut body = pids.clone();
-        body["offer"] = offer(policy_id, target, action);
-        body
+        body["offer"] = offer(policy_id, target, "use");
+        rpc(kind, body)
     };
+    let with_pids = |kind: &str| rpc(kind, pids.clone());
 
     let steps: [(&Participant, &str, Value, &str); 7] = [
-        (provider, "setup-offer", with_offer("use"), "OFFERED"),
-        (consumer, "setup-request", with_offer("use"), "REQUESTED"),
-        (provider, "setup-offer", with_offer("use"), "OFFERED"),
-        (consumer, "setup-acceptance", pids.clone(), "ACCEPTED"),
-        (provider, "setup-agreement", pids.clone(), "AGREED"),
-        (consumer, "setup-verification", pids.clone(), "VERIFIED"),
-        (provider, "setup-finalization", pids.clone(), "FINALIZED"),
+        (provider, "setup-offer", with_offer("Offer"), "OFFERED"),
+        (consumer, "setup-request", with_offer("Request"), "REQUESTED"),
+        (provider, "setup-offer", with_offer("Offer"), "OFFERED"),
+        (consumer, "setup-acceptance", with_pids("Acceptance"), "ACCEPTED"),
+        (provider, "setup-agreement", with_pids("Agreement"), "AGREED"),
+        (consumer, "setup-verification", with_pids("Verification"), "VERIFIED"),
+        (provider, "setup-finalization", with_pids("Finalization"), "FINALIZED"),
     ];
     let mut provider_process = Value::Null;
     for (who, step, body, expected) in steps {
