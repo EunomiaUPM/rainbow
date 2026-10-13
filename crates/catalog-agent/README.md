@@ -86,8 +86,8 @@ request sets `noCache`.
 
 - `CatalogAgentModule::local_connector_instances()` gives the connector instances in-process to
   the transfer agent's dataplane in the monolith.
-- `dataset_service()`, `distribution_service()` and `odrl_policy_service()` give the same
-  services in-process to the negotiation and transfer agents in the monolith.
+- `catalog_facade()` serves the catalog's published contract (`common::facades::catalog`:
+  datasets, distributions, offers) in-process to the connector, negotiation and transfer.
 - `CatalogPorts::local(auth)` uses the auth module in-process; `CatalogPorts::remote` calls the
   auth agent's API (`ssi_auth` in the config) with the service token.
 - With an event bus, the services publish `catalog:{catalog,dataservice,dataset,distribution}:{create,edit,delete}`,

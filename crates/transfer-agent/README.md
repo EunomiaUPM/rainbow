@@ -32,8 +32,7 @@ src/
 │   │   └── tck/                   TCK script table, guard and player over `common::tck`
 │   ├── http/            DSP routes and RPC routes, each with its flow adapter
 │   ├── setup/           DspContext (persistence and runners) and DspModule (routes, TCK worker)
-│   └── facades/         Negotiation (agreement as ODRL), catalog (connector for a target and
-│                        format) and dataplane (one strategy per role and mode)
+│   └── facades/         Dataplane hooks (one strategy per role and mode)
 └── setup/           TransferAgentModule, admin module, AppContext, ports, boot
 proto/               transfer_process.proto, transfer_messages.proto
 tests/
@@ -93,9 +92,14 @@ each TCK scenario and `/tck/transfers/requests` is mounted.
 | Port | `local` (monolith) | `remote` (standalone) |
 |---|---|---|
 | Auth | The auth module's adapters | Auth agent API (`ssi_auth`) |
-| Negotiation | The negotiation agent's agreement service | Negotiation agent API (`contracts`) |
-| Catalog | The catalog's dataset, distribution and offer services | Catalog agent API (`catalog`) |
-| Dataplane | Always in-process; connector instances from the catalog module | Same; connector instances over the catalog API |
+| Negotiation | `common::facades::negotiation`, served by the negotiation module | Negotiation agent API (`contracts`) |
+| Catalog | `common::facades::catalog`, served by the catalog module | Catalog agent API (`catalog`) |
+| Connectors | The catalog module's connector instances | Connector instances over the catalog API |
+| Dataplane | Always in-process | Same |
+
+The agent depends on neither the negotiation nor the catalog crate: it reads them through the
+contracts they publish in `common`. `TransferPorts::connector_for` resolves the connector
+instance of a target in a format (dataset, distribution, instance).
 
 Remote ports use the service token.
 
