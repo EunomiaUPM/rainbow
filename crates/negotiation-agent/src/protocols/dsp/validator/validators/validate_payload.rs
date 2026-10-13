@@ -20,9 +20,7 @@ use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use crate::services::negotiation_process::views::NegotiationProcessView;
 use common::config::types::roles::RoleConfig;
-use std::str::FromStr;
 use std::sync::Arc;
-use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 
 pub struct ValidatePayloadService {
@@ -99,14 +97,8 @@ impl ValidatePayload for ValidatePayloadService {
             .get_pid_by_role(dto, &RoleConfig::Consumer)
             .await?
             .to_string();
-        let provider_pid_in_payload = payload
-            .get_provider_pid()
-            .unwrap_or(Urn::from_str("urn:fake:0")?)
-            .to_string();
-        let consumer_pid_in_payload = payload
-            .get_consumer_pid()
-            .unwrap_or(Urn::from_str("urn:fake:0")?)
-            .to_string();
+        let provider_pid_in_payload = payload.get_provider_pid().unwrap_or_default();
+        let consumer_pid_in_payload = payload.get_consumer_pid().unwrap_or_default();
         if provider_pid_in_dto != provider_pid_in_payload
             || consumer_pid_in_dto != consumer_pid_in_payload
         {

@@ -25,9 +25,7 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
 };
 use crate::services::negotiation_process::views::NegotiationProcessView;
 use common::oauth::UserInfo;
-use std::str::FromStr;
 use std::sync::Arc;
-use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 
 pub struct BFFRPCOrchestratorService {
@@ -39,7 +37,7 @@ impl BFFRPCOrchestratorService {
         Self { rpc_service }
     }
 
-    fn extract_pids(&self, model: &NegotiationProcessView) -> Outcome<(Urn, Urn)> {
+    fn extract_pids(&self, model: &NegotiationProcessView) -> Outcome<(String, String)> {
         let consumer_str = model
             .identifiers
             .get("consumerPid")
@@ -49,12 +47,7 @@ impl BFFRPCOrchestratorService {
             .get("providerPid")
             .ok_or_else(|| Errors::parse("BFF: missing providerPid in identifiers", None))?;
 
-        let consumer_pid = Urn::from_str(consumer_str)
-            .map_err(|e| Errors::parse(format!("BFF: invalid consumerPid URN: {e}"), None))?;
-        let provider_pid = Urn::from_str(provider_str)
-            .map_err(|e| Errors::parse(format!("BFF: invalid providerPid URN: {e}"), None))?;
-
-        Ok((consumer_pid, provider_pid))
+        Ok((consumer_str.clone(), provider_str.clone()))
     }
 }
 

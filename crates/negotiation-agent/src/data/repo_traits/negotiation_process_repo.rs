@@ -58,11 +58,11 @@ pub trait NegotiationProcessRepoTrait: Send + Sync {
         key_id: &str,
         id: &Urn,
     ) -> Outcome<Option<negotiation_process::Model>>;
-    /// Process whose own id or any identifier equals `id`.
+    /// Process whose own id or any identifier (a pid, ours or the peer's) equals `value`.
     async fn get_negotiation_process_by_key_value(
         &self,
         scope: &OwnerScope,
-        id: &Urn,
+        value: &str,
     ) -> Outcome<Option<negotiation_process::Model>>;
     async fn create_negotiation_process(
         &self,

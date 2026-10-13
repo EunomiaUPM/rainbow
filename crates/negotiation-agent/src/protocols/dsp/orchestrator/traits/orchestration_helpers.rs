@@ -90,7 +90,7 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
     fn get_rpc_consumer_pid_safely(
         &self,
         rpc: &dyn RpcNegotiationProcessMessageTrait,
-    ) -> Outcome<Urn> {
+    ) -> Outcome<String> {
         let field = rpc.get_consumer_pid().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract consumer_pid from rpc message");
             error!("{}", err.log());
@@ -101,7 +101,7 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
     fn get_rpc_provider_pid_safely(
         &self,
         rpc: &dyn RpcNegotiationProcessMessageTrait,
-    ) -> Outcome<Urn> {
+    ) -> Outcome<String> {
         let field = rpc.get_provider_pid().ok_or_else(|| {
             let err = CommonErrors::parse_new("Not able to extract provider_pid from rpc message");
             error!("{}", err.log());
@@ -211,7 +211,7 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
     fn get_dsp_consumer_pid_safely(
         &self,
         payload: &dyn NegotiationProcessMessageTrait,
-    ) -> Outcome<Urn> {
+    ) -> Outcome<String> {
         let field = payload.get_consumer_pid().ok_or_else(|| {
             let err =
                 CommonErrors::parse_new("not able to extract consumer_pid from payload message");
@@ -223,7 +223,7 @@ pub trait OrchestrationHelpers: Send + Sync + 'static {
     fn get_dsp_provider_pid_safely(
         &self,
         payload: &dyn NegotiationProcessMessageTrait,
-    ) -> Outcome<Urn> {
+    ) -> Outcome<String> {
         let field = payload.get_provider_pid().ok_or_else(|| {
             let err =
                 CommonErrors::parse_new("not able to extract provider_pid from payload message");

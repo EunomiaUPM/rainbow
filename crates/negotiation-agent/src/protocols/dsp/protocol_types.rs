@@ -23,7 +23,6 @@ use serde_json::Value;
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
 use tracing::error;
-use urn::Urn;
 use ymir::errors::Errors;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,13 +36,16 @@ where
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: NegotiationProcessMessageType,
+    /// The message's own `@id`, which DSP allows on any message (the TCK sends one).
+    #[serde(rename = "@id", default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     #[serde(flatten)]
     pub dto: T,
 }
 
 pub trait NegotiationProcessMessageTrait: Debug + Send + Sync {
-    fn get_consumer_pid(&self) -> Option<Urn>;
-    fn get_provider_pid(&self) -> Option<Urn>;
+    fn get_consumer_pid(&self) -> Option<String>;
+    fn get_provider_pid(&self) -> Option<String>;
     fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes>;
     fn get_agreement(&self) -> Option<OdrlAgreement>;
     fn get_event_type(&self) -> Option<NegotiationEventType>;
@@ -59,18 +61,18 @@ pub trait NegotiationProcessMessageTrait: Debug + Send + Sync {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationRequestInitMessageDto {
-    pub consumer_pid: Urn,
+    pub consumer_pid: String,
     pub offer: ContractRequestMessageOfferTypes,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_address: Option<String>,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationRequestInitMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         None
     }
 
@@ -115,17 +117,17 @@ impl NegotiationProcessMessageTrait for NegotiationRequestInitMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationRequestMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub offer: ContractRequestMessageOfferTypes,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -169,18 +171,18 @@ impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationOfferInitMessageDto {
-    pub provider_pid: Urn,
+    pub provider_pid: String,
     pub offer: ContractRequestMessageOfferTypes,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_address: Option<String>,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationOfferInitMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         None
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -224,19 +226,19 @@ impl NegotiationProcessMessageTrait for NegotiationOfferInitMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationOfferMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub offer: ContractRequestMessageOfferTypes,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_address: Option<String>,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationOfferMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -280,17 +282,17 @@ impl NegotiationProcessMessageTrait for NegotiationOfferMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationAgreementMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub agreement: OdrlAgreement,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationAgreementMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -334,16 +336,16 @@ impl NegotiationProcessMessageTrait for NegotiationAgreementMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationVerificationMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationVerificationMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -387,17 +389,17 @@ impl NegotiationProcessMessageTrait for NegotiationVerificationMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationEventMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub event_type: NegotiationEventType,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationEventMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -441,8 +443,8 @@ impl NegotiationProcessMessageTrait for NegotiationEventMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationTerminationMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -450,11 +452,11 @@ pub struct NegotiationTerminationMessageDto {
 }
 
 impl NegotiationProcessMessageTrait for NegotiationTerminationMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -498,17 +500,17 @@ impl NegotiationProcessMessageTrait for NegotiationTerminationMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationAckMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub state: NegotiationProcessState,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationAckMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -552,18 +554,18 @@ impl NegotiationProcessMessageTrait for NegotiationAckMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NegotiationErrorMessageDto {
-    pub consumer_pid: Option<Urn>,
-    pub provider_pid: Option<Urn>,
+    pub consumer_pid: Option<String>,
+    pub provider_pid: Option<String>,
     pub code: Option<String>,
     pub reason: Option<Vec<String>>,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationErrorMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         self.consumer_pid.clone()
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         self.provider_pid.clone()
     }
 
@@ -779,17 +781,7 @@ impl TryFrom<NegotiationProcessView>
                 return Err(err);
             }
         };
-        let consumer_pid = match Urn::from_str(consumer_str) {
-            Ok(urn) => urn,
-            Err(e) => {
-                let err = Errors::parse(
-                    format!("Invalid URN format for consumerPid '{consumer_str}': {e}"),
-                    None,
-                );
-                error!("{}", err);
-                return Err(err);
-            }
-        };
+        let consumer_pid = consumer_str.clone();
 
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
@@ -802,17 +794,7 @@ impl TryFrom<NegotiationProcessView>
                 return Err(err);
             }
         };
-        let provider_pid = match Urn::from_str(provider_str) {
-            Ok(urn) => urn,
-            Err(e) => {
-                let err = Errors::parse(
-                    format!("Invalid URN format for providerPid '{provider_str}': {e}"),
-                    None,
-                );
-                error!("{}", err);
-                return Err(err);
-            }
-        };
+        let provider_pid = provider_str.clone();
 
         let state = match value.inner.state.parse::<NegotiationProcessState>() {
             Ok(s) => s,
@@ -830,6 +812,7 @@ impl TryFrom<NegotiationProcessView>
         };
 
         Ok(Self {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationProcess,
             dto: NegotiationAckMessageDto {

@@ -119,7 +119,7 @@ impl NegotiationAgentProcessesService for NegotiationAgentProcessesGrpc {
         request: Request<GetNegotiationProcessByKeyValueRequest>,
     ) -> Result<Response<NegotiationProcessResponse>, Status> {
         let user = self.auth.user(request.metadata()).await?;
-        let id = request.into_inner().id.urn("id")?;
+        let id = request.into_inner().id;
         let view = self
             .service
             .get_by_key_value(&user, &id)

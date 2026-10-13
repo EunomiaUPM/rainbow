@@ -57,7 +57,7 @@ pub trait NegotiationProcessServiceTrait: Send + Sync + 'static {
     async fn get_by_key_value(
         &self,
         user: &UserInfo,
-        value: &Urn,
+        value: &str,
     ) -> Outcome<NegotiationProcessView>;
 
     /// Processes found among the requested ids.

@@ -35,7 +35,9 @@ use common::dsp_common::odrl::{
     ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer, OdrlTypes,
 };
 use common::facades::AuthPorts;
+use std::str::FromStr;
 use std::sync::Arc;
+use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 use ymir::services::client::ClientExt;
 use ymir::utils::http_client;
@@ -92,7 +94,9 @@ impl NegotiationRpcStep for RpcAgreementStep {
             match offer_types {
                 ContractRequestMessageOfferTypes::OfferMessage(offer) => offer,
                 ContractRequestMessageOfferTypes::OfferId(id) => OdrlMessageOffer {
-                    id: id.id,
+                    id: Urn::from_str(&id.id).map_err(|_| {
+                        Errors::parse(format!("offer {} is not a URN", id.id), None)
+                    })?,
                     ..OdrlMessageOffer::default()
                 },
             }

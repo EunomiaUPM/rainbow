@@ -28,12 +28,10 @@ use common::dsp_common::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
-use std::str::FromStr;
-use urn::Urn;
 
 pub trait RpcNegotiationProcessMessageTrait: Debug + Send + Sync {
-    fn get_consumer_pid(&self) -> Option<Urn>;
-    fn get_provider_pid(&self) -> Option<Urn>;
+    fn get_consumer_pid(&self) -> Option<String>;
+    fn get_provider_pid(&self) -> Option<String>;
     fn get_associated_agent_peer(&self) -> Option<String>;
     fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes>;
     fn get_agreement(&self) -> Option<OdrlAgreement>;
@@ -77,13 +75,13 @@ impl From<RpcNegotiationRequestInitMessageDto>
 {
     fn from(val: RpcNegotiationRequestInitMessageDto) -> Self {
         let consumer_pid = format!("urn:consumer-pid:{}", uuid::Uuid::new_v4());
-        let consumer_pid_urn = Urn::from_str(consumer_pid.as_str()).unwrap();
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationRequestMessage,
             dto: NegotiationRequestInitMessageDto {
                 callback_address: Some(val.callback_address),
-                consumer_pid: consumer_pid_urn,
+                consumer_pid,
                 offer: val.offer,
             },
         }
@@ -91,11 +89,11 @@ impl From<RpcNegotiationRequestInitMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestInitMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         None
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         None
     }
 
@@ -143,8 +141,8 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestInitMessageDto {
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationRequestMessageDto {
     offer: ContractRequestMessageOfferTypes,
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl From<RpcNegotiationRequestMessageDto>
@@ -152,6 +150,7 @@ impl From<RpcNegotiationRequestMessageDto>
 {
     fn from(val: RpcNegotiationRequestMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationRequestMessage,
             dto: NegotiationRequestMessageDto {
@@ -164,11 +163,11 @@ impl From<RpcNegotiationRequestMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -226,12 +225,12 @@ impl From<RpcNegotiationOfferInitMessageDto>
 {
     fn from(val: RpcNegotiationOfferInitMessageDto) -> Self {
         let provider_pid = format!("urn:provider-pid:{}", uuid::Uuid::new_v4());
-        let provider_pid_urn = Urn::from_str(provider_pid.as_str()).unwrap();
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationOfferMessage,
             dto: NegotiationOfferInitMessageDto {
-                provider_pid: provider_pid_urn,
+                provider_pid,
                 offer: val.offer,
                 callback_address: Some(val.callback_address),
             },
@@ -240,11 +239,11 @@ impl From<RpcNegotiationOfferInitMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferInitMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         None
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         None
     }
 
@@ -292,8 +291,8 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferInitMessageDto {
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationOfferMessageDto {
     offer: ContractRequestMessageOfferTypes,
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl From<RpcNegotiationOfferMessageDto>
@@ -301,6 +300,7 @@ impl From<RpcNegotiationOfferMessageDto>
 {
     fn from(val: RpcNegotiationOfferMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationOfferMessage,
             dto: NegotiationOfferMessageDto {
@@ -314,11 +314,11 @@ impl From<RpcNegotiationOfferMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -366,12 +366,12 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationAgreementMessageDto {
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl RpcNegotiationAgreementMessageDto {
-    pub fn new(consumer_pid: Urn, provider_pid: Urn) -> Self {
+    pub fn new(consumer_pid: String, provider_pid: String) -> Self {
         Self {
             consumer_pid,
             provider_pid,
@@ -384,6 +384,7 @@ impl From<RpcNegotiationAgreementMessageDto>
 {
     fn from(val: RpcNegotiationAgreementMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationAgreementMessage,
             dto: NegotiationAgreementMessageDto {
@@ -396,11 +397,11 @@ impl From<RpcNegotiationAgreementMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -448,12 +449,12 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationVerificationMessageDto {
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl RpcNegotiationVerificationMessageDto {
-    pub fn new(consumer_pid: Urn, provider_pid: Urn) -> Self {
+    pub fn new(consumer_pid: String, provider_pid: String) -> Self {
         Self {
             consumer_pid,
             provider_pid,
@@ -466,6 +467,7 @@ impl From<RpcNegotiationVerificationMessageDto>
 {
     fn from(val: RpcNegotiationVerificationMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationAgreementVerificationMessage,
             dto: NegotiationVerificationMessageDto {
@@ -477,11 +479,11 @@ impl From<RpcNegotiationVerificationMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationVerificationMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -529,8 +531,8 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationVerificationMessageDto 
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationEventAcceptedMessageDto {
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl From<RpcNegotiationEventAcceptedMessageDto>
@@ -538,6 +540,7 @@ impl From<RpcNegotiationEventAcceptedMessageDto>
 {
     fn from(val: RpcNegotiationEventAcceptedMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationEventMessage(
                 NegotiationEventType::ACCEPTED,
@@ -552,11 +555,11 @@ impl From<RpcNegotiationEventAcceptedMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventAcceptedMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -603,12 +606,12 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventAcceptedMessageDto
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationEventFinalizedMessageDto {
-    provider_pid: Urn,
-    consumer_pid: Urn,
+    provider_pid: String,
+    consumer_pid: String,
 }
 
 impl RpcNegotiationEventFinalizedMessageDto {
-    pub fn new(consumer_pid: Urn, provider_pid: Urn) -> Self {
+    pub fn new(consumer_pid: String, provider_pid: String) -> Self {
         Self {
             consumer_pid,
             provider_pid,
@@ -621,6 +624,7 @@ impl From<RpcNegotiationEventFinalizedMessageDto>
 {
     fn from(val: RpcNegotiationEventFinalizedMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationEventMessage(
                 NegotiationEventType::FINALIZED,
@@ -635,11 +639,11 @@ impl From<RpcNegotiationEventFinalizedMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventFinalizedMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 
@@ -685,8 +689,8 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventFinalizedMessageDt
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationTerminationMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
+    pub consumer_pid: String,
+    pub provider_pid: String,
     pub code: Option<String>,
     pub reason: Option<Vec<String>>,
 }
@@ -696,6 +700,7 @@ impl From<RpcNegotiationTerminationMessageDto>
 {
     fn from(val: RpcNegotiationTerminationMessageDto) -> Self {
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationTerminationMessage,
             dto: NegotiationTerminationMessageDto {
@@ -709,11 +714,11 @@ impl From<RpcNegotiationTerminationMessageDto>
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
-    fn get_consumer_pid(&self) -> Option<Urn> {
+    fn get_consumer_pid(&self) -> Option<String> {
         Some(self.consumer_pid.clone())
     }
 
-    fn get_provider_pid(&self) -> Option<Urn> {
+    fn get_provider_pid(&self) -> Option<String> {
         Some(self.provider_pid.clone())
     }
 

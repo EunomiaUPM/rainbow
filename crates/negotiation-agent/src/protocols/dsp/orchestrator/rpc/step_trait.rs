@@ -30,7 +30,6 @@ use common::facades::AuthPorts;
 use common::facades::grants_facade::obtain_peer_token;
 use std::fmt::Debug;
 use std::sync::Arc;
-use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 
 /// Routing context for steps that create a brand-new negotiation process
@@ -207,12 +206,12 @@ impl NegotiationRpcContinuationContext {
     /// The `consumer_pid` is the local agent's identifier; a process the user does not act on
     /// answers as not found.
     pub(super) async fn resolve(
-        consumer_pid: &Urn,
+        consumer_pid: &str,
         user: &UserInfo,
         persistence: &Arc<dyn NegotiationRpcPersistenceTrait>,
     ) -> Outcome<Self> {
         let process = persistence
-            .fetch_process(consumer_pid.to_string().as_str(), &DspActor::user(user))
+            .fetch_process(consumer_pid, &DspActor::user(user))
             .await?;
 
         // The outgoing URL uses the *peer's* identifier (opposite of the local role).

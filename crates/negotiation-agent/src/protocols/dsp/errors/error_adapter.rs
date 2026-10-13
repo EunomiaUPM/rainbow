@@ -19,13 +19,12 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationErrorMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
 };
 use common::dsp_common::context_field::ContextField;
-use urn::Urn;
 use ymir::errors::Errors;
 
 pub struct DspNegotiationError {
     inner: Box<Errors>,
-    pub consumer_pid: Option<Urn>,
-    pub provider_pid: Option<Urn>,
+    pub consumer_pid: Option<String>,
+    pub provider_pid: Option<String>,
 }
 
 impl From<Errors> for DspNegotiationError {
@@ -39,11 +38,11 @@ impl From<Errors> for DspNegotiationError {
 }
 
 impl DspNegotiationError {
-    pub fn set_error_consumer_pid(mut self, consumer_pid: Option<Urn>) -> DspNegotiationError {
+    pub fn set_error_consumer_pid(mut self, consumer_pid: Option<String>) -> DspNegotiationError {
         self.consumer_pid = consumer_pid;
         self
     }
-    pub fn set_error_provider_pid(mut self, provider_pid: Option<Urn>) -> DspNegotiationError {
+    pub fn set_error_provider_pid(mut self, provider_pid: Option<String>) -> DspNegotiationError {
         self.provider_pid = provider_pid;
         self
     }
@@ -53,6 +52,7 @@ impl From<Errors> for NegotiationProcessMessageWrapper<NegotiationErrorMessageDt
     fn from(value: Errors) -> Self {
         let info = value.info();
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationError,
             dto: NegotiationErrorMessageDto {
@@ -69,6 +69,7 @@ impl From<DspNegotiationError> for NegotiationProcessMessageWrapper<NegotiationE
     fn from(value: DspNegotiationError) -> Self {
         let info = value.inner.info();
         NegotiationProcessMessageWrapper {
+            id: None,
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationError,
             dto: NegotiationErrorMessageDto {

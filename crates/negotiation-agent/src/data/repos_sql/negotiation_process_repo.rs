@@ -202,9 +202,9 @@ impl NegotiationProcessRepoTrait for NegotiationProcessRepoForSql {
     async fn get_negotiation_process_by_key_value(
         &self,
         scope: &OwnerScope,
-        id: &Urn,
+        value: &str,
     ) -> Outcome<Option<Model>> {
-        let id_str = id.to_string();
+        let id_str = value.to_string();
         let mut q = negotiation_process::Entity::find()
             .join(
                 JoinType::LeftJoin,

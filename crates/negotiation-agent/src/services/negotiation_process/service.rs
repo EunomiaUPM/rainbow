@@ -219,7 +219,7 @@ impl NegotiationProcessServiceTrait for NegotiationProcessService {
     async fn get_by_key_value(
         &self,
         user: &UserInfo,
-        value: &Urn,
+        value: &str,
     ) -> Outcome<NegotiationProcessView> {
         let process = self
             .process_repo

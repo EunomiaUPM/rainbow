@@ -34,6 +34,8 @@ use axum::{
     response::{IntoResponse, Response},
     routing::post,
 };
+use axum::http::header::HOST;
+use axum::http::HeaderMap;
 use common::oauth::UserInfo;
 use common::config::services::ContractsConfig;
 use common::config::services::traits::ContractsConfigTrait;
@@ -41,9 +43,7 @@ use common::dsp_common::odrl::{
     ContractRequestMessageOfferOfferId, ContractRequestMessageOfferTypes,
 };
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use std::sync::Arc;
-use urn::Urn;
 use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
 use ymir::errors::Errors;
@@ -292,6 +292,7 @@ impl RpcRouter {
     async fn tck_initiate_negotiation(
         State(state): State<RpcRouter>,
         user: UserInfo,
+        headers: HeaderMap,
         input: Result<Json<TckNegotiationInitiateRequest>, JsonRejection>,
     ) -> Response {
         let input = match extract_payload_error(input) {
@@ -302,20 +303,19 @@ impl RpcRouter {
                 return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
             }
         };
-        let offer_id_urn = match Urn::from_str(&input.offer_id) {
-            Ok(u) => u,
-            Err(_) => {
-                return (StatusCode::BAD_REQUEST, "invalid offerId: must be a URN").into_response();
-            }
-        };
-        let callback_base = state.config.ssi_auth().hosts.get_host(HostType::Http);
+        // The callback is where the TCK reached us, which our configured host may not be (Docker).
+        let callback_base = headers
+            .get(HOST)
+            .and_then(|host| host.to_str().ok())
+            .map(|host| format!("http://{host}"))
+            .unwrap_or_else(|| state.config.ssi_auth().hosts.get_host(HostType::Http));
         let callback_address = format!("{callback_base}/dsp/current/negotiations");
         let rpc_dto = RpcNegotiationRequestInitMessageDto::new(
             input.provider_id,
             input.connector_address,
             callback_address,
             ContractRequestMessageOfferTypes::OfferId(ContractRequestMessageOfferOfferId {
-                id: offer_id_urn,
+                id: input.offer_id,
             }),
         );
         Self::process_request(Ok(Json(rpc_dto)), StatusCode::CREATED, |data| async move {

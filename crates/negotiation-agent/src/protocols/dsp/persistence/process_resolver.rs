@@ -53,15 +53,15 @@ impl NegotiationProcessResolver {
     /// Finds a process by one of its pids whoever owns it, since pids are global and the owner is
     /// unknown until found, then checks that `actor` may act on it.
     #[tracing::instrument(level = "info", skip_all, err, fields(pid = %pid))]
-    pub async fn resolve(&self, pid: &Urn, actor: &DspActor) -> Outcome<NegotiationProcessView> {
+    pub async fn resolve(&self, pid: &str, actor: &DspActor) -> Outcome<NegotiationProcessView> {
         let process = self
             .process_repo
             .get_negotiation_process_by_key_value(&OwnerScope::All, pid)
             .await?
             .or_not_found(pid, "negotiation process")?;
-        actor.authorize(&process.owner(), &process.associated_agent_peer, pid)?;
         let id = Urn::from_str(&process.id)
             .map_err(|e| Errors::format(BadFormat::Received, e.to_string(), None))?;
+        actor.authorize(&process.owner(), &process.associated_agent_peer, &id)?;
         self.process_service
             .get_one(&Self::actor(), &id)
             .await

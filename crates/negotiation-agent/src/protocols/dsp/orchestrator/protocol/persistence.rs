@@ -209,8 +209,7 @@ impl OrchestrationPersistenceForProtocol {
     /// Loads the process behind a pid, provided `mate` is its counterparty.
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn fetch_process(&self, id: &str, mate: &VerifiedPeer) -> Outcome<NegotiationProcessView> {
-        let urn = self.convert_str_to_urn(id)?;
-        self.resolver.resolve(&urn, &DspActor::peer(mate)).await
+        self.resolver.resolve(id, &DspActor::peer(mate)).await
     }
 
     async fn create_process(
@@ -350,10 +349,9 @@ impl OrchestrationPersistenceForProtocol {
         let offer_content = self.get_dsp_offer_safely(message)?;
 
         let offer_id = match &offer_content {
-            ContractRequestMessageOfferTypes::OfferMessage(m) => &m.id,
-            ContractRequestMessageOfferTypes::OfferId(i) => &i.id,
-        }
-        .to_string();
+            ContractRequestMessageOfferTypes::OfferMessage(m) => m.id.to_string(),
+            ContractRequestMessageOfferTypes::OfferId(i) => i.id.clone(),
+        };
 
         let scope = NegotiationProcessResolver::actor();
         let new_offer = self

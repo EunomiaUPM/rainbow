@@ -86,8 +86,7 @@ impl NegotiationPersistenceForRpcService {
 impl NegotiationRpcPersistenceTrait for NegotiationPersistenceForRpcService {
     #[tracing::instrument(level = "info", skip_all, err)]
     async fn fetch_process(&self, id: &str, actor: &DspActor) -> Outcome<NegotiationProcessView> {
-        let urn = self.convert_str_to_urn(id)?;
-        self.resolver.resolve(&urn, actor).await
+        self.resolver.resolve(id, actor).await
     }
 
     #[tracing::instrument(level = "info", skip_all, err)]
@@ -328,10 +327,9 @@ impl NegotiationPersistenceForRpcService {
         let id = self.create_entity_urn("offer")?;
         let offer_content = self.get_rpc_offer_safely(message)?;
         let offer_id = match &offer_content {
-            ContractRequestMessageOfferTypes::OfferMessage(m) => &m.id,
-            ContractRequestMessageOfferTypes::OfferId(i) => &i.id,
-        }
-        .to_string();
+            ContractRequestMessageOfferTypes::OfferMessage(m) => m.id.to_string(),
+            ContractRequestMessageOfferTypes::OfferId(i) => i.id.clone(),
+        };
 
         let new_offer = self
             .offer_service
