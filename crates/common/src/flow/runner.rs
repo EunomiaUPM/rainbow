@@ -88,15 +88,20 @@ impl<F: FlowTrait> FlowRunner<F> {
     /// Extract with `adapter`, run, and answer with the output or the error.
     pub async fn serve<A: FlowAdapterTrait<F>>(
         &self,
-        adapter: &A,
-        caller: &F::Caller,
-        key: F::Key,
-        raw: A::Raw,
+        adapter: &A, // FlowAdapterTrait applied for each case
+        key: F::Key, // Message (distributed by router)
+        raw: A::Raw, // Request
     ) -> A::Response {
+        // Adapter extracts and returns (context_for_errors, result_of_extraction)
         let (context, result) = match adapter.extract(&key, raw).await {
-            Ok(input) => (adapter.error_context(&input), self.run(caller, input).await),
+            Ok((caller, input)) => {
+                // error_context for further error messages if any
+                // runs all template stages in order with run
+                (adapter.error_context(&input), self.run(&caller, input).await)
+            },
             Err(err) => (A::ErrorContext::default(), Err(err)),
         };
+        // With the result of running or error, responds to caller or rejects
         match result {
             Ok(output) => adapter.respond(&key, output),
             Err(err) => {
@@ -109,13 +114,17 @@ impl<F: FlowTrait> FlowRunner<F> {
     /// Runs every stage in order; the unit of work commits only if all of them pass.
     #[tracing::instrument(level = "info", skip_all, err(Display), fields(key = ?self.flow.key(&input)))]
     pub async fn run(&self, caller: &F::Caller, input: F::Input) -> Result<F::Output, FlowError> {
+        // key message for validation
         let key = self.flow.key(&input);
+        // validate input data based on input_rules
         self.input_rules
             .validate(&key, &input)
             .map_err(FlowError::from_violations)?;
 
+        // uow init
         let uow = self.uow.begin().await?;
         let cx = FlowCx { caller, uow: &uow };
+        // domain control: load facts, validate, send, persist
         let applied = self.load_and_apply(&cx, &key, input).await;
         let output = match applied {
             Ok(Applied::Done(output)) => output,
@@ -130,11 +139,13 @@ impl<F: FlowTrait> FlowRunner<F> {
         };
         uow.commit().await?;
 
+        // after uow functions
         for guard in &self.guards {
             if let Err(err) = guard.after_commit(caller, &key, &output).await {
                 tracing::warn!(error = %err.reason(), "flow guard failed after commit");
             }
         }
+        // return output
         Ok(output)
     }
 
@@ -145,24 +156,31 @@ impl<F: FlowTrait> FlowRunner<F> {
         key: &F::Key,
         input: F::Input,
     ) -> Result<Applied<F::Output>, FlowError> {
+        // domain loader
         let facts = self.flow.load(cx, input).await?;
+        // after loader guards
         for guard in &self.guards {
             if let GuardVerdict::Replay(output) = guard.after_load(cx, key, &facts).await? {
                 return Ok(Applied::Replayed(output));
             }
         }
+        // validate facts
         self.fact_rules
             .validate(key, &facts)
             .map_err(FlowError::from_violations)?;
 
         // With real transactions, the call to the peer must run outside one.
-        let reply = self.flow.send(cx, &facts).await?;
-        if let (Some(reply), Some(rules)) = (&reply, &self.reply_rules) {
+        let reply_from_peer = self.flow.send(cx, &facts).await?;
+        // validate response from peer
+        if let (Some(reply), Some(rules)) = (&reply_from_peer, &self.reply_rules) {
             rules
                 .validate(key, reply)
                 .map_err(FlowError::from_violations)?;
         }
-        Ok(Applied::Done(self.flow.apply(cx, facts, reply).await?))
+        // apply changes in db, events...
+        // apply is usually strategy (based on action)
+        let apply = self.flow.apply(cx, facts, reply_from_peer).await?;
+        Ok(Applied::Done(apply))
     }
 
     /// Internal failures are logged with their detail, which never reaches the caller.

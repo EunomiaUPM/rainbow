@@ -14,8 +14,6 @@ PROVIDER_URL="${PROVIDER_URL:-http://127.0.0.1:1200}"
 DOCKER_AUTHORITY_URL="${DOCKER_AUTHORITY_URL:-http://host.docker.internal:1500}"
 DOCKER_CONSUMER_URL="${DOCKER_CONSUMER_URL:-http://host.docker.internal:1100}"
 DOCKER_PROVIDER_URL="${DOCKER_PROVIDER_URL:-http://host.docker.internal:1200}"
-# Provider tenant the consumer onboards into (tenants share the provider DID).
-PROVIDER_TENANT="${PROVIDER_TENANT:-admin}"
 
 # ----------------------------
 # Logging (solo stderr)
@@ -116,13 +114,13 @@ log_success "OIDC4VCI processed"
 # ----------------------------
 # STEP 10 - Provider access (the VP is presented automatically)
 # ----------------------------
-log_step "STEP 10 - Provider request (tenant $PROVIDER_TENANT)"
+log_step "STEP 10 - Provider request"
 
 CONNECT_BODY=$(jq -n \
-    --arg url "$DOCKER_PROVIDER_URL/api/v1/gate/$PROVIDER_TENANT/access" \
+    --arg url "$DOCKER_PROVIDER_URL/api/v1/gate/access" \
     --arg id "$PROVIDER_DID" \
     --arg nick "provider" \
-    '{url:$url,id:$id,nick:$nick,actions:["talk"],auto:true}')
+    '{url:$url,id:$id,nick:$nick,actions:["talk"],visibility:"Public",auto:true}')
 
 curl_raw POST "$CONSUMER_URL/api/v1/peer-connection/connect" "$CONNECT_BODY" >/dev/null
 

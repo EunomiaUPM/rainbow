@@ -33,10 +33,8 @@ use urn::Urn;
 #[serde(rename_all = "camelCase")]
 pub struct NewTransferProcessCommand {
     pub id: Option<TransferProcessId>,
-    /// Who else sees it; private by default.
     #[serde(default)]
     pub visibility: Option<Visibility>,
-    /// Owner an in-process flow asks for; only honoured for the root.
     #[serde(skip)]
     pub owner: Option<Owner>,
     pub role: TransferRole,
@@ -68,10 +66,8 @@ pub struct EditTransferProcessCommand {
 pub struct NewTransferMessageCommand {
     pub id: Option<MessageId>,
     pub transfer_process_id: TransferProcessId,
-    /// Who else sees it; private by default.
     #[serde(default)]
     pub visibility: Option<Visibility>,
-    /// Owner an in-process flow asks for; only honoured for the root.
     #[serde(skip)]
     pub owner: Option<Owner>,
     pub direction: Direction,

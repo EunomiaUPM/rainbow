@@ -12,9 +12,8 @@ CONSUMER_URL="${CONSUMER_URL:-http://127.0.0.1:1100}"
 PROVIDER_URL="${PROVIDER_URL:-http://127.0.0.1:1200}"
 
 INTERNAL_AUTHORITY_URL="${INTERNAL_AUTHORITY_URL:-$AUTHORITY_URL}"
+INTERNAL_CONSUMER_URL="${INTERNAL_CONSUMER_URL:-$CONSUMER_URL}"
 INTERNAL_PROVIDER_URL="${INTERNAL_PROVIDER_URL:-$PROVIDER_URL}"
-# Provider tenant the consumer onboards into (tenants share the provider DID).
-PROVIDER_TENANT="${PROVIDER_TENANT:-admin}"
 
 # ----------------------------
 # Logging (solo stderr)
@@ -49,10 +48,10 @@ curl_raw() {
     local body=${3:-}
     eunomia_auth "$url"
     if [ -n "$body" ]; then
-        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" "${AUTH_ARGS[@]}" \
+        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" ${AUTH_ARGS[@]+"${AUTH_ARGS[@]}"} \
             -H "Content-Type: application/json" -d "$body"
     else
-        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" "${AUTH_ARGS[@]}" \
+        curl -s --max-time "$CURL_TIMEOUT" -X "$method" "$url" ${AUTH_ARGS[@]+"${AUTH_ARGS[@]}"} \
             -H "Content-Type: application/json"
     fi
 }
@@ -71,11 +70,11 @@ curl_checked() {
     # HTTP check runs, losing the reason. Capture curl's exit status instead.
     if [ -n "$body" ]; then
         code=$(curl -s -o "$out" -w '%{http_code}' --max-time "$CURL_TIMEOUT" \
-            -X "$method" "$url" "${AUTH_ARGS[@]}" -H "Content-Type: application/json" -d "$body") \
+            -X "$method" "$url" ${AUTH_ARGS[@]+"${AUTH_ARGS[@]}"} -H "Content-Type: application/json" -d "$body") \
             && rc=0 || rc=$?
     else
         code=$(curl -s -o "$out" -w '%{http_code}' --max-time "$CURL_TIMEOUT" \
-            -X "$method" "$url" "${AUTH_ARGS[@]}" -H "Content-Type: application/json") \
+            -X "$method" "$url" ${AUTH_ARGS[@]+"${AUTH_ARGS[@]}"} -H "Content-Type: application/json") \
             && rc=0 || rc=$?
     fi
     if [ "$rc" -ne 0 ]; then
@@ -143,55 +142,100 @@ log_success "Wallets linked"
 # ----------------------------
 log_step "STEP 2 - Retrieving DIDs"
 AUTH_DID=$(curl_raw GET "$AUTHORITY_URL/.well-known/did.json" | jq -r '.id')
+CONSUMER_DID=$(curl_raw GET "$CONSUMER_URL/.well-known/did.json" | jq -r '.id')
 PROVIDER_DID=$(curl_raw GET "$PROVIDER_URL/.well-known/did.json" | jq -r '.id')
 log_success "Authority DID: $AUTH_DID"
-log_success "Provider DID: $PROVIDER_DID"
+log_success "Consumer DID:  $CONSUMER_DID"
+log_success "Provider DID:  $PROVIDER_DID"
 
 # ----------------------------
-# STEP 3 - Consumer requests credential from authority
+# Helpers para onboarding
 # ----------------------------
-# Payload = ReachAuthority (crates/auth/src/types/entities/reacher.rs):
-#   { id, nick, url, vc_type, method, auto }
-log_step "STEP 3 - Consumer requests credential"
+request_credential() {
+    local agent_name="$1"
+    local agent_url="$2"
 
-if curl_raw GET "$CONSUMER_URL/api/v1/vc-request/all" \
-    | jq -e --arg id "$AUTH_DID" --arg vc "$VC_TYPE" \
-        'any(.items[]?; .participant_id == $id
-                   and .status == "Finalized"
-                   and (.vc_type_config // [] | index($vc)))' >/dev/null; then
-    log_info "Consumer ya tiene la credencial, saltando"
-else
-    BEG_BODY=$(jq -n \
-        --arg url "$INTERNAL_AUTHORITY_URL/api/v1/gate/access" \
-        --arg id "$AUTH_DID" \
-        --arg nick "authority" \
-        --arg vc_type "$VC_TYPE" \
-        --arg method "cert" \
-        '{url:$url, id:$id, nick:$nick, vc_type:$vc_type, method:$method, auto:true}')
-    curl_checked POST "$CONSUMER_URL/api/v1/vc-request/beg" "$BEG_BODY" >/dev/null
-    log_success "Credential request finished"
-fi
+    log_step "STEP 3 ($agent_name) - Requesting credential from authority"
+    if curl_raw GET "$agent_url/api/v1/vc-request/all" \
+        | jq -e --arg id "$AUTH_DID" --arg vc "$VC_TYPE" \
+            'any(.items[]?; .participant_id == $id
+                       and .status == "Finalized"
+                       and (.vc_type_config // [] | index($vc)))' >/dev/null; then
+        log_info "$agent_name ya tiene la credencial, saltando"
+    else
+        local beg_body
+        beg_body=$(jq -n \
+            --arg url "$INTERNAL_AUTHORITY_URL/api/v1/gate/access" \
+            --arg id "$AUTH_DID" \
+            --arg nick "authority" \
+            --arg vc_type "$VC_TYPE" \
+            --arg method "cert" \
+            '{url:$url, id:$id, nick:$nick, vc_type:$vc_type, method:$method, auto:true}')
+        curl_checked POST "$agent_url/api/v1/vc-request/beg" "$beg_body" >/dev/null
+
+        if ! curl_raw GET "$agent_url/api/v1/vc-request/all" \
+            | jq -e --arg id "$AUTH_DID" --arg vc "$VC_TYPE" \
+                'any(.items[]?; .participant_id == $id and .status == "Finalized" and (.vc_type_config // [] | index($vc)))' >/dev/null; then
+            log_error "La solicitud de credencial de $agent_name a la autoridad no se finalizó correctamente"
+        fi
+        log_success "$agent_name: Credential request finished"
+    fi
+}
+
+connect_peer() {
+    local source_name="$1"
+    local source_url="$2"
+    local target_name="$3"
+    local target_gate_url="$4"
+    local target_did="$5"
+
+    log_step "STEP 4 ($source_name -> $target_name) - Authenticating with peer"
+    if curl_raw GET "$source_url/api/v1/peer-connection/request/all" \
+        | jq -e --arg id "$target_did" \
+            'any(.items[]?; .participant_id == $id and .status == "Approved" and (.final_token // "") != "")' >/dev/null; then
+        log_info "$source_name ya está autenticado con $target_name, saltando"
+    else
+        local connect_body
+        connect_body=$(jq -n \
+            --arg id "$target_did" \
+            --arg nick "$target_name" \
+            --arg url "$target_gate_url" \
+            '{id:$id, nick:$nick, url:$url, actions:["talk"], visibility:"Public", auto:true}')
+        curl_checked POST "$source_url/api/v1/peer-connection/connect" "$connect_body" >/dev/null
+
+        log_info "Esperando a que $source_name complete la verificación y emisión del token con $target_name..."
+        local done=0
+        local status=""
+        for _ in $(seq 1 30); do
+            status=$(curl_raw GET "$source_url/api/v1/peer-connection/request/all" \
+                | jq -r --arg id "$target_did" \
+                    '[.items[]? | select(.participant_id == $id)] | last | .status // empty')
+            if [ "$status" = "Approved" ]; then
+                done=1
+                break
+            elif [ "$status" = "Rejected" ]; then
+                log_error "La conexión de $source_name con $target_name fue rechazada"
+            fi
+            sleep 1
+        done
+        if [ "$done" -ne 1 ]; then
+            log_error "Timeout esperando autenticación de $source_name con $target_name (estado actual: ${status:-desconocido})"
+        fi
+        log_success "$source_name autenticado con éxito en $target_name"
+    fi
+}
 
 # ----------------------------
-# STEP 4 - Consumer authenticates with provider
+# STEP 3 - Solicitud de credenciales a la autoridad
 # ----------------------------
-# Payload = ReachProvider (crates/auth/src/types/entities/reacher.rs):
-#   { id, nick, url, actions, auto }
-log_step "STEP 4 - Consumer authenticates with provider (tenant $PROVIDER_TENANT)"
+request_credential "Consumer" "$CONSUMER_URL"
+request_credential "Provider" "$PROVIDER_URL"
 
-if curl_raw GET "$CONSUMER_URL/api/v1/mates/all" \
-    | jq -e --arg id "$PROVIDER_DID" \
-        'any(.items[]?; .participant_id == $id and (.token // "") != "")' >/dev/null; then
-    log_info "Consumer ya está autenticado con el provider, saltando"
-else
-    CONNECT_BODY=$(jq -n \
-        --arg id "$PROVIDER_DID" \
-        --arg nick "provider" \
-        --arg url "$INTERNAL_PROVIDER_URL/api/v1/gate/$PROVIDER_TENANT/access" \
-        '{id:$id, nick:$nick, url:$url, actions:["talk"], auto:true}')
-    curl_checked POST "$CONSUMER_URL/api/v1/peer-connection/connect" "$CONNECT_BODY" >/dev/null
-    log_success "Authentication complete"
-fi
+# ----------------------------
+# STEP 4 - Autenticación mutua entre Consumer y Provider
+# ----------------------------
+connect_peer "Consumer" "$CONSUMER_URL" "provider" "$INTERNAL_PROVIDER_URL/api/v1/gate/access" "$PROVIDER_DID"
+connect_peer "Provider" "$PROVIDER_URL" "consumer" "$INTERNAL_CONSUMER_URL/api/v1/gate/access" "$CONSUMER_DID"
 
 echo -e "\n======================================"
 echo "   ONBOARDING FINISHED SUCCESSFULLY"

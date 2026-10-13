@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Management plane of the transfer agent: the `{api}/transfer-agent-ref` HTTP API and its
+//! Management plane of the transfer agent: the `{api}/transfer-agent` HTTP API and its
 //! gRPC mirror.
 
 use std::sync::Arc;
@@ -63,11 +63,11 @@ impl ServiceModuleTrait for TransferAdminModule {
     fn http(&self) -> Option<(String, Router)> {
         let process_router = Router::new().nest(
             "/transfer-processes",
-            TransferProcessRouter::new(self.ctx.transfer_process_svc.clone()).router(),
+            TransferProcessRouter::new(self.ctx.clone()).router(),
         );
         let message_router = Router::new().nest(
             "/transfer-messages",
-            TransferMessageRouter::new(self.ctx.transfer_message_svc.clone()).router(),
+            TransferMessageRouter::new(self.ctx.clone()).router(),
         );
         let router = TransferHttpRouter::build(
             process_router,
@@ -83,14 +83,8 @@ impl ServiceModuleTrait for TransferAdminModule {
 
     fn grpc(&self, routes: &mut RoutesBuilder) {
         routes
-            .add_service(TransferProcessesRefServer::new(TransferProcessGrpc::new(
-                self.ctx.transfer_process_svc.clone(),
-                self.ctx.oauth_validator.clone(),
-            )))
-            .add_service(TransferMessagesRefServer::new(TransferMessagesGrpc::new(
-                self.ctx.transfer_message_svc.clone(),
-                self.ctx.oauth_validator.clone(),
-            )));
+            .add_service(TransferProcessesRefServer::new(TransferProcessGrpc::new(self.ctx.clone())))
+            .add_service(TransferMessagesRefServer::new(TransferMessagesGrpc::new(self.ctx.clone())));
     }
 
     fn grpc_descriptors(&self) -> Vec<&'static [u8]> {

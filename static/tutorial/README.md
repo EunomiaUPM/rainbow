@@ -47,5 +47,17 @@ jupyter lab
 
 ## Notebooks
 
-- `01_negotiation.ipynb`: Demonstrates how to create a negotiation process, send messages, and reach an agreement.
-- `02_transfer.ipynb`: Demonstrates how to initiate a data transfer after an agreement is established.
+### 1. Setup & Configuration
+- `setup_auth.ipynb`: Configures base URLs, links wallets, retrieves participant DIDs, requests credentials from Authority, and exchanges mutual peer access tokens.
+- `setup_catalog_policies.ipynb`: Populates Provider DCAT catalog, creates datasets, distributions (`PULL` via `http+asd` and `PUSH` via `http+pushing`), ODRL policies, and registers `NO_AUTH` connector instances.
+- `setup_catalog_policies_oauth.ipynb`: Populates catalog with secret provisioning in Keystore (`/ecostars/api_key`) and registers connector instances using `BEARER_TOKEN` authentication.
+
+### 2. Contract Negotiation (Standalone & Callable)
+- `contract_negotiation.ipynb`: Full canonical DSP 2025-1 Contract Negotiation sequence (Request -> Offer -> Counter-Request -> Acceptance -> Agreement -> Verification -> Finalization). Callable via `%run ./contract_negotiation.ipynb`.
+- `bff_contract_negotiation.ipynb`: Automated BFF contract negotiation flows (both Consumer request flow and Provider offer flow). Callable via `%run ./bff_contract_negotiation.ipynb`.
+
+### 3. Transfer Process Execution (Eunomia RPC)
+- `pull_flow.ipynb`: PULL data transfer flow over Eunomia RPC (`setup-request`, `setup-start`, `setup-suspension`, restart, role/shape failure tests, and `setup-termination`). Automatically invokes `contract_negotiation.ipynb` with `setup_catalog_policies_oauth.ipynb`.
+- `push_flow.ipynb`: PUSH data transfer flow over Eunomia RPC (`setup-request` with sink `dataAddress`, `setup-start`, `setup-suspension`, restart, role test, and `setup-completion`). Automatically invokes `contract_negotiation.ipynb` with `setup_catalog_policies.ipynb`.
+- `bff_push_flow.ipynb`: PUSH data transfer flow driven by automated BFF contract negotiation. Automatically invokes `bff_contract_negotiation.ipynb` with `setup_catalog_policies.ipynb`.
+

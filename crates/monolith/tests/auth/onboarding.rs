@@ -45,12 +45,16 @@ async fn new_provider_token(
     provider_did: &str,
     previous: Option<String>,
 ) -> String {
-    // A did:web with a port carries `%3A`, which must reach the agent undecoded.
-    let path = format!("/api/v1/mates/{}", provider_did.replace('%', "%25"));
     for _ in 0..60 {
-        let mate = consumer.get(&path).await;
-        if let Some(token) = mate["token"]
-            .as_str()
+        let requests = consumer.get("/api/v1/peer-connection/request/all").await;
+        if let Some(token) = requests["items"]
+            .as_array()
+            .and_then(|items| {
+                items.iter().find(|r| {
+                    r["participant_id"] == provider_did && r["status"] == "Approved"
+                })
+            })
+            .and_then(|r| r["final_token"].as_str())
             .filter(|t| Some(t.to_string()) != previous)
         {
             return token.to_string();
@@ -62,12 +66,12 @@ async fn new_provider_token(
 
 /// Token stored for the provider before this run, if the consumer already onboarded.
 async fn current_provider_token(consumer: &Agent, provider_did: &str) -> Option<String> {
-    let mates = consumer.get("/api/v1/mates/all").await;
-    mates["items"]
+    let requests = consumer.get("/api/v1/peer-connection/request/all").await;
+    requests["items"]
         .as_array()?
         .iter()
-        .find(|m| m["participant_id"] == provider_did)
-        .and_then(|m| m["token"].as_str().map(str::to_string))
+        .find(|r| r["participant_id"] == provider_did && r["status"] == "Approved")
+        .and_then(|r| r["final_token"].as_str().map(str::to_string))
 }
 
 /// Steps 1 to 4 of the script, checking what each one leaves behind.
@@ -77,7 +81,6 @@ async fn consumer_onboards_with_the_provider() {
     let authority = Agent::login("AUTHORITY_URL", "http://127.0.0.1:1500").await;
     let consumer = Agent::login("CONSUMER_URL", "http://127.0.0.1:1100").await;
     let provider = Agent::login("PROVIDER_URL", "http://127.0.0.1:1200").await;
-    let provider_tenant = std::env::var("PROVIDER_TENANT").unwrap_or_else(|_| "admin".to_string());
     let since = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
     for agent in [&authority, &consumer, &provider] {
@@ -113,8 +116,9 @@ async fn consumer_onboards_with_the_provider() {
             json!({
                 "id": provider_did,
                 "nick": "provider",
-                "url": format!("{}/api/v1/gate/{provider_tenant}/access", provider.url),
+                "url": format!("{}/api/v1/gate/access", provider.url),
                 "actions": ["talk"],
+                "visibility": "Public",
                 "auto": true
             }),
         )
@@ -122,7 +126,44 @@ async fn consumer_onboards_with_the_provider() {
     let token = new_provider_token(&consumer, &provider_did, previous).await;
 
     let mate = provider
-        .post_json("/api/v1/mates/token", json!({ "token": token }))
+        .post_json("/api/v1/gate/token/verify", json!({ "token": token }))
         .await;
     assert_eq!(mate["participant_id"], consumer_did);
+
+    // Provider also requests credential from authority.
+    provider
+        .post(
+            "/api/v1/vc-request/beg",
+            json!({
+                "id": authority_did,
+                "nick": "authority",
+                "url": format!("{}/api/v1/gate/access", authority.url),
+                "vc_type": VC_TYPE,
+                "method": "cert",
+                "auto": true
+            }),
+        )
+        .await;
+
+    // Provider authenticates with consumer.
+    let previous_c = current_provider_token(&provider, &consumer_did).await;
+    provider
+        .post(
+            "/api/v1/peer-connection/connect",
+            json!({
+                "id": consumer_did,
+                "nick": "consumer",
+                "url": format!("{}/api/v1/gate/access", consumer.url),
+                "actions": ["talk"],
+                "visibility": "Public",
+                "auto": true
+            }),
+        )
+        .await;
+    let token_c = new_provider_token(&provider, &consumer_did, previous_c).await;
+
+    let mate_c = consumer
+        .post_json("/api/v1/gate/token/verify", json!({ "token": token_c }))
+        .await;
+    assert_eq!(mate_c["participant_id"], provider_did);
 }
