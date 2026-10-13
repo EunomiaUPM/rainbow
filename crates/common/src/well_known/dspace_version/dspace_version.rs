@@ -37,6 +37,6 @@ impl WellKnownDSpaceVersionService {
 
 impl WellKnownDSpaceVersionTrait for WellKnownDSpaceVersionService {
     fn dspace_path(&self) -> String {
-        "/dsp/current".to_string()
+        crate::dsp_common::paths::DSP_CURRENT.to_string()
     }
 }

@@ -61,5 +61,6 @@ arc-swap = { workspace = true }
 jsonschema = { workspace = true }
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
 tower = { workspace = true, features = ["util"] }
 opentelemetry_sdk = { workspace = true, features = ["testing"] }

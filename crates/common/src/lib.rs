@@ -53,6 +53,7 @@ pub mod registry;
 pub mod routes;
 pub mod secret;
 pub mod serde_utils;
+pub mod tck;
 pub mod telemetry;
 pub mod test_utils;
 pub mod utils;

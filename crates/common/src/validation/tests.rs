@@ -514,3 +514,74 @@ mod json_schema {
             .is_err());
     }
 }
+
+mod state_machine {
+    //! StateMachine: which messages a two-state table accepts.
+
+    use std::fmt;
+
+    use crate::validation::{codes, StateMachine};
+
+    #[derive(Debug, PartialEq)]
+    enum State {
+        Open,
+        Closed,
+    }
+
+    #[derive(Debug, PartialEq)]
+    enum Message {
+        Open,
+        Close,
+        Ping,
+    }
+
+    impl fmt::Display for State {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fmt::Debug::fmt(self, f)
+        }
+    }
+
+    impl fmt::Display for Message {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fmt::Debug::fmt(self, f)
+        }
+    }
+
+    const MACHINE: StateMachine<State, Message> = StateMachine::new(&[
+        (Message::Open, &[None, Some(State::Closed)]),
+        (Message::Close, &[Some(State::Open)]),
+    ]);
+
+    /// A message listed for the current state passes, the not-yet-opened state included.
+    #[test]
+    fn listed_transitions_pass() {
+        assert!(MACHINE.check(None, &Message::Open, "state").is_ok());
+        assert!(MACHINE
+            .check(Some(&State::Closed), &Message::Open, "state")
+            .is_ok());
+        assert!(MACHINE
+            .check(Some(&State::Open), &Message::Close, "state")
+            .is_ok());
+    }
+
+    /// A listed message in a state it does not accept is refused, naming the state.
+    #[test]
+    fn unlisted_state_is_refused() {
+        let err = MACHINE
+            .check(Some(&State::Open), &Message::Open, "state")
+            .unwrap_err();
+        assert_eq!(err.code(), Some(codes::NOT_ALLOWED));
+        assert!(err.to_string().contains("from state Open"));
+        let err = MACHINE.check(None, &Message::Close, "state").unwrap_err();
+        assert!(err.to_string().contains("from state <new>"));
+    }
+
+    /// A message missing from the table is not a lifecycle transition at all.
+    #[test]
+    fn unknown_message_is_refused() {
+        let err = MACHINE
+            .check(Some(&State::Open), &Message::Ping, "state")
+            .unwrap_err();
+        assert!(err.to_string().contains("not a lifecycle transition"));
+    }
+}

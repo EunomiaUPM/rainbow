@@ -31,7 +31,7 @@
 //! let runner = FlowRunner::builder(flow, uow, Arc::new(MyRules::input()), Arc::new(MyRules::facts()))
 //!     .guard(Arc::new(IdempotencyGuard::new(store)))
 //!     .build();
-//! let response = runner.serve(&adapter, &peer, MessageType::Request, request).await;
+//! let response = runner.serve(&adapter, MessageType::Request, request).await;
 //! ```
 
 mod adapter;

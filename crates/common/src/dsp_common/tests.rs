@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP namespace normalizer, alone and as axum middleware, and the DspRules checks.
+//! The DSP namespace normalizer, alone and as axum middleware, the DspRules checks and the
+//! caller layer.
 
 use axum::{routing::post, Router};
 use serde_json::json;
@@ -245,4 +246,143 @@ fn error_body_lists_every_violation() {
             "offer: field is required"
         ]
     );
+}
+
+mod caller {
+    //! PeerAuth over mocked grants and mates, and DspCaller read back from the extensions.
+
+    use std::sync::Arc;
+
+    use axum::body::Body;
+    use axum::extract::Request;
+    use axum::http::{Extensions, StatusCode};
+    use axum::routing::get;
+    use axum::{middleware, Extension, Router};
+    use chrono::Utc;
+    use tower::ServiceExt;
+    use ymir::data::entities::shared::participant::Model as Mates;
+    use ymir::errors::Errors;
+    use ymir::types::oauth::{RolePath, UserInfo};
+    use ymir::types::participants::{ParticipantType, Visibility};
+
+    use crate::dsp_common::{DspCaller, PeerAuth};
+    use crate::facades::grants_facade::{MockGrantsFacadeTrait, VerifiedPeer};
+    use crate::facades::mates_facade::MockMatesFacadeTrait;
+
+    const PEER: &str = "did:example:peer";
+
+    fn verified() -> VerifiedPeer {
+        VerifiedPeer {
+            participant_id: PEER.into(),
+            role: RolePath::root(),
+            visibility: Visibility::Public,
+        }
+    }
+
+    fn mate() -> Mates {
+        Mates {
+            participant_id: PEER.into(),
+            participant_nick: "peer".into(),
+            participant_type: ParticipantType::Agent,
+            base_url: "https://peer.example".into(),
+            saved_at: Utc::now(),
+            last_interaction: Utc::now(),
+            extra_fields: serde_json::json!({}),
+        }
+    }
+
+    /// A route behind `auth` that answers with what the layer resolved.
+    fn app(auth: PeerAuth) -> Router {
+        Router::new()
+            .route(
+                "/",
+                get(|Extension(caller): Extension<DspCaller>| async move {
+                    match caller {
+                        DspCaller::Peer { peer, mate } => {
+                            format!("{} {}", peer.participant_id, mate.is_some())
+                        }
+                        DspCaller::User(_) => "user".to_string(),
+                    }
+                }),
+            )
+            .layer(middleware::from_fn_with_state(auth, PeerAuth::run))
+    }
+
+    fn auth(known_mate: bool) -> PeerAuth {
+        let mut grants = MockGrantsFacadeTrait::new();
+        grants
+            .expect_verify_token()
+            .returning(|token| match token.as_str() {
+                "good" => Ok(verified()),
+                _ => Err(Errors::unauthorized("bad token", None)),
+            });
+        let mut mates = MockMatesFacadeTrait::new();
+        mates
+            .expect_get_mate_by_id()
+            .returning(move |_, id| match known_mate {
+                true => Ok(mate()),
+                false => Err(Errors::missing_resource(id, "not a mate", None)),
+            });
+        PeerAuth::new(Arc::new(grants), Arc::new(mates))
+    }
+
+    async fn call(app: Router, token: Option<&str>) -> (StatusCode, String) {
+        let mut request = Request::builder().uri("/");
+        if let Some(token) = token {
+            request = request.header("authorization", format!("Bearer {token}"));
+        }
+        let response = app
+            .oneshot(request.body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let status = response.status();
+        let body = axum::body::to_bytes(response.into_body(), 1024)
+            .await
+            .unwrap();
+        (status, String::from_utf8(body.to_vec()).unwrap())
+    }
+
+    /// A verified peer reaches the route with its participant record when it is a mate.
+    #[tokio::test]
+    async fn verified_peer_is_the_caller_with_its_mate() {
+        assert_eq!(
+            call(app(auth(true)), Some("good")).await,
+            (StatusCode::OK, format!("{PEER} true"))
+        );
+    }
+
+    /// An unknown mate does not stop a verified peer.
+    #[tokio::test]
+    async fn unknown_mate_still_passes() {
+        assert_eq!(
+            call(app(auth(false)), Some("good")).await,
+            (StatusCode::OK, format!("{PEER} false"))
+        );
+    }
+
+    /// A missing or rejected token gets a 404 by default, or the status the plane asks for.
+    #[tokio::test]
+    async fn rejected_tokens_answer_the_configured_status() {
+        assert_eq!(call(app(auth(true)), None).await.0, StatusCode::NOT_FOUND);
+        assert_eq!(
+            call(app(auth(true)), Some("bad")).await.0,
+            StatusCode::NOT_FOUND
+        );
+        let strict = auth(true).rejecting_with(StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            call(app(strict), Some("bad")).await.0,
+            StatusCode::UNAUTHORIZED
+        );
+    }
+
+    /// The OAuth user counts as the caller on RPC routes; with neither, it is a wiring error.
+    #[test]
+    fn caller_falls_back_to_the_oauth_user() {
+        let mut extensions = Extensions::new();
+        assert!(DspCaller::from_extensions(&extensions).is_err());
+        extensions.insert(UserInfo::system());
+        let caller = DspCaller::from_extensions(&extensions).unwrap();
+        assert!(caller.user().is_ok());
+        assert!(caller.peer().is_err());
+    }
 }

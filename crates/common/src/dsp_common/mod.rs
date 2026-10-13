@@ -36,7 +36,7 @@
 //!
 //! Router::new()
 //!     .route("/request", post(Self::handle_catalog_request))
-//!     .layer(middleware::from_fn_with_state(self.clone(), Self::auth_middleware))
+//!     .layer(middleware::from_fn_with_state(peer_auth, PeerAuth::run))
 //!     .layer(middleware::from_fn(dsp_namespace_normalizer))
 //!     .with_state(self)
 //!
@@ -97,6 +97,19 @@
 //! actor.authorize(&process.owner(), &process.associated_agent_peer, pid)?;
 //! ```
 //!
+//! [`PeerAuth`] is the axum layer every DSP plane mounts: it verifies the peer's token, looks
+//! its participant up and leaves a [`DspCaller`] in the request; on RPC routes the OAuth user
+//! is the caller. Flow adapters read it back with `DspCaller::from_extensions`.
+//!
+//! ```rust,ignore
+//! use common::dsp_common::{DspCaller, PeerAuth};
+//!
+//! router.layer(middleware::from_fn_with_state(PeerAuth::new(grants, mates), PeerAuth::run));
+//!
+//! let caller = DspCaller::from_extensions(request.extensions())?;
+//! caller.actor().authorize(&process.owner(), counterparty, pid)?;
+//! ```
+//!
 //! ## 5. Message rules
 //!
 //! [`DspRules`] are atomic checks for [`crate::validation`] pipelines: URN syntax, the path pid
@@ -116,7 +129,34 @@
 //!     });
 //! ```
 //!
-//! ## 6. Shared wire types
+//! ## 6. Where DSP is mounted
+//!
+//! [`paths`] holds the base every agent mounts its DSP routes under, and the one callbacks name.
+//!
+//! ```rust,ignore
+//! use common::dsp_common::paths;
+//!
+//! Some((paths::TRANSFERS.to_string(), router))                // a module's DSP plane
+//! let callback = format!("{host}{}", paths::DSP_CURRENT);   // our base, as peers call it
+//! ```
+//!
+//! ## 7. Storing a process
+//!
+//! [`DspPersistenceTrait`] is the write side every agent gives its DSP flows: hydrate a process
+//! by any of its pids, change its state recording the message that caused it, or just record a
+//! message. Each agent picks its process, state and recorded message types.
+//!
+//! ```rust,ignore
+//! use common::dsp_common::persistence::{DspPersistenceTrait, StateChange};
+//!
+//! let process = persistence.hydrate_process(pid).await?.ok_or_else(not_found)?;
+//! let change = StateChange { target: State::Started, code: None, reason: None, message };
+//! let process = persistence.change_process_state(&process, change).await?;
+//! ```
+//!
+//! [`DspPersistenceTrait`]: persistence::DspPersistenceTrait
+//!
+//! ## 8. Shared wire types
 //!
 //! - [`odrl`]: offers, agreements, permissions, constraints and the offer forms a contract
 //!   request may carry.
@@ -127,16 +167,20 @@
 use serde_json::Value;
 
 pub mod actor;
+pub mod caller;
 pub mod context_field;
 pub mod data_address;
 pub mod error_body;
 pub mod normalizer;
 pub mod odrl;
+pub mod paths;
+pub mod persistence;
 pub mod rdf;
 pub mod rules;
 pub mod well_known_types;
 
 pub use actor::DspActor;
+pub use caller::{DspCaller, PeerAuth};
 pub use error_body::DspErrorBody;
 pub use rules::DspRules;
 

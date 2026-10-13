@@ -52,12 +52,13 @@
 //! ## 2. Authenticating a peer on a DSP endpoint
 //!
 //! ```rust,ignore
+//! // What `crate::dsp_common::PeerAuth`, the layer of every DSP plane, does:
 //! match state.grants.verify_token(token).await {
 //!     Ok(peer) => {
 //!         request.extensions_mut().insert(peer);
 //!         Ok(next.run(request).await)
 //!     }
-//!     Err(_) => Err(StatusCode::UNAUTHORIZED),
+//!     Err(_) => Err(StatusCode::NOT_FOUND),
 //! }
 //! ```
 //!

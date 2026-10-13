@@ -93,7 +93,20 @@
 //! A violation can echo the offending value with `with_value`, but only when it cannot be a
 //! credential: the value goes back to the peer inside the error.
 //!
-//! ## 5. One registry per flow, rules from several origins: `ValidationRegistry`
+//! ## 5. State machines
+//!
+//! A [`StateMachine`] is the table of which messages each state of a protocol process accepts,
+//! `None` standing for a process that does not exist yet. It lives next to the states.
+//!
+//! ```rust,ignore
+//! const MACHINE: StateMachine<State, Message> = StateMachine::new(&[
+//!     (Message::Request, &[None]),
+//!     (Message::Start, &[Some(State::Requested), Some(State::Suspended)]),
+//! ]);
+//! MACHINE.check(current.as_ref(), &message, "state")?;
+//! ```
+//!
+//! ## 6. One registry per flow, rules from several origins: `ValidationRegistry`
 //!
 //! A [`ValidationRegistry`] maps a key to its rules: core, profiles and plugins add them to a key at a [`Stage`] (`Shape`, `Integrity`, `Domain`, `Profile`). Stages are
 //! barriers for everyone: all rules of a stage run and accumulate, and the next stage runs
@@ -112,6 +125,7 @@ pub mod registry;
 pub mod rule;
 pub mod schema;
 pub mod stage;
+pub mod state_machine;
 pub mod validator;
 pub mod violation;
 
@@ -119,6 +133,7 @@ pub use registry::{StagedValidator, ValidationRegistry};
 pub use rule::Rule;
 pub use schema::SchemaRule;
 pub use stage::Stage;
+pub use state_machine::StateMachine;
 pub use validator::Validator;
 pub use violation::{codes, violation, Path, Violation, ViolationCode, Violations};
 

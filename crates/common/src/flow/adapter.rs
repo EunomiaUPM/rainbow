@@ -29,8 +29,13 @@ pub trait FlowAdapterTrait<F: FlowTrait>: Send + Sync {
     /// What an error body needs from the input (pids, ids); `Default` when extraction failed.
     type ErrorContext: Default + Send;
 
-    /// `key` is what the route expects; checking the body against it is a shape rule.
-    async fn extract(&self, key: &F::Key, raw: Self::Raw) -> Result<F::Input, FlowError>;
+    /// The caller the auth layer resolved and the input; `key` is what the route expects, and
+    /// checking the body against it is a shape rule.
+    async fn extract(
+        &self,
+        key: &F::Key,
+        raw: Self::Raw,
+    ) -> Result<(F::Caller, F::Input), FlowError>;
     fn error_context(&self, input: &F::Input) -> Self::ErrorContext;
     fn respond(&self, key: &F::Key, output: F::Output) -> Self::Response;
     fn reject(&self, key: &F::Key, context: Self::ErrorContext, error: FlowError)
