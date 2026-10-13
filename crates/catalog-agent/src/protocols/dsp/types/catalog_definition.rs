@@ -46,7 +46,12 @@ pub struct Catalog {
     #[serde(rename = "extraFields")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_fields: Option<serde_json::Value>,
-    #[serde(rename = "catalog")]
+    /// Omitted when empty: DSP 6 asks for at least one entry when present.
+    #[serde(
+        rename = "catalog",
+        default,
+        skip_serializing_if = "CatalogCatalogTypes::is_empty"
+    )]
     pub catalogs: CatalogCatalogTypes,
     #[serde(rename = "dataset")]
     pub datasets: CatalogDatasetTypes,
@@ -136,12 +141,29 @@ pub enum CatalogCatalogTypes {
     CatalogMultipleOriginal(Vec<Catalog>),
 }
 
+impl CatalogCatalogTypes {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::CatalogMultipleMinimized(catalogs) => catalogs.is_empty(),
+            Self::CatalogMultipleOriginal(catalogs) => catalogs.is_empty(),
+        }
+    }
+}
+
+impl Default for CatalogCatalogTypes {
+    fn default() -> Self {
+        Self::CatalogMultipleMinimized(Vec::new())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum CatalogServiceTypes {
     ServiceOnly(DataService),
     ServiceMinimized(DataServiceMinimized),
     ServiceMultiple(Vec<DataService>),
+    /// DSP 6 has `service` as an array, even with one.
+    ServiceMultipleMinimized(Vec<DataServiceMinimized>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]

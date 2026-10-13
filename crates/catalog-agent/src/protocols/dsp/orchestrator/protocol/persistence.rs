@@ -295,7 +295,7 @@ impl OrchestrationPersistenceForProtocol {
                 description: vec![],
             },
             dspace: CatalogDSpaceDeclaration {
-                participant_id: None,
+                participant_id: dto.inner.dspace_participant_id.clone(),
             },
             odrl_offer: None,
             extra_fields: Default::default(),
@@ -303,7 +303,9 @@ impl OrchestrationPersistenceForProtocol {
             datasets: CatalogDatasetTypes::DatasetMultipleMinimized(
                 datasets.iter().map(|d| d.into()).collect(),
             ),
-            data_services: CatalogServiceTypes::ServiceMinimized(main_dataservice_dto.into()),
+            data_services: CatalogServiceTypes::ServiceMultipleMinimized(vec![
+                main_dataservice_dto.into(),
+            ]),
         }
     }
 
@@ -368,7 +370,10 @@ impl OrchestrationPersistenceForProtocol {
                 title: dto.inner.dct_title,
                 description: vec![],
             },
-            odrl_offer: policies,
+            odrl_offer: policies
+                .into_iter()
+                .map(OdrlOffer::without_empty_rules)
+                .collect(),
             extra_fields: Default::default(),
             distribution: DatasetDistributionTypes::DistributionMultipleMinimized(
                 distributions.iter().map(|d| d.into()).collect(),
