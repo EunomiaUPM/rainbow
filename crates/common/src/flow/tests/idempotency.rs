@@ -92,6 +92,25 @@ async fn the_process_version_tells_a_retry_from_a_restart() {
     ));
 }
 
+/// A restart carrying other content (another data address) is new once the process moved on.
+#[tokio::test]
+async fn a_restart_with_other_content_is_superseded() {
+    let guard = guard();
+    guard.claim(key("start"), [1; 32], Some(5)).await.unwrap();
+    guard
+        .record_response(&key("start"), json!({}), Some(6))
+        .await
+        .unwrap();
+    assert!(matches!(
+        guard.check(&key("start"), &[2; 32], Some(6)).await.unwrap(),
+        IdempotencyVerdict::Conflict(_)
+    ));
+    assert!(matches!(
+        guard.check(&key("start"), &[2; 32], Some(8)).await.unwrap(),
+        IdempotencyVerdict::Superseded { .. }
+    ));
+}
+
 struct Facts {
     key: IdempotencyKey,
     hash: [u8; 32],

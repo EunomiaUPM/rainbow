@@ -124,6 +124,16 @@ pub struct OdrlOffer {
     pub description: Option<String>,
 }
 
+impl OdrlOffer {
+    /// The offer without empty rule lists, which DSP schemas reject (`minItems: 1`).
+    pub fn without_empty_rules(mut self) -> Self {
+        self.permission = self.permission.filter(|rules| !rules.is_empty());
+        self.obligation = self.obligation.filter(|rules| !rules.is_empty());
+        self.prohibition = self.prohibition.filter(|rules| !rules.is_empty());
+        self
+    }
+}
+
 impl Default for OdrlOffer {
     fn default() -> Self {
         OdrlOffer {

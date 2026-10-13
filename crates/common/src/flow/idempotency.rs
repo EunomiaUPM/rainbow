@@ -164,14 +164,16 @@ impl IdempotencyGuard {
         let Some(record) = self.store.get_idempotency_record(key).await? else {
             return Ok(IdempotencyVerdict::New(key.clone()));
         };
-        if &record.canonical_hash != canonical_hash {
-            return Ok(IdempotencyVerdict::Conflict(Box::new(record)));
-        }
+        // Once the process moved on, the same key is a new transition whatever it carries (a
+        // restart may send another data address); before that, other content is a conflict.
         if record.superseded_by(process_version) {
             return Ok(IdempotencyVerdict::Superseded {
                 key: key.clone(),
                 previous: Box::new(record),
             });
+        }
+        if &record.canonical_hash != canonical_hash {
+            return Ok(IdempotencyVerdict::Conflict(Box::new(record)));
         }
         Ok(IdempotencyVerdict::Replay(Box::new(record)))
     }

@@ -17,7 +17,7 @@
 
 //! Ready-made configs.
 
-use crate::config::services::TransferConfig;
+use crate::config::services::{ContractsConfig, TransferConfig};
 use std::sync::Arc;
 
 /// Transfer config pointing every agent at `localhost`, with no cache.
@@ -46,6 +46,31 @@ pub fn transfer_config_fixture() -> Arc<TransferConfig> {
             "hosts": { "http": { "protocol": "http", "url": "localhost", "port": null, "internal_port": null }, "grpc": null, "graphql": null },
             "api_version": "v1"
         }
+    });
+    Arc::new(serde_json::from_value(json).unwrap())
+}
+
+/// Contracts config pointing every agent at `localhost`.
+pub fn contracts_config_fixture() -> Arc<ContractsConfig> {
+    let json = serde_json::json!({
+        "common": {
+            "hosts": {
+                "http": { "protocol": "http", "url": "localhost", "port": null, "internal_port": null },
+                "grpc": null, "graphql": null
+            },
+            "db": { "db_type": "Postgres", "url": "localhost", "port": "5432" },
+            "api": { "version": "v1", "openapi_path": "/openapi.json" },
+            "connection": { "is_local": true, "is_prod": false, "is_vault_real": false, "has_tls_proxy": false }
+        },
+        "ssi_auth": {
+            "hosts": { "http": { "protocol": "http", "url": "localhost", "port": null, "internal_port": null }, "grpc": null, "graphql": null },
+            "api_version": "v1"
+        },
+        "catalog": {
+            "hosts": { "http": { "protocol": "http", "url": "localhost", "port": null, "internal_port": null }, "grpc": null, "graphql": null },
+            "api_version": "v1"
+        },
+        "is_catalog_datahub": false
     });
     Arc::new(serde_json::from_value(json).unwrap())
 }

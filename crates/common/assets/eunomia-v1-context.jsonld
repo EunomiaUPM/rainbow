@@ -120,6 +120,129 @@
           "@type": "@json"
         }
       }
+    },
+    "RpcNegotiationRequestInitMessage": {
+      "@id": "eunomia:RpcNegotiationRequestInitMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "associatedAgentPeer": "eunomia:associatedAgentPeer",
+        "providerAddress": "eunomia:providerAddress",
+        "callbackAddress": "dspace:callbackAddress",
+        "offer": {
+          "@id": "dspace:offer",
+          "@type": "@json"
+        }
+      }
+    },
+    "RpcNegotiationRequestMessage": {
+      "@id": "eunomia:RpcNegotiationRequestMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "offer": {
+          "@id": "dspace:offer",
+          "@type": "@json"
+        }
+      }
+    },
+    "RpcNegotiationOfferInitMessage": {
+      "@id": "eunomia:RpcNegotiationOfferInitMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "associatedAgentPeer": "eunomia:associatedAgentPeer",
+        "consumerAddress": "eunomia:consumerAddress",
+        "callbackAddress": "dspace:callbackAddress",
+        "offer": {
+          "@id": "dspace:offer",
+          "@type": "@json"
+        }
+      }
+    },
+    "RpcNegotiationOfferMessage": {
+      "@id": "eunomia:RpcNegotiationOfferMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "offer": {
+          "@id": "dspace:offer",
+          "@type": "@json"
+        }
+      }
+    },
+    "RpcNegotiationAcceptanceMessage": {
+      "@id": "eunomia:RpcNegotiationAcceptanceMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid"
+      }
+    },
+    "RpcNegotiationAgreementMessage": {
+      "@id": "eunomia:RpcNegotiationAgreementMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid"
+      }
+    },
+    "RpcNegotiationVerificationMessage": {
+      "@id": "eunomia:RpcNegotiationVerificationMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid"
+      }
+    },
+    "RpcNegotiationFinalizationMessage": {
+      "@id": "eunomia:RpcNegotiationFinalizationMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid"
+      }
+    },
+    "RpcNegotiationTerminationMessage": {
+      "@id": "eunomia:RpcNegotiationTerminationMessage",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "consumerPid": "dspace:consumerPid",
+        "providerPid": "dspace:providerPid",
+        "code": "dspace:code",
+        "reason": {
+          "@id": "dspace:reason",
+          "@container": "@set"
+        }
+      }
+    },
+    "RpcNegotiationResult": {
+      "@id": "eunomia:RpcNegotiationResult",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "request": {
+          "@id": "eunomia:request",
+          "@type": "@json"
+        },
+        "response": {
+          "@id": "eunomia:response",
+          "@type": "@json"
+        },
+        "negotiationAgentModel": {
+          "@id": "eunomia:negotiationAgentModel",
+          "@type": "@json"
+        }
+      }
     }
   }
 }

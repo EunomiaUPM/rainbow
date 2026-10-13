@@ -88,10 +88,10 @@ async fn a_retry_while_still_in_flight_replays() {
     ));
 }
 
-/// A different message on a moved-on process is still a conflict; the difference must be a
-/// term the start's scoped context defines, or expansion drops it.
+/// A different message conflicts until the process moves on; after that it is a new transition
+/// (a restart may send another data address). The difference must be a term the start defines.
 #[tokio::test]
-async fn different_content_conflicts_even_when_superseded() {
+async fn different_content_conflicts_until_the_process_moves_on() {
     let guard = Guard::new();
 
     let start = start_message().await;
@@ -120,8 +120,12 @@ async fn different_content_conflicts_even_when_superseded() {
         "a differing dataAddress really is different content"
     );
     assert!(matches!(
-        guard.check(&tampered, Some(7)).await.unwrap(),
+        guard.check(&tampered, Some(6)).await.unwrap(),
         IdempotencyVerdict::Conflict(_)
+    ));
+    assert!(matches!(
+        guard.check(&tampered, Some(7)).await.unwrap(),
+        IdempotencyVerdict::Superseded { .. }
     ));
 }
 
