@@ -1,69 +1,17 @@
-# Initialization and Automation Scripts Documentation
+# Scripts
 
-This document describes all available scripts for initializing, automating, or resetting workflows within the **Eunomia** project.
+Helper scripts, grouped by purpose. Every script resolves its paths from its own location, so it
+can be launched from any directory. Most tasks of the root `Taskfile.yml` call them (`task --list`).
 
----
-
-## Table of Contents
-
-- [Auto-Setup](#Auto-Setup)
-- [Auto-Start](#Auto-Start)
-- [Auto-Onboarding](#Auto-Onboarding)
-
----
-
-## `Auto-Setup`
-
-### Purpose
-Automates the setup of all services.
-
-### Prerequisites
-- Docker and Cargo installed
-- WaltId operational
-
-### Usage
-```bash
-    ./auto-setup.sh # for bash
-    # or
-    ./auto-setup.ps1 # for powershell
-```
-
----
-
-## `Auto-Start`
-
-### Purpose
-Automates the startup of all services.
-
-### Prerequisites
-- Docker and Cargo installed
-- Prior setup completed
-- WaltId operational
-
-### Usage
-```bash
-    ./auto-start.sh # for bash
-    # or
-    ./auto-start.ps1 # for powershell
-```
-
----
-
-## `Auto-Onboarding`
-
-### Purpose
-Automates the full initialization flow of a **Consumer** within a **Provider**, including:
-
-1. Receiving credentials from the Authority.
-2. Onboarding the Consumer into the Provider.
-
-### Prerequisites
-- Necessary services running (Consumer, Provider, Authority, Wallet)
-- `Docker-Compose` operational for databases
-
-### Usage
-```bash
-    ./auto-onboarding.sh # for bash
-    # or 
-    ./auto-onboarding.ps1 # for powershell
-```
+| Folder | Scripts | What they do |
+|---|---|---|
+| `run/` | `run-mini.ps1` | Brings up the mini stacks (published images) and waits until each agent answers. `-Target provider\|consumer\|all`, `-Down`. |
+| | `run-provider-dev`, `run-consumer-dev` (`.ps1`, `.sh`) | Dev mode: infrastructure in Docker (`deployment/dev`), the agent from source with `cargo watch`. |
+| | `compile.ps1` | Builds the admin console and copies it into the BFF. |
+| `onboarding/` | `auto-onboarding.ps1`, `auto-onboarding-dev` (`.ps1`, `.sh`), `auto-onboarding-mini.sh`, `auto-onboarding-prod.ps1` | Full onboarding against an authority on `:1500`: credentials for the consumer and the provider, then the consumer with the provider. One variant per environment (URLs). |
+| | `gaia.ps1` | Gaia-X flow against the local authority. |
+| `data/` | `populate_all.sh`, `populate_mock_*.sh` | Seed mock catalogs, contracts, transfers and mates into a running agent. |
+| | `populate_peer_catalogs.sh` | Seeds peer catalogs into the agent's Redis cache. |
+| `tck/` | `run-tck.sh`, `populate_tck.sh` | Prepare the agents and run the Eclipse DSP TCK. |
+| `tools/` | `add_license.sh`, `build-admin-gui.sh`, `build-openapi.py` | License headers, admin console build, OpenAPI artefacts from the per-agent specs. |
+| `lib/` | `auth.sh` | Shared by the bash scripts: the user token for the API calls. |

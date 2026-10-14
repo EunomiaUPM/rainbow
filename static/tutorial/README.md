@@ -16,10 +16,10 @@ To start the system with all necessary components (Mock Provider, Consumer, Keyc
 
 ```bash
 # For MacOS/Linux
-./scripts/bash/auto-onboarding.sh
+./scripts/onboarding/auto-onboarding-mini.sh
 
 # For Windows (PowerShell)
-./scripts/powershell/auto-onboarding.ps1
+./scripts/onboarding/auto-onboarding.ps1
 ```
 
 This script will:

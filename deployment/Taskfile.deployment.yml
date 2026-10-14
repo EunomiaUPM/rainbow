@@ -30,41 +30,31 @@ tasks:
   # ─────────────────────────────────────────────────────────────────────────
   dev:consumer:
     desc: "Start Consumer dev infra (db + redis) for local development"
-    dir: "{{.DEPLOYMENT_DIR}}/dev"
     cmds:
-      - bash run-consumer-dev.sh
+      - bash {{.SCRIPTS_DIR}}/run/run-consumer-dev.sh
 
   dev:provider:
     desc: "Start Provider dev infra (db + redis) for local development"
-    dir: "{{.DEPLOYMENT_DIR}}/dev"
     cmds:
-      - bash run-provider-dev.sh
+      - bash {{.SCRIPTS_DIR}}/run/run-provider-dev.sh
 
   # ─────────────────────────────────────────────────────────────────────────
   # DEV in TCK mode — same as dev:consumer / dev:provider, with DSP_TCK_MAPPING set so the
-  # agents play their TCK scenarios and mount the TCK trigger (scripts/run-tck.sh --agents=local)
+  # agents play their TCK scenarios and mount the TCK trigger (scripts/tck/run-tck.sh --agents=local)
   # Usage:
   #   task deployment:dev:consumer:tck
   #   task deployment:dev:provider:tck
   # ─────────────────────────────────────────────────────────────────────────
   dev:consumer:tck:
     desc: "Start Consumer dev (db + redis + agent) in DSP TCK mode"
-    dir: "{{.DEPLOYMENT_DIR}}/dev"
     env:
       DSP_TCK_MAPPING: "{{.ROOT_DIR}}/tck/tck_mapping.json"
     cmds:
-      - bash run-consumer-dev.sh
+      - bash {{.SCRIPTS_DIR}}/run/run-consumer-dev.sh
 
   dev:provider:tck:
     desc: "Start Provider dev (db + redis + agent) in DSP TCK mode"
-    dir: "{{.DEPLOYMENT_DIR}}/dev"
     env:
       DSP_TCK_MAPPING: "{{.ROOT_DIR}}/tck/tck_mapping.json"
     cmds:
-      - bash run-provider-dev.sh
-
-  dev:provider:ref:
-    desc: "Start Provider dev infra (db + redis) for local development with transfer ref"
-    dir: "{{.DEPLOYMENT_DIR}}/dev"
-    cmds:
-      - bash run-provider-dev-ref.sh
+      - bash {{.SCRIPTS_DIR}}/run/run-provider-dev.sh

@@ -9,8 +9,8 @@
 #   - Idempotent: running it twice changes nothing.
 #
 # Usage:
-#   scripts/add_license.sh [dir]            # rewrite in place (default: crates)
-#   scripts/add_license.sh [dir] --check    # report only, exit 1 if any drift
+#   scripts/tools/add_license.sh [dir]      # rewrite in place (default: crates)
+#   scripts/tools/add_license.sh [dir] --check    # report only, exit 1 if any drift
 
 set -euo pipefail
 

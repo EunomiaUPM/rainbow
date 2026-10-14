@@ -1,11 +1,11 @@
 #!/bin/bash
 # Populates every mock dataset as the user of lib/auth.sh (EUNOMIA_TOKEN, or none in static mode).
 #
-# Usage: scripts/populate_all.sh
+# Usage: scripts/data/populate_all.sh
 # Env:   EUNOMIA_TOKEN, VISIBILITY (of the mates)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/auth.sh
-source "$SCRIPT_DIR/lib/auth.sh"
+# shellcheck source=../lib/auth.sh
+source "$SCRIPT_DIR/../lib/auth.sh"
 
 # Tenants are gone (the token's user decides what each call creates and sees), so the former
 # creation of a tenant with its OAuth user and main catalog is disabled:

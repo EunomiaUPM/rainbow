@@ -154,7 +154,7 @@ task deployment:mini:provider   # provider on http://localhost:1200
 task deployment:mini:consumer   # consumer on http://localhost:1100
 ```
 
-On Windows, `deployment/run-mini.ps1` does the same and waits until each agent answers
+On Windows, `scripts/run/run-mini.ps1` does the same and waits until each agent answers
 (`-Target provider|consumer|all`, `-Down` to stop). The mini stacks use the `static` identity: no
 sign-in, every request acts as the root system user.
 
@@ -203,7 +203,7 @@ stack with an OpenTelemetry collector, Jaeger (`:16686`), Prometheus (`:9090`) a
 
 ## Conformance
 
-`scripts/run-tck.sh` seeds the agents and runs the Eclipse DSP TCK (`1.0.0-RC6`) against them,
+`scripts/tck/run-tck.sh` seeds the agents and runs the Eclipse DSP TCK (`1.0.0-RC6`) against them,
 using the fixtures in `tck/` and `static/dsp_tck`.
 
 ## Tests

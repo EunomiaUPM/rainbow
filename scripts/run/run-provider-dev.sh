@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "${BASH_SOURCE[0]}")/../../deployment/dev"
+
 # 1. Environment variables
 export VAULT_PATH="./../../static/vault/provider/secrets"
 export VAULT_APP_DB="db.json.example"

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 PROVIDER_URL="${PROVIDER_URL:-http://127.0.0.1:1200}"
 CONSUMER_URL="${CONSUMER_URL:-http://127.0.0.1:1100}"
@@ -19,8 +19,8 @@ warn() { echo -e "\033[33m  ! $*\033[0m" >&2; }
 die()  { echo -e "\033[31m  ✗ $*\033[0m" >&2; exit 1; }
 new_uuid() { uuidgen 2>/dev/null | tr '[:upper:]' '[:lower:]' || cat /proc/sys/kernel/random/uuid; }
 
-# shellcheck source=lib/auth.sh
-source "$SCRIPT_DIR/lib/auth.sh"
+# shellcheck source=../lib/auth.sh
+source "$SCRIPT_DIR/../lib/auth.sh"
 
 curl_j() {
   local method=$1 url=$2 body=${3:-}

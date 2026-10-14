@@ -3,7 +3,7 @@
 
 Writes a JSON twin next to every source and merges them into merged_openapi.{yaml,json}, the
 document the agents serve at /api/v1/docs. Fails on clashing paths, operation ids or components.
-Usage: scripts/build-openapi.py [--check]
+Usage: scripts/tools/build-openapi.py [--check]
 """
 import json
 import sys
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent / "static" / "specs" / "openapi"
+ROOT = Path(__file__).resolve().parents[2] / "static" / "specs" / "openapi"
 SOURCES = [
     "well-known/well_known.yaml",
     "oauth/oauth.yaml",
@@ -119,7 +119,7 @@ def main():
         else:
             path.write_text(text)
     if stale:
-        sys.exit("out of date, run scripts/build-openapi.py: " + ", ".join(map(str, stale)))
+        sys.exit("out of date, run scripts/tools/build-openapi.py: " + ", ".join(map(str, stale)))
     print(f"{len(merged['paths'])} paths from {len(specs)} specs")
 
 

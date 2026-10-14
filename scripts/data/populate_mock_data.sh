@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/auth.sh
-source "$SCRIPT_DIR/lib/auth.sh"
+# shellcheck source=../lib/auth.sh
+source "$SCRIPT_DIR/../lib/auth.sh"
 
 # ==========================================
 # CONFIGURATION
