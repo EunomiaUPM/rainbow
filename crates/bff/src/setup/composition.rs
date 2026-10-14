@@ -47,7 +47,9 @@ impl ServiceModuleTrait for BffModule {
     }
 
     fn http(&self) -> Option<(String, Router)> {
-        let router = GatewayHttpRouter::new(self.ctx.clone()).router();
-        Some((String::new(), Router::new().nest("/admin", router)))
+        Some((
+            String::new(),
+            GatewayHttpRouter::new(self.ctx.clone()).console_router(),
+        ))
     }
 }

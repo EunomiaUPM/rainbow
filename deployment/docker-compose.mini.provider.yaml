@@ -27,7 +27,7 @@ services:
 
   fafnir-setup:
     container_name: "provider-fafnir-setup"
-    image: "rmenendez8/fafnir:v0.2.1"
+    image: "rmenendez8/fafnir:v0.2.2"
     platform: linux/amd64
     depends_on:
       provider-db:
@@ -46,7 +46,7 @@ services:
 
   fafnir-wallet:
     container_name: "provider-fafnir-wallet"
-    image: "rmenendez8/fafnir:v0.2.0"
+    image: "rmenendez8/fafnir:v0.2.2"
     platform: linux/amd64
     restart: always
     depends_on:
@@ -77,7 +77,7 @@ services:
   # =========================
   provider-setup:
     container_name: provider-setup
-    image: "rmenendez8/eunomia:v1.4.0"
+    image: "rmenendez8/eunomia:v1.6.test"
     command: ["setup", "-e", "/app/static/environment/config/core.provider.mini.yaml"]
     volumes:
       - ./../static/:/app/static
@@ -96,7 +96,7 @@ services:
   # =========================
   provider:
     container_name: provider
-    image: "rmenendez8/eunomia:v1.4.0"
+    image: "rmenendez8/eunomia:v1.6.test"
     command: ["start", "-e", "/app/static/environment/config/core.provider.mini.yaml"]
     ports:
       - "1200:1200"

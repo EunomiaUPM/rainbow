@@ -42,6 +42,13 @@ impl GatewayHttpRouter {
         Self { ctx }
     }
 
+    pub fn console_router(self) -> Router {
+        Router::new()
+            .route("/", get(FrontendHandlers::console_root))
+            .route("/admin/", get(FrontendHandlers::static_asset))
+            .nest("/admin", self.router())
+    }
+
     /// The API answers under both `/admin/api` and `/api`; any other path serves the SPA.
     pub fn router(self) -> Router {
         let cors = CorsLayer::new()

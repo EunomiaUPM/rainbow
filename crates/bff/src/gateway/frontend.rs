@@ -22,7 +22,7 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::{header, StatusCode, Uri};
-use axum::response::{IntoResponse, Response};
+use axum::response::{IntoResponse, Redirect, Response};
 use axum::Json;
 use common::config::types::traits::CommonConfigTrait;
 use rust_embed::Embed;
@@ -63,6 +63,10 @@ impl FrontendHandlers {
             .header(header::CONTENT_TYPE, mime_type.as_ref())
             .body(Body::from(content.data))
             .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+    }
+
+    pub async fn console_root() -> Redirect {
+        Redirect::temporary("/admin/")
     }
 
     pub async fn fe_config(State(ctx): State<Arc<AppContext>>) -> impl IntoResponse {

@@ -154,6 +154,13 @@ task deployment:mini:provider   # provider on http://localhost:1200
 task deployment:mini:consumer   # consumer on http://localhost:1100
 ```
 
+On Windows, `deployment/run-mini.ps1` does the same and waits until each agent answers
+(`-Target provider|consumer|all`, `-Down` to stop). The mini stacks use the `static` identity: no
+sign-in, every request acts as the root system user.
+
+To run a whole dataspace (authority, provider and consumer), optionally behind Keycloak, use the
+mini deployment of [eunomia-deployment](https://github.com/EunomiaUPM/eunomia-deployment).
+
 With both running and an authority listening on `:1500`, onboard the consumer with the provider:
 
 ```bash
