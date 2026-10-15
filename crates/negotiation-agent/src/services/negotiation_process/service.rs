@@ -35,11 +35,8 @@ use crate::data::sea_orm::orm::negotiation_process::{
 use crate::data::sea_orm::orm::negotiation_process_identifier::{
     EditNegotiationIdentifierModel, NewNegotiationIdentifierModel,
 };
-use crate::data::repo::agreement::AgreementRepoTrait;
-use crate::data::repo::negotiation_message::NegotiationMessageRepoTrait;
 use crate::data::repo::negotiation_process_identifier::NegotiationIdentifierRepoTrait;
 use crate::data::repo::negotiation_process::NegotiationProcessRepoTrait;
-use crate::data::repo::offer::OfferRepoTrait;
 use crate::entities::filters::NegotiationProcessFilter;
 use crate::entities::negotiation_process::{EditNegotiationProcessDto, NewNegotiationProcessDto};
 use crate::setup::context::AppContext;
@@ -64,18 +61,6 @@ impl NegotiationProcessService {
         self.ctx.repos.negotiation_identifier_repo()
     }
 
-    fn messages_repo(&self) -> Arc<dyn NegotiationMessageRepoTrait> {
-        self.ctx.repos.negotiation_message_repo()
-    }
-
-    fn offers_repo(&self) -> Arc<dyn OfferRepoTrait> {
-        self.ctx.repos.offer_repo()
-    }
-
-    fn agreements_repo(&self) -> Arc<dyn AgreementRepoTrait> {
-        self.ctx.repos.agreement_repo()
-    }
-
     async fn fetch_details(
         &self,
         process: NegotiationProcessModel,
@@ -83,31 +68,15 @@ impl NegotiationProcessService {
         let process_urn = Urn::from_str(&process.id)
             .map_err(|e| Errors::format(BadFormat::Received, e.to_string(), None))?;
 
-        let (identifiers, messages, offers, agreements) = (
-            self.identifiers_repo(),
-            self.messages_repo(),
-            self.offers_repo(),
-            self.agreements_repo(),
-        );
-        let (identifiers_models, messages, offers, agreement) = tokio::try_join!(
-            identifiers.get_identifiers_by_process_id(&process_urn),
-            messages.get_messages_by_process_id(&OwnerScope::All, &process_urn),
-            offers.get_offers_by_negotiation_process(&OwnerScope::All, &process_urn),
-            agreements.get_agreement_by_negotiation_process(&OwnerScope::All, &process_urn),
-        )?;
-
-        let identifiers: HashMap<String, String> = identifiers_models
+        let identifiers: HashMap<String, String> = self
+            .identifiers_repo()
+            .get_identifiers_by_process_id(&process_urn)
+            .await?
             .into_iter()
             .filter_map(|i| i.id_value.map(|v| (i.id_key, v)))
             .collect();
 
-        Ok(NegotiationProcessView::assemble(
-            process,
-            identifiers,
-            messages,
-            offers,
-            agreement,
-        ))
+        Ok(NegotiationProcessView::assemble(process, identifiers))
     }
 }
 
@@ -156,13 +125,12 @@ impl NegotiationProcessServiceTrait for NegotiationProcessService {
             .into_iter()
             .map(|p| {
                 let extra = grouped_ids.remove(&p.id).unwrap_or_default();
-                NegotiationProcessView::assemble(p, extra, vec![], vec![], None)
+                NegotiationProcessView::assemble(p, extra)
             })
             .collect();
 
         Ok(Paginated::from_page(items, &page, total, |p| {
-            let updated = p.inner.updated_at.as_ref().unwrap_or(&p.inner.created_at);
-            Cursor::encode_sorted(&p.inner.created_at, updated, sort)
+            Cursor::encode_sorted(&p.created_at, &p.updated_at, sort)
         }))
     }
 
@@ -276,7 +244,7 @@ impl NegotiationProcessServiceTrait for NegotiationProcessService {
             .into_iter()
             .map(|p| {
                 let extra = grouped_ids.remove(&p.id).unwrap_or_default();
-                NegotiationProcessView::assemble(p, extra, vec![], vec![], None)
+                NegotiationProcessView::assemble(p, extra)
             })
             .collect();
 
@@ -316,11 +284,10 @@ impl NegotiationProcessServiceTrait for NegotiationProcessService {
         }
 
         let identifiers = cmd.identifiers.clone().unwrap_or_default();
-        let view =
-            NegotiationProcessView::assemble(created_process, identifiers, vec![], vec![], None);
+        let view = NegotiationProcessView::assemble(created_process, identifiers);
         events::emit_action!(
             self.ctx.events,
-            &view.inner.owner(),
+            &view.owner(),
             crate::EVENT_PREFIX,
             "process",
             "create",
@@ -381,7 +348,7 @@ impl NegotiationProcessServiceTrait for NegotiationProcessService {
         let view = self.fetch_details(updated_process).await?;
         events::emit_action!(
             self.ctx.events,
-            &view.inner.owner(),
+            &view.owner(),
             crate::EVENT_PREFIX,
             "process",
             "edit",

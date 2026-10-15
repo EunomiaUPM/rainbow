@@ -67,11 +67,14 @@ impl NegotiationDspPersistence {
         record: NegotiationMessageRecord,
         attachment: NegotiationAttachment,
     ) -> Outcome<NegotiationProcess> {
-        let view = self.ctx.processes().create(user, cmd).await?;
-        let process = NegotiationProcess::hydrate(
-            view.inner,
-            view.identifiers.into_iter().map(|(k, v)| (k, Some(v))),
-        )?;
+        let correlation = self.ctx.processes().create(user, cmd).await?.correlation;
+        let pid = correlation
+            .consumer_pid
+            .or(correlation.provider_pid)
+            .ok_or_else(|| Errors::crazy("opened negotiation has no pid", None))?;
+        let process = self.hydrate_process(&pid).await?.ok_or_else(|| {
+            Errors::crazy(format!("negotiation {pid} vanished after a write"), None)
+        })?;
         let state = process.state;
         let message_id = self.write_message(&process, record, state, state).await?;
         self.attach(&process, &message_id, attachment).await?;
@@ -167,7 +170,7 @@ impl NegotiationDspPersistence {
             payload: record.payload,
         };
         let view = self.ctx.messages().create(&Self::actor(), &cmd).await?;
-        Self::urn(&view.inner.id)
+        Self::urn(&view.id)
     }
 
     async fn attach(

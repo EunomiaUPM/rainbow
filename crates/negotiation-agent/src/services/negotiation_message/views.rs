@@ -17,32 +17,47 @@
 
 //! Negotiation message output views.
 
-use crate::data::sea_orm::orm::agreement as agreement_model;
-use crate::data::sea_orm::orm::negotiation_message as negotiation_message_model;
-use crate::data::sea_orm::orm::offer as offer_model;
+use crate::data::sea_orm::orm::negotiation_message::Model as NegotiationMessageModel;
+use chrono::{DateTime, Utc};
+use common::oauth::{RolePath, Visibility};
 use serde::{Deserialize, Serialize};
+use serde_json::Value as Json;
 
-/// Management view of a negotiation message with linked offer and agreement.
+/// Management view of a negotiation message.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NegotiationMessageView {
-    #[serde(flatten)]
-    pub inner: negotiation_message_model::Model,
-    pub offer: Option<offer_model::Model>,
-    pub agreement: Option<agreement_model::Model>,
+    pub id: String,
+    pub negotiation_process_id: String,
+    pub user_id: String,
+    pub user_role: RolePath,
+    pub visibility: Visibility,
+    pub direction: String,
+    pub protocol: String,
+    pub message_type: String,
+    pub state_transition_from: String,
+    pub state_transition_to: String,
+    pub payload: Json,
+    pub occurred_at: DateTime<Utc>,
 }
 
+common::impl_owned!(NegotiationMessageView);
+
 impl NegotiationMessageView {
-    /// Assemble view from message model and optional linked offer and agreement.
-    pub fn assemble(
-        inner: negotiation_message_model::Model,
-        offer: Option<offer_model::Model>,
-        agreement: Option<agreement_model::Model>,
-    ) -> Self {
+    pub fn assemble(msg: NegotiationMessageModel) -> Self {
         Self {
-            inner,
-            offer,
-            agreement,
+            id: msg.id,
+            negotiation_process_id: msg.negotiation_agent_process_id,
+            user_id: msg.user_id,
+            user_role: msg.user_role,
+            visibility: msg.visibility,
+            direction: msg.direction,
+            protocol: msg.protocol,
+            message_type: msg.message_type,
+            state_transition_from: msg.state_transition_from,
+            state_transition_to: msg.state_transition_to,
+            payload: msg.payload,
+            occurred_at: msg.created_at.with_timezone(&Utc),
         }
     }
 }

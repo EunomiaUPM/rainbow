@@ -17,6 +17,7 @@
 
 //! A stored negotiation as the DSP flows read it: its row with the pids, role and state parsed.
 
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use common::oauth::{OwnedTrait, Owner};
@@ -24,6 +25,7 @@ use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::data::sea_orm::orm::negotiation_process::Model;
+use crate::entities::negotiation_process::NegotiationCorrelation;
 use crate::protocols::dsp::entities::role::NegotiationRole;
 use crate::protocols::dsp::entities::state::NegotiationState;
 
@@ -39,8 +41,8 @@ pub struct NegotiationProcess {
 
 impl NegotiationProcess {
     /// Identifier keys the pids are stored under.
-    pub const CONSUMER_PID: &'static str = "consumerPid";
-    pub const PROVIDER_PID: &'static str = "providerPid";
+    pub const CONSUMER_PID: &'static str = NegotiationCorrelation::CONSUMER_PID;
+    pub const PROVIDER_PID: &'static str = NegotiationCorrelation::PROVIDER_PID;
 
     /// The row with its identifiers; a role or state outside DSP is a broken record.
     pub fn hydrate(
@@ -102,6 +104,17 @@ impl NegotiationProcess {
             NegotiationRole::Provider => self.consumer_pid.as_deref(),
             NegotiationRole::Consumer => self.provider_pid.as_deref(),
         }
+    }
+
+    /// The pids as stored identifiers.
+    pub fn identifiers(&self) -> HashMap<String, String> {
+        [
+            (Self::CONSUMER_PID, &self.consumer_pid),
+            (Self::PROVIDER_PID, &self.provider_pid),
+        ]
+        .into_iter()
+        .filter_map(|(key, pid)| pid.clone().map(|pid| (key.to_string(), pid)))
+        .collect()
     }
 
     /// Microseconds of the last write: the table has no counter, and every write stamps it.

@@ -41,12 +41,16 @@ impl NegotiationRpcResult {
     pub const TYPE: &'static str = "RpcNegotiationResult";
 
     pub fn assemble(outcome: NegotiationRpcOutcome) -> Self {
+        let identifiers = outcome.process.identifiers();
         Self {
             context: EUNOMIA_CONTEXT_URL,
             kind: Self::TYPE,
             request: outcome.request,
             response: outcome.response,
-            negotiation_agent_model: outcome.view,
+            negotiation_agent_model: NegotiationProcessView::assemble(
+                outcome.process.model,
+                identifiers,
+            ),
         }
     }
 }

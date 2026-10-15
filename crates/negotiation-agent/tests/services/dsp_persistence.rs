@@ -93,11 +93,7 @@ fn messages(
         })
         .times(1)
         .returning(|_, _| {
-            Ok(NegotiationMessageView::assemble(
-                message_row(200),
-                None,
-                None,
-            ))
+            Ok(NegotiationMessageView::assemble(message_row(200)))
         });
     messages
 }
@@ -113,9 +109,6 @@ fn edits_to(state: &'static str) -> MockNegotiationProcessServiceTrait {
             Ok(NegotiationProcessView::assemble(
                 process_row(1, "Provider", "X"),
                 HashMap::new(),
-                vec![],
-                vec![],
-                None,
             ))
         });
     processes
@@ -169,9 +162,6 @@ async fn opening_stores_process_message_and_offer() {
         Ok(NegotiationProcessView::assemble(
             process_row(1, &cmd.role, &cmd.state),
             cmd.identifiers.clone().unwrap_or_default(),
-            vec![],
-            vec![],
-            None,
         ))
     });
     let mut offers = MockOfferServiceTrait::new();
@@ -320,9 +310,6 @@ async fn a_termination_keeps_code_and_reason() {
             Ok(NegotiationProcessView::assemble(
                 process_row(1, "Provider", "X"),
                 HashMap::new(),
-                vec![],
-                vec![],
-                None,
             ))
         });
     let ctx = stored("Provider", "OFFERED")

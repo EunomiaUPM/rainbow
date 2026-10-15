@@ -25,7 +25,6 @@ use crate::protocols::dsp::entities::context_rpc::{NegotiationRpcDomain, Negotia
 use crate::protocols::dsp::entities::state::NegotiationState;
 use crate::protocols::dsp::services::dsp_persistence::service::NegotiationDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
-use crate::setup::context::AppContext;
 
 /// Stores the process the provider accepted, or moves ours back to REQUESTED; keeps the offer.
 pub struct RequestHandler;
@@ -33,7 +32,6 @@ pub struct RequestHandler;
 impl RequestHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         user: &UserInfo,
         domain: NegotiationRpcDomain,
@@ -41,10 +39,10 @@ impl RequestHandler {
     ) -> Outcome<NegotiationRpcOutcome> {
         let requested = NegotiationState::REQUESTED;
         if domain.process.is_none() {
-            return OutboundTransition::open(ctx, persistence, user, domain, reply, requested)
+            return OutboundTransition::open(persistence, user, domain, reply, requested)
                 .await;
         }
         let offer = OutboundTransition::offer(&domain)?;
-        OutboundTransition::apply(ctx, persistence, domain, reply, requested, offer).await
+        OutboundTransition::apply(persistence, domain, reply, requested, offer).await
     }
 }

@@ -40,7 +40,6 @@ use crate::protocols::dsp::entities::state_change::{
     MessageDirection, NegotiationAttachment, NegotiationMessageRecord, OfferRecord,
 };
 use crate::protocols::dsp::services::dsp_persistence::service::NegotiationDspPersistence;
-use crate::setup::context::AppContext;
 
 /// The state change our own message causes, and the process it opens.
 pub struct OutboundTransition;
@@ -48,7 +47,6 @@ pub struct OutboundTransition;
 impl OutboundTransition {
     /// Moves the process to `target` and keeps the message as sent, with what it brought.
     pub async fn apply(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         domain: NegotiationRpcDomain,
         reply: &Value,
@@ -64,12 +62,11 @@ impl OutboundTransition {
         let process = persistence
             .change_with(domain.existing()?, change, attachment)
             .await?;
-        Self::sent(ctx, domain, reply, process).await
+        Ok(NegotiationRpcOutcome::sent(domain, reply, process))
     }
 
     /// Stores the process the peer accepted, with both pids, the message and its offer.
     pub async fn open(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         user: &UserInfo,
         domain: NegotiationRpcDomain,
@@ -101,7 +98,7 @@ impl OutboundTransition {
         let process = persistence
             .open_process(user, &cmd, Self::record(&domain), Self::offer(&domain)?)
             .await?;
-        Self::sent(ctx, domain, reply, process).await
+        Ok(NegotiationRpcOutcome::sent(domain, reply, process))
     }
 
     /// The offer a request or offer carried, as sent.
@@ -132,20 +129,6 @@ impl OutboundTransition {
             direction: MessageDirection::Outbound,
             payload: domain.outgoing.json.clone(),
         }
-    }
-
-    /// The outcome, with the process as the management API shows it.
-    async fn sent(
-        ctx: &AppContext,
-        domain: NegotiationRpcDomain,
-        reply: &Value,
-        process: NegotiationProcess,
-    ) -> Outcome<NegotiationRpcOutcome> {
-        let view = ctx
-            .processes()
-            .get_one(&NegotiationDspPersistence::actor(), &process.id()?)
-            .await?;
-        Ok(NegotiationRpcOutcome::sent(domain, reply, process, view))
     }
 
     fn text(value: &Value) -> String {

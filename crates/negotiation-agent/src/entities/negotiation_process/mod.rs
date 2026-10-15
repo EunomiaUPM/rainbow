@@ -25,6 +25,38 @@ use common::oauth::{Owner, Visibility};
 use std::collections::HashMap;
 use urn::Urn;
 
+/// How a negotiation is matched with its peer: identifiers, pids, peer and callback.
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct NegotiationCorrelation {
+    pub identifiers: HashMap<String, String>,
+    pub consumer_pid: Option<String>,
+    pub provider_pid: Option<String>,
+    pub callback_address: Option<String>,
+    pub peer_participant_id: String,
+}
+
+impl NegotiationCorrelation {
+    /// Identifier keys the pids are stored under.
+    pub const CONSUMER_PID: &'static str = "consumerPid";
+    pub const PROVIDER_PID: &'static str = "providerPid";
+
+    /// Correlation with the pids lifted out of `identifiers`.
+    pub fn new(
+        identifiers: HashMap<String, String>,
+        callback_address: Option<String>,
+        peer_participant_id: String,
+    ) -> Self {
+        Self {
+            consumer_pid: identifiers.get(Self::CONSUMER_PID).cloned(),
+            provider_pid: identifiers.get(Self::PROVIDER_PID).cloned(),
+            identifiers,
+            callback_address,
+            peer_participant_id,
+        }
+    }
+}
+
 /// New negotiation process with its identifiers.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

@@ -146,7 +146,7 @@ impl NegotiationAgentProcessesRouter {
     ) -> AppResult<(HeaderMap, Json<NegotiationProcessView>)> {
         let urn = extract_path_urn(&id)?;
         let view = state.ctx.processes().get_one(&user, &urn).await?;
-        if view.identifiers.contains_key(&key_id) {
+        if view.correlation.identifiers.contains_key(&key_id) {
             Ok((headers.response_headers(), Json(view)))
         } else {
             Err(ymir::errors::Errors::missing_resource(
