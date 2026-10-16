@@ -211,5 +211,5 @@ async fn create_forces_caller_tenant_for_non_admin() {
         .create(&TestUsers::user("tenant-2", "/admin/tenant-2"), &cmd)
         .await
         .unwrap();
-    assert_eq!(view.inner.user_id, "tenant-2");
+    assert_eq!(view.user_id, "tenant-2");
 }

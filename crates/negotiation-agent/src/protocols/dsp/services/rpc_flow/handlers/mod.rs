@@ -33,7 +33,6 @@ use ymir::errors::{Errors, Outcome};
 
 use crate::entities::negotiation_process::NewNegotiationProcessDto;
 use crate::protocols::dsp::entities::context_rpc::{NegotiationRpcDomain, NegotiationRpcOutcome};
-use crate::protocols::dsp::entities::process::NegotiationProcess;
 use crate::protocols::dsp::entities::role::NegotiationRole;
 use crate::protocols::dsp::entities::state::NegotiationState;
 use crate::protocols::dsp::entities::state_change::{

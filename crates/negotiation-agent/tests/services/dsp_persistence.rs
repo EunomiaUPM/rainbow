@@ -38,6 +38,7 @@ use negotiation_agent::services::negotiation_process::views::NegotiationProcessV
 use negotiation_agent::services::negotiation_process::MockNegotiationProcessServiceTrait;
 use negotiation_agent::services::offer::views::OfferView;
 use negotiation_agent::services::offer::MockOfferServiceTrait;
+use common::dsp_common::persistence::INITIAL_STATE;
 use serde_json::json;
 
 use crate::support::context::TestContext;
@@ -154,7 +155,7 @@ async fn a_broken_role_fails_hydration() {
     assert!(result.is_err());
 }
 
-/// Opening a process stores it, its first message (no transition) and the offer it brought.
+/// Opening a process stores it, its first message (from INITIAL) and the offer it brought.
 #[tokio::test]
 async fn opening_stores_process_message_and_offer() {
     let mut processes = MockNegotiationProcessServiceTrait::new();
@@ -173,9 +174,10 @@ async fn opening_stores_process_message_and_offer() {
         })
         .times(1)
         .returning(|_, _| Ok(OfferView::assemble(offer_row(1))));
-    let ctx = TestContext::new()
+    // The stored process is read back by its pid after the write.
+    let ctx = stored("Provider", "REQUESTED")
         .processes(processes)
-        .messages(messages("ContractRequestMessage", "REQUESTED", "REQUESTED"))
+        .messages(messages("ContractRequestMessage", INITIAL_STATE, "REQUESTED"))
         .offers(offers)
         .build();
     let cmd = negotiation_agent::entities::negotiation_process::NewNegotiationProcessDto {
