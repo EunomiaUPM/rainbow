@@ -46,6 +46,9 @@ pub struct EventEnvelope {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trace_context: Option<String>,
     pub payload: serde_json::Value,
+    /// When someone who sees the event marked it read; `None` while unread.
+    #[serde(default)]
+    pub read_at: Option<DateTime<Utc>>,
 }
 
 impl EventEnvelope {
@@ -70,6 +73,7 @@ impl EventEnvelope {
             correlation_id,
             trace_context: TraceParent::current(),
             payload,
+            read_at: None,
         }
     }
 
@@ -95,6 +99,7 @@ impl EventEnvelope {
             correlation_id,
             trace_context,
             payload,
+            read_at: None,
         }
     }
 }

@@ -1,115 +1,151 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowUpRight } from "lucide-react";
 import {
-  useGetAgreementByIdS,
   getGetAgreementByIdSQueryOptions,
+  useGetAgreementByIdS,
 } from "shared/src/data/orval/negotiations/negotiations";
-import { InfoList } from "shared/src/components/ui/info-list";
-import { FormatDate } from "shared/src/components/ui/format-date";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
-import { formatIdentifier, formatUrn } from "shared/src/lib/utils.ts";
+import { useGetTransferProcesses } from "shared/src/data/orval/transfers/transfers";
+import { TransferProcessDto } from "shared/src/data/orval/model";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { PageSection } from "shared/src/components/layout/PageSection";
-import { InfoGrid } from "shared/src/components/layout/InfoGrid";
-import { PolicyWrapperShow } from "shared/components/PolicyWrapperShow";
-import { AgreementActions } from "shared/components/actions/AgreementActions";
+import { FieldGrid } from "shared/src/components/layout/FieldGrid";
+import { Badge } from "shared/src/components/ui/badge";
+import { FormatDate } from "shared/src/components/ui/format-date";
+import { DataTable } from "shared/src/components/DataTable";
+import { ParticipantLabel } from "shared/src/components/identity/ParticipantLabel";
+import { DatasetLabel } from "shared/src/components/identity/DatasetLabel";
+import { Identifier } from "shared/src/components/identity/Identifier";
+import { OdrlRulesView } from "shared/src/components/policy/OdrlRulesView";
+import { JsonViewer } from "shared/src/components/json/JsonViewer";
+import { AgreementActions } from "shared/src/components/actions/AgreementActions";
+import { useParticipantDirectory } from "shared/src/data/useParticipantDirectory";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "shared/src/components/ui/accordion";
 
-/**
- * Route for displaying agreement details.
- */
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
-  loader: ({ context: { queryClient }, params: { agreementId } }) => {
-    return queryClient.ensureQueryData(getGetAgreementByIdSQueryOptions(agreementId));
-  },
+  loader: ({ context: { queryClient }, params: { agreementId } }) =>
+    queryClient.ensureQueryData(getGetAgreementByIdSQueryOptions(agreementId)),
 });
 
 function RouteComponent() {
-  const formatString = (text: string = "") => {
-    return text.replace(/[()[]{}"]/g, " ");
-  };
   const { agreementId } = Route.useParams();
+  const navigate = useNavigate();
+  const { isSelf } = useParticipantDirectory();
   const { data: response } = useGetAgreementByIdS(agreementId);
   const agreement = response?.status === 200 ? response.data : undefined;
+  const { data: transfersResponse } = useGetTransferProcesses(
+    { agreement_id: agreementId, limit: 50, sort: "created_at_desc" },
+    { query: { enabled: !!agreement } },
+  );
+  const transfers = transfersResponse?.status === 200 ? transfersResponse.data : undefined;
 
-  if (!agreement) return null; // Handle loading/error state if needed
+  if (!agreement) return null;
+  const myRole = isSelf(agreement.providerParticipantId) ? "Provider" : "Consumer";
+
   return (
     <PageLayout>
       <PageHeader
-        title="Agreement with id"
+        eyebrow="Agreement"
+        title={<DatasetLabel id={agreement.target} compact />}
         badge={
-          <Badge variant="info" size="lg">
-            {formatUrn(agreement.id)}
-          </Badge>
+          <>
+            <Badge variant="status" state={agreement.state}>
+              {agreement.state}
+            </Badge>
+            <Badge variant="role" dsrole={myRole}>
+              {myRole}
+            </Badge>
+          </>
         }
+        description={
+          <>
+            Agreed <FormatDate date={agreement.createdAt} />
+          </>
+        }
+        actions={<AgreementActions agreement={agreement} />}
       />
-      <InfoGrid>
-        <PageSection title="Agreement info">
-          <InfoList
-            items={[
-              {
-                label: "Agreement Id",
-                value: { type: "urn", value: formatIdentifier(agreement.id) },
-              },
-              {
-                label: "Related Message",
-                value: {
-                  type: "urn",
-                  value: formatIdentifier(agreement.negotiationAgentMessageId),
-                },
-              },
-              {
-                label: "Target Dataset",
-                value: {
-                  type: "text",
-                  value: formatIdentifier(agreement.target),
-                },
-              },
-              {
-                label: "Consumer Participant",
-                value: {
-                  type: "text",
-                  value: formatIdentifier(agreement.consumerParticipantId, 3),
-                },
-              },
-              {
-                label: "Provider Participant",
-                value: {
-                  type: "text",
-                  value: formatIdentifier(agreement.providerParticipantId, 3),
-                },
-              },
-              {
-                label: "Status",
-                value: {
-                  type: "custom",
-                  content: (
-                    <Badge variant="status" state={agreement.state ? "ACTIVE" : "PAUSE"}>
-                      {agreement.state}
-                    </Badge>
-                  ),
-                },
-              },
-              {
-                label: "Created at",
-                value: { type: "custom", content: <FormatDate date={agreement.createdAt} /> },
-              },
-            ]}
-          />
-        </PageSection>
 
-        <PolicyWrapperShow
-          key={(agreement.agreementContent as any)["@id"]}
-          policy={agreement.agreementContent as any}
-          datasetId={(agreement.agreementContent as any).target}
-          catalogId={undefined}
-          datasetName={(agreement.agreementContent as any).target}
+      <PageSection title="Summary">
+        <FieldGrid
+          columns={3}
+          fields={[
+            { label: "Provider", value: <ParticipantLabel id={agreement.providerParticipantId} /> },
+            { label: "Consumer", value: <ParticipantLabel id={agreement.consumerParticipantId} /> },
+            { label: "Dataset", value: <DatasetLabel id={agreement.target} /> },
+            { label: "Agreement", value: <Identifier value={agreement.id} tail={36} /> },
+            {
+              label: "Negotiation",
+              value: (
+                <Link
+                  to="/contract-negotiation/$cnProcess"
+                  params={{ cnProcess: agreement.negotiationAgentProcessId }}
+                  className="inline-flex items-center gap-1 text-brand-sky hover:underline"
+                >
+                  <Identifier value={agreement.negotiationAgentProcessId} copyable={false} />
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              ),
+            },
+            {
+              label: "Agreement message",
+              value: <Identifier value={agreement.negotiationAgentMessageId} />,
+            },
+          ]}
         />
-      </InfoGrid>
+      </PageSection>
 
-      {/* ACTIONS */}
-      <AgreementActions process={agreement} tiny={false} />
+      <PageSection title="Policy">
+        <OdrlRulesView policy={agreement.agreementContent} />
+        <Accordion type="multiple" className="mt-3">
+          <AccordionItem value="odrl" className="border-none">
+            <AccordionTrigger className="py-2 text-sm text-ink/60 hover:no-underline">
+              ODRL agreement document
+            </AccordionTrigger>
+            <AccordionContent>
+              <JsonViewer value={agreement.agreementContent} />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </PageSection>
+
+      <PageSection title="Transfers under this agreement">
+        <DataTable<TransferProcessDto>
+          data={transfers}
+          keyExtractor={(t) => t.id}
+          hideToolbar
+          onRowClick={(t) =>
+            navigate({
+              to: "/transfer-process/$transferProcessId",
+              params: { transferProcessId: t.id },
+            })
+          }
+          emptyMessage="No transfers have been requested under this agreement."
+          columns={[
+            { header: "Transfer", cell: (t) => <Identifier value={t.id} /> },
+            {
+              header: "State",
+              cell: (t) => (
+                <Badge variant="status" state={t.state} size="sm">
+                  {t.state}
+                </Badge>
+              ),
+            },
+            { header: "Protocol", cell: (t) => <span className="text-sm">{t.protocol}</span> },
+            {
+              header: "Created",
+              accessorKey: "createdAt",
+              sortKey: "created_at",
+              cell: (t) => <FormatDate date={t.createdAt} />,
+            },
+          ]}
+        />
+      </PageSection>
     </PageLayout>
   );
 }

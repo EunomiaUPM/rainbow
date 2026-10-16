@@ -40,6 +40,7 @@ import type {
   BadRequestResponse,
   CreateSubscriptionCommand,
   DeadLetterRecord,
+  EventCount,
   EventDeliveryRecord,
   EventEnvelope,
   EventSubscription,
@@ -1957,6 +1958,377 @@ export const useDeleteEventSubscription = <TError = ErrorType<UnauthorizedRespon
         TContext
       > => {
       return useMutation(getDeleteEventSubscriptionMutationOptions(options), queryClient);
+    }
+    /**
+ * Events the caller sees that nobody has marked read yet.
+ * @summary Count unread events
+ */
+export type getUnreadEventCountResponse200 = {
+  data: EventCount
+  status: 200
+}
+
+export type getUnreadEventCountResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+    
+export type getUnreadEventCountResponseSuccess = (getUnreadEventCountResponse200) & {
+  headers: Headers;
+};
+export type getUnreadEventCountResponseError = (getUnreadEventCountResponse401) & {
+  headers: Headers;
+};
+
+export type getUnreadEventCountResponse = (getUnreadEventCountResponseSuccess | getUnreadEventCountResponseError)
+
+export const getGetUnreadEventCountUrl = () => {
+
+
+  
+
+  return `/events/unread-count`
+}
+
+export const getUnreadEventCount = async ( options?: RequestInit): Promise<getUnreadEventCountResponse> => {
+  
+  return customInstance<getUnreadEventCountResponse>(getGetUnreadEventCountUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetUnreadEventCountInfiniteQueryKey = () => {
+    return [
+    'infinite', `/events/unread-count`
+    ] as const;
+    }
+
+export const getGetUnreadEventCountQueryKey = () => {
+    return [
+    `/events/unread-count`
+    ] as const;
+    }
+
+    
+export const getGetUnreadEventCountInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getUnreadEventCount>>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnreadEventCountInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnreadEventCount>>> = ({ signal }) => getUnreadEventCount({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn,   ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData> }
+}
+
+export type GetUnreadEventCountInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUnreadEventCount>>>
+export type GetUnreadEventCountInfiniteQueryError = ErrorType<UnauthorizedResponse>
+
+
+export function useGetUnreadEventCountInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getUnreadEventCount>>>, TError = ErrorType<UnauthorizedResponse>>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnreadEventCount>>,
+          TError,
+          Awaited<ReturnType<typeof getUnreadEventCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetUnreadEventCountInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getUnreadEventCount>>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnreadEventCount>>,
+          TError,
+          Awaited<ReturnType<typeof getUnreadEventCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetUnreadEventCountInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getUnreadEventCount>>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+/**
+ * @summary Count unread events
+ */
+
+export function useGetUnreadEventCountInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getUnreadEventCount>>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> } {
+
+  const queryOptions = getGetUnreadEventCountInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getGetUnreadEventCountQueryOptions = <TData = Awaited<ReturnType<typeof getUnreadEventCount>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnreadEventCountQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnreadEventCount>>> = ({ signal }) => getUnreadEventCount({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn,   ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData> }
+}
+
+export type GetUnreadEventCountQueryResult = NonNullable<Awaited<ReturnType<typeof getUnreadEventCount>>>
+export type GetUnreadEventCountQueryError = ErrorType<UnauthorizedResponse>
+
+
+export function useGetUnreadEventCount<TData = Awaited<ReturnType<typeof getUnreadEventCount>>, TError = ErrorType<UnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnreadEventCount>>,
+          TError,
+          Awaited<ReturnType<typeof getUnreadEventCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetUnreadEventCount<TData = Awaited<ReturnType<typeof getUnreadEventCount>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnreadEventCount>>,
+          TError,
+          Awaited<ReturnType<typeof getUnreadEventCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+export function useGetUnreadEventCount<TData = Awaited<ReturnType<typeof getUnreadEventCount>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> }
+/**
+ * @summary Count unread events
+ */
+
+export function useGetUnreadEventCount<TData = Awaited<ReturnType<typeof getUnreadEventCount>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnreadEventCount>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> } {
+
+  const queryOptions = getGetUnreadEventCountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Mark every unread event read
+ */
+export type markAllEventsReadResponse200 = {
+  data: EventCount
+  status: 200
+}
+
+export type markAllEventsReadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+    
+export type markAllEventsReadResponseSuccess = (markAllEventsReadResponse200) & {
+  headers: Headers;
+};
+export type markAllEventsReadResponseError = (markAllEventsReadResponse401) & {
+  headers: Headers;
+};
+
+export type markAllEventsReadResponse = (markAllEventsReadResponseSuccess | markAllEventsReadResponseError)
+
+export const getMarkAllEventsReadUrl = () => {
+
+
+  
+
+  return `/events/read-all`
+}
+
+export const markAllEventsRead = async ( options?: RequestInit): Promise<markAllEventsReadResponse> => {
+  
+  return customInstance<markAllEventsReadResponse>(getMarkAllEventsReadUrl(),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getMarkAllEventsReadMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markAllEventsRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof markAllEventsRead>>, TError,void, TContext> => {
+
+const mutationKey = ['markAllEventsRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markAllEventsRead>>, void> = () => {
+          
+
+          return  markAllEventsRead(requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkAllEventsReadMutationResult = NonNullable<Awaited<ReturnType<typeof markAllEventsRead>>>
+    
+    export type MarkAllEventsReadMutationError = ErrorType<UnauthorizedResponse>
+
+    /**
+ * @summary Mark every unread event read
+ */
+export const useMarkAllEventsRead = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markAllEventsRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markAllEventsRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getMarkAllEventsReadMutationOptions(options), queryClient);
+    }
+    /**
+ * Read state is shared by everyone who sees the event.
+ * @summary Mark an event read
+ */
+export type markEventReadResponse200 = {
+  data: EventCount
+  status: 200
+}
+
+export type markEventReadResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type markEventReadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+    
+export type markEventReadResponseSuccess = (markEventReadResponse200) & {
+  headers: Headers;
+};
+export type markEventReadResponseError = (markEventReadResponse400 | markEventReadResponse401) & {
+  headers: Headers;
+};
+
+export type markEventReadResponse = (markEventReadResponseSuccess | markEventReadResponseError)
+
+export const getMarkEventReadUrl = (eventId: string,) => {
+
+
+  
+
+  return `/events/${eventId}/read`
+}
+
+export const markEventRead = async (eventId: string, options?: RequestInit): Promise<markEventReadResponse> => {
+  
+  return customInstance<markEventReadResponse>(getMarkEventReadUrl(eventId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getMarkEventReadMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markEventRead>>, TError,{eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof markEventRead>>, TError,{eventId: string}, TContext> => {
+
+const mutationKey = ['markEventRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markEventRead>>, {eventId: string}> = (props) => {
+          const {eventId} = props ?? {};
+
+          return  markEventRead(eventId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkEventReadMutationResult = NonNullable<Awaited<ReturnType<typeof markEventRead>>>
+    
+    export type MarkEventReadMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse>
+
+    /**
+ * @summary Mark an event read
+ */
+export const useMarkEventRead = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markEventRead>>, TError,{eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markEventRead>>,
+        TError,
+        {eventId: string},
+        TContext
+      > => {
+      return useMutation(getMarkEventReadMutationOptions(options), queryClient);
     }
     /**
  * @summary Get an event

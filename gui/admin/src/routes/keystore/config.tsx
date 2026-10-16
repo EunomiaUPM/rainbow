@@ -446,7 +446,7 @@ function SubObjectPanel({
   searchQuery?: string;
   depth?: number;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const entries = Object.entries(data);
 
   return (
@@ -852,7 +852,7 @@ const KeystoreConfig = () => {
   const [selectedSection, setSelectedSection] = useState<string>("all");
   const [globalViewMode, setGlobalViewMode] = useState<"structured" | "json">("structured");
   const [copiedAll, setCopiedAll] = useState(false);
-  const [allExpanded, setAllExpanded] = useState(true);
+  const [allExpanded, setAllExpanded] = useState(false);
 
   const cfg = (response?.status === 200 ? response.data : {}) as Record<string, unknown>;
   const sectionKeys = Object.keys(cfg);

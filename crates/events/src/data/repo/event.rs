@@ -57,4 +57,7 @@ pub trait EventStoreRepo: Send + Sync + 'static {
         page: &Page,
         sort: &Sort,
     ) -> Outcome<(Vec<EventEnvelope>, u64)>;
+    async fn count_unread(&self, scope: &OwnerScope) -> Outcome<u64>;
+    /// Marks one event read, or every unread one in scope when `id` is `None`; returns how many.
+    async fn mark_read(&self, scope: &OwnerScope, id: Option<Urn>) -> Outcome<u64>;
 }

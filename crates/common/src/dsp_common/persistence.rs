@@ -28,11 +28,15 @@ pub struct StateChange<S, M> {
     pub message: M,
 }
 
+/// History label for the state before the message that opened a process.
+pub const INITIAL_STATE: &str = "INITIAL";
+
 /// A message kept in a process history, with the states it left the process between.
 #[derive(Debug, Clone)]
 pub struct RecordedMessage<S, M> {
     pub message: M,
-    pub from: S,
+    /// `None` when the message opened the process; stored as [`INITIAL_STATE`].
+    pub from: Option<S>,
     pub to: S,
 }
 

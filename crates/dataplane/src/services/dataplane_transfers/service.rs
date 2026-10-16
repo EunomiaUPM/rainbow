@@ -245,12 +245,12 @@ impl DataplaneTransferServiceTrait for DataplaneTransferService {
     ) -> Outcome<DataplaneTransferDto> {
 
         // Authorize before writing anything; every row below belongs to the transfer's owner.
-        let owner = self
+        let current = self
             .repo()
             .get_dataplane_transfers_by_id(&OwnerScope::acting(user), id)
             .await?
-            .or_not_found(id, "dataplane transfer")?
-            .owner();
+            .or_not_found(id, "dataplane transfer")?;
+        let owner = current.owner();
 
         if let Some(fields) = &cmd.fields {
             let fields_repo = self.data_plane_repo.get_dataplane_fields_repo();
@@ -282,11 +282,12 @@ impl DataplaneTransferServiceTrait for DataplaneTransferService {
             .put_dataplane_transfers(&OwnerScope::All, id, &edit_model)
             .await?;
 
-        if let Some(new_state) = &cmd.state {
+        // The log keeps real transitions only, each with the state it left.
+        if let Some(new_state) = cmd.state.as_ref().filter(|s| **s != current.state) {
             let log = NewTransferLog {
                 owner: updated_process.owner(),
                 dataplane_process_id: updated_process.id.clone(),
-                previous_state: None,
+                previous_state: Some(current.state.clone()),
                 new_state: new_state.clone(),
                 trigger: "Update".to_string(),
                 reason: None,

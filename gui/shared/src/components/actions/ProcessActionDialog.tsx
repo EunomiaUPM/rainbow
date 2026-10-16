@@ -85,7 +85,7 @@ export const ProcessActionDialog: FC<ProcessActionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Trigger button */}
       <DialogTrigger asChild>
-        <Button variant={variant} size={(tiny ? "sm" : "") as ButtonSizes}>
+        <Button variant={variant} size={tiny ? "sm" : undefined}>
           {label}
         </Button>
       </DialogTrigger>

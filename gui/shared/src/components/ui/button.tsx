@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "shared/src/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center flex-nowrap min-w-fit tracking-wider !leading-none justify-center gap-2 whitespace-nowrap rounded-md text-xs font-semibold uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+  "inline-flex items-center flex-nowrap min-w-fit !leading-none justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -18,7 +18,7 @@ const buttonVariants = cva(
         outline_destructive:
           "border border-danger-700/60 text-danger-700 dark:text-danger-300 bg-transparent hover:bg-danger-50 dark:bg-danger-950/40 hover:text-danger-800 dark:hover:text-danger-200 hover:border-danger-600 active:scale-[0.98]",
         secondary:
-          "bg-ink/10 text-brand-snow hover:bg-ink/15 border border-ink/15 hover:border-ink/25 shadow-sm active:scale-[0.98]",
+          "bg-ink/10 text-ink hover:bg-ink/15 border border-ink/15 hover:border-ink/25 shadow-sm active:scale-[0.98]",
         ghost: "text-ink/80 hover:text-ink hover:bg-ink/10 active:scale-[0.98]",
         success:
           "border border-success-700/50 bg-success-50 dark:bg-success-950/40 text-success-700 dark:text-success-300 hover:bg-success-100 dark:hover:bg-success-900/60 hover:text-success-800 dark:hover:text-success-100 hover:border-success-600/70 shadow-sm active:scale-[0.98]",
@@ -27,12 +27,12 @@ const buttonVariants = cva(
         link: "!px-0 flex-nowrap normal-case text-brand-sky underline-offset-4 hover:underline hover:text-ink active:scale-100 transition-colors",
       },
       size: {
-        default: "h-8 px-3.5 py-1 text-xs",
-        sm: "h-7 rounded-sm px-2.5 text-xs",
-        xs: "h-6 rounded-sm px-2 text-xs",
-        lg: "h-10 rounded-md px-6 text-sm font-bold",
-        icon: "h-8 w-8 rounded-md p-0 flex items-center justify-center",
-        icon_sm: "h-7 w-7 rounded-md p-0 flex items-center justify-center",
+        default: "h-9 px-4",
+        sm: "h-8 px-3 text-[0.8125rem]",
+        xs: "h-7 px-2.5 text-xs [&_svg]:size-3.5",
+        lg: "h-10 px-6",
+        icon: "h-9 w-9 p-0",
+        icon_sm: "h-8 w-8 p-0 [&_svg]:size-3.5",
       },
       policy: {
         default: "",
@@ -71,8 +71,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || props.disabled}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {props.children}
+        {/* Slot takes exactly one child, so `asChild` renders the child alone. */}
+        {asChild ? (
+          props.children
+        ) : (
+          <>
+            {isLoading && <Loader2 className="animate-spin" />}
+            {props.children}
+          </>
+        )}
       </Comp>
     );
   },

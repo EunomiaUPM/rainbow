@@ -26,7 +26,9 @@ use crate::data::repo::dataplane_transfer_log::{
 use crate::data::sea_orm::orm::dataplane_transfer_logs::{
     self, Column, Entity as DataplaneTransferLogsEntity, NewTransferLog,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
+};
 use urn::Urn;
 use ymir::errors::{Outcome, RepoIntoErrors};
 
@@ -69,6 +71,7 @@ impl DataplaneTransferLogsRepo for DataplaneTransferLogsRepoForSql {
         let logs = DataplaneTransferLogsEntity::find()
             .filter(Column::DataplaneProcessId.eq(dataplane_process_id.to_string()))
             .filter(scope.condition(Column::UserId, Column::UserRole, Column::Visibility))
+            .order_by_asc(Column::CreatedAt)
             .all(self.db.as_ref())
             .await
             .map_err(|e| {

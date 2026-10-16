@@ -1,129 +1,121 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { formatIdentifier } from "shared/src/lib/utils";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useGetAgreements } from "shared/src/data/orval/negotiations/negotiations";
+import { AgreementDto } from "shared/src/data/orval/model";
 import { DataTable } from "shared/src/components/DataTable";
 import { FormatDate } from "shared/src/components/ui/format-date";
-import { Button } from "shared/src/components/ui/button";
 import { Badge } from "shared/src/components/ui/badge";
-import { ArrowRight } from "lucide-react";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
-import { PageSection } from "shared/src/components/layout/PageSection";
-import { AgreementActions } from "shared/src/components/actions/AgreementActions";
+import { ParticipantLabel } from "shared/src/components/identity/ParticipantLabel";
+import { DatasetLabel } from "shared/src/components/identity/DatasetLabel";
+import { Identifier } from "shared/src/components/identity/Identifier";
+import { useParticipantDirectory } from "shared/src/data/useParticipantDirectory";
 import { useTableQueryParams } from "shared/src/hooks/useTableQueryParams";
 
-import { keepPreviousData } from "@tanstack/react-query";
-
-/**
- * Route for listing all agreements.
- */
 export const Route = createFileRoute("/agreements/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const {
-    params: queryParams,
-    apiParams,
-    onQueryChange,
-  } = useTableQueryParams({
+  const navigate = useNavigate();
+  const { self, isSelf } = useParticipantDirectory();
+  const { params, apiParams, onQueryChange } = useTableQueryParams({
     defaultLimit: 10,
     defaultSort: "created_at_desc",
   });
 
-  const { data: response, isFetching } = useGetAgreements(apiParams, {
-    query: {
-      queryKey: ["/negotiations/agreements", apiParams],
-      placeholderData: keepPreviousData,
-    },
+  // The role filter maps to the participant column this agent fills.
+  const { role, ...rest } = apiParams;
+  const queryParams = {
+    ...rest,
+    ...(role === "Provider" && self && { providerId: self.participant_id }),
+    ...(role === "Consumer" && self && { consumerId: self.participant_id }),
+  };
+
+  const { data: response, isFetching } = useGetAgreements(queryParams, {
+    query: { placeholderData: keepPreviousData },
   });
-  const agreements = response?.status === 200 ? response.data : [];
+  const page = response?.status === 200 ? response.data : undefined;
 
   return (
     <PageLayout>
-      <PageHeader title="Agreements" />
-      <PageSection>
-        <DataTable
-          className="text-sm"
-          data={agreements ?? []}
-          serverSide={true}
-          loading={isFetching}
-          queryParams={queryParams}
-          onQueryChange={onQueryChange}
-          keyExtractor={(a) => a.id}
-          searchPlaceholder="Filter agreements by ID, participant, or state..."
-          filters={[
-            {
-              id: "state",
-              label: "Status",
-              options: [
-                { label: "All Statuses", value: "all" },
-                { label: "Finalized", value: "FINALIZED" },
-                { label: "Active", value: "ACTIVE" },
-                { label: "Terminated", value: "TERMINATED" },
-              ],
-            },
-          ]}
-          columns={[
-            {
-              header: "Provider",
-              accessorKey: "providerParticipantId" as any,
-              sortValue: (a: any) => a.providerParticipantId,
-              cell: (a: any) => (
-                <p className="capitalize">{formatIdentifier(a.providerParticipantId, 3)}</p>
-              ),
-            },
-            {
-              header: "Consumer",
-              accessorKey: "consumerParticipantId" as any,
-              sortValue: (a: any) => a.consumerParticipantId,
-              cell: (a: any) => (
-                <p className="capitalize">{formatIdentifier(a.consumerParticipantId, 3)}</p>
-              ),
-            },
-            {
-              header: "Agreement Id",
-              accessorKey: "id" as any,
-              cell: (a: any) => <Badge variant="info">{formatIdentifier(a.id)}</Badge>,
-            },
-            {
-              header: "Status",
-              accessorKey: "state" as any,
-              cell: (a: any) => (
-                <Badge variant="status" state={a.state ? "ACTIVE" : "PAUSE"}>
-                  {a.state}
+      <PageHeader
+        title="Agreements"
+        description="Contract agreements reached through finalized negotiations (DSP 8.1)."
+      />
+      <DataTable<AgreementDto>
+        data={page}
+        serverSide
+        loading={isFetching}
+        queryParams={params}
+        onQueryChange={onQueryChange}
+        keyExtractor={(a) => a.id}
+        onRowClick={(a) =>
+          navigate({ to: "/agreements/$agreementId", params: { agreementId: a.id } })
+        }
+        searchable={false}
+        emptyMessage="No agreements yet. They appear when a negotiation is finalized."
+        filters={[
+          {
+            id: "role",
+            label: "My role",
+            options: [
+              { label: "Any role", value: "all" },
+              { label: "Provider", value: "Provider" },
+              { label: "Consumer", value: "Consumer" },
+            ],
+          },
+        ]}
+        columns={[
+          {
+            header: "Dataset",
+            cell: (a) => <DatasetLabel id={a.target} />,
+          },
+          {
+            header: "Counterparty",
+            cell: (a) => (
+              <ParticipantLabel
+                id={
+                  isSelf(a.providerParticipantId)
+                    ? a.consumerParticipantId
+                    : a.providerParticipantId
+                }
+                compact
+              />
+            ),
+          },
+          {
+            header: "My role",
+            cell: (a) => {
+              const r = isSelf(a.providerParticipantId) ? "Provider" : "Consumer";
+              return (
+                <Badge variant="role" dsrole={r} size="sm">
+                  {r}
                 </Badge>
-              ),
+              );
             },
-            {
-              header: "Created at",
-              accessorKey: "createdAt" as any,
-              sortKey: "created_at",
-              sortValue: (a: any) => new Date(a.createdAt).getTime(),
-              cell: (a: any) => <FormatDate date={a.createdAt} />,
-            },
-            {
-              header: "Actions",
-              sortable: false,
-              searchable: false,
-              cell: (p: any) => <AgreementActions process={p} tiny={true} />,
-            },
-            {
-              header: "Link",
-              sortable: false,
-              searchable: false,
-              cell: (a: any) => (
-                <Link to="/agreements/$agreementId" params={{ agreementId: a.id }}>
-                  <Button variant="link">
-                    See details
-                    <ArrowRight />
-                  </Button>
-                </Link>
-              ),
-            },
-          ]}
-        />
-      </PageSection>
+          },
+          {
+            header: "State",
+            cell: (a) => (
+              <Badge variant="status" state={a.state} size="sm">
+                {a.state}
+              </Badge>
+            ),
+          },
+          {
+            header: "Agreement",
+            cell: (a) => <Identifier value={a.id} />,
+          },
+          {
+            header: "Agreed",
+            accessorKey: "createdAt",
+            sortKey: "created_at",
+            cell: (a) => <FormatDate date={a.createdAt} />,
+          },
+        ]}
+      />
     </PageLayout>
   );
 }

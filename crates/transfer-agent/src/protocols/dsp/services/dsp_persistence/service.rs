@@ -19,7 +19,7 @@
 
 use std::sync::Arc;
 
-use common::dsp_common::persistence::DspPersistenceTrait;
+use common::dsp_common::persistence::{DspPersistenceTrait, INITIAL_STATE};
 use common::oauth::{OwnerScope, UserInfo};
 use ymir::errors::{Errors, Outcome};
 
@@ -177,7 +177,12 @@ impl DspPersistenceTrait for TransferDspPersistence {
         process: &TransferProcess,
         message: TransferRecordedMessage,
     ) -> Outcome<()> {
-        let from = ProtocolState(message.from.to_string().into());
+        let from = ProtocolState(
+            message
+                .from
+                .map_or_else(|| INITIAL_STATE.to_string(), |s| s.to_string())
+                .into(),
+        );
         let to = ProtocolState(message.to.to_string().into());
         self.write_message(process, message.message, from, to).await
     }

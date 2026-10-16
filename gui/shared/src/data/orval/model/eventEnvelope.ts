@@ -31,4 +31,9 @@ export interface EventEnvelope {
   trace_context?: string;
   /** Event payload, any JSON value. */
   payload: unknown;
+  /**
+   * When someone who sees the event marked it read; null while unread.
+   * @nullable
+   */
+  read_at?: string | null;
 }

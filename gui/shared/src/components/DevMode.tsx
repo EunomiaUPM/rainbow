@@ -67,7 +67,7 @@ export const DevMode = ({ className }: { className?: string }) => {
       <div className="flex items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className={cn("h-2 w-2 rounded-full shrink-0 animate-pulse", theme.bg)} />
-          <span className="font-semibold text-foreground tracking-tight text-[11px] group-data-[collapsible=icon]:hidden">
+          <span className="font-semibold text-foreground tracking-tight text-xs group-data-[collapsible=icon]:hidden">
             GUI Dev Mode
           </span>
         </div>
@@ -83,9 +83,11 @@ export const DevMode = ({ className }: { className?: string }) => {
       </div>
 
       {api_gateway && (
-        <div className="text-[10px] text-muted-foreground truncate group-data-[collapsible=icon]:hidden">
-          <span className="opacity-70 font-sans">Gateway: </span>
-          <span className="font-mono select-all text-foreground/80">{api_gateway}</span>
+        <div className="flex flex-col gap-0.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+          <span className="opacity-70 font-sans">Gateway</span>
+          <span className="font-mono select-all break-all leading-snug text-foreground/85">
+            {api_gateway}
+          </span>
         </div>
       )}
     </div>

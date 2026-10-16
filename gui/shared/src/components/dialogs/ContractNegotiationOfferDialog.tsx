@@ -65,9 +65,10 @@ export const ContractNegotiationOfferDialog = ({
   const { refetch } = useGetNegotiationProcesses();
   const router = useRouter();
   const { mutateAsync: setupOffer } = useRpcSetupOffer();
+  const { data: offersData } = useGetOffersByProcessId(process.id, { limit: 100 });
   const lastOffer = useMemo(() => {
-    return process.offers!.at(-1);
-  }, [process]);
+    return offersData?.status === 200 ? offersData.data.items?.at(-1) : undefined;
+  }, [offersData]);
 
   // ---------------------------------------------------------------------------
   // Info Items
@@ -80,8 +81,10 @@ export const ContractNegotiationOfferDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    const providerPid = process.identifiers.providerPid;
-    const consumerPid = process.identifiers.consumerPid;
+    const providerPid =
+      process.correlation.providerPid || process.correlation.identifiers?.providerPid;
+    const consumerPid =
+      process.correlation.consumerPid || process.correlation.identifiers?.consumerPid;
     if (!providerPid || !consumerPid || !lastOffer || !currentPolicy) {
       console.error("Missing required data for offer");
       return;

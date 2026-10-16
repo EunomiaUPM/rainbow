@@ -16,7 +16,8 @@
 
 import React, { useContext, useMemo } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { cn, formatUrn } from "shared/src/lib/utils";
+import { cn } from "shared/src/lib/utils";
+import { Identifier } from "shared/src/components/identity/Identifier";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,7 +29,8 @@ import {
 } from "shared/src/components/ui/breadcrumb";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { Button } from "shared/src/components/ui/button";
-import { LogOut, Bell, User, Check, Copy, ExternalLink, Radio } from "lucide-react";
+import { LogOut, Check, Copy, ExternalLink, Radio } from "lucide-react";
+import { NotificationBell } from "shared/src/components/NotificationBell";
 import { Badge } from "shared/src/components/ui/badge";
 import { type SessionUser, sessionDisplayName } from "shared/src/lib/session";
 import { SidebarTrigger } from "shared/src/components/ui/sidebar";
@@ -68,8 +70,8 @@ interface BreadcrumbItemData {
 const ROUTE_LABELS: Record<string, string> = {
   "datahub-catalog": "DataHub Catalog",
   "provider-catalog": "Provider Catalog",
-  "contract-negotiation": "Contract Negotiation",
-  "transfer-process": "Transfer Process",
+  "contract-negotiation": "Negotiations",
+  "transfer-process": "Transfers",
   "business-requests": "Business Requests",
   "customer-requests": "Customer Requests",
   subscriptions: "Subscriptions",
@@ -82,9 +84,9 @@ const ROUTE_LABELS: Record<string, string> = {
   oauth: "OAuth 2.0",
   clients: "Clients",
   pats: "Personal Access Tokens",
-  events: "Events & Streaming",
-  feed: "Live Feed",
-  dlq: "Dead Letter Queue",
+  events: "Events",
+  feed: "Feed",
+  dlq: "Dead letters",
   keystore: "Keystore",
   parameters: "Parameters",
   secrets: "Secrets",
@@ -122,9 +124,9 @@ function formatSegmentLabel(segment: string): string {
     return ROUTE_LABELS[segment];
   }
 
-  // Format URNs
-  if (segment.includes("urn:")) {
-    return formatUrn(segment);
+  // URNs and DIDs read as `agreement · 9a31d5ab`
+  if (segment.startsWith("urn:") || segment.startsWith("did:")) {
+    return Identifier.short(segment);
   }
 
   // Convert kebab-case to Title Case
@@ -351,21 +353,7 @@ export const Header = ({
 
       {/* Right section: Quick actions and user profile */}
       <div className="flex flex-row gap-3 shrink-0 items-center">
-        <Link
-          to="/events/feed"
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-          title="Event Bus Live Stream"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Bus Live</span>
-        </Link>
-
-        <Link
-          to="/events/feed"
-          className="relative p-1 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Bell className="h-4 w-4" />
-        </Link>
+        <NotificationBell />
 
         <ThemeToggle />
 

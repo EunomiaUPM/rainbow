@@ -12,23 +12,6 @@ are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
-import type { NegotiationMessageRecordDirection } from './negotiationMessageRecordDirection';
-import type { Visibility } from './visibility';
+import type { NegotiationMessageDto } from './negotiationMessageDto';
 
-export interface NegotiationMessageRecord {
-  id: string;
-  /** Author of the record (`system` when a peer opened it). */
-  userId: string;
-  /** Role the record was created under (or that handles it). */
-  userRole: string;
-  visibility: Visibility;
-  negotiationAgentProcessId: string;
-  createdAt: string;
-  direction: NegotiationMessageRecordDirection;
-  protocol: string;
-  messageType: string;
-  stateTransitionFrom: string;
-  stateTransitionTo: string;
-  /** The DSP message as sent or received. */
-  payload: unknown;
-}
+export type NegotiationMessageRecord = NegotiationMessageDto;

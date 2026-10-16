@@ -1,11 +1,11 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useContext } from "react";
 import { SSIAuthContext } from "shared/src/context/SSIAuthContext";
+import { RouteTabs } from "shared/src/components/layout/RouteTabs";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
 import { Button } from "shared/src/components/ui/button";
-import { cn } from "shared/src/lib/utils";
-import { Wallet } from "lucide-react";
+import { RefreshCw, Wallet } from "lucide-react";
 
 /**
  * Wallet route layout.
@@ -13,8 +13,6 @@ import { Wallet } from "lucide-react";
  */
 const WalletLayout = () => {
   const { ownWalletOnboarded, onboardInWallet, isLoading } = useContext(SSIAuthContext);
-  const routerState = useRouterState();
-  const pathname = routerState.location.pathname;
 
   const tabs = [
     { label: "Info", to: "/wallet/info" },
@@ -27,24 +25,23 @@ const WalletLayout = () => {
 
   return (
     <PageLayout>
-      <PageHeader title="Wallet">
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={onboardInWallet}
-            isLoading={isLoading.onboard}
-            variant={ownWalletOnboarded ? "outline" : "default"}
-            size="sm"
-            className="flex gap-2"
-          >
-            <Wallet className="h-4 w-4" />
-            {isLoading.onboard
-              ? "Linking..."
-              : ownWalletOnboarded
-                ? "Re-Link Wallet"
-                : "Link Wallet"}
-          </Button>
-        </div>
-      </PageHeader>
+      <PageHeader
+        title="Wallet"
+        description="Decentralized identity: DIDs, keys and verifiable credentials."
+        actions={
+          ownWalletOnboarded && (
+            <Button
+              onClick={onboardInWallet}
+              isLoading={isLoading.onboard}
+              variant="outline"
+              size="sm"
+            >
+              {!isLoading.onboard && <RefreshCw />}
+              {isLoading.onboard ? "Relinking…" : "Relink wallet"}
+            </Button>
+          )
+        }
+      />
 
       {!ownWalletOnboarded ? (
         <div className="flex flex-col items-center justify-center min-h-[400px] border border-dashed border-ink/10 rounded-xl bg-ink/5 p-12">
@@ -54,30 +51,12 @@ const WalletLayout = () => {
             Link your wallet to start managing your identity.
           </p>
           <Button onClick={onboardInWallet} isLoading={isLoading.onboard}>
-            Link Wallet Now
+            Link wallet
           </Button>
         </div>
       ) : (
         <>
-          <div className="flex gap-1 border-b border-ink/10 mb-6 w-full">
-            {tabs.map((tab) => {
-              const isActive = pathname === tab.to || pathname.startsWith(tab.to + "/");
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium border-b-2 transition-all",
-                    isActive
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </div>
+          <RouteTabs tabs={tabs} />
           <Outlet />
         </>
       )}

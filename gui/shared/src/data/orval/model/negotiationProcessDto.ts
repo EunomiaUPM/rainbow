@@ -12,19 +12,31 @@ are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
-import type { AgreementDto } from './agreementDto';
-import type { NegotiationMessageRecord } from './negotiationMessageRecord';
-import type { NegotiationProcessDtoIdentifiers } from './negotiationProcessDtoIdentifiers';
-import type { NegotiationProcessRecord } from './negotiationProcessRecord';
-import type { OfferDto } from './offerDto';
+import type { NegotiationCorrelation } from './negotiationCorrelation';
+import type { NegotiationProcessDtoRole } from './negotiationProcessDtoRole';
+import type { NegotiationProcessDtoState } from './negotiationProcessDtoState';
+import type { Visibility } from './visibility';
 
-/**
- * Negotiation with its identifiers, messages, offers and agreement.
- */
-export type NegotiationProcessDto = NegotiationProcessRecord & ({
-  /** DSP identifiers such as `consumerPid` and `providerPid`. */
-  identifiers: NegotiationProcessDtoIdentifiers;
-  messages: NegotiationMessageRecord[];
-  offers: OfferDto[];
-  agreement?: AgreementDto | null;
-});
+export interface NegotiationProcessDto {
+  /** URN of the negotiation. */
+  id: string;
+  /** Author of the record (`system` when a peer opened it). */
+  userId: string;
+  /** Role the record was created under (or that handles it). */
+  userRole: string;
+  visibility: Visibility;
+  role: NegotiationProcessDtoRole;
+  protocol: string;
+  state: NegotiationProcessDtoState;
+  /** @nullable */
+  stateAttribute?: string | null;
+  correlation: NegotiationCorrelation;
+  /** Free-form JSON. */
+  properties: unknown;
+  /** Last error, any JSON value. */
+  errorDetails?: unknown;
+  createdAt: string;
+  updatedAt: string;
+  /** Optimistic concurrency version. */
+  version: number;
+}

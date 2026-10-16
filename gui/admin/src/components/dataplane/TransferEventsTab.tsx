@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { TabsContent } from "shared/src/components/ui/tabs";
 import { FormatDate } from "shared/src/components/ui/format-date";
 import { Badge } from "shared/components/ui/badge";
 import {
@@ -58,9 +57,9 @@ export function TransferEventsTab({ events }: { events: TransferEventDto[] }) {
   const chartData = useEventsChartData(events);
 
   return (
-    <TabsContent value="transfer-events" className="w-full">
+    <div className="w-full">
       {/* Activity chart */}
-      <div className="mt-4 mb-4 rounded-md border border-ink/10 bg-muted/20 p-4">
+      <div className="mb-4 rounded-md border border-ink/10 bg-muted/20 p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
           Activity — Events per Minute
         </div>
@@ -159,6 +158,6 @@ export function TransferEventsTab({ events }: { events: TransferEventDto[] }) {
           No events available.
         </div>
       )}
-    </TabsContent>
+    </div>
   );
 }

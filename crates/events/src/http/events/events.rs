@@ -25,13 +25,13 @@ use std::time::Duration;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use common::oauth::{Owner, OwnerScope, UserInfo};
 use common::paginated_spec::{Cursor, Paginated};
 use common::query::{QueryFilter, QuerySpec};
 use futures_util::stream::{self, Stream};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::error::RecvError;
 use urn::Urn;
 use uuid::Uuid;
@@ -55,7 +55,13 @@ pub struct StreamQuery {
     pub filter: EventFilter,
 }
 
-/// Event routes: publish, list, live stream and the deliveries of each event.
+/// How many events a read count or a mark-read touched.
+#[derive(Debug, Serialize)]
+pub struct EventCount {
+    pub count: u64,
+}
+
+/// Event routes: publish, list, live stream, read state and the deliveries of each event.
 #[derive(Clone)]
 pub struct EventsRouter {
     bus: Arc<EventBus>,
@@ -73,7 +79,10 @@ impl EventsRouter {
                 get(Self::handle_list_events).post(Self::handle_publish),
             )
             .route("/stream", get(Self::handle_stream))
+            .route("/unread-count", get(Self::handle_unread_count))
+            .route("/read-all", post(Self::handle_read_all))
             .route("/{id}", get(Self::handle_get_event))
+            .route("/{id}/read", post(Self::handle_read))
             .route("/{id}/deliveries", get(Self::handle_get_deliveries))
             .with_state(self.bus)
     }
@@ -178,6 +187,42 @@ impl EventsRouter {
             .await?
             .ok_or_else(|| Errors::missing_resource(uuid.to_string(), "event not found", None))?;
         Ok(Json(event))
+    }
+
+    async fn handle_unread_count(
+        State(bus): State<Arc<EventBus>>,
+        user: UserInfo,
+    ) -> AppResult<Json<EventCount>> {
+        let count = bus
+            .event_repo()
+            .count_unread(&OwnerScope::seeing(&user))
+            .await?;
+        Ok(Json(EventCount { count }))
+    }
+
+    /// Marks every unread event the caller sees as read.
+    async fn handle_read_all(
+        State(bus): State<Arc<EventBus>>,
+        user: UserInfo,
+    ) -> AppResult<Json<EventCount>> {
+        let count = bus
+            .event_repo()
+            .mark_read(&OwnerScope::seeing(&user), None)
+            .await?;
+        Ok(Json(EventCount { count }))
+    }
+
+    async fn handle_read(
+        State(bus): State<Arc<EventBus>>,
+        user: UserInfo,
+        Path(id): Path<String>,
+    ) -> AppResult<Json<EventCount>> {
+        let (urn, _) = Self::parse_id(&id)?;
+        let count = bus
+            .event_repo()
+            .mark_read(&OwnerScope::seeing(&user), Some(urn))
+            .await?;
+        Ok(Json(EventCount { count }))
     }
 
     async fn handle_get_deliveries(

@@ -118,7 +118,7 @@ export function AppSidebar() {
           icon: Archive,
         },
         {
-          title: "Contract Negotiation",
+          title: "Negotiations",
           url: "/admin/contract-negotiation",
           icon: Feather,
         },
@@ -128,7 +128,7 @@ export function AppSidebar() {
           icon: Handshake,
         },
         {
-          title: "Transferences",
+          title: "Transfers",
           url: "/admin/transfer-process",
           icon: ArrowLeftRight,
         },
@@ -175,7 +175,7 @@ export function AppSidebar() {
         //   icon: Lock,
         // },
         {
-          title: "Events & Bus",
+          title: "Events",
           url: "/admin/events/feed",
           icon: Radio,
         },

@@ -28,6 +28,7 @@ use tower_http::cors::{Any, CorsLayer};
 
 use crate::gateway::discovery::DiscoveryHandlers;
 use crate::gateway::frontend::FrontendHandlers;
+use crate::gateway::live::LiveHandlers;
 use crate::gateway::session::SessionHandlers;
 use crate::setup::context::AppContext;
 
@@ -59,6 +60,7 @@ impl GatewayHttpRouter {
     fn api_router(&self) -> Router {
         Router::new()
             .route("/fe-config", get(FrontendHandlers::fe_config))
+            .route("/live", get(LiveHandlers::live))
             .route(
                 "/dsp/current/{service_prefix}/{*extra}",
                 any(Self::proxy_dsp),

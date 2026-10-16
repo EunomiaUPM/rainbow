@@ -71,7 +71,7 @@ impl RequestHandler {
                 &process,
                 RecordedMessage {
                     message: record,
-                    from: TransferDSPState::REQUESTED,
+                    from: None,
                     to: TransferDSPState::REQUESTED,
                 },
             )

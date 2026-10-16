@@ -39,4 +39,14 @@ sort?: SortParameter;
  * Topic pattern; `*` matches one segment, `**` any number of them.
  */
 topic?: TopicPatternParameter;
+/**
+ * Crate that published the event.
+ */
+source_crate?: string;
+/**
+ * `false` keeps unread events only, `true` read ones.
+ */
+read?: boolean;
+created_after?: string;
+created_before?: string;
 };

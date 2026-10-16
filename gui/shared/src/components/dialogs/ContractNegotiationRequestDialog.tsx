@@ -20,7 +20,10 @@ import {
   useRpcSetupRequestInit,
 } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { EUNOMIA_CONTEXT } from "../../data/eunomia";
-import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import {
+  useGetNegotiationProcesses,
+  useGetOffersByProcessId,
+} from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
@@ -63,9 +66,15 @@ export const ContractNegotiationRequestDialog = ({
   const router = useRouter();
   const [currentPolicy, setCurrentPolicy] = useState<OdrlInfo | null>(null);
   const { mutateAsync: dataRequestAsync } = useRpcSetupRequest();
+  const { data: offersData } = useGetOffersByProcessId(process.id, { limit: 100 });
   const lastOffer = useMemo(() => {
-    return process.offers?.at(-1);
-  }, [process]);
+    return offersData?.status === 200 ? offersData.data.items?.at(-1) : undefined;
+  }, [offersData]);
+
+  const consumerPid =
+    process.correlation.consumerPid || process.correlation.identifiers?.consumerPid;
+  const providerPid =
+    process.correlation.providerPid || process.correlation.identifiers?.providerPid;
 
   // ---------------------------------------------------------------------------
   // Info Items
@@ -78,12 +87,7 @@ export const ContractNegotiationRequestDialog = ({
   // ---------------------------------------------------------------------------
 
   const handleSubmit = async () => {
-    if (
-      !process.identifiers?.consumerPid ||
-      !process.identifiers?.providerPid ||
-      !lastOffer ||
-      !currentPolicy
-    ) {
+    if (!consumerPid || !providerPid || !lastOffer || !currentPolicy) {
       console.error("Missing required data for request");
       return;
     }
@@ -92,8 +96,8 @@ export const ContractNegotiationRequestDialog = ({
       data: {
         "@context": EUNOMIA_CONTEXT,
         "@type": "RpcNegotiationRequestMessage",
-        consumerPid: process.identifiers.consumerPid,
-        providerPid: process.identifiers.providerPid,
+        consumerPid,
+        providerPid,
         offer: {
           "@id": (lastOffer.offerContent["@id"] as string) ?? "urn:uuid:placeholder",
           "@type": lastOffer.offerContent["@type"] as any,
@@ -142,12 +146,7 @@ export const ContractNegotiationRequestDialog = ({
       infoItems={infoItems}
       afterInfoContent={policyEditorContent}
       submitLabel="Request"
-      disabledSubmit={
-        !process.identifiers?.consumerPid ||
-        !process.identifiers?.providerPid ||
-        !lastOffer ||
-        !currentPolicy
-      }
+      disabledSubmit={!consumerPid || !providerPid || !lastOffer || !currentPolicy}
       submitVariant="outline"
       onSubmit={handleSubmit}
       scrollable
