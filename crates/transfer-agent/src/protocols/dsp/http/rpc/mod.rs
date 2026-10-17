@@ -80,7 +80,7 @@ impl TransferRpcRouter {
     }
 
     /// Runs the outbound flow for `key`; the adapter reads the user and the JSON body.
-    async fn dispatch(&self, key: TransferDSPMessageType, request: Request) -> Response {
+    pub async fn dispatch(&self, key: TransferDSPMessageType, request: Request) -> Response {
         self.ctx
             .outbound
             .serve(&TransferRpcAdapter, key, request)

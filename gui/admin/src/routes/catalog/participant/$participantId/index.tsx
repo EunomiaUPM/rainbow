@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { getGetMyselfQueryOptions } from "shared/src/data/orval/participants/participants";
 import { useRpcSetupCatalogRequest } from "shared/src/data/orval/catalog-rp-c/catalog-rp-c";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { PageHeader } from "shared/src/components/layout/PageHeader";
@@ -375,4 +376,11 @@ function RouteComponent() {
 
 export const Route = createFileRoute("/catalog/participant/$participantId/")({
   component: RouteComponent,
+  // This connector is not among its own peers: its catalog is the local one.
+  beforeLoad: async ({ params, context: { queryClient } }) => {
+    const myself = await queryClient.ensureQueryData(getGetMyselfQueryOptions());
+    if (myself.status === 200 && myself.data.participant_id === params.participantId) {
+      throw redirect({ to: "/my-catalog" });
+    }
+  },
 });

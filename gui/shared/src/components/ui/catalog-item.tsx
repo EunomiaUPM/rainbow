@@ -63,8 +63,9 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
 
   const { mutate, data } = useRpcSetupCatalogRequest();
 
+  // The own catalog is local: there is no peer to ask through DSP.
   React.useEffect(() => {
-    if (id) {
+    if (id && !ownCatalog) {
       mutate({
         data: {
           associatedAgentPeer: id,
@@ -73,7 +74,7 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
         },
       });
     }
-  }, [id, mutate]);
+  }, [id, ownCatalog, mutate]);
 
   const liveCatalog = data?.status === 200 ? data.data : undefined;
   const liveTitle = liveCatalog?.response?.title;
@@ -191,6 +192,8 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
         </Dialog>
       </>
     );
+  } else if (ownCatalog) {
+    headingLink = <Link to={"/my-catalog"}>{headingNode}</Link>;
   } else if (id !== null) {
     headingLink = (
       <Link

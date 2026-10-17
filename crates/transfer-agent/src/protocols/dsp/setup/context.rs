@@ -15,16 +15,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! What the DSP plane uses: the agent context, the runners of both flows built on it, and the
-//! TCK queue in TCK mode.
+//! What the DSP plane uses: the agent context, the runners of both flows built on it, the
+//! auto-start worker, and the TCK queue in TCK mode.
 
 use std::sync::Arc;
 
+use common::boot::workers::BackgroundWorker;
 use common::flow::{AutocommitUnitOfWorkFactory, FlowRunner};
 use common::flow::{IdempotencyGuard, InMemoryIdempotencyStore};
 use common::tck::{TckMapping, TckQueue, TckWorker};
 
-use crate::protocols::dsp::entities::tck::TckMessage;
+use crate::protocols::dsp::services::auto_start::guard::AutoStartGuard;
+use crate::protocols::dsp::services::auto_start::worker::AutoStartWorker;
 use crate::protocols::dsp::services::dsp_flow::service::TransferDspFlow;
 use crate::protocols::dsp::services::dsp_persistence::service::TransferDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::service::TransferRpcFlow;
@@ -45,18 +47,21 @@ pub struct DspContext {
 }
 
 impl DspContext {
-    /// The runners, with the TCK guard on both and the worker that plays it in TCK mode.
-    pub fn build(app: Arc<AppContext>) -> (Arc<Self>, Option<TckWorker<TckMessage>>) {
+    /// The runners and their workers: auto-start always, the TCK guard and player in TCK mode.
+    pub fn build(app: Arc<AppContext>) -> (Arc<Self>, Vec<Box<dyn BackgroundWorker>>) {
         let (queue, jobs) = TckMapping::from_env()
             .map(TckQueue::<TransferTckScript>::open)
             .unzip();
         let guard = queue.clone().map(TckGuard::new);
+        let (auto_start, auto_start_jobs) = AutoStartGuard::open();
         let outbound = Self::outbound(&app, guard.as_ref());
-        let inbound = Self::inbound(&app, guard.as_ref());
-        let worker = jobs.map(|jobs| {
+        let inbound = Self::inbound(&app, auto_start, guard.as_ref());
+        let mut workers: Vec<Box<dyn BackgroundWorker>> =
+            vec![Box::new(AutoStartWorker::new(auto_start_jobs, outbound.clone()))];
+        if let Some(jobs) = jobs {
             let player = Arc::new(TransferTckPlayer::new(outbound.clone()));
-            TckWorker::new("transfer-tck-scenarios", jobs, player)
-        });
+            workers.push(Box::new(TckWorker::new("transfer-tck-scenarios", jobs, player)));
+        }
         let ctx = Self {
             persistence: TransferDspPersistence::new(app.clone()),
             app,
@@ -64,15 +69,19 @@ impl DspContext {
             outbound,
             tck: queue,
         };
-        (Arc::new(ctx), worker)
+        (Arc::new(ctx), workers)
     }
 
     pub fn tck_mode(&self) -> bool {
         self.tck.is_some()
     }
 
-    /// Peers' messages: replayed when repeated, then seen by the TCK guard.
-    fn inbound(app: &Arc<AppContext>, tck: Option<&TckGuard>) -> Arc<FlowRunner<TransferDspFlow>> {
+    /// Peers' messages: replayed when repeated, then seen by the auto-start and TCK guards.
+    fn inbound(
+        app: &Arc<AppContext>,
+        auto_start: AutoStartGuard,
+        tck: Option<&TckGuard>,
+    ) -> Arc<FlowRunner<TransferDspFlow>> {
         let mut runner = FlowRunner::builder(
             Arc::new(TransferDspFlow::new(app.clone())),
             Arc::new(AutocommitUnitOfWorkFactory),
@@ -81,7 +90,8 @@ impl DspContext {
         )
         .guard(Arc::new(IdempotencyGuard::new(Arc::new(
             InMemoryIdempotencyStore::new(),
-        ))));
+        ))))
+        .guard(Arc::new(auto_start));
         if let Some(guard) = tck {
             runner = runner.guard(Arc::new(guard.clone()));
         }

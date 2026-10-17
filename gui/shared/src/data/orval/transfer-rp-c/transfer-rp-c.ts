@@ -41,8 +41,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Not served by the backend any more; kept only because the admin GUI still calls it.
- * @deprecated
+ * The RPC request with `autoStart` set; the provider starts the transfer once it accepts it.
  * @summary Initiate a transfer request with simplified BFF flow (consumer). The Provider automatically responds with a TransferStart.
  */
 export type bffRpcSetupTransferRequestResponse201 = {
@@ -139,7 +138,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type BffRpcSetupTransferRequestMutationError = ErrorType<ErrorInfo>
 
     /**
- * @deprecated
  * @summary Initiate a transfer request with simplified BFF flow (consumer). The Provider automatically responds with a TransferStart.
  */
 export const useBffRpcSetupTransferRequest = <TError = ErrorType<ErrorInfo>,

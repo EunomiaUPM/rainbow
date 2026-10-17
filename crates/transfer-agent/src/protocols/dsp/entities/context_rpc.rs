@@ -59,6 +59,8 @@ pub struct TransferRpcBody {
     pub provider_pid: Option<String>,
     pub code: Option<String>,
     pub reason: Option<Vec<String>>,
+    /// Asks the provider to start the transfer as soon as it accepts the request.
+    pub auto_start: Option<bool>,
 }
 
 impl TransferRpcBody {
@@ -86,7 +88,7 @@ pub struct TransferRpcRaw {
 
 impl TransferRpcRaw {
     /// Cap on RPC bodies, as on the DSP side.
-    const MAX_BODY_BYTES: usize = 1024 * 1024;
+    pub const MAX_BODY_BYTES: usize = 1024 * 1024;
 
     pub fn new(route: &TransferDSPMessageType, json: Value) -> Self {
         Self {

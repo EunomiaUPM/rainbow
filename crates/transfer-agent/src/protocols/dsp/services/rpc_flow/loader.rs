@@ -28,7 +28,7 @@ use common::dsp_common::paths;
 use common::dsp_common::persistence::DspPersistenceTrait;
 use common::dsp_common::{DspActor, DspCaller};
 use common::oauth::{Owner, UserInfo};
-use common::rdf::RdfMessage;
+use common::rdf::{RdfMessage, RdfProtocolTrait};
 use serde_json::{json, Map, Value};
 use url::Url;
 use urn::Urn;
@@ -154,18 +154,33 @@ impl TransferRpcLoader {
             .await?
             .map(DataAddress::from)
             .or(sink);
-        domain.outgoing = RdfMessage::<DspTransfer>::build(
-            &message,
-            Self::members(json!({
-                "consumerPid": consumer_pid,
-                "agreementId": body.agreement_id,
-                "format": body.format,
-                "callbackAddress": callback,
-                "dataAddress": sink,
-            })),
-        )
-        .await?;
+        let members = Self::members(json!({
+            "consumerPid": consumer_pid,
+            "agreementId": body.agreement_id,
+            "format": body.format,
+            "callbackAddress": callback,
+            "dataAddress": sink,
+        }));
+        domain.outgoing =
+            Self::request_message(&message, members, body.auto_start == Some(true)).await?;
         Ok(domain)
+    }
+
+    /// The DSP 9.2.1 request; with `auto_start` it also carries `eunomia:autoStart`.
+    async fn request_message(
+        message: &TransferDSPMessageType,
+        members: Map<String, Value>,
+        auto_start: bool,
+    ) -> Outcome<RdfMessage<DspTransfer>> {
+        if !auto_start {
+            return RdfMessage::<DspTransfer>::build(message, members).await;
+        }
+        let mut json = Map::new();
+        json.insert("@context".into(), DspTransfer::auto_start_context());
+        json.insert("@type".into(), json!(DspTransfer::compact_type(message)));
+        json.insert(DspTransfer::auto_start_member(), json!(true));
+        json.extend(members.into_iter().filter(|(_, v)| !v.is_null()));
+        RdfMessage::<DspTransfer>::read(Value::Object(json)).await
     }
 
     /// Any other message moves a process the caller may act on, addressed to the peer's pid.

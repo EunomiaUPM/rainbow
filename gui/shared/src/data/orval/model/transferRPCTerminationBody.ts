@@ -14,6 +14,8 @@ are calls the GUI still makes to routes the backend no longer serves.
  */
 
 export interface TransferRPCTerminationBody {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcTransferTerminationMessage';
   consumerPid: string;
   providerPid: string;
   code: string;
