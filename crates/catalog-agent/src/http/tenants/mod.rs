@@ -22,10 +22,11 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::services::tenant_provisioning::TenantProvisioningServiceTrait;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct TenantRouter {
@@ -39,7 +40,7 @@ impl TenantRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/provision", post(Self::handle_provision))
+            .route(routes::tenants::PROVISION, post(Self::handle_provision))
             .with_state(self)
     }
 

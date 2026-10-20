@@ -21,7 +21,7 @@ pub mod service;
 
 use crate::entities::connector_template::ConnectorTemplateDto;
 use crate::entities::filters::ConnectorTemplateFilter;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Page, Paginated, Sort};
 use ymir::errors::Outcome;
 

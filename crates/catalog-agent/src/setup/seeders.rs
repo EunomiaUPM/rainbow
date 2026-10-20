@@ -20,7 +20,8 @@
 
 use std::sync::Arc;
 
-use common::oauth::{Owner, UserInfo};
+use common::oauth::Owner;
+use ymir::types::oauth::UserInfo;
 use common::boot::seeders::{BootPhase, BootSeeder};
 use serde_json::Value;
 use tokio::fs;

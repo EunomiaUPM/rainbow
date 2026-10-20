@@ -39,7 +39,7 @@ impl KeystoreClientImpl {
 
 impl KeystoreClientImpl {
     /// Lookups only read, and only the entries of `user_id` (the keystore is per user).
-    fn reader_scope(user_id: &str) -> common::oauth::UserInfo {
+    fn reader_scope(user_id: &str) -> ymir::types::oauth::UserInfo {
         common::oauth::acting_as(user_id)
     }
 }

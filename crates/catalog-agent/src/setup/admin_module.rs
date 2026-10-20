@@ -49,6 +49,7 @@ use crate::http::policy_templates::PolicyTemplateEntityRouter;
 use crate::http::tenants::TenantRouter;
 use crate::setup::context::AppContext;
 use crate::SERVICE_NAME;
+use common::routes::catalog as routes;
 
 pub struct CatalogAdminModule {
     ctx: Arc<AppContext>,
@@ -78,28 +79,28 @@ impl ServiceModuleTrait for CatalogAdminModule {
         let config = ctx.config.clone();
         let router = Router::new()
             .nest(
-                "/catalogs",
+                routes::catalogs::PREFIX,
                 CatalogEntityRouter::new(ctx.catalog_svc.clone(), config.clone()).router(),
             )
             .nest(
-                "/data-services",
+                routes::data_services::PREFIX,
                 DataServiceEntityRouter::new(ctx.data_service_svc.clone(), config.clone()).router(),
             )
             .nest(
-                "/datasets",
+                routes::datasets::PREFIX,
                 DatasetEntityRouter::new(ctx.dataset_svc.clone(), config.clone()).router(),
             )
             .nest(
-                "/distributions",
+                routes::distributions::PREFIX,
                 DistributionEntityRouter::new(ctx.distribution_svc.clone(), config.clone())
                     .router(),
             )
             .nest(
-                "/odrl-policies",
+                routes::odrl_policies::PREFIX,
                 OdrlOfferEntityRouter::new(ctx.odrl_policy_svc.clone(), config.clone()).router(),
             )
             .nest(
-                "/policy-templates",
+                routes::policy_templates::PREFIX,
                 PolicyTemplateEntityRouter::new(
                     ctx.policy_template_svc.clone(),
                     ctx.policy_instantiation_svc.clone(),
@@ -108,15 +109,15 @@ impl ServiceModuleTrait for CatalogAdminModule {
                 .router(),
             )
             .nest(
-                "/peer-catalogs",
+                routes::peer_catalogs::PREFIX,
                 PeerCatalogEntityRouter::new(ctx.peer_catalog_svc.clone()).router(),
             )
             .nest(
-                "/dataset-offerings",
+                routes::dataset_offerings::PREFIX,
                 DatasetOfferingRouter::new(ctx.dataset_offering_svc.clone()).router(),
             )
             .nest(
-                "/tenants",
+                routes::tenants::PREFIX,
                 TenantRouter::new(ctx.tenant_provisioning_svc.clone()).router(),
             )
             .route_layer(axum::middleware::from_fn_with_state(

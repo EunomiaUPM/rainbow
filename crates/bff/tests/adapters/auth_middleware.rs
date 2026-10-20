@@ -23,9 +23,9 @@ use axum::extract::Request;
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::get;
 use axum::Router;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::http::OauthHttpMiddleware;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use ymir::services::client::ClientTrait;
 use ymir::utils::http_client;
 

@@ -29,7 +29,7 @@ use crate::services::parameters::ParameterStore;
 use crate::services::parameters::service::ParameterStoreImpl;
 use crate::services::secrets::SecretStore;
 use crate::services::secrets::service::SecretStoreImpl;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::config::ApplicationConfig;
 use common::module_loader::root_context::RootContext;
 use ymir::services::vault::VaultService;

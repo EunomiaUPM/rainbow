@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use common::dsp_common::odrl::OdrlAgreement;
 use common::facades::negotiation::{NegotiationFacadeTrait, StoredAgreement};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use urn::Urn;
 use ymir::errors::Outcome;
 

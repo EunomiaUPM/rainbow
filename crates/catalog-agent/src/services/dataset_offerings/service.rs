@@ -20,7 +20,8 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use common::oauth::{OwnedTrait, Owner, UserInfo};
+use common::oauth::{OwnedTrait, Owner};
+use ymir::types::oauth::UserInfo;
 use serde_json::json;
 use tracing::warn;
 use urn::Urn;

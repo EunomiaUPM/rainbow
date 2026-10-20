@@ -21,7 +21,7 @@ pub mod service;
 
 use crate::entities::data_services::{DataServiceDto, EditDataServiceDto, NewDataServiceDto};
 use crate::entities::filters::DataServiceFilter;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Page, Paginated, Sort};
 use urn::Urn;
 use ymir::errors::Outcome;

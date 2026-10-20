@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use tokio_util::sync::CancellationToken;
-use ymir::config::traits::{ConnectionConfigTrait, HostsConfigTrait};
+use ymir::config::traits::{ApiConfigTrait, ConnectionConfigTrait, HostsConfigTrait};
 use ymir::config::types::HostType;
 use ymir::errors::{Errors, Outcome};
 use ymir::http::HealthRouter;
@@ -141,10 +141,11 @@ impl<S: BootstrapServiceTrait> Bootstrapper<S> {
                 composer.auth_ports().map(|p| p.mates.clone()),
             )?)
             .merge(HealthRouter::new().router())
+            .nest(&common.get_api_version(), HealthRouter::new().router())
             .fallback(global_handler_404)
             .layer(axum::middleware::from_fn(HttpTracing::record_http_duration))
             .layer(HttpTracing::http_layer());
-        let tls = match common.is_prod() && !common.has_tls_proxy() {
+        let tls = match common.is_prod() && !common.has_proxy() {
             true => Some(HttpServer::tls_from_vault(vault).await?),
             false => None,
         };

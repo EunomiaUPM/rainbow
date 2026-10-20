@@ -27,13 +27,14 @@ use axum::extract::{FromRef, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::http_tracing::ExtractedHeaders;
 use common::batch_requests::BatchRequests;
 use common::query::{Paginated, QuerySpec, Sort};
 use std::sync::Arc;
 use ymir::errors::AppResult;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::negotiation as routes;
 
 pub type AgreementQuery = QuerySpec<AgreementFilter, Sort>;
 
@@ -55,17 +56,17 @@ impl NegotiationAgentAgreementsRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all).post(Self::handle_create))
-            .route("/batch", post(Self::handle_batch))
+            .route(routes::entity::ROOT, get(Self::handle_get_all).post(Self::handle_create))
+            .route(routes::entity::BATCH, post(Self::handle_batch))
             .route(
-                "/{id}",
+                routes::entity::BY_ID,
                 get(Self::handle_get_one)
                     .put(Self::handle_edit)
                     .delete(Self::handle_delete),
             )
-            .route("/process/{process_id}", get(Self::handle_get_by_process))
-            .route("/assignee/{assignee}", get(Self::handle_get_by_assignee))
-            .route("/assigner/{assigner}", get(Self::handle_get_by_assigner))
+            .route(routes::entity::BY_PROCESS, get(Self::handle_get_by_process))
+            .route(routes::agreements::BY_ASSIGNEE, get(Self::handle_get_by_assignee))
+            .route(routes::agreements::BY_ASSIGNER, get(Self::handle_get_by_assigner))
             .with_state(self)
     }
 

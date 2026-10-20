@@ -31,6 +31,7 @@ use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::errors::Errors;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct DataServiceEntityRouter {
@@ -60,24 +61,24 @@ impl DataServiceEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_data_services))
+            .route(routes::entity::ROOT, get(Self::handle_get_all_data_services))
             .route(
-                "/catalog/{id}",
+                routes::entity::BY_CATALOG,
                 get(Self::handle_get_data_services_by_catalog_id),
             )
-            .route("/", post(Self::handle_create_data_service))
-            .route("/batch", post(Self::handle_get_batch_data_services))
-            .route("/main", get(Self::handle_get_main_data_service))
-            .route("/main", post(Self::handle_create_main_data_service))
-            .route("/{id}", get(Self::handle_get_data_service_by_id))
-            .route("/{id}", put(Self::handle_put_data_service_by_id))
-            .route("/{id}", delete(Self::handle_delete_data_service_by_id))
+            .route(routes::entity::ROOT, post(Self::handle_create_data_service))
+            .route(routes::entity::BATCH, post(Self::handle_get_batch_data_services))
+            .route(routes::entity::MAIN, get(Self::handle_get_main_data_service))
+            .route(routes::entity::MAIN, post(Self::handle_create_main_data_service))
+            .route(routes::entity::BY_ID, get(Self::handle_get_data_service_by_id))
+            .route(routes::entity::BY_ID, put(Self::handle_put_data_service_by_id))
+            .route(routes::entity::BY_ID, delete(Self::handle_delete_data_service_by_id))
             .with_state(self)
     }
 
     async fn handle_get_all_data_services(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(query): Query<DataServiceQuery>,
     ) -> impl IntoResponse {
         match state
@@ -91,7 +92,7 @@ impl DataServiceEntityRouter {
     }
     async fn handle_get_batch_data_services(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<BatchRequests>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -109,7 +110,7 @@ impl DataServiceEntityRouter {
     }
     async fn handle_get_data_services_by_catalog_id(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -127,7 +128,7 @@ impl DataServiceEntityRouter {
     }
     async fn handle_get_data_service_by_id(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -142,7 +143,7 @@ impl DataServiceEntityRouter {
 
     async fn handle_get_main_data_service(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
     ) -> impl IntoResponse {
         match state.service.get_main_data_service(&user).await {
             Ok(Some(data_service)) => {
@@ -158,7 +159,7 @@ impl DataServiceEntityRouter {
 
     async fn handle_put_data_service_by_id(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
         input: Result<Json<EditDataServiceDto>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -181,7 +182,7 @@ impl DataServiceEntityRouter {
     }
     async fn handle_create_data_service(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewDataServiceDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -196,7 +197,7 @@ impl DataServiceEntityRouter {
 
     async fn handle_create_main_data_service(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewDataServiceDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -211,7 +212,7 @@ impl DataServiceEntityRouter {
 
     async fn handle_delete_data_service_by_id(
         State(state): State<DataServiceEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {

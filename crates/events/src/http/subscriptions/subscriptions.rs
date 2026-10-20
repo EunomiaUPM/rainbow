@@ -23,7 +23,8 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::oauth::{Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Cursor, Paginated};
 use common::query::QuerySpec;
 use ymir::errors::{AppResult, Errors};
@@ -32,6 +33,7 @@ use crate::data::repo::EventSubscriptionRepo;
 use crate::entities::commands::{CreateSubscriptionDto, UpdateSubscriptionDto};
 use crate::entities::queries::SubscriptionFilter;
 use crate::services::event_bus::SubscriptionView;
+use common::routes::events as routes;
 
 /// Query string of the subscription listing.
 pub type SubscriptionsQuery = QuerySpec<SubscriptionFilter>;
@@ -49,9 +51,9 @@ impl SubscriptionsRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_list).post(Self::handle_create))
+            .route(routes::subscriptions::ROOT, get(Self::handle_list).post(Self::handle_create))
             .route(
-                "/{id}",
+                routes::subscriptions::BY_ID,
                 get(Self::handle_get)
                     .put(Self::handle_update)
                     .delete(Self::handle_delete),

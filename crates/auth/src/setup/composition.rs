@@ -35,7 +35,8 @@ use crate::SERVICE_NAME;
 use axum::Router;
 use common::boot::workers::BackgroundWorker;
 use common::config::services::SsiAuthConfig;
-use common::config::types::traits::{CommonConfigTrait, GaiaConfigTrait};
+use common::config::types::traits::{CommonConfigTrait, GaiaConfigTrait, Oid4VpServiceTrait};
+use common::config::types::Oid4VpService;
 use common::facades::AuthPorts;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;
@@ -48,7 +49,7 @@ use ymir::errors::{Errors, Outcome};
 use ymir::services::issuer::{oid4vci_1_0, IssuerTrait};
 use ymir::services::token_validator::OauthTokenValidatorTrait;
 use ymir::services::vault::VaultService;
-use ymir::services::verifier::oid4vp_draft20;
+use ymir::services::verifier::{oid4vp_1_0, oid4vp_draft20, VerifierTrait};
 use ymir::services::wallet::fafnir::{FafnirConfig, FafnirService};
 use ymir::services::wallet::WalletTrait;
 use ymir::types::dids::{DidService, DidServiceType};
@@ -76,7 +77,6 @@ impl AuthModule {
         let vc_req_config = VCRequesterConfig::from(config);
         let peer_connector_config = GnapPeerConnectorConfig::from(config);
         let gatekeeper_config = GnapGateKeeperConfig::from(config);
-        let verifier_config = oid4vp_draft20::VerifierConfig::from(config);
         let core_config = Arc::new(config.clone());
 
         // ===== WALLET ============================================================================
@@ -92,7 +92,20 @@ impl AuthModule {
         let callback = Arc::new(BasicCallbackService::new(vault.clone()));
         let repo = Arc::new(AuthRepoForSql::create_repo(db_connection));
         let gatekeeper = Arc::new(GnapGateKeeperService::new(gatekeeper_config));
-        let verifier = Arc::new(oid4vp_draft20::VerifierService::new(verifier_config));
+        let verifier: Arc<dyn VerifierTrait> = match config.oid4vp_service() {
+            Oid4VpService::Draft20 => {
+                let config = oid4vp_draft20::VerifierConfig::from(config);
+                Arc::new(oid4vp_draft20::VerifierService::new(config))
+            }
+            Oid4VpService::V1_0 => {
+                let config = oid4vp_1_0::VerifierConfig::from(config);
+                Arc::new(oid4vp_1_0::VerifierService::new(
+                    config,
+                    vault.clone(),
+                    arc_identity.clone(),
+                ))
+            }
+        };
 
         // ===== OPTIONAL: GAIA-X SELF-ATTESTATION AND ISSUER ======================================
         let (gaia, issuer) = match config.gaia_config() {

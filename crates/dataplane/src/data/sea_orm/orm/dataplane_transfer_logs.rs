@@ -18,7 +18,9 @@
 //! State transition log table.
 
 use super::dataplane_transfers::TransferState;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};

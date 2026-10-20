@@ -16,7 +16,9 @@
  */
 
 use urn::Urn;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 
 /// Extra Identifiers for TransferProcess in case there is some dependence of
 /// protocol-dependant identifiers

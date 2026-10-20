@@ -41,7 +41,7 @@ use ymir::errors::{Errors, Outcome};
 use ymir::services::repo::postgres::listing::KeysetPager;
 use ymir::types::participants::Visibility;
 
-use super::{RolePath, RoleTrait, UserInfo, UserTrait, SYSTEM_USER_ID};
+use ymir::types::oauth::{RolePath, RoleTrait, UserInfo, UserTrait, SYSTEM_USER_ID};
 
 // ==============================================================================================
 // Owner of a record
@@ -308,7 +308,7 @@ mod tests {
     use ymir::types::participants::Visibility;
 
     use super::{OwnerScope, OwnershipTrait};
-    use crate::oauth::{RolePath, UserInfo, SYSTEM_USER_ID};
+    use ymir::types::oauth::{RolePath, UserInfo, SYSTEM_USER_ID};
 
     fn role(path: &str) -> RolePath {
         path.parse().unwrap()

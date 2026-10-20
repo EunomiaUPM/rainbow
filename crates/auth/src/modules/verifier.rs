@@ -20,11 +20,11 @@ use crate::types::events::{recv_owner, GrantEvent, VerificationEvent};
 use async_trait::async_trait;
 use chrono::Utc;
 use ymir::data::entities::received::verification;
-use ymir::errors::Outcome;
+use ymir::errors::{Errors, Outcome};
 use ymir::services::HasVerifier;
 use ymir::types::gnap::{GrantStatus, InteractionFinishResponse};
 use ymir::types::vcs::VPDef;
-use ymir::types::verification::VerifyPayload;
+use ymir::types::verification::{VerificationStatus, VerifyPayload};
 
 /// Verifying the presentations peers send during onboarding.
 #[async_trait]
@@ -37,6 +37,13 @@ pub trait VerifierModule:
         let verification = self.repo().recv_verification().get_by_state(&state).await?;
         self.verifier().generate_vpd(&verification)
     }
+    /// Signed Request Object of the verification opened with `state` (OpenID4VP 1.0
+    /// `request_uri`), echoing the wallet's `wallet_nonce`, if any.
+    #[tracing::instrument(level = "info", skip_all, err)]
+    async fn request_object(&self, state: String, wallet_nonce: Option<String>) -> Outcome<String> {
+        let verification = self.repo().recv_verification().get_by_state(&state).await?;
+        self.verifier().request_object(&verification, wallet_nonce).await
+    }
     /// Verifies the presentation and finishes the GNAP interaction with the result.
     #[tracing::instrument(level = "info", skip_all, err)]
     async fn verify(
@@ -44,12 +51,21 @@ pub trait VerifierModule:
         state: String,
         payload: VerifyPayload,
     ) -> Outcome<InteractionFinishResponse> {
-        println!("{:#?}", payload.vp_token);
         let mut verification = self.repo().recv_verification().get_by_state(&state).await?;
-        let verification_result = self
-            .verifier()
-            .verify_all(&mut verification, &payload.vp_token)
-            .await;
+        let verification_result = match (payload.vp_token(), payload.refusal()) {
+            (Some(vp_token), _) => self
+                .verifier()
+                .verify_all(&mut verification, vp_token)
+                .await
+                .map(|_| ()),
+            // The wallet refused to present (it lacks the credentials, the user declined): a
+            // failed verification, like an invalid presentation.
+            (None, refusal) => {
+                verification.ended_at = Some(Utc::now());
+                verification.status = VerificationStatus::Failed;
+                Err(refusal.unwrap_or_else(|| Errors::forbidden("no presentation", None)))
+            }
+        };
 
         let interaction = self
             .repo()

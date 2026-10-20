@@ -55,8 +55,8 @@ fn view() -> TransferProcessView {
     TransferProcessView {
         id: TransferProcessId::generate(),
         user_id: TENANT.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         role: TransferRole::Provider,
         protocol: ProtocolId::Dsp2025_1,
         state: ProtocolState("REQUESTED".into()),

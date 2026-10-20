@@ -82,8 +82,8 @@ fn provider_dto(state: TransferState) -> DataplaneTransferDto {
     DataplaneTransferDto {
         inner: dataplane_transfers::Model {
             user_id: "tenant-1".to_string(),
-            user_role: common::oauth::RolePath::root(),
-            visibility: common::oauth::Visibility::Private,
+            user_role: ymir::types::oauth::RolePath::root(),
+            visibility: ymir::types::participants::Visibility::Private,
             id: "urn:dataplane-transfer:test-1".to_string(),
             transfer_process_id: tp_urn().to_string(),
             role: TransferRole::Provider,

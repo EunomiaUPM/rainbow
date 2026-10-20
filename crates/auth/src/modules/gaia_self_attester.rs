@@ -40,10 +40,10 @@ pub trait GaiaSelfAttesterModule:
         let terms = self.issuer().sign_claims(&terms).await?;
 
         let legal_p = vc::Plan {
-            vc_body: VcBody::Jwt(legal_p),
+            vc_body: VcBody::Jwt(legal_p.as_str().to_string()),
         };
         let terms = vc::Plan {
-            vc_body: VcBody::Jwt(terms),
+            vc_body: VcBody::Jwt(terms.as_str().to_string()),
         };
         self.wallet().store_vc(legal_p).await?;
         self.wallet().store_vc(terms).await?;

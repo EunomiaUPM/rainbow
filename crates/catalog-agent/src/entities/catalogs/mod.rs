@@ -18,7 +18,8 @@
 //! Catalogs.
 
 use crate::data::entities::catalog;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::data::entities::catalog::{EditCatalogModel, Model, NewCatalogModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

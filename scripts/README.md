@@ -15,3 +15,20 @@ can be launched from any directory. Most tasks of the root `Taskfile.yml` call t
 | `tck/` | `run-tck.sh`, `populate_tck.sh` | Prepare the agents and run the Eclipse DSP TCK. |
 | `tools/` | `add_license.sh`, `build-admin-gui.sh`, `build-openapi.py` | License headers, admin console build, OpenAPI artefacts from the per-agent specs. |
 | `lib/` | `auth.sh` | Shared by the bash scripts: the user token for the API calls. |
+
+## Agents behind Keycloak
+
+By default the `data/` scripts call the provider on `http://127.0.0.1:1200` without a token, which
+an agent in `static` mode serves as its configured user. When the agents run behind Keycloak (the
+mini of eunomia-deployment with `-Auth keycloak`), one variable switches the scripts over:
+
+```bash
+EUNOMIA_KEYCLOAK=1 bash scripts/data/populate_mock_data.sh
+```
+
+The calls then go through the edge by name (`http://provider.localhost`, `http://consumer.localhost`)
+and carry a token of the realm's service account, asked to Keycloak with client credentials (client
+`cli`, secret `<realm>-cli-secret`, the example values of the mini). The realm is the first label of
+the target's host name. `KEYCLOAK_URL`, `EUNOMIA_CLIENT_ID`, `EUNOMIA_CLIENT_SECRET`,
+`EUNOMIA_PROVIDER_URL` and `EUNOMIA_CONSUMER_URL` change the defaults; `EUNOMIA_TOKEN` sends a given
+token instead.

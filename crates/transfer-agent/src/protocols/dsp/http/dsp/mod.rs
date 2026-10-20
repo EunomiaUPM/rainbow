@@ -36,6 +36,7 @@ use crate::protocols::dsp::entities::state::TransferDSPState;
 use crate::protocols::dsp::entities::transfer_error::TransferErrorDto;
 use crate::protocols::dsp::http::dsp::adapter::TransferDspAdapter;
 use crate::protocols::dsp::setup::context::DspContext;
+use common::routes::transfer as routes;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -52,12 +53,12 @@ impl DspRouter {
         let auth = &self.ctx.app.ports.auth;
         let peer_auth = PeerAuth::new(auth.grants.clone(), auth.mates.clone());
         Router::new()
-            .route("/request", post(Self::handle_transfer_request))
-            .route("/{id}", get(Self::handle_get_transfer_process))
-            .route("/{id}/start", post(Self::handle_transfer_start))
-            .route("/{id}/completion", post(Self::handle_transfer_completion))
-            .route("/{id}/termination", post(Self::handle_transfer_termination))
-            .route("/{id}/suspension", post(Self::handle_transfer_suspension))
+            .route(routes::dsp::REQUEST, post(Self::handle_transfer_request))
+            .route(routes::dsp::PROCESS, get(Self::handle_get_transfer_process))
+            .route(routes::dsp::PROCESS_START, post(Self::handle_transfer_start))
+            .route(routes::dsp::PROCESS_COMPLETION, post(Self::handle_transfer_completion))
+            .route(routes::dsp::PROCESS_TERMINATION, post(Self::handle_transfer_termination))
+            .route(routes::dsp::PROCESS_SUSPENSION, post(Self::handle_transfer_suspension))
             .layer(middleware::from_fn_with_state(peer_auth, PeerAuth::run))
             .with_state(self)
     }

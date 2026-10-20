@@ -25,7 +25,8 @@ use tonic::Code;
 use ymir::errors::{Errors, Outcome};
 
 use crate::oauth::grpc::GrpcAuth;
-use crate::oauth::{OauthTokenValidatorTrait, RolePath, RoleTrait, UserInfo};
+use ymir::services::token_validator::OauthTokenValidatorTrait;
+use ymir::types::oauth::{RolePath, RoleTrait, UserInfo};
 
 /// Accepts a root and a regular user token; anything else is unauthorized.
 struct StubValidator;

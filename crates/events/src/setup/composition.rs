@@ -18,7 +18,7 @@
 use std::sync::Arc;
 
 use axum::Router;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::boot::workers::BackgroundWorker;
 use common::module_loader::root_context::RootContext;
 use common::module_loader::service_module::ServiceModuleTrait;

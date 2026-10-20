@@ -20,7 +20,8 @@
 
 use axum::extract::Request;
 use common::facades::grants_facade::VerifiedPeer;
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use negotiation_agent::protocols::dsp::entities::context_dsp::{
     NegotiationDspParsed, NegotiationDspRaw, NegotiationDspRdf, NegotiationDspTyped,
 };

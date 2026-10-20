@@ -66,6 +66,12 @@
 //! [`GrpcAuth`] does the same from tonic metadata, returning a `Status` on failure.
 //!
 //! [`GrpcAuth`]: grpc::GrpcAuth
+//! [`UserInfo`]: ymir::types::oauth::UserInfo
+//! [`UserInfo::reaches`]: ymir::types::oauth::UserInfo::reaches
+//! [`UserInfo::system`]: ymir::types::oauth::UserInfo::system
+//! [`OauthTokenValidatorTrait`]: ymir::services::token_validator::OauthTokenValidatorTrait
+//! [`OauthHttpMiddleware`]: ymir::http::OauthHttpMiddleware
+//! [`OauthHttpMiddleware::run`]: ymir::http::OauthHttpMiddleware::run
 //!
 //! ## 5. In-process calls
 //!
@@ -80,14 +86,15 @@ pub mod provider;
 // pub mod rules;
 
 pub use ownership::{acting_as, OwnedTrait, Owner, OwnerScope, OwnershipTrait};
-pub use ymir::types::participants::Visibility;
+// Imported from ymir where used, not re-exported as this crate's.
+// pub use ymir::types::participants::Visibility;
 pub use provider::token_validator;
 // pub use rules::AuthRules;
-pub use ymir::http::OauthHttpMiddleware;
-pub use ymir::services::token_validator::{
-    FixedUserValidator, ProxiedTokenValidator, OauthTokenValidatorTrait,
-};
-pub use ymir::types::oauth::{RolePath, RoleTrait, UserInfo, UserTrait, SYSTEM_USER_ID};
+// pub use ymir::http::OauthHttpMiddleware;
+// pub use ymir::services::token_validator::{
+//     FixedUserValidator, OauthTokenValidatorTrait, ProxiedTokenValidator, VerifiedTokenValidator,
+// };
+// pub use ymir::types::oauth::{RolePath, RoleTrait, UserInfo, UserTrait, SYSTEM_USER_ID};
 
 /// Header / metadata key carrying the bearer token.
 pub const AUTHORIZATION_HEADER: &str = "authorization";

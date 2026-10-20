@@ -21,7 +21,7 @@ pub mod service;
 
 use crate::entities::distributions::{DistributionDto, EditDistributionDto, NewDistributionDto};
 use crate::entities::filters::DistributionFilter;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Page, Paginated, Sort};
 use urn::Urn;
 use ymir::errors::Outcome;

@@ -22,7 +22,8 @@ use serde_json::Map;
 use tonic::Request;
 use ymir::errors::{Errors, Outcome};
 
-use crate::oauth::{RolePath, OauthTokenValidatorTrait, UserInfo};
+use ymir::types::oauth::{RolePath, UserInfo};
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 
 /// User behind the `user` token.
 pub const USER_ID: &str = "user-1";

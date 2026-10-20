@@ -37,10 +37,10 @@ use uuid::Uuid;
 use ymir::config::traits::ApiConfigTrait;
 use ymir::http::routes::verifier;
 use ymir::http::OauthHttpMiddleware;
-use ymir::http::{HealthRouter, OpenapiRouter, WalletRouter};
+use ymir::http::{OpenapiRouter, WalletRouter};
 use ymir::services::token_validator::OauthTokenValidatorTrait;
 
-/// Every auth route, plus health and the OpenAPI document; panics on a bad OpenAPI path.
+/// Every auth route, plus the OpenAPI document; panics on a bad OpenAPI path.
 pub struct AuthRouter {
     core: Arc<AuthCore>,
     openapi: String,
@@ -75,7 +75,6 @@ impl AuthRouter {
         let peer_r = OnboarderRouter::new(self.core.clone());
         let gaia_r = GaiaSelfAttesterRouter::new(self.core.clone());
         let openapi_r = OpenapiRouter::new(self.openapi.clone());
-        let health_r = HealthRouter::new();
 
         let api_path = self.core.config().common().get_api_version();
 
@@ -113,9 +112,8 @@ impl AuthRouter {
             .nest(gaia::PREFIX, gaia_r.internal())
             .route_layer(guard);
 
-        // ===== OPEN: health and API docs =========================================================
+        // ===== OPEN: API docs ====================================================================
         let open = Router::new()
-            .merge(health_r.router())
             .nest(docs::PREFIX, openapi_r.router());
 
         // ===== ALL TOGETHER: well-known at the root, the rest under the API version ==============

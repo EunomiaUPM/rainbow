@@ -18,7 +18,8 @@
 //! Distributions.
 
 use crate::data::entities::distribution;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::data::entities::distribution::{EditDistributionModel, Model, NewDistributionModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

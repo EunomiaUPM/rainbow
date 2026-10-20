@@ -29,7 +29,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Json, Router};
 use common::dsp_common::{paths, DspCaller};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use http::header::HOST;
 use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
@@ -39,6 +39,7 @@ use crate::protocols::dsp::entities::context_rpc::NegotiationRpcBody;
 use crate::protocols::dsp::entities::message_types::NegotiationRpcMessage;
 use crate::protocols::dsp::http::rpc::adapter::NegotiationRpcAdapter;
 use crate::protocols::dsp::setup::context::DspContext;
+use common::routes::negotiation as routes;
 
 /// What the TCK posts to `dataspacetck.dsp.connector.negotiation.initiate.url`.
 #[derive(Debug, Deserialize)]
@@ -62,15 +63,15 @@ impl NegotiationRpcRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/rpc/setup-request-init", post(Self::handle_request_init))
-            .route("/rpc/setup-request", post(Self::handle_request))
-            .route("/rpc/setup-offer-init", post(Self::handle_offer_init))
-            .route("/rpc/setup-offer", post(Self::handle_offer))
-            .route("/rpc/setup-acceptance", post(Self::handle_acceptance))
-            .route("/rpc/setup-agreement", post(Self::handle_agreement))
-            .route("/rpc/setup-verification", post(Self::handle_verification))
-            .route("/rpc/setup-finalization", post(Self::handle_finalization))
-            .route("/rpc/setup-termination", post(Self::handle_termination))
+            .route(routes::rpc::SETUP_REQUEST_INIT, post(Self::handle_request_init))
+            .route(routes::rpc::SETUP_REQUEST, post(Self::handle_request))
+            .route(routes::rpc::SETUP_OFFER_INIT, post(Self::handle_offer_init))
+            .route(routes::rpc::SETUP_OFFER, post(Self::handle_offer))
+            .route(routes::rpc::SETUP_ACCEPTANCE, post(Self::handle_acceptance))
+            .route(routes::rpc::SETUP_AGREEMENT, post(Self::handle_agreement))
+            .route(routes::rpc::SETUP_VERIFICATION, post(Self::handle_verification))
+            .route(routes::rpc::SETUP_FINALIZATION, post(Self::handle_finalization))
+            .route(routes::rpc::SETUP_TERMINATION, post(Self::handle_termination))
             .with_state(self)
     }
 
@@ -78,7 +79,7 @@ impl NegotiationRpcRouter {
     pub fn tck_router(self) -> Router {
         Router::new()
             .route(
-                "/tck/negotiations/requests",
+                routes::rpc::TCK_REQUESTS,
                 post(Self::handle_tck_initiate),
             )
             .with_state(self)

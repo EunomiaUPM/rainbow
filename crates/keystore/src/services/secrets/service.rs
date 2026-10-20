@@ -19,7 +19,8 @@
 
 use std::sync::Arc;
 
-use common::oauth::{Owner, UserInfo};
+use common::oauth::Owner;
+use ymir::types::oauth::UserInfo;
 use common::errors::NotFoundExt;
 use common::query::QueryFilter;
 use ymir::errors::Outcome;

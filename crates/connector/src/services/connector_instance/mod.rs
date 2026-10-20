@@ -20,7 +20,7 @@
 pub mod service;
 
 use crate::entities::connector_instance::{ConnectorInstanceDto, ConnectorInstantiationDto};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use urn::Urn;
 use ymir::errors::Outcome;
 

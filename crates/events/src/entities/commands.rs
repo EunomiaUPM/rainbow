@@ -20,7 +20,7 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
-use common::oauth::Visibility;
+use ymir::types::participants::Visibility;
 use common::secret::Secret;
 use serde::{Deserialize, Serialize};
 

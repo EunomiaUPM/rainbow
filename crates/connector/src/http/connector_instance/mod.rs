@@ -24,11 +24,12 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::errors::Errors;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::connector as routes;
 
 pub use common::paginated_spec::PaginationParams;
 pub type ConnectorInstanceQuery = QuerySpec<ConnectorInstanceFilter>;
@@ -51,13 +52,13 @@ impl ConnectorInstanceRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", post(Self::handle_upsert_instance))
-            .route("/{id}", get(Self::handle_get_instance_by_id))
+            .route(routes::instances::ROOT, post(Self::handle_upsert_instance))
+            .route(routes::instances::BY_ID, get(Self::handle_get_instance_by_id))
             .route(
-                "/distribution/{did}",
+                routes::instances::BY_DISTRIBUTION,
                 get(Self::get_instance_by_distribution),
             )
-            .route("/{id}", delete(Self::handle_delete_instance_by_id))
+            .route(routes::instances::BY_ID, delete(Self::handle_delete_instance_by_id))
             .with_state(self)
     }
 

@@ -23,7 +23,7 @@ pub mod views;
 use crate::entities::filters::NegotiationProcessFilter;
 use crate::entities::negotiation_process::{EditNegotiationProcessDto, NewNegotiationProcessDto};
 use crate::services::negotiation_process::views::NegotiationProcessView;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::batch_requests::BatchRequests;
 use common::paginated_spec::{Page, Paginated, Sort};
 use urn::Urn;

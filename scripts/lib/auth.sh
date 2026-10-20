@@ -3,10 +3,58 @@
 # after `eunomia_auth <base_url>`, or use `eunomia_curl`.
 #
 # Env: EUNOMIA_TOKEN (optional access token issued by the identity provider, e.g. Keycloak).
+#      EUNOMIA_KEYCLOAK=1: the agents are behind Keycloak (mini with -Auth keycloak). The calls
+#        go through the edge by name (http://provider.localhost, ...) and carry a token of the
+#        realm's service account, asked with client credentials; the realm is the first label
+#        of the target's host name (provider.localhost -> provider).
+#        KEYCLOAK_URL (default http://keycloak.localhost), EUNOMIA_CLIENT_ID (default cli),
+#        EUNOMIA_CLIENT_SECRET (default <realm>-cli-secret, the example secret of the mini).
+#        Without it, the mode is detected: static when the provider answers on its own port
+#        (http://127.0.0.1:1200), Keycloak when it answers by name through the edge
+#        (http://provider.localhost). EUNOMIA_KEYCLOAK=0 forces static.
+#      EUNOMIA_PROVIDER_URL / EUNOMIA_CONSUMER_URL: where the agents are (defaults per mode).
 #
 # The agents no longer issue tokens nor take a tenant: the user comes from the token. Without
-# EUNOMIA_TOKEN the calls go without one, which an agent in `static` mode serves as its
-# configured user (by default the root, /admin).
+# EUNOMIA_TOKEN nor Keycloak the calls go without one, which an agent in `static` mode serves as
+# its configured user (by default the root, /admin).
+
+# Whether an agent answers at <base url> (any HTTP status counts).
+eunomia_answers() {
+    local code
+    code=$(curl -s -o /dev/null -m 2 -w "%{http_code}" "$1/.well-known/dspace-version" || true)
+    [ -n "$code" ] && [ "$code" != "000" ]
+}
+
+if [ -z "${EUNOMIA_KEYCLOAK:-}" ]; then
+    if eunomia_answers "${EUNOMIA_PROVIDER_URL:-http://127.0.0.1:1200}"; then
+        EUNOMIA_KEYCLOAK=0
+    elif eunomia_answers "http://provider.localhost"; then
+        EUNOMIA_KEYCLOAK=1
+    else
+        EUNOMIA_KEYCLOAK=0
+        echo "Warning: no provider answers on http://127.0.0.1:1200 nor on http://provider.localhost; is the deployment up?" >&2
+    fi
+fi
+export EUNOMIA_KEYCLOAK
+
+if [ "${EUNOMIA_KEYCLOAK:-}" = "1" ]; then
+    EUNOMIA_PROVIDER_URL="${EUNOMIA_PROVIDER_URL:-http://provider.localhost}"
+    EUNOMIA_CONSUMER_URL="${EUNOMIA_CONSUMER_URL:-http://consumer.localhost}"
+else
+    EUNOMIA_PROVIDER_URL="${EUNOMIA_PROVIDER_URL:-http://127.0.0.1:1200}"
+    EUNOMIA_CONSUMER_URL="${EUNOMIA_CONSUMER_URL:-http://127.0.0.1:1100}"
+fi
+# Service-account tokens are cached per realm in a directory shared with subshells.
+export EUNOMIA_TOKEN_DIR="${EUNOMIA_TOKEN_DIR:-$(mktemp -d)}"
+
+if [ -z "${EUNOMIA_MODE_SHOWN:-}" ]; then
+    if [ "$EUNOMIA_KEYCLOAK" = "1" ]; then
+        echo "Mode: Keycloak (provider $EUNOMIA_PROVIDER_URL, service-account token)" >&2
+    else
+        echo "Mode: static (provider $EUNOMIA_PROVIDER_URL, no token)" >&2
+    fi
+    export EUNOMIA_MODE_SHOWN=1
+fi
 
 # Former login of every agent, with tokens cached per agent:
 # ADMIN_EMAIL="${ADMIN_EMAIL:-admin@admin.local}"
@@ -18,9 +66,34 @@ eunomia_origin() {
     printf '%s' "$1" | sed -E 's#^(https?://[^/]+).*#\1#'
 }
 
-# Prints the access token to send to the agent serving <url> (empty: none).
+# Prints the access token to send to the agent serving <url> (empty: none): EUNOMIA_TOKEN if
+# set; with EUNOMIA_KEYCLOAK=1, the service account's token of the target's realm (asked on
+# first use); otherwise none.
 eunomia_token() {
-    printf '%s' "${EUNOMIA_TOKEN:-}"
+    if [ -n "${EUNOMIA_TOKEN:-}" ]; then
+        printf '%s' "$EUNOMIA_TOKEN"
+        return 0
+    fi
+    [ "${EUNOMIA_KEYCLOAK:-}" = "1" ] || return 0
+
+    local host realm client cache token
+    host=$(printf '%s' "$1" | sed -E 's#^https?://([^/:]+).*#\1#')
+    realm="${host%%.*}"
+    client="${EUNOMIA_CLIENT_ID:-cli}"
+    cache="$EUNOMIA_TOKEN_DIR/$realm"
+    if [ ! -s "$cache" ]; then
+        token=$(curl -s -X POST "${KEYCLOAK_URL:-http://keycloak.localhost}/realms/$realm/protocol/openid-connect/token" \
+            -d grant_type=client_credentials \
+            -d "client_id=$client" \
+            -d "client_secret=${EUNOMIA_CLIENT_SECRET:-$realm-cli-secret}" \
+            | jq -r '.access_token // empty')
+        if [ -z "$token" ]; then
+            echo "Keycloak sign-in of client $client in realm $realm failed" >&2
+            return 1
+        fi
+        printf '%s' "$token" > "$cache"
+    fi
+    cat "$cache"
 }
 
 # Former version, logging into the agent's own /oauth/token (gone with the built-in OAuth module):

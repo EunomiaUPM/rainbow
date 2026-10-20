@@ -21,7 +21,7 @@ use auth::modules::GaiaSelfAttesterModule;
 use common::test_utils::scopes::TestUsers;
 use ymir::types::issuance::VcBody;
 
-use crate::support::builders::{stored_vc, vc_claims};
+use crate::support::builders::{signed_vc, stored_vc, vc_claims};
 use crate::support::mocks::Doubles;
 
 /// Both credentials are signed and stored in the wallet as JWTs.
@@ -37,10 +37,10 @@ async fn root_signs_and_stores_both_credentials() {
     d.issuer
         .expect_sign_claims()
         .times(2)
-        .returning(|_| Ok("signed.jwt".to_string()));
+        .returning(|claims| Ok(signed_vc(claims)));
     d.wallet
         .expect_store_vc()
-        .withf(|plan| matches!(&plan.vc_body, VcBody::Jwt(jwt) if jwt == "signed.jwt"))
+        .withf(|plan| matches!(&plan.vc_body, VcBody::Jwt(jwt) if jwt.ends_with(".c2lnbmVk")))
         .times(2)
         .returning(|_| Ok(stored_vc()));
 

@@ -16,7 +16,9 @@
  */
 
 use chrono::Utc;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use compact_str::CompactString;
 use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;

@@ -29,12 +29,13 @@ use axum::extract::{FromRef, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::http_tracing::ExtractedHeaders;
 use common::batch_requests::BatchRequests;
 use common::query::{Paginated, QuerySpec, Sort};
 use ymir::errors::AppResult;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::dataplane as routes;
 
 /// Query string of the process listing.
 pub type DataplaneTransferQuery = QuerySpec<DataplaneTransferFilter, Sort>;
@@ -64,21 +65,21 @@ impl DataPlaneProcessesRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_dataplane_transfers))
-            .route("/", post(Self::handle_create_dataplane_transfer))
-            .route("/batch", post(Self::handle_get_batch_dataplane_transfers))
-            .route("/{dataplane_id}", get(Self::handle_get_data_plane_by_id))
+            .route(routes::dataplane_processes::ROOT, get(Self::handle_get_all_dataplane_transfers))
+            .route(routes::dataplane_processes::ROOT, post(Self::handle_create_dataplane_transfer))
+            .route(routes::dataplane_processes::BATCH, post(Self::handle_get_batch_dataplane_transfers))
+            .route(routes::dataplane_processes::BY_ID, get(Self::handle_get_data_plane_by_id))
             .route(
-                "/{dataplane_id}",
+                routes::dataplane_processes::BY_ID,
                 put(Self::handle_put_dataplane_transfer_by_id),
             )
             .route(
-                "/{dataplane_id}",
+                routes::dataplane_processes::BY_ID,
                 delete(Self::handle_delete_dataplane_transfer),
             )
-            .route("/{dataplane_id}/info", get(Self::handle_get_dataplane_info))
+            .route(routes::dataplane_processes::INFO, get(Self::handle_get_dataplane_info))
             .route(
-                "/transfer-process/{transfer_process_id}",
+                routes::dataplane_processes::BY_TRANSFER_PROCESS,
                 get(Self::handle_get_dataplane_transfer_by_process_id),
             )
             .with_state(self)

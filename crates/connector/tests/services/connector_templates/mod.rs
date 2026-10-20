@@ -21,7 +21,8 @@
 mod isolation;
 mod validation;
 
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::oauth::{Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Page, Sort};
 use common::test_utils::scopes::TestUsers;
 use connector::data::entities::connector_templates;

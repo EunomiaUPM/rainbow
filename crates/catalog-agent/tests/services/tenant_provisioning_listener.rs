@@ -23,7 +23,7 @@ use std::time::Duration;
 
 use catalog_agent::services::tenant_provisioning::listener::TenantProvisioningListener;
 use catalog_agent::services::tenant_provisioning::MockTenantProvisioningServiceTrait;
-use common::oauth::RoleTrait;
+use ymir::types::oauth::RoleTrait;
 use common::boot::workers::BackgroundWorker;
 use events::data::repo::{
     MockEventDeadLetterRepo, MockEventDeliveryRepo, MockEventStoreRepo, MockEventSubscriptionRepo,

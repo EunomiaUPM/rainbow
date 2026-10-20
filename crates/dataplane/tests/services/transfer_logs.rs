@@ -42,8 +42,8 @@ fn make_log_model(n: u32, tenant: &str) -> LogModel {
     LogModel {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         dataplane_process_id: test_urn(1).to_string(),
         previous_state: None,
         new_state: TransferState::Init,

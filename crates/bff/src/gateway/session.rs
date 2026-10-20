@@ -24,7 +24,7 @@
 //! proxy's sign-in.
 
 use axum::Json;
-use common::oauth::{RoleTrait, UserInfo};
+use ymir::types::oauth::{RoleTrait, UserInfo};
 use serde::Serialize;
 
 /// The session's user, as the SPA shows it.

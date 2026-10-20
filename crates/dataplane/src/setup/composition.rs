@@ -38,6 +38,7 @@ use crate::http::transfer_events::TransferEventsRouter;
 use crate::setup::context::AppContext;
 use crate::setup::ports::DataplanePorts;
 use crate::testing_proxy::http::http::TestingHTTPProxy;
+use common::routes::dataplane as routes;
 
 /// Dataplane as a module: control API under its prefix and the data proxy.
 #[derive(Clone)]
@@ -90,8 +91,8 @@ impl DataplaneModule {
             .merge(DataplaneTransferLogsRouter::new(ctx.logs_svc.clone()).router())
             .merge(events_router.clone().dataplane_processes_sub_router());
         Router::new()
-            .nest("/dataplane-processes", processes_router)
-            .nest("/transfer-events", events_router.events_sub_router())
+            .nest(routes::dataplane_processes::PREFIX, processes_router)
+            .nest(routes::transfer_events::PREFIX, events_router.events_sub_router())
             .route_layer(axum::middleware::from_fn_with_state(
                 ctx.oauth_validator.clone(),
                 ymir::http::OauthHttpMiddleware::run,

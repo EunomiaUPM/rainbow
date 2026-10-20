@@ -16,7 +16,8 @@
  */
 
 use sea_orm::entity::prelude::*;
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]

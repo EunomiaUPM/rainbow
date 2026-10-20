@@ -41,6 +41,7 @@ use crate::http::negotiation_message::NegotiationAgentMessagesRouter;
 use crate::http::negotiation_process::NegotiationAgentProcessesRouter;
 use crate::http::offer::NegotiationAgentOffersRouter;
 use crate::setup::context::AppContext;
+use common::routes::negotiation as routes;
 
 pub struct NegotiationAdminModule {
     ctx: Arc<AppContext>,
@@ -69,19 +70,19 @@ impl ServiceModuleTrait for NegotiationAdminModule {
         let ctx = &self.ctx;
         let router = Router::new()
             .nest(
-                "/negotiation-messages",
+                routes::negotiation_messages::PREFIX,
                 NegotiationAgentMessagesRouter::new(ctx.clone()).router(),
             )
             .nest(
-                "/negotiation-processes",
+                routes::negotiation_processes::PREFIX,
                 NegotiationAgentProcessesRouter::new(ctx.clone()).router(),
             )
             .nest(
-                "/offers",
+                routes::offers::PREFIX,
                 NegotiationAgentOffersRouter::new(ctx.clone()).router(),
             )
             .nest(
-                "/agreements",
+                routes::agreements::PREFIX,
                 NegotiationAgentAgreementsRouter::new(ctx.clone()).router(),
             )
             .route_layer(axum::middleware::from_fn_with_state(

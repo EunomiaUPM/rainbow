@@ -25,7 +25,7 @@ use crate::entities::entry::Entry;
 use crate::entities::filters::PrefixFilter;
 use crate::entities::key::{Key, KeyPrefix};
 use crate::entities::version::Version;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use ymir::errors::Outcome;

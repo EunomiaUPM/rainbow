@@ -21,9 +21,10 @@ use crate::services::config::ConfigStore;
 use axum::extract::State;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::config::ApplicationConfig;
 use ymir::errors::AppResult;
+use common::routes::keystore as routes;
 
 #[derive(Clone)]
 pub struct ConfigRouter {
@@ -37,7 +38,7 @@ impl ConfigRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::get_application_config))
+            .route(routes::config::ROOT, get(Self::get_application_config))
             .with_state(self)
     }
 

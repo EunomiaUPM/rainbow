@@ -27,7 +27,8 @@ use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::oauth::{Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Cursor, Paginated};
 use common::query::{QueryFilter, QuerySpec};
 use futures_util::stream::{self, Stream};
@@ -44,6 +45,7 @@ use crate::entities::queries::EventFilter;
 use crate::entities::topic::Topic;
 use crate::entities::topic_pattern::TopicPattern;
 use crate::services::event_bus::EventBus;
+use common::routes::events as routes;
 
 /// Query string of the event listing.
 pub type EventsQuery = QuerySpec<EventFilter>;
@@ -69,12 +71,12 @@ impl EventsRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route(
-                "/",
+                routes::entries::ROOT,
                 get(Self::handle_list_events).post(Self::handle_publish),
             )
-            .route("/stream", get(Self::handle_stream))
-            .route("/{id}", get(Self::handle_get_event))
-            .route("/{id}/deliveries", get(Self::handle_get_deliveries))
+            .route(routes::entries::STREAM, get(Self::handle_stream))
+            .route(routes::entries::BY_ID, get(Self::handle_get_event))
+            .route(routes::entries::DELIVERIES, get(Self::handle_get_deliveries))
             .with_state(self.bus)
     }
 

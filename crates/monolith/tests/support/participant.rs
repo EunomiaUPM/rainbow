@@ -259,7 +259,7 @@ impl Participant {
             },
             "db": {"db_type": "Postgres", "url": "localhost", "port": "5432"},
             "api": {"version": "v1", "openapi_path": "/openapi.json"},
-            "connection": {"is_local": true, "is_prod": false, "is_vault_real": false, "has_tls_proxy": false},
+            "connection": {"is_local": true, "is_prod": false, "is_vault_real": false, "has_proxy": false},
             "jwt_secret": "integration-tests"
         }))
         .expect("valid common config")

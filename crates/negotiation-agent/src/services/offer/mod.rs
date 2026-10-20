@@ -23,7 +23,7 @@ pub mod views;
 use crate::entities::filters::OfferFilter;
 use crate::entities::offer::NewOfferDto;
 use crate::services::offer::views::OfferView;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::batch_requests::BatchRequests;
 use common::paginated_spec::{Page, Paginated, Sort};
 use urn::Urn;

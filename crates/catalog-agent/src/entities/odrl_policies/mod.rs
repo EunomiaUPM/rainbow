@@ -18,7 +18,8 @@
 //! ODRL offers attached to catalog entities.
 
 use crate::data::entities::odrl_offer;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
 use common::dsp_common::odrl::OdrlPolicyInfo;
 use serde::{Deserialize, Serialize};

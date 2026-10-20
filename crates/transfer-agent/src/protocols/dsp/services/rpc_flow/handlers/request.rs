@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use common::dsp_common::persistence::{DspPersistenceTrait, RecordedMessage};
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde_json::{json, Value};
 use url::Url;
 use urn::Urn;

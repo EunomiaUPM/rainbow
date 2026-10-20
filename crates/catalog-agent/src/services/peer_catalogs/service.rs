@@ -20,7 +20,7 @@
 use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::services::peer_catalogs::PeerCatalogServiceTrait;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::facades::mates_facade::MatesFacadeTrait;
 use std::sync::Arc;
 use tracing::warn;

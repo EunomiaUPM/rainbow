@@ -45,8 +45,8 @@ fn dto(version: &str) -> PolicyTemplateDto {
     PolicyTemplateDto {
         id: "tpl".into(),
         user_id: TENANT.into(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Public,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Public,
         version: version.into(),
         date: Utc::now().into(),
         title: Some(LocalizedText::Single("Title".into())),

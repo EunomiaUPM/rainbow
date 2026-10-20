@@ -80,8 +80,8 @@ fn dummy_dataplane_transfer_dto(
     DataplaneTransferDto {
         inner: dataplane_transfers::Model {
             user_id: "tenant-1".to_string(),
-            user_role: common::oauth::RolePath::root(),
-            visibility: common::oauth::Visibility::Private,
+            user_role: ymir::types::oauth::RolePath::root(),
+            visibility: ymir::types::participants::Visibility::Private,
             id: id.to_string(),
             transfer_process_id: tp_id.to_string(),
             role,

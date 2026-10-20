@@ -21,7 +21,9 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use sea_orm::entity::prelude::*;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use common::secret::Secret;
 use sea_orm::ActiveValue;
 use ymir::errors::{Errors, Outcome};

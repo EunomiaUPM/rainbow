@@ -16,7 +16,8 @@
  */
 
 use crate::entities::ids::TransferProcessId;
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use crate::entities::protocol::{
     CONSUMER_PID_KEY, PROVIDER_PID_KEY, ProtocolId, ProtocolState, StateMetadata,
     TransferCorrelation, TransferRole,

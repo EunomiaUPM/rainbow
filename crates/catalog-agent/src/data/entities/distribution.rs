@@ -18,7 +18,9 @@
 //! Distributions table.
 
 use sea_orm::entity::prelude::*;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
 use urn::{Urn, UrnBuilder};

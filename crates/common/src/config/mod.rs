@@ -35,7 +35,7 @@
 //!   hosts: { http: { protocol: 'http', url: '127.0.0.1', port: '1200' }, grpc: null }
 //!   db: { db_type: Postgres, url: '127.0.0.1', port: '1400' }
 //!   api: { version: 'v1' }
-//!   connection: { is_local: true, is_prod: false, is_vault_real: false, has_tls_proxy: false }
+//!   connection: { is_local: true, is_prod: false, is_vault_real: false, has_proxy: false }
 //!
 //! monolith:
 //!   common: *common_config
@@ -117,13 +117,11 @@
 //! once, naming every missing section.
 
 mod config;
-mod oauth;
 mod parse_from;
 pub mod services;
 pub mod types;
 
 pub use config::ApplicationConfig;
-pub use oauth::OauthConfig;
 
 #[cfg(test)]
 mod tests;

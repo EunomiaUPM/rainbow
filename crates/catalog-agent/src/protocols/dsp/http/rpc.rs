@@ -25,9 +25,10 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use std::sync::Arc;
 use ymir::utils::extract_payload;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct RpcRouter {
@@ -47,11 +48,11 @@ impl RpcRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route(
-                "/rpc/setup-catalog-request",
+                routes::rpc::SETUP_CATALOG_REQUEST,
                 post(Self::handle_rpc_catalog_request),
             )
             .route(
-                "/rpc/setup-dataset-request",
+                routes::rpc::SETUP_DATASET_REQUEST,
                 post(Self::handle_rpc_dataset_request),
             )
             .with_state(self)

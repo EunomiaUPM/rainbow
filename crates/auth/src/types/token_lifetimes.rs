@@ -19,3 +19,6 @@ pub const FINAL_TOKEN_TTL_SECS: i64 = 3_600;
 pub const MANAGING_TOKEN_TTL_SECS: i64 = 604_800;
 pub const EXPIRY_MARGIN_SECS: i64 = 60;
 pub const SWEEP_INTERVAL_SECS: u64 = 300;
+/// An access grant still open this long after it was requested is given up (finalized) by the
+/// sweep: its presentation is not coming (on both sides: the gatekeeper and the peer connector).
+pub const PENDING_GRANT_TTL_SECS: i64 = 600;

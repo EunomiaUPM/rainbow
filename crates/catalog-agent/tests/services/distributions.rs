@@ -56,8 +56,8 @@ fn make_model(tenant: &str, n: u32) -> distribution::Model {
     distribution::Model {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         dct_issued: Utc::now().into(),
         dct_modified: None,
         dct_title: Some(format!("distribution-{n}")),

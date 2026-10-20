@@ -27,7 +27,7 @@ impl Flags {
         Self(ConnectionConfig {
             is_prod,
             is_vault_real,
-            has_tls_proxy: false,
+            has_proxy: false,
         })
     }
 }

@@ -18,7 +18,8 @@
 //! Data services.
 
 use crate::data::entities::dataservice;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::data::entities::dataservice::{EditDataServiceModel, Model, NewDataServiceModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

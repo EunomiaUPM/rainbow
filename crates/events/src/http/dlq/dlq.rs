@@ -23,7 +23,8 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use common::oauth::{OwnerScope, UserInfo};
+use common::oauth::OwnerScope;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Cursor, Paginated};
 use common::query::QuerySpec;
 use serde_json::json;
@@ -33,6 +34,7 @@ use crate::entities::dead_letter::DeadLetterRecord;
 use crate::entities::delivery::EventDeliveryRecord;
 use crate::entities::queries::DeadLetterFilter;
 use crate::services::event_bus::EventBus;
+use common::routes::events as routes;
 
 /// Query string of the dead letter listing.
 pub type DeadLettersQuery = QuerySpec<DeadLetterFilter>;
@@ -50,10 +52,10 @@ impl DeadLetterRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_list))
-            .route("/replay-all", post(Self::handle_replay_all))
-            .route("/{id}", get(Self::handle_get).delete(Self::handle_delete))
-            .route("/{id}/replay", post(Self::handle_replay))
+            .route(routes::dlq::ROOT, get(Self::handle_list))
+            .route(routes::dlq::REPLAY_ALL, post(Self::handle_replay_all))
+            .route(routes::dlq::BY_ID, get(Self::handle_get).delete(Self::handle_delete))
+            .route(routes::dlq::REPLAY, post(Self::handle_replay))
             .with_state(self.bus)
     }
 

@@ -26,7 +26,7 @@ use crate::services::transfer_message::TransferMessageServiceTrait;
 use crate::services::transfer_process::service::TransferProcessService;
 use crate::services::transfer_process::TransferProcessServiceTrait;
 use crate::setup::ports::TransferPorts;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use events::EventSinkTrait;
 use common::config::services::TransferConfig;
 use common::module_loader::root_context::RootContext;

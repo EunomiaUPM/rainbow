@@ -20,7 +20,7 @@
 
 use axum::extract::Request;
 use common::facades::grants_facade::VerifiedPeer;
-use common::oauth::RolePath;
+use ymir::types::oauth::RolePath;
 use transfer_agent::entities::protocol::ProtocolId;
 use transfer_agent::protocols::dsp::entities::context_dsp::{
     TransferDspParsed, TransferDspRaw, TransferDspRdf, TransferDspTyped,
@@ -32,7 +32,7 @@ fn mate() -> VerifiedPeer {
     VerifiedPeer {
         participant_id: "did:example:provider".into(),
         role: RolePath::root(),
-        visibility: common::oauth::Visibility::Public,
+        visibility: ymir::types::participants::Visibility::Public,
     }
 }
 

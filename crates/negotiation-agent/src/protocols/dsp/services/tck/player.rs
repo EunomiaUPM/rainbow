@@ -22,7 +22,7 @@ use std::sync::Arc;
 use common::dsp_common::persistence::DspPersistenceTrait;
 use common::dsp_common::DspCaller;
 use common::flow::{FlowError, FlowRunner};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::tck::TckPlayerTrait;
 use ymir::errors::Outcome;
 

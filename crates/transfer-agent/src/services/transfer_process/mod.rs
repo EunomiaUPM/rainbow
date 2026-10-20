@@ -18,7 +18,7 @@
 use crate::entities::commands::{EditTransferProcessCommand, NewTransferProcessCommand};
 use crate::entities::filters::TransferProcessFilter;
 use crate::services::transfer_process::views::TransferProcessView;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Paginated, Sort};
 use urn::Urn;

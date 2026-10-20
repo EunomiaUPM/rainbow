@@ -6,7 +6,7 @@ source "$SCRIPT_DIR/../lib/auth.sh"
 # ==========================================
 # CONFIGURATION
 # ==========================================
-AGENT_URL="http://127.0.0.1:1200"
+AGENT_URL="${AGENT_URL:-$EUNOMIA_PROVIDER_URL}"
 
 
 # ==========================================

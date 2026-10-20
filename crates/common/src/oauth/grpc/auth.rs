@@ -24,7 +24,7 @@ use tonic::Status;
 
 use ymir::types::oauth::UserInfo;
 
-use crate::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use crate::oauth::AUTHORIZATION_HEADER;
 
 /// Validates bearer tokens from metadata into the caller's `UserInfo`.

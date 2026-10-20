@@ -27,7 +27,7 @@ pub mod verification;
 use std::collections::HashMap;
 
 use common::dsp_common::persistence::StateChange;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde_json::Value;
 use ymir::errors::{Errors, Outcome};
 

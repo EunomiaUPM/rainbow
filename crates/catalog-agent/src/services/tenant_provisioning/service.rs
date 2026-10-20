@@ -20,7 +20,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use common::oauth::{RoleTrait, UserInfo};
+use ymir::types::oauth::{RoleTrait, UserInfo};
 use common::facades::mates_facade::MatesFacadeTrait;
 use urn::Urn;
 use ymir::errors::Outcome;

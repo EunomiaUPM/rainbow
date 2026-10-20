@@ -78,7 +78,7 @@ impl<'a> RuntimeSecretVault<'a> {
         Self { store, user_id }
     }
 
-    fn owner_scope(&self) -> common::oauth::UserInfo {
+    fn owner_scope(&self) -> ymir::types::oauth::UserInfo {
         common::oauth::acting_as(self.user_id)
     }
 

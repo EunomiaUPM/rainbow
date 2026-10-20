@@ -17,7 +17,7 @@
 
 //! `ContractRequestMessage` sent by the consumer (DSP 8.2.2, 8.2.3): opening a negotiation or countering an offer.
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde_json::Value;
 use ymir::errors::Outcome;
 

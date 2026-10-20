@@ -20,7 +20,7 @@
 pub mod service;
 
 use crate::entities::dataset_offerings::{DatasetOfferingDto, NewDatasetOfferingDto};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::errors::Outcome;
 
 /// Publishing a dataset together with its distribution and policy.

@@ -17,7 +17,8 @@
 
 //! Hand-written stubs.
 
-use common::oauth::{OauthTokenValidatorTrait, RolePath, UserInfo};
+use ymir::services::token_validator::OauthTokenValidatorTrait;
+use ymir::types::oauth::{RolePath, UserInfo};
 use serde_json::Map;
 use ymir::errors::{Errors, Outcome};
 

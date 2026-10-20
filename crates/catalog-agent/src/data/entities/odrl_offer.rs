@@ -18,7 +18,9 @@
 //! ODRL offers table.
 
 use crate::entities::odrl_policies::CatalogEntityTypes;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use common::dsp_common::odrl::OdrlPolicyInfo;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;

@@ -52,8 +52,8 @@ fn make_process_model(id: &Urn, tenant_id: &str) -> NegotiationProcessModel {
     NegotiationProcessModel {
         id: id.to_string(),
         user_id: tenant_id.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         state: "REQUESTED".to_string(),
         state_attribute: None,
         associated_agent_peer: "urn:peer:1".to_string(),

@@ -30,6 +30,7 @@ use common::config::services::CatalogConfig;
 use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct DistributionEntityRouter {
@@ -59,26 +60,26 @@ impl DistributionEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_distributions))
+            .route(routes::entity::ROOT, get(Self::handle_get_all_distributions))
             .route(
-                "/dataset/{id}",
+                routes::distributions::BY_DATASET,
                 get(Self::handle_get_distributions_by_dataset_id),
             )
             .route(
-                "/dataset/{id}/format/{format}",
+                routes::distributions::BY_DATASET_AND_FORMAT,
                 get(Self::handle_get_distribution_by_dataset_id_and_dct_format),
             )
-            .route("/", post(Self::handle_create_distribution))
-            .route("/batch", post(Self::handle_get_batch_distributions))
-            .route("/{id}", get(Self::handle_get_distribution_by_id))
-            .route("/{id}", put(Self::handle_put_distribution_by_id))
-            .route("/{id}", delete(Self::handle_delete_distribution_by_id))
+            .route(routes::entity::ROOT, post(Self::handle_create_distribution))
+            .route(routes::entity::BATCH, post(Self::handle_get_batch_distributions))
+            .route(routes::entity::BY_ID, get(Self::handle_get_distribution_by_id))
+            .route(routes::entity::BY_ID, put(Self::handle_put_distribution_by_id))
+            .route(routes::entity::BY_ID, delete(Self::handle_delete_distribution_by_id))
             .with_state(self)
     }
 
     async fn handle_get_all_distributions(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(query): Query<DistributionQuery>,
     ) -> impl IntoResponse {
         let (filter, page, sort) = query.into_domain();
@@ -93,7 +94,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_get_batch_distributions(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<BatchRequests>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -111,7 +112,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_get_distributions_by_dataset_id(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -129,7 +130,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_get_distribution_by_dataset_id_and_dct_format(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path((id, dct_format)): Path<(String, String)>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -147,7 +148,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_get_distribution_by_id(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -161,7 +162,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_put_distribution_by_id(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
         input: Result<Json<EditDistributionDto>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -184,7 +185,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_create_distribution(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewDistributionDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -198,7 +199,7 @@ impl DistributionEntityRouter {
     }
     async fn handle_delete_distribution_by_id(
         State(state): State<DistributionEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {

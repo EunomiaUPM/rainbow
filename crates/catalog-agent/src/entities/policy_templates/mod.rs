@@ -21,7 +21,9 @@ pub mod types;
 pub mod validator;
 
 use crate::data::entities::policy_template;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use crate::data::entities::policy_template::{Model, NewPolicyTemplateModel};
 use crate::entities::policy_templates::types::{LocalizedText, ParameterDefinition};
 use common::dsp_common::odrl::OdrlPolicyInfo;

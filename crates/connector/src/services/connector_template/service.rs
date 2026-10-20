@@ -91,7 +91,8 @@ impl ConnectorTemplateService {
 }
 
 use crate::entities::filters::ConnectorTemplateFilter;
-use common::oauth::{OwnedTrait, Owner, OwnerScope, UserInfo};
+use common::oauth::{OwnedTrait, Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Cursor, Page, Paginated, Sort};
 use common::query::QueryFilter;
 

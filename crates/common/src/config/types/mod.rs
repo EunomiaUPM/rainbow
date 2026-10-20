@@ -22,9 +22,11 @@ mod datahub;
 mod entity_client;
 mod gaia_config;
 pub mod min_known_config;
+mod oid4vp_service;
 pub mod roles;
 pub mod traits;
 
 pub use datahub::DatahubConfig;
 pub use entity_client::*;
 pub use gaia_config::GaiaConfig;
+pub use oid4vp_service::Oid4VpService;

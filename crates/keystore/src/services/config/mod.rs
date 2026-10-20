@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::config::ApplicationConfig;
 use ymir::errors::Outcome;
 

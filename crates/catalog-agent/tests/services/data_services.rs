@@ -56,8 +56,8 @@ fn make_model(tenant: &str, n: u32) -> dataservice::Model {
     dataservice::Model {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         dcat_endpoint_description: None,
         dcat_endpoint_url: "https://example.org/api".to_string(),
         dct_conforms_to: None,

@@ -31,9 +31,10 @@ use serde_json::Map;
 use tower::ServiceExt;
 use ymir::errors::{Errors, Outcome};
 
-use ymir::http::OauthHttpMiddleware;
+use ymir::http::{OauthHttpMiddleware, USER_TOKEN_HEADER};
 
-use crate::oauth::{OauthTokenValidatorTrait, RolePath, RoleTrait, UserInfo};
+use ymir::services::token_validator::OauthTokenValidatorTrait;
+use ymir::types::oauth::{RolePath, RoleTrait, UserInfo};
 
 /// Accepts one root and one regular user token; anything else is unauthorized.
 struct StubValidator;
@@ -226,4 +227,29 @@ async fn query_tokens_and_permissive_mode_are_accepted() {
     let resp_auth = app_permissive.oneshot(req_auth).await.unwrap();
     assert_eq!(resp_auth.status(), StatusCode::OK);
     assert_eq!(json(resp_auth).await["authenticated"], true);
+}
+
+/// The user's token forwarded by the proxy wins over `Authorization`, which stays for the
+/// protocols; without it, the bearer of `Authorization` is used as before.
+#[test]
+fn user_token_header_wins_over_authorization() {
+    let both = Request::builder()
+        .header(USER_TOKEN_HEADER, " user_jwt ")
+        .header(AUTHORIZATION, "Bearer peer_gnap_token")
+        .body(Body::empty())
+        .unwrap();
+    assert_eq!(OauthHttpMiddleware::extract_token(&both).as_deref(), Some("user_jwt"));
+
+    let only_bearer = Request::builder()
+        .header(AUTHORIZATION, "Bearer user_jwt")
+        .body(Body::empty())
+        .unwrap();
+    assert_eq!(OauthHttpMiddleware::extract_token(&only_bearer).as_deref(), Some("user_jwt"));
+
+    let blank = Request::builder()
+        .header(USER_TOKEN_HEADER, "  ")
+        .header(AUTHORIZATION, "Bearer user_jwt")
+        .body(Body::empty())
+        .unwrap();
+    assert_eq!(OauthHttpMiddleware::extract_token(&blank).as_deref(), Some("user_jwt"));
 }

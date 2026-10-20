@@ -28,7 +28,7 @@ use crate::protocols::dsp::protocol_types::{
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
 use common::facades::grants_facade::{send_with_peer_token, GrantsFacadeTrait};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::well_known::rpc::WellKnownRPCRequest;
 use std::sync::Arc;
 use ymir::errors::{Errors, Outcome};

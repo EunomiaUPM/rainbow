@@ -27,7 +27,7 @@ use axum::extract::Request;
 use common::facades::grants_facade::VerifiedPeer;
 use common::flow::idempotency::{IdempotencyRecord, IdempotencyVerdict};
 use common::flow::{IdempotencyGuard, IdempotencyKey, InMemoryIdempotencyStore};
-use common::oauth::RolePath;
+use ymir::types::oauth::RolePath;
 use transfer_agent::entities::protocol::ProtocolId;
 use transfer_agent::protocols::dsp::entities::context_dsp::{
     TransferDspParsed, TransferDspRaw, TransferDspRdf, TransferDspTyped,
@@ -80,7 +80,7 @@ fn mate(participant_id: &str) -> VerifiedPeer {
     VerifiedPeer {
         participant_id: participant_id.into(),
         role: RolePath::root(),
-        visibility: common::oauth::Visibility::Public,
+        visibility: ymir::types::participants::Visibility::Public,
     }
 }
 

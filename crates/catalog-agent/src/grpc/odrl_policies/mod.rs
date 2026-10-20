@@ -29,7 +29,7 @@ use crate::grpc::api::catalog_agent::{
 };
 use crate::services::odrl_policies::OdrlPolicyServiceTrait;
 use common::oauth::grpc::GrpcAuth;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::grpc::{IntoStatus, ListParams, ProtoField, ProtoFieldList};
 use tonic::{Request, Response, Status};
 use ymir::errors::Errors;

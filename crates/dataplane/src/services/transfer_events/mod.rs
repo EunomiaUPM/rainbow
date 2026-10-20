@@ -21,7 +21,7 @@ pub mod service;
 
 pub use service::TransferEventsService;
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::batch_requests::BatchRequests;
 use common::query::{Page, Paginated, Sort};
 use urn::Urn;

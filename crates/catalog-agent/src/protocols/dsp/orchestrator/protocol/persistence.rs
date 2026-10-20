@@ -40,7 +40,7 @@ use crate::services::data_services::DataServiceServiceTrait;
 use crate::services::datasets::DatasetServiceTrait;
 use crate::services::distributions::DistributionServiceTrait;
 use crate::services::odrl_policies::OdrlPolicyServiceTrait;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::dsp_common::context_field::ContextField;
 use common::dsp_common::odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use common::paginated_spec::{Page, MAX_PAGE_LIMIT};

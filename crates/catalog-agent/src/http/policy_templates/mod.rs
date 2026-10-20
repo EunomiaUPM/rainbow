@@ -34,6 +34,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 use ymir::errors::Errors;
 use ymir::utils::extract_payload;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct PolicyTemplateEntityRouter {
@@ -83,20 +84,20 @@ impl PolicyTemplateEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_policy_templates))
-            .route("/", post(Self::handle_create_policy_template))
-            .route("/batch", post(Self::handle_get_batch_policy_templates))
-            .route("/{id}", get(Self::handle_get_policy_template_by_id))
+            .route(routes::entity::ROOT, get(Self::handle_get_all_policy_templates))
+            .route(routes::entity::ROOT, post(Self::handle_create_policy_template))
+            .route(routes::entity::BATCH, post(Self::handle_get_batch_policy_templates))
+            .route(routes::entity::BY_ID, get(Self::handle_get_policy_template_by_id))
             .route(
-                "/{id}/{version}",
+                routes::policy_templates::BY_ID_AND_VERSION,
                 get(Self::handle_get_policy_template_by_id_and_version),
             )
             .route(
-                "/{id}/{version}",
+                routes::policy_templates::BY_ID_AND_VERSION,
                 delete(Self::handle_delete_policy_template_by_id_and_version),
             )
             .route(
-                "/instantiate-odrl-offer",
+                routes::policy_templates::INSTANTIATE_ODRL_OFFER,
                 post(Self::handle_instantiate_offer),
             )
             .with_state(self)
@@ -104,7 +105,7 @@ impl PolicyTemplateEntityRouter {
 
     async fn handle_get_all_policy_templates(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(query): Query<PolicyTemplateQuery>,
     ) -> impl IntoResponse {
         match state
@@ -118,7 +119,7 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_get_batch_policy_templates(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<BatchRequestsAsString>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -136,7 +137,7 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_get_policy_template_by_id(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         match state.service.get_policies_template_by_id(&user, &id).await {
@@ -146,7 +147,7 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_get_policy_template_by_id_and_version(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path((id, version)): Path<(String, String)>,
     ) -> impl IntoResponse {
         match state
@@ -160,7 +161,7 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_create_policy_template(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(params): Query<SilentParams>,
         input: Result<Json<NewPolicyTemplateDto>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -192,7 +193,7 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_delete_policy_template_by_id_and_version(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path((id, version)): Path<(String, String)>,
     ) -> impl IntoResponse {
         match state
@@ -207,7 +208,7 @@ impl PolicyTemplateEntityRouter {
 
     async fn handle_instantiate_offer(
         State(state): State<PolicyTemplateEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewPolicyInstantiationDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {

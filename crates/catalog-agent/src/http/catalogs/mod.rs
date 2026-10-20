@@ -31,6 +31,7 @@ use common::errors::CommonErrors;
 use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct CatalogEntityRouter {
@@ -59,20 +60,20 @@ impl CatalogEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_catalogs))
-            .route("/", post(Self::handle_create_catalog))
-            .route("/main", get(Self::handle_get_main_catalog))
-            .route("/main", post(Self::handle_create_main_catalog))
-            .route("/batch", post(Self::handle_get_batch_catalogs))
-            .route("/{id}", get(Self::handle_get_catalog_by_id))
-            .route("/{id}", put(Self::handle_put_catalog_by_id))
-            .route("/{id}", delete(Self::handle_delete_catalog_by_id))
+            .route(routes::entity::ROOT, get(Self::handle_get_all_catalogs))
+            .route(routes::entity::ROOT, post(Self::handle_create_catalog))
+            .route(routes::entity::MAIN, get(Self::handle_get_main_catalog))
+            .route(routes::entity::MAIN, post(Self::handle_create_main_catalog))
+            .route(routes::entity::BATCH, post(Self::handle_get_batch_catalogs))
+            .route(routes::entity::BY_ID, get(Self::handle_get_catalog_by_id))
+            .route(routes::entity::BY_ID, put(Self::handle_put_catalog_by_id))
+            .route(routes::entity::BY_ID, delete(Self::handle_delete_catalog_by_id))
             .with_state(self)
     }
 
     async fn handle_get_all_catalogs(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(query): Query<CatalogQuery>,
     ) -> impl IntoResponse {
         match state
@@ -86,7 +87,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_get_batch_catalogs(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<BatchRequests>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -100,7 +101,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_get_catalog_by_id(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -114,7 +115,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_get_main_catalog(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
     ) -> impl IntoResponse {
         match state.service.get_main_catalog(&user).await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
@@ -127,7 +128,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_put_catalog_by_id(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
         input: Result<Json<EditCatalogDto>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -150,7 +151,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_create_catalog(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewCatalogDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -164,7 +165,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_create_main_catalog(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewCatalogDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -178,7 +179,7 @@ impl CatalogEntityRouter {
     }
     async fn handle_delete_catalog_by_id(
         State(state): State<CatalogEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {

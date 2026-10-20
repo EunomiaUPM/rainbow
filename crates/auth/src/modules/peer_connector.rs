@@ -20,7 +20,7 @@ use crate::services::{HasCallback, HasPeerConnector, HasRepo, MayHaveEventBus};
 use crate::types::entities::ReachProvider;
 use crate::types::events::{sent_owner, GrantEvent, VerificationEvent};
 use crate::types::response::{RotationOutcome, TokenWhatResponse};
-use crate::types::token_lifetimes::EXPIRY_MARGIN_SECS;
+use crate::types::token_lifetimes::{EXPIRY_MARGIN_SECS, PENDING_GRANT_TTL_SECS};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use common::facades::grants_facade::PeerToken;
@@ -193,7 +193,13 @@ pub trait PeerConnectorModule:
 
     #[tracing::instrument(level = "info", skip_all, err)]
     async fn sweep_expired(&self, now: DateTime<Utc>) -> Outcome<u64> {
-        self.repo().sent_grant().finalize_expired(now).await
+        let expired = self.repo().sent_grant().finalize_expired(now).await?;
+        let stale = self
+            .repo()
+            .sent_grant()
+            .finalize_stale_pending(now - Duration::seconds(PENDING_GRANT_TTL_SECS), now)
+            .await?;
+        Ok(expired + stale)
     }
 
     // ==========================================================================================

@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use common::dsp_common::DspCaller;
 use common::flow::{FlowError, FlowRunner};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::tck::TckPlayerTrait;
 
 use crate::protocols::dsp::entities::context_rpc::{TransferRpcBody, TransferRpcTyped};

@@ -30,7 +30,7 @@ pub fn transfer_config_fixture() -> Arc<TransferConfig> {
             },
             "db": { "db_type": "Postgres", "url": "localhost", "port": "5432" },
             "api": { "version": "v1", "openapi_path": "/openapi.json" },
-            "connection": { "is_local": true, "is_prod": false, "is_vault_real": false, "has_tls_proxy": false }
+            "connection": { "is_local": true, "is_prod": false, "is_vault_real": false, "has_proxy": false }
         },
         "cache": { "cache_type": "Noop", "url": "", "port": "", "user": "", "password": "" },
         "contracts": {
@@ -60,7 +60,7 @@ pub fn contracts_config_fixture() -> Arc<ContractsConfig> {
             },
             "db": { "db_type": "Postgres", "url": "localhost", "port": "5432" },
             "api": { "version": "v1", "openapi_path": "/openapi.json" },
-            "connection": { "is_local": true, "is_prod": false, "is_vault_real": false, "has_tls_proxy": false }
+            "connection": { "is_local": true, "is_prod": false, "is_vault_real": false, "has_proxy": false }
         },
         "ssi_auth": {
             "hosts": { "http": { "protocol": "http", "url": "localhost", "port": null, "internal_port": null }, "grpc": null, "graphql": null },

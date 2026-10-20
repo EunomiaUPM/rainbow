@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::oauth::{Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::errors::NotFoundExt;
 use common::paginated_spec::Cursor;
 use common::query::{Page, Paginated, QueryFilter, Sort};

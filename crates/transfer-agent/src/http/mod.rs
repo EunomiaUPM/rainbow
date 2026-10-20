@@ -16,7 +16,7 @@
  */
 
 use axum::Router;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use std::sync::Arc;
 
 pub mod transfer_message_router;

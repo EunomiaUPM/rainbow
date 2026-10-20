@@ -24,7 +24,8 @@ use ymir::errors::Outcome;
 use ymir::services::vault::global::VaultService;
 use ymir::services::vault::VaultTrait;
 
-use crate::oauth::{OauthTokenValidatorTrait, token_validator};
+use crate::oauth::token_validator;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use crate::config::services::CommonConfig;
 
 /// One vault, one DB pool and one token validator for the whole process.

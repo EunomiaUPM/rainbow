@@ -24,11 +24,12 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::errors::CommonErrors;
 use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::utils::extract_payload;
+use common::routes::connector as routes;
 
 #[derive(Clone)]
 pub struct ConnectorTemplateRouter {
@@ -51,15 +52,15 @@ impl ConnectorTemplateRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_templates))
-            .route("/", post(Self::handle_create_template))
-            .route("/{id}", get(Self::handle_get_templates_by_id))
+            .route(routes::templates::ROOT, get(Self::handle_get_all_templates))
+            .route(routes::templates::ROOT, post(Self::handle_create_template))
+            .route(routes::templates::BY_ID, get(Self::handle_get_templates_by_id))
             .route(
-                "/{name}/{version}",
+                routes::templates::BY_NAME_AND_VERSION,
                 get(Self::handle_get_template_by_name_and_version),
             )
             .route(
-                "/{name}/{version}",
+                routes::templates::BY_NAME_AND_VERSION,
                 delete(Self::handle_delete_template_by_name_and_version),
             )
             .with_state(self)

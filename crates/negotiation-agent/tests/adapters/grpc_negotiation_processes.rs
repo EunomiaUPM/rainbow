@@ -50,8 +50,8 @@ fn view(n: u32) -> NegotiationProcessView {
         negotiation_process::Model {
             id: urn(n),
             user_id: TENANT.to_string(),
-            user_role: common::oauth::RolePath::root(),
-            visibility: common::oauth::Visibility::Private,
+            user_role: ymir::types::oauth::RolePath::root(),
+            visibility: ymir::types::participants::Visibility::Private,
             state: "REQUESTED".into(),
             state_attribute: None,
             associated_agent_peer: "peer".into(),

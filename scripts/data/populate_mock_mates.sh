@@ -6,7 +6,7 @@ source "$SCRIPT_DIR/../lib/auth.sh"
 # ==========================================
 # CONFIGURATION
 # ==========================================
-BASE_URL="${BASE_URL:-http://127.0.0.1:1200}"
+BASE_URL="${BASE_URL:-$EUNOMIA_PROVIDER_URL}"
 MATES_URL="$BASE_URL/api/v1/mates"
 
 # ==========================================

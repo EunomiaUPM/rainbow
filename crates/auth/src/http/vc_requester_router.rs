@@ -31,7 +31,7 @@ use ymir::utils::extract_payload;
 use crate::entities::filters::SentGrantFilter;
 use crate::modules::VcRequesterModule;
 use crate::types::entities::ReachAuthority;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::Paginated;
 use common::query::{QueryFilter, QuerySpec};
 use common::routes::auth::vc_request;

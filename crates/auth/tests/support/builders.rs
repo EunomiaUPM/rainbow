@@ -37,12 +37,15 @@ use ymir::types::gnap::grant_request::{GrantKind, GrantRequest};
 use ymir::types::gnap::grant_response::GrantResponse;
 use ymir::types::gnap::GrantStatus;
 use ymir::types::issuance::VcBody;
-use ymir::types::jwt::VCJwtClaims;
+// use ymir::types::vcs::VCJwtClaims;
+use ymir::types::jwt::{Jwt, JwtClaims};
+use ymir::types::vcs::VcPayload;
 use ymir::types::keys::DbKeySource;
 use ymir::types::oauth::RolePath;
 use ymir::types::participants::{ParticipantType, Visibility};
 use ymir::types::vcs::{VcFormat, VcType, VcTypeConfig};
 use ymir::types::verification::VerificationStatus;
+use ymir::utils::encode_url_safe_no_pad;
 
 use auth::types::entities::{ReachAuthority, ReachProvider};
 
@@ -373,7 +376,7 @@ pub fn grant_request() -> GrantRequest {
 }
 
 /// Claims of a self-attested credential, before signing.
-pub fn vc_claims(kind: &str) -> VCJwtClaims {
+pub fn vc_claims(kind: &str) -> JwtClaims<VcPayload> {
     serde_json::from_value(json!({
         "@context": ["https://www.w3.org/ns/credentials/v2"],
         "id": format!("urn:vc:{kind}"),
@@ -382,6 +385,18 @@ pub fn vc_claims(kind: &str) -> VCJwtClaims {
         "credentialSubject": {"id": "did:web:me"}
     }))
     .expect("valid VC claims")
+}
+
+/// `claims` as a JWT with a fake signature (`signed`), as the issuer double returns them.
+pub fn signed_vc(claims: &JwtClaims<VcPayload>) -> Jwt<VcPayload> {
+    let header = json!({"alg": "EdDSA", "typ": "vc+jwt", "kid": "did:web:me#key-1"});
+    let jwt = format!(
+        "{}.{}.{}",
+        encode_url_safe_no_pad(header.to_string()),
+        encode_url_safe_no_pad(serde_json::to_string(claims).expect("serializable claims")),
+        encode_url_safe_no_pad("signed"),
+    );
+    Jwt::parse(&jwt).expect("valid JWT")
 }
 
 /// A credential as the wallet stores it.

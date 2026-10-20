@@ -28,8 +28,13 @@ use ymir::utils::http_client;
 pub struct DiscoveryHandlers;
 
 impl DiscoveryHandlers {
+    /// The DID document a peer publishes, at the root of its host (public: no session needed).
     pub async fn did_json(Path(url): Path<String>) -> Response {
-        let target = format!("{}/api/v1/wallet/did.json", url.trim_end_matches('/'));
+        let target = format!(
+            "{}{}",
+            url.trim_end_matches('/'),
+            ymir::http::routes::wallet::DID_DOC
+        );
         Self::fetch_json(&target, "DID document").await
     }
 

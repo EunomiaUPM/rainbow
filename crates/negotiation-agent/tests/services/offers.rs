@@ -44,8 +44,8 @@ fn make_offer_model(id: &Urn, tenant_id: &str) -> OfferModel {
     OfferModel {
         id: id.to_string(),
         user_id: tenant_id.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         negotiation_agent_process_id: "urn:uuid:process-1".to_string(),
         negotiation_agent_message_id: "urn:uuid:message-1".to_string(),
         offer_id: "offer-ext-1".to_string(),

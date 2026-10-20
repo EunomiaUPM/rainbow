@@ -21,7 +21,7 @@ pub mod service;
 
 use crate::entities::policy_instantiation::NewPolicyInstantiationDto;
 use crate::OdrlPolicyDto;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::errors::Outcome;
 
 /// Turning a policy template into a concrete ODRL offer.

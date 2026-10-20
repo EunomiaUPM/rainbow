@@ -27,11 +27,12 @@ use axum::extract::{FromRef, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::http_tracing::ExtractedHeaders;
 use common::query::{Paginated, QuerySpec, Sort};
 use ymir::errors::AppResult;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::transfer as routes;
 
 #[derive(Clone)]
 pub struct TransferMessageRouter {
@@ -51,12 +52,12 @@ impl TransferMessageRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all).post(Self::handle_create))
+            .route(routes::entity::ROOT, get(Self::handle_get_all).post(Self::handle_create))
             .route(
-                "/{id}",
+                routes::entity::BY_ID,
                 get(Self::handle_get_one).delete(Self::handle_delete),
             )
-            .route("/process/{process_id}", get(Self::handle_get_by_process))
+            .route(routes::entity::BY_PROCESS, get(Self::handle_get_by_process))
             .with_state(self)
     }
 

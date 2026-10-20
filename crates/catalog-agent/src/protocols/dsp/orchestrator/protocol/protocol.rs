@@ -22,7 +22,7 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use std::sync::Arc;
 use ymir::errors::Outcome;
 

@@ -59,7 +59,7 @@ common_config: &common_config
     is_local: true
     is_prod: false
     is_vault_real: false
-    has_tls_proxy: false
+    has_proxy: false
   # oauth:
   #   provider: static
 
@@ -100,6 +100,7 @@ ssi_auth:
   client_config:
     class_id: "Provider"
     display: null
+  oid4vp_service: V1_0
   verify_req_config:
     is_cert_allowed: false
     auto_approve_cert: false

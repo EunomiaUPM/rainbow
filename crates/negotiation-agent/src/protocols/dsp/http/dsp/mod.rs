@@ -34,6 +34,7 @@ use crate::protocols::dsp::entities::message_types::NegotiationMessageType;
 use crate::protocols::dsp::entities::negotiation_error::NegotiationErrorDto;
 use crate::protocols::dsp::http::dsp::adapter::NegotiationDspAdapter;
 use crate::protocols::dsp::setup::context::DspContext;
+use common::routes::negotiation as routes;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -50,18 +51,18 @@ impl DspRouter {
         let auth = &self.ctx.app.ports.auth;
         let peer_auth = PeerAuth::new(auth.grants.clone(), auth.mates.clone());
         Router::new()
-            .route("/{id}", get(Self::handle_get_negotiation))
-            .route("/request", post(Self::handle_request))
-            .route("/{id}/request", post(Self::handle_request))
-            .route("/offers", post(Self::handle_offer))
-            .route("/{id}/offers", post(Self::handle_offer))
-            .route("/{id}/events", post(Self::handle_event))
-            .route("/{id}/agreement", post(Self::handle_agreement))
+            .route(routes::dsp::PROCESS, get(Self::handle_get_negotiation))
+            .route(routes::dsp::REQUEST, post(Self::handle_request))
+            .route(routes::dsp::PROCESS_REQUEST, post(Self::handle_request))
+            .route(routes::dsp::OFFERS, post(Self::handle_offer))
+            .route(routes::dsp::PROCESS_OFFERS, post(Self::handle_offer))
+            .route(routes::dsp::PROCESS_EVENTS, post(Self::handle_event))
+            .route(routes::dsp::PROCESS_AGREEMENT, post(Self::handle_agreement))
             .route(
-                "/{id}/agreement/verification",
+                routes::dsp::PROCESS_AGREEMENT_VERIFICATION,
                 post(Self::handle_verification),
             )
-            .route("/{id}/termination", post(Self::handle_termination))
+            .route(routes::dsp::PROCESS_TERMINATION, post(Self::handle_termination))
             .layer(middleware::from_fn_with_state(peer_auth, PeerAuth::run))
             .with_state(self)
     }

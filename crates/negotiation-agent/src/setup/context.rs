@@ -21,7 +21,7 @@ use std::sync::{Arc, OnceLock};
 
 use common::config::services::ContractsConfig;
 use common::module_loader::root_context::RootContext;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use events::EventSinkTrait;
 
 use crate::data::factory::DataFactory;

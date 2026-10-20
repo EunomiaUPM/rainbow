@@ -36,7 +36,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::any;
 use axum::{Json, Router};
-use common::oauth::{OwnedTrait, UserInfo};
+use common::oauth::OwnedTrait;
+use ymir::types::oauth::UserInfo;
 use common::utils::get_urn_from_string;
 use connector::KeystoreLookup;
 use hyper::Method;
@@ -48,6 +49,7 @@ use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 use ymir::services::client::ClientService;
 use ymir::types::http::Response as UpstreamResponse;
+use common::routes::dataplane as routes;
 
 /// Maximum request body we buffer before forwarding upstream (2 MiB).
 const MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
@@ -161,9 +163,9 @@ impl TestingHTTPProxy {
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/{data_plane_id}", any(Self::forward_request_base))
+            .route(routes::proxy::BY_DATAPLANE, any(Self::forward_request_base))
             .route(
-                "/{data_plane_id}/{*path}",
+                routes::proxy::PATH,
                 any(Self::forward_request_wildcard),
             )
             .with_state(self)

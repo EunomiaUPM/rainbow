@@ -26,7 +26,7 @@ pub mod service;
 
 use crate::entities::catalogs::CatalogDto;
 use crate::entities::data_services::DataServiceDto;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde::Serialize;
 use ymir::errors::Outcome;
 

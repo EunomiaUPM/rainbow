@@ -51,8 +51,8 @@ fn entity_for_init() -> Arc<dyn DataplaneTransferServiceTrait> {
         Ok(DataplaneTransferDto {
             inner: dataplane_transfers::Model {
                 user_id: dto.owner.clone().unwrap().user_id,
-                user_role: common::oauth::RolePath::root(),
-                visibility: common::oauth::Visibility::Private,
+                user_role: ymir::types::oauth::RolePath::root(),
+                visibility: ymir::types::participants::Visibility::Private,
                 id: "urn:dataplane-transfer:test".to_string(),
                 transfer_process_id: dto.transfer_process_id.clone(),
                 role: dto.role.clone(),

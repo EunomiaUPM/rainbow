@@ -25,7 +25,8 @@ use crate::services::config::ConfigStore;
 use crate::services::parameters::ParameterStore;
 use crate::services::secrets::SecretStore;
 use axum::Router;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
+use common::routes::keystore as routes;
 
 pub struct KeystoreRouter {
     parameters: Arc<dyn ParameterStore<serde_json::Value>>,
@@ -55,9 +56,9 @@ impl KeystoreRouter {
         let config_router = config::ConfigRouter::new(self.config).router();
 
         Router::new()
-            .nest("/parameters", parameters_router)
-            .nest("/secrets", secrets_router)
-            .nest("/config", config_router)
+            .nest(routes::parameters::PREFIX, parameters_router)
+            .nest(routes::secrets::PREFIX, secrets_router)
+            .nest(routes::config::PREFIX, config_router)
             .route_layer(axum::middleware::from_fn_with_state(
                 self.validator,
                 ymir::http::OauthHttpMiddleware::run,

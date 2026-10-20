@@ -34,7 +34,7 @@
 use crate::entities::auth_config::AuthenticationConfig;
 use crate::entities::connector_template::ConnectorMetadata;
 use crate::entities::interaction::InteractionConfig;
-use common::oauth::Visibility;
+use ymir::types::participants::Visibility;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use urn::Urn;

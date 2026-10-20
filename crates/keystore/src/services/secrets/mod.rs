@@ -26,7 +26,7 @@ use crate::entities::filters::PrefixFilter;
 use crate::entities::key::{Key, KeyPrefix};
 use crate::entities::secret_value::SecretValue;
 use crate::entities::version::Version;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::errors::Outcome;
 
 /// Per-user secrets: credentials connectors and services resolve at runtime.

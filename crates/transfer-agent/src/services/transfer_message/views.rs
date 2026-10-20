@@ -16,7 +16,8 @@
  */
 
 use crate::entities::ids::{MessageId, TransferProcessId};
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::protocol::{ProtocolId, ProtocolMessageType};
 use crate::entities::transfer_message::{Direction, TransferMessage};

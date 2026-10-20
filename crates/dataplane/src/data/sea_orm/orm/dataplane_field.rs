@@ -18,7 +18,8 @@
 //! `dataplane_fields` table.
 
 use sea_orm::entity::prelude::*;
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use serde::{Deserialize, Serialize};
 
 /// `dataplane_fields` row: one key/value field of a process.

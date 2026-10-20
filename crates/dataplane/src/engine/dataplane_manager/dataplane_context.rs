@@ -31,7 +31,7 @@ use crate::entities::dataplane_transfers::{
 use crate::errors::DataplaneError;
 use crate::services::dataplane_transfers::DataplaneTransferServiceTrait;
 use crate::DataplaneAddress;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::config::services::TransferConfig;
 use common::config::types::traits::CommonConfigTrait;
 use ymir::config::traits::HostsConfigTrait;

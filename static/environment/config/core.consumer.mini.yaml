@@ -18,6 +18,19 @@ min_known_config: &min_known_config
   hosts: *min_hosts
   api_version: *api_version
 
+# The agent itself seen from inside its container: the gateway (BFF) forwards here, not to the
+# public name, which would take every console call out and back in again.
+inner_known_config: &inner_known_config
+  hosts:
+    http:
+      protocol: "http"
+      url: "consumer"
+      port: "1100"
+      internal_port: null
+    grpc: null
+    graphql: null
+  api_version: *api_version
+
 is_catalog_datahub: &is_catalog_datahub false
 
 policy_templates_folder: &policy_templates_folder "/app/static/policy_templates"
@@ -48,7 +61,7 @@ common_config: &common_config
   connection:
     is_prod: false
     is_vault_real: false
-    has_tls_proxy: false
+    has_proxy: false
 
 # ==========================
 # MONOLITH
@@ -87,6 +100,7 @@ ssi_auth:
   client_config:
     class_id: "Consumer"
     display: null
+  oid4vp_service: V1_0
   verify_req_config:
     is_cert_allowed: false
     auto_approve_cert: false
@@ -145,8 +159,8 @@ transfer:
 gateway:
   common: *common_config
   is_production: false
-  transfer: *min_known_config
-  contracts: *min_known_config
-  catalog: *min_known_config
-  ssi_auth: *min_known_config
+  transfer: *inner_known_config
+  contracts: *inner_known_config
+  catalog: *inner_known_config
+  ssi_auth: *inner_known_config
   is_catalog_datahub: *is_catalog_datahub

@@ -57,8 +57,8 @@ fn make_model(tenant: &str, n: u32) -> odrl_offer::Model {
     odrl_offer::Model {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         odrl_offer: json!({}),
         entity: test_urn(100).to_string(),
         entity_type: "Dataset".to_string(),

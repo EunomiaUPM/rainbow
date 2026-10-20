@@ -42,7 +42,7 @@ common_config: &common_config
     is_local: false
     is_prod: true
     is_vault_real: true
-    has_tls_proxy: false
+    has_proxy: false
 
 # ==========================
 # MONOLITH
@@ -81,6 +81,7 @@ ssi_auth:
   vc_config:
     vc_model: JwtVc
     w3c_data_model: V2
+  oid4vp_service: V1_0
   verify_req_config:
     is_cert_allowed: false
     auto_approve_cert: false

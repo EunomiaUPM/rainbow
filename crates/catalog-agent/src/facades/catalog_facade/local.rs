@@ -22,7 +22,7 @@ use std::sync::Arc;
 use common::facades::catalog::{
     CatalogDataset, CatalogDistribution, CatalogFacadeTrait, CatalogOffer,
 };
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use urn::Urn;
 use ymir::errors::{Errors, Outcome};
 

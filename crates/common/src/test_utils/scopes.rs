@@ -19,7 +19,8 @@
 
 use serde_json::Map;
 
-use crate::oauth::{Owner, RolePath, UserInfo};
+use crate::oauth::Owner;
+use ymir::types::oauth::{RolePath, UserInfo};
 
 /// Ready-made users for service tests.
 pub struct TestUsers;

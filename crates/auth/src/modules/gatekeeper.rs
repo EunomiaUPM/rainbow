@@ -18,10 +18,11 @@
 use crate::entities::filters::RecvGrantFilter;
 use crate::services::{HasGateKeeper, HasRepo, MayHaveEventBus};
 use crate::types::events::{recv_owner, GrantEvent};
+use crate::types::token_lifetimes::PENDING_GRANT_TTL_SECS;
 use async_trait::async_trait;
 use axum::body::Bytes;
 use axum::http::HeaderMap;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use common::facades::grants_facade::VerifiedPeer;
 use common::paginated_spec::{Cursor, Page, Paginated, Sort};
 use serde_json::{json, Value};
@@ -215,7 +216,13 @@ pub trait GateKeeperModule:
 
     #[tracing::instrument(level = "info", skip_all, err)]
     async fn sweep_expired(&self, now: DateTime<Utc>) -> Outcome<u64> {
-        self.repo().recv_grant().finalize_expired(now).await
+        let expired = self.repo().recv_grant().finalize_expired(now).await?;
+        let stale = self
+            .repo()
+            .recv_grant()
+            .finalize_stale_pending(now - Duration::seconds(PENDING_GRANT_TTL_SECS), now)
+            .await?;
+        Ok(expired + stale)
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
@@ -359,7 +366,7 @@ pub trait GateKeeperModule:
 
         let verification = self.verifier().build_vp_plan(&grant.id)?;
         let verification = self.repo().recv_verification().create(verification).await?;
-        let uri = self.verifier().generate_verification_uri(&verification);
+        let uri = self.verifier().generate_verification_uri(&verification).await?;
         self.gate_event(&grant, "requested").await;
         Ok(GrantResponse::pending(uri, &interaction))
     }

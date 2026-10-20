@@ -41,8 +41,8 @@ fn make_event_model(n: u32, tenant: &str) -> EventModel {
     EventModel {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         transfer_id: test_urn(1).to_string(),
         level: LogLevel::Info,
         component: "Driver".to_string(),
@@ -167,8 +167,8 @@ async fn create_forces_caller_tenant_for_non_admin() {
             Ok(EventModel {
                 id: test_urn(10).to_string(),
                 user_id: cmd.owner.user_id.clone(),
-                user_role: common::oauth::RolePath::root(),
-                visibility: common::oauth::Visibility::Private,
+                user_role: ymir::types::oauth::RolePath::root(),
+                visibility: ymir::types::participants::Visibility::Private,
                 transfer_id: cmd.transfer_id.clone(),
                 level: cmd.level.clone(),
                 component: cmd.component.clone(),

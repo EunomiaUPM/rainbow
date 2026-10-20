@@ -107,7 +107,7 @@ async fn grant_request_is_stored_and_answered_with_the_verification_uri() {
         .returning(|plan| Ok(recv_verification(&plan.id, None)));
     d.verifier
         .expect_generate_verification_uri()
-        .returning(|_| "openid4vp://me?state=state-1".to_string());
+        .returning(|_| Ok("openid4vp://me?state=state-1".to_string()));
 
     let response = d
         .core()

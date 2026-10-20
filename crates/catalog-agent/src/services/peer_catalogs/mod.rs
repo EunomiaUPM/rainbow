@@ -20,7 +20,7 @@
 pub mod service;
 
 use crate::protocols::dsp::types::catalog_definition::Catalog;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::data::entities::shared::participant::Model as Mates;
 use ymir::errors::Outcome;
 

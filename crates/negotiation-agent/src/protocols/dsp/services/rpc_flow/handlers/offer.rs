@@ -17,7 +17,7 @@
 
 //! `ContractOfferMessage` sent by the provider (DSP 8.3.3, 8.3.4): opening a negotiation or countering a request.
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use serde_json::Value;
 use ymir::errors::Outcome;
 

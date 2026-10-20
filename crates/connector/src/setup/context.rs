@@ -25,7 +25,7 @@ use crate::services::connector_instance::ConnectorInstanceServiceTrait;
 use crate::services::connector_template::service::ConnectorTemplateService;
 use crate::services::connector_template::ConnectorTemplateServiceTrait;
 use crate::setup::ports::ConnectorPorts;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::config::services::CatalogConfig;
 use common::config::types::traits::CommonConfigTrait;
 use common::module_loader::root_context::RootContext;

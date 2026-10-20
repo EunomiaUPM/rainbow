@@ -21,7 +21,7 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::errors::AppResult;
 
 use crate::entities::commands::{EditParameterCommand, NewParameterCommand};
@@ -30,6 +30,7 @@ use crate::entities::key::Key;
 use crate::services::parameters::ParameterStore;
 use crate::services::parameters::views::{ParameterView, VersionResponse};
 use common::query::QuerySpec;
+use common::routes::keystore as routes;
 
 #[derive(Clone)]
 pub struct ParameterRouter {
@@ -45,9 +46,9 @@ impl ParameterRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::list).post(Self::create))
+            .route(routes::parameters::ROOT, get(Self::list).post(Self::create))
             .route(
-                "/{*key}",
+                routes::parameters::BY_KEY,
                 get(Self::read).put(Self::update).delete(Self::delete),
             )
             .with_state(self)

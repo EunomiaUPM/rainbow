@@ -56,8 +56,8 @@ fn make_transfer_model(n: u32, tenant: &str) -> TransferModel {
     TransferModel {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         transfer_process_id: format!("urn:uuid:{n:08x}-0000-0000-0000-000000000001"),
         role: TransferRole::Provider,
         interaction_mode: InteractionMode::Pull,
@@ -100,8 +100,8 @@ fn default_logs_repo() -> MockDataplaneTransferLogsRepo {
         Ok(LogModel {
             id: test_urn(999).to_string(),
             user_id: cmd.owner.user_id.clone(),
-            user_role: common::oauth::RolePath::root(),
-            visibility: common::oauth::Visibility::Private,
+            user_role: ymir::types::oauth::RolePath::root(),
+            visibility: ymir::types::participants::Visibility::Private,
             dataplane_process_id: cmd.dataplane_process_id,
             previous_state: None,
             new_state: cmd.new_state,
@@ -250,8 +250,8 @@ async fn create_forces_caller_tenant_for_non_admin() {
             Ok(TransferModel {
                 id: test_urn(10).to_string(),
                 user_id: cmd.owner.user_id.clone(),
-                user_role: common::oauth::RolePath::root(),
-                visibility: common::oauth::Visibility::Private,
+                user_role: ymir::types::oauth::RolePath::root(),
+                visibility: ymir::types::participants::Visibility::Private,
                 transfer_process_id: cmd.transfer_process_id.clone(),
                 role: cmd.role.clone(),
                 interaction_mode: cmd.interaction_mode.clone(),

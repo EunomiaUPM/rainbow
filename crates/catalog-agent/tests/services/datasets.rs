@@ -54,8 +54,8 @@ fn make_model(tenant: &str, n: u32) -> dataset::Model {
     dataset::Model {
         id: test_urn(n).to_string(),
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         dct_conforms_to: None,
         dct_creator: None,
         dct_identifier: None,

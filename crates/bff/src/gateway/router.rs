@@ -30,6 +30,7 @@ use crate::gateway::discovery::DiscoveryHandlers;
 use crate::gateway::frontend::FrontendHandlers;
 use crate::gateway::session::SessionHandlers;
 use crate::setup::context::AppContext;
+use common::routes::bff as routes;
 
 /// Gateway routes. Proxied calls are authenticated by the agents they reach.
 #[derive(Clone)]
@@ -44,9 +45,9 @@ impl GatewayHttpRouter {
 
     pub fn console_router(self) -> Router {
         Router::new()
-            .route("/", get(FrontendHandlers::console_root))
-            .route("/admin/", get(FrontendHandlers::static_asset))
-            .nest("/admin", self.router())
+            .route(routes::ROOT, get(FrontendHandlers::console_root))
+            .route(routes::CONSOLE_INDEX, get(FrontendHandlers::static_asset))
+            .nest(routes::CONSOLE, self.router())
     }
 
     /// The API answers under both `/admin/api` and `/api`; any other path serves the SPA.
@@ -57,22 +58,22 @@ impl GatewayHttpRouter {
             .allow_headers(Any);
         let api = self.api_router();
         Router::new()
-            .nest("/admin/api", api.clone())
-            .nest("/api", api)
+            .nest(routes::CONSOLE_API, api.clone())
+            .nest(routes::API, api)
             .fallback(FrontendHandlers::static_asset)
             .layer(cors)
     }
 
     fn api_router(&self) -> Router {
         Router::new()
-            .route("/fe-config", get(FrontendHandlers::fe_config))
+            .route(routes::FE_CONFIG, get(FrontendHandlers::fe_config))
             .route(
-                "/dsp/current/{service_prefix}/{*extra}",
+                routes::DSP,
                 any(Self::proxy_dsp),
             )
-            .route("/well-known/rpc/{*extra}", any(Self::proxy_well_known_rpc))
-            .route("/{service_prefix}", any(Self::proxy))
-            .route("/{service_prefix}/{*extra}", any(Self::proxy_with_extra))
+            .route(routes::WELL_KNOWN_RPC, any(Self::proxy_well_known_rpc))
+            .route(routes::SERVICE, any(Self::proxy))
+            .route(routes::SERVICE_PATH, any(Self::proxy_with_extra))
             .merge(self.guarded_router())
             .with_state(self.ctx.clone())
     }
@@ -84,10 +85,10 @@ impl GatewayHttpRouter {
             return Router::new();
         };
         Router::new()
-            .route("/me", get(SessionHandlers::me))
-            .route("/did-json/{url}", get(DiscoveryHandlers::did_json))
+            .route(routes::ME, get(SessionHandlers::me))
+            .route(routes::DID_JSON, get(DiscoveryHandlers::did_json))
             .route(
-                "/federated-catalog/{url}",
+                routes::FEDERATED_CATALOG,
                 get(DiscoveryHandlers::federated_catalog),
             )
             .route_layer(from_fn_with_state(validator, OauthHttpMiddleware::run))

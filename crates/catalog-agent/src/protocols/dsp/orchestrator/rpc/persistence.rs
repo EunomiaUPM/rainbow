@@ -17,7 +17,7 @@
 
 use crate::protocols::dsp::types::catalog_definition::Catalog;
 use crate::services::peer_catalogs::PeerCatalogServiceTrait;
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use std::sync::Arc;
 use ymir::errors::Outcome;
 

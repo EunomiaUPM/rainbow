@@ -21,7 +21,7 @@ pub mod service;
 
 pub use service::DataplaneTransferLogsService;
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use urn::Urn;
 use ymir::errors::Outcome;
 

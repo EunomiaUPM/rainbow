@@ -15,12 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::config::oauth::OauthConfig;
+// use crate::config::oauth::OauthConfig;
 use serde::{Deserialize, Serialize};
 use ymir::config::traits::{
-    ApiConfigTrait, ConnectionConfigTrait, DatabaseConfigTrait, HostsConfigTrait,
+    ApiConfigTrait, ConnectionConfigTrait, DatabaseConfigTrait, HostsConfigTrait, OauthConfigTrait,
 };
-use ymir::config::types::{ApiConfig, CommonHostsConfig, ConnectionConfig, DatabaseConfig};
+use ymir::config::types::{
+    ApiConfig, CommonHostsConfig, ConnectionConfig, DatabaseConfig, OauthConfig,
+};
 
 /// Hosts, database, API, connection flags and auth settings every agent section embeds.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -30,7 +32,7 @@ pub struct CommonConfig {
     api: ApiConfig,
     connection: ConnectionConfig,
     #[serde(default)]
-    pub oauth: OauthConfig,
+    oauth: OauthConfig,
 }
 
 impl HostsConfigTrait for CommonConfig {
@@ -48,6 +50,12 @@ impl DatabaseConfigTrait for CommonConfig {
 impl ConnectionConfigTrait for CommonConfig {
     fn connection(&self) -> &ConnectionConfig {
         &self.connection
+    }
+}
+
+impl OauthConfigTrait for CommonConfig {
+    fn oauth(&self) -> &OauthConfig {
+        &self.oauth
     }
 }
 

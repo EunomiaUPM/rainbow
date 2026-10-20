@@ -27,7 +27,8 @@ use common::facades::grants_facade::{MockGrantsFacadeTrait, VerifiedPeer};
 use common::facades::catalog::{CatalogDataset, CatalogDistribution, MockCatalogFacadeTrait};
 use common::facades::mates_facade::MockMatesFacadeTrait;
 use common::facades::negotiation::MockNegotiationFacadeTrait;
-use common::oauth::{RolePath, Visibility};
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use connector::{
     MockConnectorInstanceFacadeTrait,
     AuthenticationConfig, ConnectorInstanceDto, ConnectorMetadata, HttpSpec, InteractionConfig,

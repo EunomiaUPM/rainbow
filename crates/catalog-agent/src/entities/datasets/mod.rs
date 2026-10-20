@@ -18,7 +18,8 @@
 //! Datasets.
 
 use crate::data::entities::dataset;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::data::entities::dataset::{EditDatasetModel, Model, NewDatasetModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;

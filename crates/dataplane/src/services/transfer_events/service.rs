@@ -19,7 +19,8 @@
 
 use std::sync::Arc;
 
-use common::oauth::{Owner, OwnerScope, UserInfo};
+use common::oauth::{Owner, OwnerScope};
+use ymir::types::oauth::UserInfo;
 use common::batch_requests::BatchRequests;
 use common::errors::NotFoundExt;
 use common::paginated_spec::Cursor;

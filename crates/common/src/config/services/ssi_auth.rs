@@ -23,9 +23,9 @@ use ymir::errors::Outcome;
 use crate::config::services::traits::SsiAuthConfigTrait;
 use crate::config::services::CommonConfig;
 use crate::config::types::traits::{
-    CommonConfigTrait, ConfigLoader, EntityClientTrait, GaiaConfigTrait,
+    CommonConfigTrait, ConfigLoader, EntityClientTrait, GaiaConfigTrait, Oid4VpServiceTrait,
 };
-use crate::config::types::{EntityClientConfig, GaiaConfig};
+use crate::config::types::{EntityClientConfig, GaiaConfig, Oid4VpService};
 
 /// `ssi_auth` section: wallet, DID, verification and client settings of the auth agent.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -35,6 +35,7 @@ pub struct SsiAuthConfig {
     client_config: EntityClientConfig,
     did_config: DidConfig,
     verify_req_config: VerifyReqConfig,
+    oid4vp_service: Oid4VpService,
     gaia_config: Option<GaiaConfig>,
 }
 
@@ -79,6 +80,12 @@ impl EntityClientTrait for SsiAuthConfig {
 impl GaiaConfigTrait for SsiAuthConfig {
     fn gaia_config(&self) -> Option<&GaiaConfig> {
         self.gaia_config.as_ref()
+    }
+}
+
+impl Oid4VpServiceTrait for SsiAuthConfig {
+    fn oid4vp_service(&self) -> &Oid4VpService {
+        &self.oid4vp_service
     }
 }
 

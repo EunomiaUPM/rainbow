@@ -21,11 +21,10 @@
 use serde_json::Map;
 use ymir::errors::Errors;
 
-use crate::oauth::{
-    FixedUserValidator, ProxiedTokenValidator, RolePath, OauthTokenValidatorTrait,
-    RoleTrait, UserInfo, UserTrait,
-};
-use crate::config::OauthConfig;
+use ymir::services::token_validator::{FixedUserValidator, ProxiedTokenValidator, OauthTokenValidatorTrait};
+use ymir::types::oauth::{RolePath, RoleTrait, UserInfo, UserTrait};
+// use crate::config::OauthConfig;
+use ymir::config::types::OauthConfig;
 
 /// Unsigned JWT as oauth2-proxy would forward it from Keycloak: `sub` 0b6f-uuid, email
 /// ana@upm.es, preferred_username ana, role [/admin/upm/dit, /admin/upm/dit/gsi].
@@ -94,7 +93,7 @@ fn ensure_reaches_hides_unreachable_records_as_not_found() {
 /// of its roles; without a token it is a 401.
 #[tokio::test]
 async fn proxied_validator_reads_the_forwarded_token() {
-    let user = ProxiedTokenValidator
+    let user = ProxiedTokenValidator::default()
         .validate_token(Some(FORWARDED_JWT))
         .await
         .unwrap();
@@ -103,8 +102,8 @@ async fn proxied_validator_reads_the_forwarded_token() {
     assert_eq!(user.username(), Some("ana"));
     assert_eq!(user.role(), &role("/admin/upm/dit"));
 
-    assert!(ProxiedTokenValidator.validate_token(None).await.is_err());
-    assert!(ProxiedTokenValidator.validate_token(Some("not-a-jwt")).await.is_err());
+    assert!(ProxiedTokenValidator::default().validate_token(None).await.is_err());
+    assert!(ProxiedTokenValidator::default().validate_token(Some("not-a-jwt")).await.is_err());
 }
 
 /// The fixed validator is the configured user, token or not.
@@ -118,7 +117,8 @@ async fn fixed_validator_ignores_the_token() {
     );
 }
 
-/// The provider block: `static` carries the user itself, `keycloak` and `built_in` nothing.
+/// The provider block: `static` carries the user itself, `keycloak` its options (all with a
+/// default), `built_in` nothing.
 #[test]
 fn oauth_config_reads_each_provider() {
     let static_cfg: OauthConfig = serde_json::from_value(serde_json::json!({
@@ -137,7 +137,31 @@ fn oauth_config_reads_each_provider() {
 
     let keycloak: OauthConfig =
         serde_json::from_value(serde_json::json!({ "provider": "keycloak" })).unwrap();
-    assert!(matches!(keycloak, OauthConfig::Keycloak));
+    let OauthConfig::Keycloak(defaults) = keycloak else {
+        panic!("expected keycloak");
+    };
+    assert_eq!(defaults.user_header, ymir::http::USER_TOKEN_HEADER);
+    assert!(!defaults.strict);
+
+    let strict: OauthConfig = serde_json::from_value(serde_json::json!({
+        "provider": "keycloak",
+        "user_header": "X-Forwarded-Access-Token",
+        "strict": true,
+        "issuer": "http://keycloak.localhost/realms/consumer"
+    }))
+    .unwrap();
+    let OauthConfig::Keycloak(options) = &strict else {
+        panic!("expected keycloak");
+    };
+    assert_eq!(options.user_header, "X-Forwarded-Access-Token");
+    assert!(options.strict);
+    assert!(strict.validator(false).is_ok());
+
+    let no_issuer: OauthConfig = serde_json::from_value(
+        serde_json::json!({ "provider": "keycloak", "strict": true }),
+    )
+    .unwrap();
+    assert!(no_issuer.validator(false).is_err());
     let built_in: OauthConfig =
         serde_json::from_value(serde_json::json!({ "provider": "built_in" })).unwrap();
     assert!(matches!(built_in, OauthConfig::BuiltIn));

@@ -21,9 +21,10 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::errors::CommonErrors;
 use std::sync::Arc;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct PeerCatalogEntityRouter {
@@ -43,8 +44,8 @@ impl PeerCatalogEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_catalog_by_peer_id))
-            .route("/{peer_id}", get(Self::handle_get_catalog_by_peer_id))
+            .route(routes::peer_catalogs::ROOT, get(Self::handle_get_all_catalog_by_peer_id))
+            .route(routes::peer_catalogs::BY_PEER, get(Self::handle_get_catalog_by_peer_id))
             .with_state(self)
     }
 

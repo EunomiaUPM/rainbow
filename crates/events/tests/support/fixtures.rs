@@ -20,7 +20,8 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use common::secret::Secret;
 use events::data::repo::{
     MockEventDeadLetterRepo, MockEventDeliveryRepo, MockEventStoreRepo, MockEventSubscriptionRepo,

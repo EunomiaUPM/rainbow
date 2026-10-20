@@ -24,7 +24,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 use ymir::errors::Outcome;
-use ymir::types::jwt::{VCJwtClaims, VcJwtClaimsBuilder};
+use ymir::types::jwt::JwtClaims;
+use ymir::types::vcs::{VcJwtClaimsBuilder, VcPayload};
 use ymir::types::vcs::doc::VcDocumentBuilder;
 use ymir::types::vcs::vc_specs::legal_person::{
     Address, LegalPersonCredentialSubject, TypedRegistrationNumber,
@@ -49,20 +50,20 @@ impl GaiaSelfAttester {
 #[async_trait]
 impl GaiaSelfAttesterTrait for GaiaSelfAttester {
     #[tracing::instrument(level = "info", skip_all, err)]
-    async fn generate_terms_cons_vc(&self) -> Outcome<VCJwtClaims> {
+    async fn generate_terms_cons_vc(&self) -> Outcome<JwtClaims<VcPayload>> {
         let identity = self.identity.read().await;
         let holder_did = identity.did().id().to_string();
         let cred_subj = TermsAndConditionsCredSub {
             id: holder_did,
             uri: "https://gaia-x.eu/.well-known/terms-and-conditions.json#cs".to_string(),
-            hash: "4bd7554097444c960292b4726c2efa1373485e8a5565d94d41195214c5e0ceb3".to_string(),
+            hash: "067dcac5efd18c1927deb1ffed3feab6d0ad044c0a9a263e6d5d8bdc43224515".to_string(),
         };
         let value = serde_json::to_value(cred_subj)?;
         Ok(self.build(value, VcType::TermsAndConditions).await)
     }
 
     #[tracing::instrument(level = "info", skip_all, err)]
-    async fn generate_legal_person(&self) -> Outcome<VCJwtClaims> {
+    async fn generate_legal_person(&self) -> Outcome<JwtClaims<VcPayload>> {
         let identity = self.identity.read().await;
         let holder_did = identity.did().id().to_string();
 
@@ -102,7 +103,7 @@ impl GaiaSelfAttesterTrait for GaiaSelfAttester {
 }
 
 impl GaiaSelfAttester {
-    async fn build(&self, cred_subj: Value, vc_type: VcType) -> VCJwtClaims {
+    async fn build(&self, cred_subj: Value, vc_type: VcType) -> JwtClaims<VcPayload> {
         let identity = self.identity.read().await;
         let holder_did = identity.did().id();
 

@@ -25,10 +25,11 @@ use axum::extract::{FromRef, Path, State};
 use axum::http::HeaderMap;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::http_tracing::ExtractedHeaders;
 use ymir::errors::AppResult;
 use ymir::utils::extract_path_urn;
+use common::routes::dataplane as routes;
 
 /// Routes of diagnostic events, by process and by id.
 #[derive(Clone)]
@@ -51,7 +52,7 @@ impl TransferEventsRouter {
     pub fn dataplane_processes_sub_router(self) -> Router {
         Router::new()
             .route(
-                "/{dataplane_process_id}/events",
+                routes::dataplane_processes::EVENTS,
                 get(Self::handle_get_events_by_transfer_id),
             )
             .with_state(self)
@@ -60,7 +61,7 @@ impl TransferEventsRouter {
     /// `/{event_id}`, mounted under the global events route.
     pub fn events_sub_router(self) -> Router {
         Router::new()
-            .route("/{event_id}", get(Self::handle_get_event_by_id))
+            .route(routes::transfer_events::BY_ID, get(Self::handle_get_event_by_id))
             .with_state(self)
     }
 

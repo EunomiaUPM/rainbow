@@ -26,7 +26,7 @@ pub mod persistence;
 pub mod rpc;
 pub mod types;
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 
 #[async_trait::async_trait]
 pub trait RPCOrchestratorTrait: Send + Sync + 'static {

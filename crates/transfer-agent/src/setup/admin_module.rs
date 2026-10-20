@@ -36,6 +36,7 @@ use crate::http::TransferHttpRouter;
 use crate::http::transfer_message_router::TransferMessageRouter;
 use crate::http::transfer_process_router::TransferProcessRouter;
 use crate::setup::context::AppContext;
+use common::routes::transfer as routes;
 
 pub struct TransferAdminModule {
     ctx: Arc<AppContext>,
@@ -62,11 +63,11 @@ impl ServiceModuleTrait for TransferAdminModule {
 
     fn http(&self) -> Option<(String, Router)> {
         let process_router = Router::new().nest(
-            "/transfer-processes",
+            routes::transfer_processes::PREFIX,
             TransferProcessRouter::new(self.ctx.clone()).router(),
         );
         let message_router = Router::new().nest(
-            "/transfer-messages",
+            routes::transfer_messages::PREFIX,
             TransferMessageRouter::new(self.ctx.clone()).router(),
         );
         let router = TransferHttpRouter::build(

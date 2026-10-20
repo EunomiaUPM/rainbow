@@ -25,10 +25,11 @@ use axum::extract::{FromRef, Path, State};
 use axum::http::HeaderMap;
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::http_tracing::ExtractedHeaders;
 use ymir::errors::AppResult;
 use ymir::utils::extract_path_urn;
+use common::routes::dataplane as routes;
 
 /// Route of the state transitions of a process.
 #[derive(Clone)]
@@ -50,7 +51,7 @@ impl DataplaneTransferLogsRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route(
-                "/{dataplane_process_id}/logs",
+                routes::dataplane_processes::LOGS,
                 get(Self::handle_get_logs_by_dataplane_process_id),
             )
             .with_state(self)

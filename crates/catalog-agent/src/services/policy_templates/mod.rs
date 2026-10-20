@@ -21,7 +21,7 @@ pub mod service;
 
 use crate::entities::filters::PolicyTemplateFilter;
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateDto};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::paginated_spec::{Page, Paginated, Sort};
 use ymir::errors::Outcome;
 

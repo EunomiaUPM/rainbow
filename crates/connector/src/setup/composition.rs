@@ -33,6 +33,7 @@ use crate::http::connector_instance::ConnectorInstanceRouter;
 use crate::http::connector_template::ConnectorTemplateRouter;
 use crate::setup::context::AppContext;
 use crate::setup::ports::ConnectorPorts;
+use common::routes::connector as routes;
 
 /// Connector as a module mounted by the catalog agent.
 pub struct ConnectorModule {
@@ -80,11 +81,11 @@ impl ServiceModuleTrait for ConnectorModule {
         let ctx = &self.ctx;
         let router = Router::new()
             .nest(
-                "/templates",
+                routes::templates::PREFIX,
                 ConnectorTemplateRouter::new(ctx.template_svc.clone()).router(),
             )
             .nest(
-                "/instances",
+                routes::instances::PREFIX,
                 ConnectorInstanceRouter::new(ctx.instance_svc.clone()).router(),
             )
             .route_layer(axum::middleware::from_fn_with_state(

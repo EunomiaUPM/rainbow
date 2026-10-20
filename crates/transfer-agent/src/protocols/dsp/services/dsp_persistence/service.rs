@@ -20,7 +20,8 @@
 use std::sync::Arc;
 
 use common::dsp_common::persistence::DspPersistenceTrait;
-use common::oauth::{OwnerScope, UserInfo};
+use common::oauth::OwnerScope;
+use ymir::types::oauth::UserInfo;
 use ymir::errors::{Errors, Outcome};
 
 use crate::entities::commands::{

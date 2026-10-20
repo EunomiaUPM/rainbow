@@ -17,7 +17,7 @@
 
 use std::sync::Arc;
 
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::config::services::GatewayConfig;
 use common::module_loader::root_context::RootContext;
 

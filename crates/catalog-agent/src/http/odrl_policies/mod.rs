@@ -30,6 +30,7 @@ use common::config::services::CatalogConfig;
 use common::query::QuerySpec;
 use std::sync::Arc;
 use ymir::utils::{extract_path_urn, extract_payload};
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct OdrlOfferEntityRouter {
@@ -59,17 +60,17 @@ impl OdrlOfferEntityRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", get(Self::handle_get_all_odrl_offers))
+            .route(routes::entity::ROOT, get(Self::handle_get_all_odrl_offers))
             .route(
-                "/entity/{entity_id}",
+                routes::odrl_policies::BY_ENTITY,
                 get(Self::handle_get_all_odrl_offers_by_entity),
             )
-            .route("/", post(Self::handle_create_odrl_offer))
-            .route("/batch", post(Self::handle_get_batch_odrl_offers))
-            .route("/{id}", get(Self::handle_get_odrl_offer_by_id))
-            .route("/{id}", delete(Self::handle_delete_odrl_offer_by_id))
+            .route(routes::entity::ROOT, post(Self::handle_create_odrl_offer))
+            .route(routes::entity::BATCH, post(Self::handle_get_batch_odrl_offers))
+            .route(routes::entity::BY_ID, get(Self::handle_get_odrl_offer_by_id))
+            .route(routes::entity::BY_ID, delete(Self::handle_delete_odrl_offer_by_id))
             .route(
-                "/entity/{entity_id}",
+                routes::odrl_policies::BY_ENTITY,
                 delete(Self::handle_delete_odrl_offers_by_entity),
             )
             .with_state(self)
@@ -77,7 +78,7 @@ impl OdrlOfferEntityRouter {
 
     async fn handle_get_all_odrl_offers(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Query(query): Query<OdrlPolicyQuery>,
     ) -> impl IntoResponse {
         match state
@@ -91,7 +92,7 @@ impl OdrlOfferEntityRouter {
     }
     async fn handle_get_batch_odrl_offers(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<BatchRequests>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -109,7 +110,7 @@ impl OdrlOfferEntityRouter {
     }
     async fn handle_get_all_odrl_offers_by_entity(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(entity_id): Path<String>,
     ) -> impl IntoResponse {
         let entity_id = match extract_path_urn(&entity_id) {
@@ -127,7 +128,7 @@ impl OdrlOfferEntityRouter {
     }
     async fn handle_get_odrl_offer_by_id(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -141,7 +142,7 @@ impl OdrlOfferEntityRouter {
     }
     async fn handle_create_odrl_offer(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         input: Result<Json<NewOdrlPolicyDto>, JsonRejection>,
     ) -> impl IntoResponse {
         let input = match extract_payload(input) {
@@ -156,7 +157,7 @@ impl OdrlOfferEntityRouter {
 
     async fn handle_delete_odrl_offer_by_id(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&id) {
@@ -170,7 +171,7 @@ impl OdrlOfferEntityRouter {
     }
     async fn handle_delete_odrl_offers_by_entity(
         State(state): State<OdrlOfferEntityRouter>,
-        user: common::oauth::UserInfo,
+        user: ymir::types::oauth::UserInfo,
         Path(entity): Path<String>,
     ) -> impl IntoResponse {
         let id_urn = match extract_path_urn(&entity) {

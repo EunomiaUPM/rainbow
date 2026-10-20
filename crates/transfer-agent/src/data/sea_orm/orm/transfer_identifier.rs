@@ -16,7 +16,9 @@
  */
 
 use sea_orm::ActiveValue::Set;
-use common::oauth::{Owner, RolePath, Visibility};
+use common::oauth::Owner;
+use ymir::types::oauth::RolePath;
+use ymir::types::participants::Visibility;
 use sea_orm::entity::prelude::*;
 use urn::Urn;
 use ymir::errors::Outcome;

@@ -25,7 +25,7 @@ use catalog_agent::services::data_services::MockDataServiceServiceTrait;
 use catalog_agent::services::tenant_provisioning::service::TenantProvisioningService;
 use catalog_agent::services::tenant_provisioning::TenantProvisioningServiceTrait;
 use common::facades::mates_facade::MockMatesFacadeTrait;
-use common::oauth::RoleTrait;
+use ymir::types::oauth::RoleTrait;
 use common::test_utils::scopes::TestUsers;
 
 use crate::support::builders::{catalog_dto, data_service_dto, mate};

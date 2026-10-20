@@ -23,12 +23,13 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use ymir::utils::extract_payload;
 
 use crate::entities::dataset_offerings::NewDatasetOfferingDto;
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::services::dataset_offerings::DatasetOfferingServiceTrait;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct DatasetOfferingRouter {
@@ -42,7 +43,7 @@ impl DatasetOfferingRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/", post(Self::handle_create))
+            .route(routes::dataset_offerings::ROOT, post(Self::handle_create))
             .with_state(self)
     }
 

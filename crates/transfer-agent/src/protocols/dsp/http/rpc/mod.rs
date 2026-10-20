@@ -29,7 +29,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Json, Router};
 use common::dsp_common::{paths, DspCaller};
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use http::header::HOST;
 use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
@@ -38,6 +38,7 @@ use crate::protocols::dsp::entities::context_rpc::TransferRpcBody;
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
 use crate::protocols::dsp::http::rpc::adapter::TransferRpcAdapter;
 use crate::protocols::dsp::setup::context::DspContext;
+use common::routes::transfer as routes;
 
 /// What the TCK posts to `dataspacetck.dsp.connector.transfer.initiate.url`.
 #[derive(Debug, Deserialize)]
@@ -61,12 +62,12 @@ impl TransferRpcRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/rpc/setup-request", post(Self::handle_setup_request))
-            .route("/rpc/setup-start", post(Self::handle_setup_start))
-            .route("/rpc/setup-completion", post(Self::handle_setup_completion))
-            .route("/rpc/setup-suspension", post(Self::handle_setup_suspension))
+            .route(routes::rpc::SETUP_REQUEST, post(Self::handle_setup_request))
+            .route(routes::rpc::SETUP_START, post(Self::handle_setup_start))
+            .route(routes::rpc::SETUP_COMPLETION, post(Self::handle_setup_completion))
+            .route(routes::rpc::SETUP_SUSPENSION, post(Self::handle_setup_suspension))
             .route(
-                "/rpc/setup-termination",
+                routes::rpc::SETUP_TERMINATION,
                 post(Self::handle_setup_termination),
             )
             .with_state(self)
@@ -75,7 +76,7 @@ impl TransferRpcRouter {
     /// The TCK's consumer trigger; mounted only in TCK mode, and run as the agent itself.
     pub fn tck_router(self) -> Router {
         Router::new()
-            .route("/tck/transfers/requests", post(Self::handle_tck_initiate))
+            .route(routes::rpc::TCK_REQUESTS, post(Self::handle_tck_initiate))
             .with_state(self)
     }
 

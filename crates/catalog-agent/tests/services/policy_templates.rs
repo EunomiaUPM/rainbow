@@ -56,8 +56,8 @@ fn make_svc(repo: MockPolicyTemplatesRepositoryTrait) -> PolicyTemplateService {
 fn make_model(tenant: &str, id: &str, version: &str) -> policy_template::Model {
     policy_template::Model {
         user_id: tenant.to_string(),
-        user_role: common::oauth::RolePath::root(),
-        visibility: common::oauth::Visibility::Private,
+        user_role: ymir::types::oauth::RolePath::root(),
+        visibility: ymir::types::participants::Visibility::Private,
         id: id.to_string(),
         version: version.to_string(),
         date: Utc::now().into(),

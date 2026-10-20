@@ -18,7 +18,8 @@
 //! Offers.
 
 use crate::data::sea_orm::orm::offer::NewOfferModel;
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 

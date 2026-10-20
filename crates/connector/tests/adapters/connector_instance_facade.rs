@@ -25,9 +25,10 @@ use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
-use common::oauth::{
-    FixedUserValidator, OauthTokenValidatorTrait, OwnerScope, RolePath, UserInfo, Visibility,
-};
+use common::oauth::OwnerScope;
+use ymir::services::token_validator::{FixedUserValidator, OauthTokenValidatorTrait};
+use ymir::types::oauth::{RolePath, UserInfo};
+use ymir::types::participants::Visibility;
 use common::config::types::min_known_config::MinKnownConfig;
 use connector::{
     AuthenticationConfig, ConnectorInstanceDto, ConnectorInstanceFacadeTrait,

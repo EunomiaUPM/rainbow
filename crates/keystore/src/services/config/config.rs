@@ -17,7 +17,7 @@
 
 use crate::data::repo::config::KeystoreConfigRepo;
 use crate::services::config::ConfigStore;
-use common::oauth::{RoleTrait, UserInfo};
+use ymir::types::oauth::{RoleTrait, UserInfo};
 use common::config::ApplicationConfig;
 use std::sync::Arc;
 use ymir::errors::Outcome;

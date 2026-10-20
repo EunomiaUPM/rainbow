@@ -73,7 +73,7 @@ impl PolicyInstantiationService {
     }
 }
 
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 
 #[async_trait::async_trait]
 impl PolicyInstantiationServiceTrait for PolicyInstantiationService {

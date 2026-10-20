@@ -28,6 +28,7 @@ use axum::Router;
 use crate::protocols::dsp::entities::message_types::NegotiationRpcMessage;
 use crate::protocols::dsp::http::rpc::NegotiationRpcRouter;
 use crate::protocols::dsp::setup::context::DspContext;
+use common::routes::negotiation as routes;
 
 #[derive(Clone)]
 pub struct NegotiationBffRouter {
@@ -44,13 +45,13 @@ impl NegotiationBffRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route(
-                "/bff-rpc/setup-request-init",
+                routes::bff_rpc::SETUP_REQUEST_INIT,
                 post(Self::handle_request_init),
             )
-            .route("/bff-rpc/setup-offer-init", post(Self::handle_offer_init))
-            .route("/bff-rpc/setup-acceptance", post(Self::handle_acceptance))
-            .route("/bff-rpc/setup-agreement", post(Self::handle_agreement))
-            .route("/bff-rpc/setup-termination", post(Self::handle_termination))
+            .route(routes::bff_rpc::SETUP_OFFER_INIT, post(Self::handle_offer_init))
+            .route(routes::bff_rpc::SETUP_ACCEPTANCE, post(Self::handle_acceptance))
+            .route(routes::bff_rpc::SETUP_AGREEMENT, post(Self::handle_agreement))
+            .route(routes::bff_rpc::SETUP_TERMINATION, post(Self::handle_termination))
             .with_state(self)
     }
 

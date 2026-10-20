@@ -21,7 +21,7 @@
 //! Entries belong to one user: each caller reads and writes its own, and only the root lists
 //! everyone's (or one user's, with the `user_id` filter).
 
-use common::oauth::{RoleTrait, UserInfo};
+use ymir::types::oauth::{RoleTrait, UserInfo};
 use ymir::errors::{Errors, Outcome};
 
 pub mod config;

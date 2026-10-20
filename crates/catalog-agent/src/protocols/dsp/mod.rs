@@ -34,7 +34,7 @@ use crate::services::peer_catalogs::PeerCatalogServiceTrait;
 use axum::http::StatusCode;
 use axum::Router;
 use common::dsp_common::PeerAuth;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use ymir::http::OauthHttpMiddleware;
 use common::facades::mates_facade::MatesFacadeTrait;
 use common::facades::grants_facade::GrantsFacadeTrait;

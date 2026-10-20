@@ -27,7 +27,6 @@ use axum::http::HeaderMap;
 use chrono::{DateTime, Duration, Utc};
 use common::config::types::traits::EntityClientTrait;
 use common::routes::auth::{gate, peer_connection};
-use common::utils::parse_url;
 use serde_json::Value;
 use tracing::info;
 use ymir::capabilities::HttpSig;
@@ -52,7 +51,7 @@ use ymir::types::oauth::UserInfo;
 use ymir::types::participants::ParticipantType;
 use ymir::types::secrets::{PemHelper, StringHelper};
 use ymir::utils::{
-    expect_from_env, get_query_param, http_client, json_headers, require_field, trim_4_base,
+    expect_from_env, http_client, json_headers, require_field, trim_4_base,
     ParseHeaderExt, ResponseExt,
 };
 
@@ -190,34 +189,10 @@ impl PeerConnectorTrait for GnapPeerConnectorService {
             flags: None,
         }
     }
-
+    
     fn build_verification_plan(&self, uri: &str, id: &str) -> Outcome<verification::Plan> {
         info!("Saving verification data");
-
-        // url::Url doesn't accept custom schemes; rewrite to https just for parsing.
-        let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
-        let parsed_uri = parse_url(&fixed_uri)?;
-
-        let response_type = get_query_param(&parsed_uri, "response_type")?;
-        let client_id = get_query_param(&parsed_uri, "client_id")?;
-        let response_mode = get_query_param(&parsed_uri, "response_mode")?;
-        let pd_uri = get_query_param(&parsed_uri, "presentation_definition_uri")?;
-        let client_id_scheme = get_query_param(&parsed_uri, "client_id_scheme")?;
-        let nonce = get_query_param(&parsed_uri, "nonce")?;
-        let response_uri = get_query_param(&parsed_uri, "response_uri")?;
-
-        Ok(verification::Plan {
-            id: id.to_string(),
-            uri: uri.to_string(),
-            scheme: "openid4vp".to_string(),
-            response_type,
-            client_id,
-            response_mode,
-            pd_uri,
-            client_id_scheme,
-            nonce,
-            response_uri,
-        })
+        verification::Plan::from_uri(id, uri)
     }
 
     fn build_mate_plan(&self, grant: &grant::Model) -> participant::Plan {

@@ -44,7 +44,7 @@ use crate::services::policy_templates::PolicyTemplateServiceTrait;
 use crate::services::tenant_provisioning::service::TenantProvisioningService;
 use crate::services::tenant_provisioning::TenantProvisioningServiceTrait;
 use crate::setup::ports::CatalogPorts;
-use common::oauth::OauthTokenValidatorTrait;
+use ymir::services::token_validator::OauthTokenValidatorTrait;
 use common::config::services::traits::CatalogConfigTrait;
 use common::config::services::CatalogConfig;
 use common::config::types::cache::CacheType;

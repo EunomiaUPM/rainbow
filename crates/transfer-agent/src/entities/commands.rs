@@ -16,7 +16,8 @@
  */
 
 use crate::entities::ids::{MessageId, ParticipantId, TransferProcessId};
-use common::oauth::{Owner, Visibility};
+use common::oauth::Owner;
+use ymir::types::participants::Visibility;
 use crate::entities::message_envelope::MessageEnvelope;
 use crate::entities::protocol::{
     ProtocolId, ProtocolMessageType, ProtocolState, StateMetadata, TransferRole,

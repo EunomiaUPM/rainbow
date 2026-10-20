@@ -29,7 +29,7 @@ use axum::{
     routing::post,
     Extension, Json, Router,
 };
-use common::oauth::UserInfo;
+use ymir::types::oauth::UserInfo;
 use common::dsp_common::context_field::ContextField;
 use common::dsp_common::normalizer::dsp_namespace_normalizer;
 use common::dsp_common::PeerAuth;
@@ -39,6 +39,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
 use ymir::errors::Errors;
+use common::routes::catalog as routes;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -68,8 +69,8 @@ impl DspRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/request", post(Self::handle_catalog_request))
-            .route("/datasets/{id}", get(Self::handle_dataset_request))
+            .route(routes::dsp::REQUEST, post(Self::handle_catalog_request))
+            .route(routes::dsp::DATASET, get(Self::handle_dataset_request))
             .layer(middleware::from_fn_with_state(
                 self.peer_auth.clone(),
                 PeerAuth::run,
