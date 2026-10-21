@@ -12,32 +12,6 @@ are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
-import type { NegotiationProcessRecordRole } from './negotiationProcessRecordRole';
-import type { NegotiationProcessRecordState } from './negotiationProcessRecordState';
-import type { Visibility } from './visibility';
+import type { NegotiationProcessDto } from './negotiationProcessDto';
 
-export interface NegotiationProcessRecord {
-  /** URN of the negotiation. */
-  id: string;
-  /** Author of the record (`system` when a peer opened it). */
-  userId: string;
-  /** Role the record was created under (or that handles it). */
-  userRole: string;
-  visibility: Visibility;
-  state: NegotiationProcessRecordState;
-  /** @nullable */
-  stateAttribute?: string | null;
-  /** Participant id (DID) of the counterpart. */
-  associatedAgentPeer: string;
-  protocol: string;
-  /** @nullable */
-  callbackAddress?: string | null;
-  role: NegotiationProcessRecordRole;
-  /** Free-form JSON. */
-  properties: unknown;
-  /** Last error, any JSON value. */
-  errorDetails?: unknown;
-  createdAt: string;
-  /** @nullable */
-  updatedAt?: string | null;
-}
+export type NegotiationProcessRecord = NegotiationProcessDto;

@@ -34,14 +34,14 @@ use serde_json::json;
 use tonic::Code;
 
 use crate::support::context::TestContext;
-use crate::support::fixtures::{agreement_row, message_row, offer_row, urn};
+use crate::support::fixtures::{message_row, urn};
 
 fn grpc(service: MockNegotiationMessageServiceTrait) -> NegotiationAgentMessagesGrpc {
     NegotiationAgentMessagesGrpc::new(TestContext::new().messages(service).build())
 }
 
 fn view(n: u32) -> NegotiationMessageView {
-    NegotiationMessageView::assemble(message_row(n), Some(offer_row(3)), Some(agreement_row(4)))
+    NegotiationMessageView::assemble(message_row(n))
 }
 
 fn by_id(id: &str) -> GetNegotiationMessageByIdRequest {
@@ -136,9 +136,9 @@ async fn domain_not_found_maps_to_not_found() {
     assert_eq!(err.code(), Code::NotFound);
 }
 
-/// The message carries its offer, agreement and payload from the view.
+/// The message carries its payload; offer and agreement stay empty, the view has none.
 #[tokio::test]
-async fn get_nests_offer_and_agreement_from_the_view() {
+async fn get_carries_the_payload_without_sub_entities() {
     let mut svc = MockNegotiationMessageServiceTrait::new();
     svc.expect_get_one().returning(|_, _| Ok(view(1)));
     let g = grpc(svc);
@@ -149,8 +149,8 @@ async fn get_nests_offer_and_agreement_from_the_view() {
         .into_inner()
         .message
         .unwrap();
-    assert_eq!(msg.offer.unwrap().offer_id, "offer-3");
-    assert_eq!(msg.agreement.unwrap().target, urn(300));
+    assert!(msg.offer.is_none());
+    assert!(msg.agreement.is_none());
     assert_eq!(
         msg.payload.unwrap().fields["@type"].kind,
         Some(prost_types::value::Kind::StringValue(

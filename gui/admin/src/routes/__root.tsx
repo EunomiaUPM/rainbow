@@ -19,6 +19,7 @@ import {
 import eunomiaLogo from "shared/src/img/eunomia_logo_lg_light.svg";
 import { Toaster } from "shared/src/components/ui/sonner";
 import { BubbleBackground } from "shared/src/components/ui/bubble-background";
+import { LiveContextProvider } from "shared/src/context/LiveContext";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -54,7 +55,7 @@ function RootComponent() {
   }
 
   return (
-    <>
+    <LiveContextProvider>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -67,7 +68,7 @@ function RootComponent() {
       <Toaster />
       <GlobalLoadingIndicator />
       <TanStackRouterDevtools />
-    </>
+    </LiveContextProvider>
   );
 }
 

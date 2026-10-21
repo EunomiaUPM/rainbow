@@ -27,6 +27,9 @@ export const TransferProcessActions: FC<{
     },
   });
 
+  // Who suspended it, whether stored as `BY_CONSUMER` or `ByConsumer`; only that side restarts.
+  const suspendedBy = process.stateMetadata.attribute?.replace(/_/g, "").toLowerCase();
+
   // Determine available actions based on process state and user role
   const getActions = () => {
     if (process.role === "provider") {
@@ -50,6 +53,7 @@ export const TransferProcessActions: FC<{
             { label: "Suspend", variant: "outline", Component: TransferProcessSuspensionDialog },
             { label: "Complete", variant: "outline", Component: TransferProcessCompletionDialog },
           ];
+        // DSP 9.1: a suspended transfer restarts or terminates; it completes only once started.
         case "SUSPENDED":
           const actions = [
             {
@@ -58,18 +62,13 @@ export const TransferProcessActions: FC<{
               Component: TransferProcessTerminationDialog,
             },
           ];
-          if (process.stateMetadata.attribute && process.stateMetadata.attribute !== "ByConsumer") {
+          if (suspendedBy && suspendedBy !== "byconsumer") {
             actions.push({
               label: "Start",
               variant: "default",
               Component: TransferProcessStartDialog,
             });
           }
-          actions.push({
-            label: "Complete",
-            variant: "outline",
-            Component: TransferProcessCompletionDialog,
-          });
           return actions;
         case "COMPLETED":
         case "TERMINATED":
@@ -105,18 +104,13 @@ export const TransferProcessActions: FC<{
               Component: TransferProcessTerminationDialog,
             },
           ];
-          if (process.stateMetadata.attribute && process.stateMetadata.attribute !== "ByProvider") {
+          if (suspendedBy && suspendedBy !== "byprovider") {
             actions.push({
               label: "Start",
               variant: "default",
               Component: TransferProcessStartDialog,
             });
           }
-          actions.push({
-            label: "Complete",
-            variant: "outline",
-            Component: TransferProcessCompletionDialog,
-          });
           return actions;
         case "COMPLETED":
         case "TERMINATED":

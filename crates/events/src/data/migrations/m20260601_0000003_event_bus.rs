@@ -46,6 +46,7 @@ pub enum Events {
     Payload,
     Timestamp,
     CreatedAt,
+    ReadAt,
 }
 
 /// Column names of `event_deliveries`.
@@ -115,6 +116,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Events::Payload).json().not_null())
                     .col(ColumnDef::new(Events::Timestamp).date_time().not_null())
                     .col(ColumnDef::new(Events::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Events::ReadAt).date_time())
                     .to_owned(),
             )
             .await?;

@@ -21,11 +21,17 @@ import { useForm } from "react-hook-form";
 import { BaseProcessDialog } from "./base";
 import { urnInfoItem } from "./base/infoItemMappers";
 import { InfoItemProps } from "../ui/info-list";
-import { AgreementDto, DataAddressDto, Distribution } from "../../data/orval/model";
+import {
+  AgreementDto,
+  DataAddressDto,
+  Distribution,
+  TransferRPCRequestBody,
+} from "../../data/orval/model";
 import {
   useBffRpcSetupTransferRequest,
   useSetupTransferRequest,
 } from "../../data/orval/transfer-rp-c/transfer-rp-c";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { useRpcSetupDatasetRequest } from "../../data/orval/catalog-rp-c/catalog-rp-c";
 import { useMyWellKnownDSPPath, useParticipantDSPPath } from "../../hooks/useWellKnownUrl";
 import { useNavigate } from "@tanstack/react-router";
@@ -83,7 +89,9 @@ export const TransferProcessRequestDialog = ({ process }: TransferProcessRequest
         }
       : undefined;
 
-    const payload = {
+    const payload: TransferRPCRequestBody = {
+      "@context": EUNOMIA_CONTEXT,
+      "@type": "RpcTransferRequestMessage",
       associatedAgentPeer: process.providerParticipantId,
       providerAddress: providerDspPath || "",
       callbackAddress: myDspPath || "",
@@ -93,6 +101,7 @@ export const TransferProcessRequestDialog = ({ process }: TransferProcessRequest
       dataAddress,
     };
 
+    // Auto-start: the provider sends the TransferStart itself, REQUESTED -> STARTED.
     const res = autoStart
       ? await bffSetupTransferRequest({ data: payload })
       : await setupTransferRequest({ data: payload });

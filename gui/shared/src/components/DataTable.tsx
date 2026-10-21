@@ -102,7 +102,7 @@ export interface Column<T> {
   /** Additional CSS class for the header cell */
   headerClassName?: string;
 
-  /** Whether this column is sortable. Defaults to true when accessorKey/sortKey/sortValue is set */
+  /** Only creation-date columns sort; `false` turns that off too. */
   sortable?: boolean;
 
   /** Custom sort key name */
@@ -624,9 +624,11 @@ export function DataTable<T extends Record<string, any> = any>({
           ? Math.min(safeCurrentPage * activeItemsPerPage, totalItems)
           : totalItems;
 
+  // Tables sort by creation date only, so every listing reads newest-first the same way.
   const isColumnSortable = (col: Column<T>) => {
-    if (col.sortable !== undefined) return col.sortable;
-    return Boolean(col.sortKey || col.accessorKey || (!isServerDriven && col.sortValue));
+    if (col.sortable === false) return false;
+    const key = col.sortKey ?? (col.accessorKey as string | undefined);
+    return key !== undefined && toSnakeCase(String(key)) === "created_at";
   };
 
   const handleHeaderClick = (col: Column<T>, index: number) => {

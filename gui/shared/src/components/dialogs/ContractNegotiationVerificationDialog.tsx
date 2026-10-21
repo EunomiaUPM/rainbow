@@ -11,7 +11,10 @@ import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { useRpcSetupVerification } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { NegotiationProcessDto } from "../../data/orval/model";
-import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import {
+  useGetAgreementsByNegotiationProcess,
+  useGetNegotiationProcesses,
+} from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
@@ -25,14 +28,23 @@ export const ContractNegotiationVerificationDialog = ({
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: verifyAsync } = useRpcSetupVerification();
   const { refetch } = useGetNegotiationProcesses();
+  const { data: agreementsData } = useGetAgreementsByNegotiationProcess(process.id);
   const router = useRouter();
+
+  const agreement = agreementsData?.status === 200 ? agreementsData.data.items?.[0] : undefined;
+  const consumerPid =
+    process.correlation.consumerPid || process.correlation.identifiers?.consumerPid;
+  const providerPid =
+    process.correlation.providerPid || process.correlation.identifiers?.providerPid;
+  const datasetId = process.correlation.identifiers?.datasetId;
+  const catalogId = process.correlation.identifiers?.catalogId;
 
   /**
    * Handles the verification submission.
    * Sends verification message to the provider.
    */
   const handleSubmit = async () => {
-    if (!process.identifiers?.consumerPid || !process.identifiers?.providerPid) {
+    if (!consumerPid || !providerPid) {
       console.error("Missing process identifiers");
       return;
     }
@@ -40,8 +52,8 @@ export const ContractNegotiationVerificationDialog = ({
       data: {
         "@context": EUNOMIA_CONTEXT,
         "@type": "RpcNegotiationVerificationMessage",
-        providerPid: process.identifiers.providerPid,
-        consumerPid: process.identifiers.consumerPid,
+        providerPid,
+        consumerPid,
       },
     });
     await refetch();
@@ -67,12 +79,12 @@ export const ContractNegotiationVerificationDialog = ({
       onSubmit={handleSubmit}
       scrollable={true}
       afterInfoContent={
-        process.agreement?.agreementContent ? (
+        agreement?.agreementContent ? (
           <div className="pt-4">
             <PolicyWrapperShow
-              policy={process.agreement.agreementContent}
-              datasetId={process.identifiers?.datasetId}
-              catalogId={process.identifiers?.catalogId}
+              policy={agreement.agreementContent}
+              datasetId={datasetId}
+              catalogId={catalogId}
             />
           </div>
         ) : undefined

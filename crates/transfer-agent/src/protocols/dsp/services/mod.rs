@@ -16,8 +16,9 @@
  */
 
 //! Use cases of the DSP transfer process: the inbound and outbound flows, the persistence they
-//! share, the validators and the TCK scenarios.
+//! share, the validators, auto-start and the TCK scenarios.
 
+pub mod auto_start;
 pub mod dsp_flow;
 pub mod dsp_persistence;
 pub mod rpc_flow;

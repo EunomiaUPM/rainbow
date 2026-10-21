@@ -286,6 +286,9 @@ pub struct TransferDspOutcome {
     pub idempotency_key: IdempotencyKey,
     pub agreement_id: String,
     pub role: TransferRole,
+    /// The request asked the provider to start the transfer unasked.
+    #[serde(default)]
+    pub auto_start: bool,
 }
 
 impl TransferDspOutcome {
@@ -308,6 +311,7 @@ impl TransferDspOutcome {
             idempotency_key: domain.typed.idempotency_key.clone(),
             agreement_id: domain.agreement.id.to_string(),
             role: domain.role,
+            auto_start: domain.typed.fields.auto_start,
         }
     }
 }

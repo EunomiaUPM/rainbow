@@ -15,13 +15,14 @@ are calls the GUI still makes to routes the backend no longer serves.
 import type { DataAddressDto } from './dataAddressDto';
 
 export interface TransferRPCRequestBody {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcTransferRequestMessage';
   associatedAgentPeer: string;
   providerAddress: string;
   callbackAddress: string;
   agreementId: string;
   format: string;
   dataAddress?: DataAddressDto;
-  /** BFF simplified flow. When true the Provider automatically responds with a TransferStartMessage upon receiving the request.
- */
+  /** Asks the provider to start the transfer as soon as it accepts the request (`eunomia:autoStart` on the DSP request). */
   autoStart?: boolean;
 }

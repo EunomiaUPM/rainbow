@@ -100,7 +100,7 @@ impl Store {
     }
 
     fn view(row: &Row) -> NegotiationProcessView {
-        NegotiationProcessView::assemble(row.model.clone(), row.ids.clone(), vec![], vec![], None)
+        NegotiationProcessView::assemble(row.model.clone(), row.ids.clone())
     }
 
     fn repos(
@@ -222,11 +222,7 @@ fn router(store: &Store, as_peer: Option<&str>) -> Router {
         .returning(|_, id| Err(Errors::missing_resource(id, "not a mate", None)));
     let mut messages = MockNegotiationMessageServiceTrait::new();
     messages.expect_create().returning(|_, _| {
-        Ok(NegotiationMessageView::assemble(
-            message_row(200),
-            None,
-            None,
-        ))
+        Ok(NegotiationMessageView::assemble(message_row(200)))
     });
     let mut offers = MockOfferServiceTrait::new();
     offers

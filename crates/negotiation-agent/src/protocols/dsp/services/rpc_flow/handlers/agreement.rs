@@ -25,7 +25,6 @@ use crate::protocols::dsp::entities::state::NegotiationState;
 use crate::protocols::dsp::entities::state_change::{AgreementRecord, NegotiationAttachment};
 use crate::protocols::dsp::services::dsp_persistence::service::NegotiationDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
-use crate::setup::context::AppContext;
 use std::str::FromStr;
 use urn::Urn;
 use ymir::errors::{BadFormat, Errors};
@@ -36,14 +35,12 @@ pub struct AgreementHandler;
 impl AgreementHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         domain: NegotiationRpcDomain,
         reply: &Value,
     ) -> Outcome<NegotiationRpcOutcome> {
         let agreement = Self::record(&domain)?;
         OutboundTransition::apply(
-            ctx,
             persistence,
             domain,
             reply,

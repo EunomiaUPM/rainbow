@@ -33,15 +33,23 @@ export function mapCNProcessToInfoItemsForProvider(
   const items: (InfoItemProps | undefined)[] = [
     {
       label: "Provider ID",
-      value: { type: "urn" as const, value: process.identifiers?.providerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.providerPid || process.correlation.identifiers?.providerPid || "",
+      },
     },
     {
       label: "Consumer ID",
-      value: { type: "urn" as const, value: process.identifiers?.consumerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.consumerPid || process.correlation.identifiers?.consumerPid || "",
+      },
     },
     {
       label: "Associated Consumer",
-      value: { type: "urn" as const, value: process.associatedAgentPeer || "" },
+      value: { type: "urn" as const, value: process.correlation.peerParticipantId || "" },
     },
     { label: "Current State", value: { type: "status" as const, value: process.state || "" } },
     // { label: "Initiated By", value: { type: "role" as const, value: process.initiated_by ?? "" } }, // Not available in DTO directly?
@@ -63,15 +71,23 @@ export function mapCNProcessToInfoItemsForConsumer(
   const items: (InfoItemProps | undefined)[] = [
     {
       label: "Provider ID",
-      value: { type: "urn" as const, value: process.identifiers?.providerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.providerPid || process.correlation.identifiers?.providerPid || "",
+      },
     },
     {
       label: "Consumer ID",
-      value: { type: "urn" as const, value: process.identifiers?.consumerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.consumerPid || process.correlation.identifiers?.consumerPid || "",
+      },
     },
     {
       label: "Associated Provider",
-      value: { type: "urn" as const, value: process.associatedAgentPeer || "" },
+      value: { type: "urn" as const, value: process.correlation.peerParticipantId || "" },
     },
     { label: "Current State", value: { type: "status" as const, value: process.state || "" } },
     // { label: "Initiated By", value: { type: "role" as const, value: process.initiated_by ?? "" } },
@@ -91,15 +107,23 @@ export function mapCNProcessToFullInfoItems(process: NegotiationProcessDto): Inf
   const items: (InfoItemProps | undefined)[] = [
     {
       label: "Provider ID",
-      value: { type: "urn" as const, value: process.identifiers?.providerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.providerPid || process.correlation.identifiers?.providerPid || "",
+      },
     },
     {
       label: "Consumer ID",
-      value: { type: "urn" as const, value: process.identifiers?.consumerPid || "" },
+      value: {
+        type: "urn" as const,
+        value:
+          process.correlation.consumerPid || process.correlation.identifiers?.consumerPid || "",
+      },
     },
     {
       label: "Associated Peer",
-      value: { type: "urn" as const, value: process.associatedAgentPeer || "" },
+      value: { type: "urn" as const, value: process.correlation.peerParticipantId || "" },
     },
     { label: "Current State", value: { type: "status" as const, value: process.state } },
     { label: "Created At", value: { type: "date" as const, value: process.createdAt } },

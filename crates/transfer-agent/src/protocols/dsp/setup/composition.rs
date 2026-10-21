@@ -15,7 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! The DSP plane as a module: the DSP and RPC routes, and the TCK worker in TCK mode.
+//! The DSP plane as a module: the DSP, RPC and BFF routes, the auto-start worker, and the TCK
+//! worker in TCK mode.
 
 use std::sync::{Arc, Mutex};
 
@@ -23,27 +24,25 @@ use axum::Router;
 use common::boot::workers::BackgroundWorker;
 use common::dsp_common::paths;
 use common::module_loader::service_module::ServiceModuleTrait;
-use common::tck::TckWorker;
-
-use crate::protocols::dsp::entities::tck::TckMessage;
+use crate::protocols::dsp::http::bff::TransferBffRouter;
 use crate::protocols::dsp::http::dsp::DspRouter;
 use crate::protocols::dsp::http::rpc::TransferRpcRouter;
 use crate::protocols::dsp::setup::context::DspContext;
 use crate::setup::context::AppContext;
 
-/// DSP transfer: the inbound flow peers call, the outbound flow users call over RPC, and the
-/// TCK scenario worker when `DSP_TCK_MAPPING` is set.
+/// DSP transfer: the inbound flow peers call, the outbound flow users call over RPC and BFF,
+/// the auto-start worker and the TCK scenario worker when `DSP_TCK_MAPPING` is set.
 pub struct DspModule {
     ctx: Arc<DspContext>,
-    tck_worker: Mutex<Option<TckWorker<TckMessage>>>,
+    workers: Mutex<Vec<Box<dyn BackgroundWorker>>>,
 }
 
 impl DspModule {
     pub fn new(app: Arc<AppContext>) -> Self {
-        let (ctx, tck_worker) = DspContext::build(app);
+        let (ctx, workers) = DspContext::build(app);
         Self {
             ctx,
-            tck_worker: Mutex::new(tck_worker),
+            workers: Mutex::new(workers),
         }
     }
 }
@@ -53,11 +52,12 @@ impl ServiceModuleTrait for DspModule {
         "dsp-transfers"
     }
 
-    /// Peers reach the DSP routes with their grant; users reach the RPC routes with OAuth.
+    /// Peers reach the DSP routes with their grant; users reach the RPC and BFF routes with OAuth.
     fn http(&self) -> Option<(String, Router)> {
         let dsp = DspRouter::new(self.ctx.clone()).router();
         let rpc = TransferRpcRouter::new(self.ctx.clone())
             .router()
+            .merge(TransferBffRouter::new(self.ctx.clone()).router())
             .route_layer(axum::middleware::from_fn_with_state(
                 self.ctx.app.oauth_validator.clone(),
                 ymir::http::OauthHttpMiddleware::run,
@@ -71,12 +71,11 @@ impl ServiceModuleTrait for DspModule {
     }
 
     fn workers(&self) -> Vec<Box<dyn BackgroundWorker>> {
-        self.tck_worker
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .take()
-            .map(|w| Box::new(w) as Box<dyn BackgroundWorker>)
-            .into_iter()
-            .collect()
+        std::mem::take(
+            &mut *self
+                .workers
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner()),
+        )
     }
 }

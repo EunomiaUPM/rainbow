@@ -90,6 +90,6 @@ compact_str = { version = "0.8", features = ["serde"] }
 argon2 = "0.5.3"
 arc-swap = "1.9"
 jsonschema = { version = "0.58", default-features = false }
-ymir = { git = "https://github.com/EunomiaUPM/ymir.git", branch = "multi-tenancy" }
+ymir = { git = "https://github.com/EunomiaUPM/ymir.git", rev = "1b3b80234769f8f7b0332ae46a1212c3128ea863" }
 #ymir = {git = "https://github.com/EunomiaUPM/ymir.git", tag = "v0.8.6"}
 #ymir = { path = "./../ymir" }

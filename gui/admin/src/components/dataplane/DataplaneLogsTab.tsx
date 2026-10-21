@@ -1,83 +1,64 @@
 import React from "react";
-import { TabsContent } from "shared/src/components/ui/tabs";
-import { FormatDate } from "shared/src/components/ui/format-date";
-import { Badge } from "shared/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/components/ui/table";
+import { ArrowRight } from "lucide-react";
+import dayjs from "dayjs";
+import { Badge } from "shared/src/components/ui/badge";
+import { RelativeTime } from "shared/src/components/ui/format-date";
 import { DataplaneTransferLogDto } from "shared/src/data/orval/model";
 import { dataplaneStateVariant } from "./utils/dataplaneState";
 
+/** Every state the dataplane process went through, oldest first. */
 export function DataplaneLogsTab({ logs }: { logs: DataplaneTransferLogDto[] }) {
+  if (logs.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-ink/15 py-10 text-center text-sm text-ink/50">
+        The dataplane has not logged any state change.
+      </div>
+    );
+  }
+
   return (
-    <TabsContent value="dataplane-logs" className="w-full">
-      {logs.length > 0 ? (
-        <div className="rounded-md border overflow-hidden mt-4">
-          <Table>
-            <TableHeader className="bg-muted/50 sticky top-0">
-              <TableRow>
-                <TableHead className="w-[160px]">Timestamp</TableHead>
-                <TableHead className="w-[160px]">Trigger</TableHead>
-                <TableHead className="w-[300px]">State Transition</TableHead>
-                <TableHead>Reason</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((log, i) => (
-                <TableRow key={log.id ?? i}>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    <FormatDate date={log.created_at} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs bg-muted/70 border border-ink/10 px-1.5 py-0.5 rounded whitespace-nowrap">
-                      {log.trigger ?? "—"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {log.previous_state ? (
-                        <Badge
-                          variant="status"
-                          state={dataplaneStateVariant(log.previous_state)}
-                          size="sm"
-                        >
-                          {log.previous_state}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs italic">initial</span>
-                      )}
-                      <span className="text-muted-foreground text-xs">→</span>
-                      <Badge
-                        variant="status"
-                        state={dataplaneStateVariant(log.new_state)}
-                        size="sm"
-                      >
-                        {log.new_state ?? "—"}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {log.reason ? (
-                      <span>{log.reason}</span>
-                    ) : (
-                      <span className="italic opacity-50">—</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className="text-muted-foreground p-8 text-center border rounded-md border-dashed mt-4">
-          No dataplane logs available.
-        </div>
-      )}
-    </TabsContent>
+    <div className="overflow-hidden rounded-lg border border-ink/10">
+      <table className="w-full text-sm">
+        <thead className="bg-ink/[0.03] text-left text-xs font-medium text-ink/55">
+          <tr>
+            <th className="w-10 px-3 py-2.5 font-medium">#</th>
+            <th className="px-3 py-2.5 font-medium">State change</th>
+            <th className="px-3 py-2.5 font-medium">Trigger</th>
+            <th className="px-3 py-2.5 font-medium">Reason</th>
+            <th className="px-3 py-2.5 text-right font-medium">When</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map((log, i) => (
+            <tr key={log.id ?? i} className="border-t border-ink/[0.07]">
+              <td className="px-3 py-2.5 tabular-nums text-ink/40">{i + 1}</td>
+              <td className="px-3 py-2.5">
+                <span className="inline-flex items-center gap-1.5">
+                  {log.previous_state ? (
+                    <span className="text-xs text-ink/70">{log.previous_state}</span>
+                  ) : (
+                    <span className="text-xs italic text-ink/45">Initial</span>
+                  )}
+                  <ArrowRight className="h-3 w-3 text-ink/35" />
+                  <Badge variant="status" state={dataplaneStateVariant(log.new_state)} size="sm">
+                    {log.new_state}
+                  </Badge>
+                </span>
+              </td>
+              <td className="px-3 py-2.5 text-ink/70">{log.trigger}</td>
+              <td className="px-3 py-2.5 text-ink/60">
+                {log.reason ?? <span className="text-ink/30">—</span>}
+              </td>
+              <td
+                className="px-3 py-2.5 text-right text-ink/60"
+                title={dayjs(log.created_at).format("YYYY-MM-DD HH:mm:ss.SSS")}
+              >
+                <RelativeTime date={log.created_at} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

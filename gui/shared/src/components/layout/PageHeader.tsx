@@ -1,68 +1,61 @@
 /**
  * PageHeader.tsx
  *
- * Standard header component for page titles with optional badge decoration.
- * Creates a consistent heading style across all pages in the application.
- *
- * @example
- * // Basic usage
- * <PageHeader title="Datasets" />
- *
- * @example
- * // With status badge
- * <PageHeader
- *   title="Contract Negotiation"
- *   badge={<Badge variant="success">Active</Badge>}
- * />
+ * Sticky page title with optional badge, description and right-aligned actions.
  */
 
 import Heading from "shared/src/components/ui/heading";
 import { cn } from "shared/src/lib/utils";
 import React from "react";
 
-// =============================================================================
-// TYPES
-// =============================================================================
-
-/**
- * Props for the PageHeader component.
- */
-export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** The main title text to display */
-  title: string;
-
-  /** Optional badge element displayed next to the title */
+export interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+  title: React.ReactNode;
+  /** Badge shown next to the title (state, role...). */
   badge?: React.ReactNode;
+  /** Small line above the title, e.g. the kind of record. */
+  eyebrow?: React.ReactNode;
+  /** One line under the title. */
+  description?: React.ReactNode;
+  /** Buttons aligned to the right of the title. */
+  actions?: React.ReactNode;
 }
 
-// =============================================================================
-// COMPONENT
-// =============================================================================
-
-/**
- * Page header component that displays a formatted title with optional badge.
- *
- * Provides consistent styling for page-level headings including:
- * - Bottom border separator
- * - Proper spacing and typography
- * - Badge alignment
- *
- * @param props - PageHeader properties
- * @returns A styled page header element
- */
-export function PageHeader({ title, badge, className, children, ...props }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  badge,
+  eyebrow,
+  description,
+  actions,
+  className,
+  children,
+  ...props
+}: PageHeaderProps) {
   return (
     <header
       className={cn(
-        "pt-3 mb-4 pb-3 border-b border-ink/10 sticky top-12 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors",
+        "pt-4 mb-5 pb-4 border-b border-ink/10 sticky top-12 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors",
         className,
       )}
       {...props}
     >
-      <Heading level="h4" className="flex gap-2 items-center font-display mb-0 text-ink/90">
-        {title}
-        {badge}
-      </Heading>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-1">
+          {eyebrow && (
+            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-ink/50">
+              {eyebrow}
+            </div>
+          )}
+          <Heading
+            level="h4"
+            className="flex flex-wrap gap-2 items-center font-display mb-0 text-ink/90"
+          >
+            <span className="min-w-0 break-words">{title}</span>
+            {badge}
+          </Heading>
+          {description && <p className="mt-1 text-sm text-ink/60">{description}</p>}
+        </div>
+        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      </div>
       {children}
     </header>
   );

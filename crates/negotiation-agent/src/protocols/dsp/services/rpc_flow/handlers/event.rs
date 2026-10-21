@@ -26,7 +26,6 @@ use crate::protocols::dsp::entities::state::NegotiationState;
 use crate::protocols::dsp::entities::state_change::NegotiationAttachment;
 use crate::protocols::dsp::services::dsp_persistence::service::NegotiationDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
-use crate::setup::context::AppContext;
 
 /// Moves our process to the event's state; FINALIZED activates the agreement.
 pub struct EventHandler;
@@ -34,7 +33,6 @@ pub struct EventHandler;
 impl EventHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         domain: NegotiationRpcDomain,
         reply: &Value,
@@ -46,6 +44,6 @@ impl EventHandler {
             ),
             _ => (NegotiationState::ACCEPTED, NegotiationAttachment::Nothing),
         };
-        OutboundTransition::apply(ctx, persistence, domain, reply, target, attachment).await
+        OutboundTransition::apply(persistence, domain, reply, target, attachment).await
     }
 }

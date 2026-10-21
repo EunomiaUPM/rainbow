@@ -7,6 +7,7 @@ import { ContractNegotiationTerminationDialog } from "../dialogs/ContractNegotia
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "./ProcessActionDialog";
 import { NegotiationProcessDto } from "shared/src/data/orval/model/negotiationProcessDto";
+import { useGetAgreementsByNegotiationProcess } from "shared/src/data/orval/negotiations/negotiations";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
@@ -17,6 +18,13 @@ export const ContractNegotiationBusinessActions = ({
   process: NegotiationProcessDto;
   tiny: boolean;
 }) => {
+  const { data: agreementsData } = useGetAgreementsByNegotiationProcess(process.id, undefined, {
+    query: {
+      enabled: process.state === "FINALIZED",
+    },
+  });
+  const agreementId =
+    agreementsData?.status === 200 ? agreementsData.data.items?.[0]?.id : undefined;
   const containerClassName = cva("", {
     variants: {
       tiny: {
@@ -86,12 +94,18 @@ export const ContractNegotiationBusinessActions = ({
     process.state === "FINALIZED" ||
     (process.role === "Consumer" && process.state === "ACCEPTED");
 
-  const showGoToAgreement = () => process.state === "FINALIZED" && !!process.agreement;
+  const showGoToAgreement = () => process.state === "FINALIZED" && !!agreementId;
 
   const showSwitchToStandard = () =>
     actions.length === 0 && !isTerminalState() && !showGoToAgreement();
 
-  if (!tiny && actions.length === 0 && !isTerminalState() && !showGoToAgreement() && !showSwitchToStandard()) {
+  if (
+    !tiny &&
+    actions.length === 0 &&
+    !isTerminalState() &&
+    !showGoToAgreement() &&
+    !showSwitchToStandard()
+  ) {
     return null;
   }
 
@@ -118,7 +132,7 @@ export const ContractNegotiationBusinessActions = ({
           ))}
           {isTerminalState() && !showGoToAgreement() && <NoFurtherActions />}
           {showGoToAgreement() && (
-            <Link to="/agreements/$agreementId" params={{ agreementId: process.agreement!.id }}>
+            <Link to="/agreements/$agreementId" params={{ agreementId: agreementId! }}>
               <Button variant="link" className="gap-1.5">
                 See agreement <ArrowRight className="h-4 w-4" />
               </Button>

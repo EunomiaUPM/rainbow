@@ -28,6 +28,7 @@ use tower_http::cors::{Any, CorsLayer};
 
 use crate::gateway::discovery::DiscoveryHandlers;
 use crate::gateway::frontend::FrontendHandlers;
+use crate::gateway::live::LiveHandlers;
 use crate::gateway::session::SessionHandlers;
 use crate::setup::context::AppContext;
 use common::routes::bff as routes;
@@ -78,14 +79,15 @@ impl GatewayHttpRouter {
             .with_state(self.ctx.clone())
     }
 
-    /// Routes for authenticated callers only: who the session is, and discovery, which fetches
-    /// arbitrary URLs.
+    /// Routes for authenticated callers only: who the session is, the live updates, and
+    /// discovery, which fetches arbitrary URLs.
     fn guarded_router(&self) -> Router<Arc<AppContext>> {
         let Some(validator) = self.ctx.oauth_validator.clone() else {
             return Router::new();
         };
         Router::new()
             .route(routes::ME, get(SessionHandlers::me))
+            .route(routes::LIVE, get(LiveHandlers::live))
             .route(routes::DID_JSON, get(DiscoveryHandlers::did_json))
             .route(
                 routes::FEDERATED_CATALOG,

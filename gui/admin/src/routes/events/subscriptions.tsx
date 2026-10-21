@@ -224,16 +224,9 @@ const SubscriptionsComponent = () => {
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">External Webhook Subscriptions</h2>
-          <p className="text-xs text-muted-foreground">
-            Configure external listeners that receive HTTP POST notifications with exponential
-            backoff and HMAC-SHA256 signatures.
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> New Subscription
+      <div className="flex items-center justify-end">
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus /> New subscription
         </Button>
       </div>
 

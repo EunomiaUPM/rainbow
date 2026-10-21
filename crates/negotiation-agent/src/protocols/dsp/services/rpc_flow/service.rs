@@ -140,18 +140,18 @@ impl FlowTrait for NegotiationRpcFlow {
     ) -> Outcome<NegotiationRpcOutcome> {
         use NegotiationRpcMessage::*;
         let reply = reply.unwrap_or(Value::Null);
-        let (ctx, persistence, user) = (self.ctx.as_ref(), &self.persistence, cx.caller.user()?);
+        let (persistence, user) = (&self.persistence, cx.caller.user()?);
         match domain.typed.message {
             RequestInit | Request => {
-                RequestHandler::handle(ctx, persistence, user, domain, &reply).await
+                RequestHandler::handle(persistence, user, domain, &reply).await
             }
-            OfferInit | Offer => OfferHandler::handle(ctx, persistence, user, domain, &reply).await,
+            OfferInit | Offer => OfferHandler::handle(persistence, user, domain, &reply).await,
             Acceptance | Finalization => {
-                EventHandler::handle(ctx, persistence, domain, &reply).await
+                EventHandler::handle(persistence, domain, &reply).await
             }
-            Agreement => AgreementHandler::handle(ctx, persistence, domain, &reply).await,
-            Verification => VerificationHandler::handle(ctx, persistence, domain, &reply).await,
-            Termination => TerminationHandler::handle(ctx, persistence, domain, &reply).await,
+            Agreement => AgreementHandler::handle(persistence, domain, &reply).await,
+            Verification => VerificationHandler::handle(persistence, domain, &reply).await,
+            Termination => TerminationHandler::handle(persistence, domain, &reply).await,
         }
     }
 }

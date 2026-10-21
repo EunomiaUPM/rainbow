@@ -17,6 +17,7 @@
 
 //! Listing filters of the event feed, webhook subscriptions and dead letters.
 
+use chrono::{DateTime, Utc};
 use common::paginated_spec::deserialize_opt_bool_from_str_or_bool;
 use common::query::QueryFilter;
 use serde::Deserialize;
@@ -28,6 +29,13 @@ use crate::entities::topic_pattern::TopicPattern;
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct EventFilter {
     pub topic: Option<String>,
+    /// Crate that published the event, such as `transfer_agent`.
+    pub source_crate: Option<String>,
+    /// `false` keeps unread events only, `true` read ones.
+    #[serde(default, deserialize_with = "deserialize_opt_bool_from_str_or_bool")]
+    pub read: Option<bool>,
+    pub created_after: Option<DateTime<Utc>>,
+    pub created_before: Option<DateTime<Utc>>,
 }
 
 impl EventFilter {
@@ -43,6 +51,10 @@ impl EventFilter {
 impl QueryFilter for EventFilter {
     fn is_empty(&self) -> bool {
         self.topic.is_none()
+            && self.source_crate.is_none()
+            && self.read.is_none()
+            && self.created_after.is_none()
+            && self.created_before.is_none()
     }
 
     fn validate(&self) -> Outcome<()> {

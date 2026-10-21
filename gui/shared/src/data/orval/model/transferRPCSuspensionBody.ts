@@ -14,6 +14,8 @@ are calls the GUI still makes to routes the backend no longer serves.
  */
 
 export interface TransferRPCSuspensionBody {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcTransferSuspensionMessage';
   consumerPid: string;
   providerPid: string;
   code: string;

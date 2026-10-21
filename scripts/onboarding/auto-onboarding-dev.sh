@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/auth.sh"
 
 # ----------------------------
-# Configuración de URLs
+# URLs
 # ----------------------------
 AUTHORITY_URL="${AUTHORITY_URL:-http://127.0.0.1:1500}"
 CONSUMER_URL="${CONSUMER_URL:-http://127.0.0.1:1100}"
@@ -16,7 +16,7 @@ INTERNAL_CONSUMER_URL="${INTERNAL_CONSUMER_URL:-$CONSUMER_URL}"
 INTERNAL_PROVIDER_URL="${INTERNAL_PROVIDER_URL:-$PROVIDER_URL}"
 
 # ----------------------------
-# Logging (solo stderr)
+# Logging (stderr)
 # ----------------------------
 log_step()    { echo -e "\n\033[36m$1\033[0m" >&2; }
 log_success() { echo -e "\033[32m$1\033[0m" >&2; }

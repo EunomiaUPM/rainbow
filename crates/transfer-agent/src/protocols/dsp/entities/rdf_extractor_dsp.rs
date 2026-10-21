@@ -21,8 +21,9 @@
 use common::dsp_common::context_field::ContextField;
 use common::dsp_common::data_address::{DataAddress, EndpointProperty};
 use common::dsp_common::rdf::DspProfile;
+use common::eunomia::EUNOMIA_NS;
 use common::rdf::{RdfCanonicalizer, RdfEngine, RdfNode, RdfProtocolTrait};
-use serde_json::Value;
+use serde_json::{json, Value};
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::protocols::dsp::entities::message_types::TransferDSPMessageType;
@@ -32,6 +33,8 @@ use crate::protocols::dsp::entities::protocol_fields::TransferProtocolFields;
 const DSPACE: &str = "https://w3id.org/dspace/2025/1/";
 /// `format` is Dublin Core in the DSP context, not a `dspace:` term.
 const DCT_FORMAT: &str = "http://purl.org/dc/terms/format";
+/// Our extension term on a request; not part of DSP, so a standard peer ignores it.
+const AUTO_START: &str = "autoStart";
 
 /// The transfer protocol, as an extraction target.
 #[derive(Debug, Clone)]
@@ -79,11 +82,29 @@ impl RdfProtocolTrait for DspTransfer {
                 .filter_map(|v| v.get("@value").and_then(serde_json::Value::as_str))
                 .map(str::to_string)
                 .collect(),
+            auto_start: node
+                .get_opt_bool(&format!("{EUNOMIA_NS}{AUTO_START}"))?
+                .unwrap_or(false),
         })
     }
 }
 
 impl DspTransfer {
+    /// The DSP context plus the eunomia prefix, for a request carrying `eunomia:autoStart`.
+    pub(crate) fn auto_start_context() -> Value {
+        let mut contexts = match Self::context() {
+            Value::Array(contexts) => contexts,
+            single => vec![single],
+        };
+        contexts.push(json!({ "eunomia": EUNOMIA_NS }));
+        Value::Array(contexts)
+    }
+
+    /// The compact member asking a provider to start the transfer unasked.
+    pub(crate) fn auto_start_member() -> String {
+        format!("eunomia:{AUTO_START}")
+    }
+
     /// A `dataAddress` is optional, but a present one missing a required member is
     /// malformed rather than absent.
     pub(crate) fn data_address(node: &RdfNode<'_, '_>) -> Outcome<Option<DataAddress>> {

@@ -12,6 +12,7 @@ import { ContractNegotiationVerificationDialog } from "../dialogs/ContractNegoti
 import NoFurtherActions from "../ui/noFurtherActions";
 import { ProcessActionDialog } from "./ProcessActionDialog";
 import { NegotiationProcessDto } from "shared/src/data/orval/model/negotiationProcessDto";
+import { useGetAgreementsByNegotiationProcess } from "shared/src/data/orval/negotiations/negotiations";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 /**
@@ -24,6 +25,13 @@ export const ContractNegotiationActions = ({
   process: NegotiationProcessDto;
   tiny: boolean;
 }) => {
+  const { data: agreementsData } = useGetAgreementsByNegotiationProcess(process.id, undefined, {
+    query: {
+      enabled: process.state === "FINALIZED",
+    },
+  });
+  const agreementId =
+    agreementsData?.status === 200 ? agreementsData.data.items?.[0]?.id : undefined;
   // Define container class name with variants
   const containerClassName = cva("", {
     variants: {
@@ -64,6 +72,11 @@ export const ContractNegotiationActions = ({
         case "ACCEPTED":
           return [
             { label: "Agree", variant: "default", Component: ContractNegotiationAgreementDialog },
+            {
+              label: "Terminate",
+              variant: "destructive",
+              Component: ContractNegotiationTerminationDialog,
+            },
           ];
         case "AGREED":
           return [
@@ -120,6 +133,21 @@ export const ContractNegotiationActions = ({
               variant: "default",
               Component: ContractNegotiationVerificationDialog,
             },
+            {
+              label: "Terminate",
+              variant: "destructive",
+              Component: ContractNegotiationTerminationDialog,
+            },
+          ];
+        // DSP 8.1: either party may terminate until the negotiation is finalized.
+        case "ACCEPTED":
+        case "VERIFIED":
+          return [
+            {
+              label: "Terminate",
+              variant: "destructive",
+              Component: ContractNegotiationTerminationDialog,
+            },
           ];
         default:
           return [];
@@ -132,18 +160,12 @@ export const ContractNegotiationActions = ({
   const actions = getActions();
 
   // Determine if no further actions are available
-  const showNoFurtherActions = () => {
-    if (process.state === "TERMINATED") return true;
-    if (process.role === "Consumer") {
-      if (process.state === "ACCEPTED") return true;
-      if (process.state === "VERIFIED") return true;
-    }
-    return false;
-  };
+  const showNoFurtherActions = () =>
+    process.state === "TERMINATED" || (process.state === "FINALIZED" && !agreementId);
 
   // Determine if agreement can be viewed
   const showGoToAgreement = () => {
-    return process.state === "FINALIZED" && !!process.agreement;
+    return process.state === "FINALIZED" && !!agreementId;
   };
 
   if (!tiny && actions.length === 0 && !showNoFurtherActions() && !showGoToAgreement()) {
@@ -173,7 +195,7 @@ export const ContractNegotiationActions = ({
           ))}
           {showNoFurtherActions() && <NoFurtherActions />}
           {showGoToAgreement() && (
-            <Link to="/agreements/$agreementId" params={{ agreementId: process.agreement!.id }}>
+            <Link to="/agreements/$agreementId" params={{ agreementId: agreementId! }}>
               <Button variant="link" className="gap-1.5">
                 See agreement <ArrowRight className="h-4 w-4" />
               </Button>

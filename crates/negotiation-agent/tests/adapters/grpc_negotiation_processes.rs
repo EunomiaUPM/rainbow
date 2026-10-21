@@ -39,7 +39,7 @@ use tonic::Code;
 use ymir::errors::Errors;
 
 use crate::support::context::TestContext;
-use crate::support::fixtures::{agreement_row, message_row, offer_row, urn};
+use crate::support::fixtures::urn;
 
 fn grpc(service: MockNegotiationProcessServiceTrait) -> NegotiationAgentProcessesGrpc {
     NegotiationAgentProcessesGrpc::new(TestContext::new().processes(service).build())
@@ -64,9 +64,6 @@ fn view(n: u32) -> NegotiationProcessView {
             updated_at: None,
         },
         HashMap::from([("consumerPid".to_string(), "c-1".to_string())]),
-        vec![message_row(1), message_row(2)],
-        vec![offer_row(3)],
-        Some(agreement_row(4)),
     )
 }
 
@@ -224,9 +221,9 @@ async fn domain_errors_map_to_grpc_codes() {
     assert_eq!(err.code(), Code::PermissionDenied);
 }
 
-/// The process carries its identifiers, messages, offers and agreement from the view.
+/// The process carries its identifiers and properties; nested messages, offers and agreement stay empty.
 #[tokio::test]
-async fn get_nests_messages_offers_and_agreement_from_the_view() {
+async fn get_carries_identifiers_without_sub_entities() {
     let mut svc = MockNegotiationProcessServiceTrait::new();
     svc.expect_get_one().returning(|_, _| Ok(view(1)));
     let g = grpc(svc);
@@ -238,12 +235,9 @@ async fn get_nests_messages_offers_and_agreement_from_the_view() {
     let process = resp.process.unwrap();
     assert_eq!(process.id, urn(1));
     assert_eq!(process.identifiers["consumerPid"], "c-1");
-    assert_eq!(process.messages.len(), 2);
-    assert!(process.messages[0].payload.is_some());
-    assert!(process.messages[0].offer.is_none());
-    assert_eq!(process.offers.len(), 1);
-    assert_eq!(process.offers[0].offer_id, "offer-3");
-    assert_eq!(process.agreement.as_ref().unwrap().state, "ACTIVE");
+    assert!(process.messages.is_empty());
+    assert!(process.offers.is_empty());
+    assert!(process.agreement.is_none());
     assert_eq!(
         process.properties.unwrap().fields["k"].kind,
         Some(prost_types::value::Kind::StringValue("v".into()))

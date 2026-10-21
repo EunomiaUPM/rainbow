@@ -19,6 +19,7 @@
 
 use async_trait::async_trait;
 use common::oauth::OwnerScope;
+use chrono::Utc;
 use common::paginated_spec::{Page, Sort};
 use sea_orm::sea_query::{BinOper, Expr};
 use sea_orm::{
@@ -91,6 +92,20 @@ impl EventStoreRepo for SeaOrmEventRepo {
                     .binary(BinOper::Custom("~"), pattern.to_sql_regex()),
             );
         }
+        if let Some(source) = &filter.source_crate {
+            query = query.filter(event::Column::SourceCrate.eq(source.clone()));
+        }
+        match filter.read {
+            Some(true) => query = query.filter(event::Column::ReadAt.is_not_null()),
+            Some(false) => query = query.filter(event::Column::ReadAt.is_null()),
+            None => {}
+        }
+        if let Some(after) = filter.created_after {
+            query = query.filter(event::Column::Timestamp.gte(after.naive_utc()));
+        }
+        if let Some(before) = filter.created_before {
+            query = query.filter(event::Column::Timestamp.lt(before.naive_utc()));
+        }
 
         let total = query
             .clone()
@@ -113,5 +128,31 @@ impl EventStoreRepo for SeaOrmEventRepo {
             .map(event::Model::into_domain)
             .collect::<Outcome<Vec<_>>>()?;
         Ok((events, total))
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn count_unread(&self, scope: &OwnerScope) -> Outcome<u64> {
+        event::Entity::find()
+            .filter(scope.condition(event::Column::UserId, event::Column::UserRole, event::Column::Visibility))
+            .filter(event::Column::ReadAt.is_null())
+            .count(&self.db)
+            .await
+            .map_err(|e| Errors::db("failed to count unread events", Some(Box::new(e))))
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, err)]
+    async fn mark_read(&self, scope: &OwnerScope, id: Option<Urn>) -> Outcome<u64> {
+        let mut update = event::Entity::update_many()
+            .col_expr(event::Column::ReadAt, Expr::value(Utc::now().naive_utc()))
+            .filter(scope.condition(event::Column::UserId, event::Column::UserRole, event::Column::Visibility))
+            .filter(event::Column::ReadAt.is_null());
+        if let Some(id) = id {
+            update = update.filter(event::Column::Id.eq(id.to_string()));
+        }
+        let res = update
+            .exec(&self.db)
+            .await
+            .map_err(|e| Errors::db("failed to mark events read", Some(Box::new(e))))?;
+        Ok(res.rows_affected)
     }
 }

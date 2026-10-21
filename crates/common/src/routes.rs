@@ -283,6 +283,13 @@ pub mod transfer {
         /// TCK trigger; only served in TCK mode.
         pub const TCK_REQUESTS: &str = "/tck/transfers/requests";
     }
+
+    /// The transfer steps of the console (internal: users), under
+    /// `dsp_common::paths::TRANSFERS`.
+    pub mod bff_rpc {
+        /// A request the provider starts on its own (`autoStart`).
+        pub const SETUP_REQUEST: &str = "/bff-rpc/setup-request";
+    }
 }
 
 /// Data plane: its control API (internal: users) under its prefix and the data proxy (external: the
@@ -318,7 +325,11 @@ pub mod events {
         pub const ROOT: &str = "/";
         /// Server-sent events.
         pub const STREAM: &str = "/stream";
+        /// Read state of the caller.
+        pub const UNREAD_COUNT: &str = "/unread-count";
+        pub const READ_ALL: &str = "/read-all";
         pub const BY_ID: &str = "/{id}";
+        pub const READ: &str = "/{id}/read";
         pub const DELIVERIES: &str = "/{id}/deliveries";
     }
 
@@ -393,6 +404,8 @@ pub mod bff {
     pub const SERVICE_PATH: &str = "/{service_prefix}/{*extra}";
     /// Who the session is.
     pub const ME: &str = "/me";
+    /// The console's live updates: a WebSocket fed by the event bus.
+    pub const LIVE: &str = "/live";
     /// A peer's DID document, fetched server side.
     pub const DID_JSON: &str = "/did-json/{url}";
     /// An authority's federated catalog, fetched server side.

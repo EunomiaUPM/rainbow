@@ -16,6 +16,10 @@
         "callbackAddress": "dspace:callbackAddress",
         "agreementId": "dspace:agreementId",
         "format": "dct:format",
+        "autoStart": {
+          "@id": "eunomia:autoStart",
+          "@type": "xsd:boolean"
+        },
         "dataAddress": {
           "@id": "dspace:dataAddress",
           "@context": {

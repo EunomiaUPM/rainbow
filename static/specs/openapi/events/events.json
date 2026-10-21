@@ -61,6 +61,45 @@
           },
           {
             "$ref": "#/components/parameters/TopicPattern"
+          },
+          {
+            "name": "source_crate",
+            "in": "query",
+            "required": false,
+            "description": "Crate that published the event.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "transfer_agent"
+              ]
+            }
+          },
+          {
+            "name": "read",
+            "in": "query",
+            "required": false,
+            "description": "`false` keeps unread events only, `true` read ones.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "created_before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         ],
         "responses": {
@@ -158,6 +197,88 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/events/unread-count": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "operationId": "getUnreadEventCount",
+        "summary": "Count unread events",
+        "description": "Events the caller sees that nobody has marked read yet.",
+        "responses": {
+          "200": {
+            "description": "Unread events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/events/read-all": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "operationId": "markAllEventsRead",
+        "summary": "Mark every unread event read",
+        "responses": {
+          "200": {
+            "description": "Events marked read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/read": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "operationId": "markEventRead",
+        "summary": "Mark an event read",
+        "description": "Read state is shared by everyone who sees the event.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/EventId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "1 if the event was unread, else 0",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -961,6 +1082,18 @@
           }
         }
       },
+      "EventCount": {
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
       "EventEnvelope": {
         "type": "object",
         "required": [
@@ -1021,6 +1154,14 @@
           },
           "payload": {
             "description": "Event payload, any JSON value."
+          },
+          "read_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When someone who sees the event marked it read; null while unread."
           }
         }
       },

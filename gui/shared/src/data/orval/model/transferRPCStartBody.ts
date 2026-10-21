@@ -12,8 +12,12 @@ are calls the GUI still makes to routes the backend no longer serves.
 
  * OpenAPI spec version: 1.0.0
  */
+import type { DataAddressDto } from './dataAddressDto';
 
 export interface TransferRPCStartBody {
+  '@context': 'https://w3id.org/eunomia/v1/context.jsonld';
+  '@type': 'RpcTransferStartMessage';
   consumerPid: string;
   providerPid: string;
+  dataAddress?: DataAddressDto;
 }

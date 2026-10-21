@@ -19,6 +19,7 @@
 
 mod discovery;
 mod frontend;
+mod live;
 mod session;
 pub mod router;
 

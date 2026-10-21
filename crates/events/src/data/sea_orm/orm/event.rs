@@ -48,6 +48,7 @@ pub struct Model {
     pub payload: serde_json::Value,
     pub timestamp: chrono::NaiveDateTime,
     pub created_at: chrono::NaiveDateTime,
+    pub read_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -82,6 +83,7 @@ impl Model {
             correlation_id,
             trace_context: self.trace_context,
             payload: self.payload,
+            read_at: self.read_at.map(|d| DateTime::from_naive_utc_and_offset(d, Utc)),
         })
     }
 }
@@ -103,6 +105,7 @@ impl ActiveModel {
             payload: ActiveValue::Set(entity.payload.clone()),
             timestamp: ActiveValue::Set(entity.timestamp.naive_utc()),
             created_at: ActiveValue::Set(Utc::now().naive_utc()),
+            read_at: ActiveValue::Set(entity.read_at.map(|d| d.naive_utc())),
         }
     }
 }

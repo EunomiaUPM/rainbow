@@ -79,6 +79,7 @@ impl RdfProtocolTrait for EunomiaTransfer {
             provider_pid: Self::owned(node, &Self::dspace("providerPid")),
             code: Self::owned(node, &Self::dspace("code")),
             reason: (!reason.is_empty()).then_some(reason),
+            auto_start: node.get_opt_bool(&EunomiaProfile::term("autoStart"))?,
         })
     }
 }

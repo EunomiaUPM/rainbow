@@ -11,7 +11,10 @@ import { BaseProcessDialog, mapCNProcessToInfoItemsForConsumer } from "./base";
 import { NegotiationProcessDto } from "../../data/orval/model";
 import { useRpcSetupAcceptance } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { EUNOMIA_CONTEXT } from "../../data/eunomia";
-import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import {
+  useGetNegotiationProcesses,
+  useGetOffersByProcessId,
+} from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
@@ -25,19 +28,32 @@ export const ContractNegotiationAcceptanceDialog = ({
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: acceptAsync } = useRpcSetupAcceptance();
   const { refetch } = useGetNegotiationProcesses();
+  const { data: offersData } = useGetOffersByProcessId(process.id, { limit: 100 });
   const router = useRouter();
+
+  const lastOffer = offersData?.status === 200 ? offersData.data.items?.at(-1) : undefined;
+  const consumerPid =
+    process.correlation.consumerPid || process.correlation.identifiers?.consumerPid;
+  const providerPid =
+    process.correlation.providerPid || process.correlation.identifiers?.providerPid;
+  const datasetId = process.correlation.identifiers?.datasetId;
+  const catalogId = process.correlation.identifiers?.catalogId;
 
   /**
    * Handles the acceptance submission.
    * Sends acceptance event to the provider.
    */
   const handleSubmit = async () => {
+    if (!consumerPid || !providerPid) {
+      console.error("Missing process identifiers");
+      return;
+    }
     await acceptAsync({
       data: {
         "@context": EUNOMIA_CONTEXT,
         "@type": "RpcNegotiationAcceptanceMessage",
-        consumerPid: process.identifiers!.consumerPid,
-        providerPid: process.identifiers!.providerPid,
+        consumerPid,
+        providerPid,
       },
     });
     await refetch();
@@ -63,13 +79,12 @@ export const ContractNegotiationAcceptanceDialog = ({
       onSubmit={handleSubmit}
       scrollable={true}
       afterInfoContent={
-        // Process lists come without their offers: the policy only shows where they are loaded.
-        process.offers?.at(-1)?.offerContent ? (
+        lastOffer?.offerContent ? (
           <div className="pt-4">
             <PolicyWrapperShow
-              policy={process.offers!.at(-1)!.offerContent}
-              datasetId={process.identifiers!.datasetId}
-              catalogId={process.identifiers!.catalogId}
+              policy={lastOffer.offerContent}
+              datasetId={datasetId}
+              catalogId={catalogId}
             />
           </div>
         ) : undefined

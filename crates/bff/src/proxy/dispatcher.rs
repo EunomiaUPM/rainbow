@@ -102,6 +102,21 @@ impl HttpProxyDispatcher {
         self.execute(&base_url, &api_path, None, req).await
     }
 
+    /// The bus's live event stream, with the caller's raw query (a topic pattern) if any.
+    pub fn events_stream_url(&self, query: Option<&str>) -> Option<String> {
+        let (base, path) = self.resolve_upstream("events")?;
+        let mut url = format!(
+            "{}/{}/stream",
+            base.trim_end_matches('/'),
+            path.trim_matches('/')
+        );
+        if let Some(q) = query.filter(|q| !q.is_empty()) {
+            url.push('?');
+            url.push_str(q);
+        }
+        Some(url)
+    }
+
     fn resolve_upstream(&self, prefix: &str) -> Option<(String, String)> {
         match prefix {
             "catalogs" => Some((

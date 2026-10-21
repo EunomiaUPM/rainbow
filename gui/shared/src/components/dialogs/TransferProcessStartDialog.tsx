@@ -15,6 +15,7 @@ import {
   useGetTransferProcesses,
   useGetTransferProcessById,
 } from "../../data/orval/transfers/transfers";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 
 export const TransferProcessStartDialog = ({
   process,
@@ -39,6 +40,8 @@ export const TransferProcessStartDialog = ({
     }
     await startAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcTransferStartMessage",
         consumerPid: process.correlation.consumerPid,
         providerPid: process.correlation.providerPid,
       },

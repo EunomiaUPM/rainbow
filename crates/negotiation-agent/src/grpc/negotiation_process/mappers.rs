@@ -24,10 +24,7 @@ use crate::grpc::api::negotiation_agent::{
     ListNegotiationProcessesRequest, NegotiationProcess as ProtoProcess,
     NegotiationProcessListResponse, NegotiationProcessResponse, PutNegotiationProcessRequest,
 };
-use crate::services::agreement::views::AgreementView;
-use crate::services::negotiation_message::views::NegotiationMessageView;
 use crate::services::negotiation_process::views::NegotiationProcessView;
-use crate::services::offer::views::OfferView;
 use common::batch_requests::BatchRequests;
 use common::grpc::{JsonStructExt, JsonValueExt, ListParams, PageMeta, ProtoField, ProtoFieldList};
 use common::paginated_spec::Paginated;
@@ -101,34 +98,25 @@ impl From<PutNegotiationProcessRequest> for EditNegotiationProcessDto {
     }
 }
 
-/// Sub-entities travel as bare rows in the view; they are lifted to their own views first.
+/// The view carries no sub-entities; the proto's nested messages, offers and agreement stay empty.
 impl From<NegotiationProcessView> for ProtoProcess {
     fn from(view: NegotiationProcessView) -> Self {
-        let inner = view.inner;
         Self {
-            id: inner.id,
-            state: inner.state,
-            state_attribute: inner.state_attribute,
-            associated_agent_peer: inner.associated_agent_peer,
-            protocol: inner.protocol,
-            callback_address: inner.callback_address,
-            role: inner.role,
-            properties: Some(inner.properties.into_prost_struct()),
-            error_details: inner.error_details.map(JsonValueExt::into_prost_struct),
-            created_at: inner.created_at.to_rfc3339(),
-            updated_at: inner.updated_at.map(|d| d.to_rfc3339()),
-            identifiers: view.identifiers,
-            messages: view
-                .messages
-                .into_iter()
-                .map(|m| NegotiationMessageView::assemble(m, None, None).into())
-                .collect(),
-            offers: view
-                .offers
-                .into_iter()
-                .map(|o| OfferView::assemble(o).into())
-                .collect(),
-            agreement: view.agreement.map(|a| AgreementView::assemble(a).into()),
+            id: view.id,
+            state: view.state,
+            state_attribute: view.state_attribute,
+            associated_agent_peer: view.correlation.peer_participant_id,
+            protocol: view.protocol,
+            callback_address: view.correlation.callback_address,
+            role: view.role,
+            properties: Some(view.properties.into_prost_struct()),
+            error_details: view.error_details.map(JsonValueExt::into_prost_struct),
+            created_at: view.created_at.to_rfc3339(),
+            updated_at: Some(view.updated_at.to_rfc3339()),
+            identifiers: view.correlation.identifiers,
+            messages: vec![],
+            offers: vec![],
+            agreement: None,
         }
     }
 }

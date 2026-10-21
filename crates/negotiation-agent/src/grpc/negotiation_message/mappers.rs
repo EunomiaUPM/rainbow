@@ -23,9 +23,7 @@ use crate::grpc::api::negotiation_agent::{
     CreateNegotiationMessageRequest, GetMessagesByProcessIdRequest, ListNegotiationMessagesRequest,
     NegotiationMessage as ProtoMessage, NegotiationMessageListResponse, NegotiationMessageResponse,
 };
-use crate::services::agreement::views::AgreementView;
 use crate::services::negotiation_message::views::NegotiationMessageView;
-use crate::services::offer::views::OfferView;
 use common::grpc::{JsonStructExt, JsonValueExt, ListParams, PageMeta, ProtoField};
 use common::paginated_spec::Paginated;
 use serde_json::Value as Json;
@@ -86,21 +84,21 @@ impl TryFrom<CreateNegotiationMessageRequest> for NewNegotiationMessageDto {
     }
 }
 
+/// The view carries no sub-entities; the proto's offer and agreement stay empty.
 impl From<NegotiationMessageView> for ProtoMessage {
     fn from(view: NegotiationMessageView) -> Self {
-        let inner = view.inner;
         Self {
-            id: inner.id,
-            negotiation_agent_process_id: inner.negotiation_agent_process_id,
-            direction: inner.direction,
-            protocol: inner.protocol,
-            message_type: inner.message_type,
-            state_transition_from: inner.state_transition_from,
-            state_transition_to: inner.state_transition_to,
-            payload: Some(inner.payload.into_prost_struct()),
-            created_at: inner.created_at.to_rfc3339(),
-            offer: view.offer.map(|o| OfferView::assemble(o).into()),
-            agreement: view.agreement.map(|a| AgreementView::assemble(a).into()),
+            id: view.id,
+            negotiation_agent_process_id: view.negotiation_process_id,
+            direction: view.direction,
+            protocol: view.protocol,
+            message_type: view.message_type,
+            state_transition_from: view.state_transition_from,
+            state_transition_to: view.state_transition_to,
+            payload: Some(view.payload.into_prost_struct()),
+            created_at: view.occurred_at.to_rfc3339(),
+            offer: None,
+            agreement: None,
         }
     }
 }

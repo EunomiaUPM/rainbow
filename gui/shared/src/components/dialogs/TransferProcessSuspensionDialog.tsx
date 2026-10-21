@@ -15,6 +15,7 @@ import {
   useGetTransferProcessById,
 } from "../../data/orval/transfers/transfers";
 import { useRouter } from "@tanstack/react-router";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 
 export const TransferProcessSuspensionDialog = ({
   process,
@@ -38,6 +39,8 @@ export const TransferProcessSuspensionDialog = ({
     }
     await suspendAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcTransferSuspensionMessage",
         consumerPid: process.correlation.consumerPid,
         providerPid: process.correlation.providerPid,
         code: "SUSPENDED",

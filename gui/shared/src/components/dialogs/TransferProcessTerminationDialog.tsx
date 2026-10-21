@@ -15,6 +15,7 @@ import {
   useGetTransferProcesses,
   useGetTransferProcessById,
 } from "../../data/orval/transfers/transfers";
+import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 
 export const TransferProcessTerminationDialog = ({
   process,
@@ -39,6 +40,8 @@ export const TransferProcessTerminationDialog = ({
     }
     await terminateAsync({
       data: {
+        "@context": EUNOMIA_CONTEXT,
+        "@type": "RpcTransferTerminationMessage",
         consumerPid: process.correlation.consumerPid,
         providerPid: process.correlation.providerPid,
         code: "TERMINATED",

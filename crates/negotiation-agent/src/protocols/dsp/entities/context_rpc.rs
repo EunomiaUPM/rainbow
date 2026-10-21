@@ -32,7 +32,6 @@ use crate::protocols::dsp::entities::rdf_extractor_dsp::DspNegotiation;
 use crate::protocols::dsp::entities::rdf_extractor_rpc::EunomiaNegotiation;
 use crate::protocols::dsp::entities::role::NegotiationRole;
 use crate::protocols::dsp::entities::state::NegotiationState;
-use crate::services::negotiation_process::views::NegotiationProcessView;
 
 /// RPC body for any outbound negotiation message; which fields matter depends on the message.
 #[derive(Debug, Clone, Default, Serialize)]
@@ -190,7 +189,6 @@ pub struct NegotiationRpcOutcome {
     pub request: Value,
     pub response: Value,
     pub process: NegotiationProcess,
-    pub view: NegotiationProcessView,
     pub role: NegotiationRole,
     pub opening_target: Option<String>,
 }
@@ -201,7 +199,6 @@ impl NegotiationRpcOutcome {
         domain: NegotiationRpcDomain,
         reply: &Value,
         process: NegotiationProcess,
-        view: NegotiationProcessView,
     ) -> Self {
         Self {
             request: domain.typed.rdf.raw.json,
@@ -209,7 +206,6 @@ impl NegotiationRpcOutcome {
             role: domain.role,
             opening_target: domain.opening_target,
             process,
-            view,
         }
     }
 }

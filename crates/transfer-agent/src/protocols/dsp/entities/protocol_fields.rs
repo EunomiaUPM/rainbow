@@ -39,4 +39,7 @@ pub struct TransferProtocolFields {
     /// `@container: @set` in the context, so genuinely multi-valued.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reason: Vec<String>,
+    /// `eunomia:autoStart`, our extension to a request: the provider starts it unasked.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub auto_start: bool,
 }

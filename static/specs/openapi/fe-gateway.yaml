@@ -1749,8 +1749,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorInfo'
-      deprecated: true
-      description: Not served by the backend any more; kept only because the admin GUI still calls it.
+      description: The RPC request with `autoStart` set; the provider starts the transfer once it accepts it.
   /dsp/current/transfers/rpc/setup-completion:
     post:
       operationId: setupTransferCompletion
@@ -2018,6 +2017,32 @@ paths:
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/Sort'
       - $ref: '#/components/parameters/TopicPattern'
+      - name: source_crate
+        in: query
+        required: false
+        description: Crate that published the event.
+        schema:
+          type: string
+          examples:
+          - transfer_agent
+      - name: read
+        in: query
+        required: false
+        description: '`false` keeps unread events only, `true` read ones.'
+        schema:
+          type: boolean
+      - name: created_after
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: created_before
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
       responses:
         '200':
           description: Page of events, newest first by default
@@ -2308,6 +2333,57 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /events/unread-count:
+    get:
+      tags:
+      - Events
+      operationId: getUnreadEventCount
+      summary: Count unread events
+      description: Events the caller sees that nobody has marked read yet.
+      responses:
+        '200':
+          description: Unread events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/read-all:
+    post:
+      tags:
+      - Events
+      operationId: markAllEventsRead
+      summary: Mark every unread event read
+      responses:
+        '200':
+          description: Events marked read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/{eventId}/read:
+    post:
+      tags:
+      - Events
+      operationId: markEventRead
+      summary: Mark an event read
+      description: Read state is shared by everyone who sees the event.
+      parameters:
+      - $ref: '#/components/parameters/EventId'
+      responses:
+        '200':
+          description: 1 if the event was unread, else 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /events/{eventId}:
     get:
       tags:
@@ -7807,6 +7883,14 @@ components:
         created_at:
           type: string
           format: date-time
+    EventCount:
+      type: object
+      required:
+      - count
+      properties:
+        count:
+          type: integer
+          minimum: 0
     EventEnvelope:
       type: object
       required:
@@ -7853,6 +7937,12 @@ components:
           description: W3C `traceparent` of the publishing span.
         payload:
           description: Event payload, any JSON value.
+        read_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When someone who sees the event marked it read; null while unread.
     EventSubscription:
       type: object
       required:
@@ -8174,29 +8264,40 @@ components:
               type: string
             '@language':
               type: string
+    NegotiationCorrelation:
+      type: object
+      required:
+      - identifiers
+      - peerParticipantId
+      properties:
+        identifiers:
+          type: object
+          additionalProperties:
+            type: string
+        consumerPid:
+          type:
+          - string
+          - 'null'
+        providerPid:
+          type:
+          - string
+          - 'null'
+        callbackAddress:
+          type:
+          - string
+          - 'null'
+          format: uri
+        peerParticipantId:
+          type: string
     NegotiationMessageDto:
-      description: Message with the offer or agreement it carried.
-      allOf:
-      - $ref: '#/components/schemas/NegotiationMessageRecord'
-      - type: object
-        properties:
-          offer:
-            oneOf:
-            - $ref: '#/components/schemas/OfferDto'
-            - type: 'null'
-          agreement:
-            oneOf:
-            - $ref: '#/components/schemas/AgreementDto'
-            - type: 'null'
-    NegotiationMessageRecord:
       type: object
       required:
       - id
       - userId
       - userRole
       - visibility
-      - negotiationAgentProcessId
-      - createdAt
+      - negotiationProcessId
+      - occurredAt
       - direction
       - protocol
       - messageType
@@ -8205,6 +8306,8 @@ components:
       - payload
       properties:
         id:
+          type: string
+        negotiationProcessId:
           type: string
         userId:
           type: string
@@ -8216,11 +8319,6 @@ components:
           - /admin/upm
         visibility:
           $ref: '#/components/schemas/Visibility'
-        negotiationAgentProcessId:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
         direction:
           type: string
           enum:
@@ -8238,60 +8336,47 @@ components:
           type: string
         payload:
           description: The DSP message as sent or received.
+        occurredAt:
+          type: string
+          format: date-time
+    NegotiationMessageRecord:
+      $ref: '#/components/schemas/NegotiationMessageDto'
     NegotiationProcessDto:
-      description: Negotiation with its identifiers, messages, offers and agreement.
-      allOf:
-      - $ref: '#/components/schemas/NegotiationProcessRecord'
-      - type: object
-        required:
-        - identifiers
-        - messages
-        - offers
-        properties:
-          identifiers:
-            type: object
-            description: DSP identifiers such as `consumerPid` and `providerPid`.
-            additionalProperties:
-              type: string
-          messages:
-            type: array
-            items:
-              $ref: '#/components/schemas/NegotiationMessageRecord'
-          offers:
-            type: array
-            items:
-              $ref: '#/components/schemas/OfferDto'
-          agreement:
-            oneOf:
-            - $ref: '#/components/schemas/AgreementDto'
-            - type: 'null'
-    NegotiationProcessRecord:
       type: object
       required:
       - id
       - userId
       - userRole
       - visibility
-      - state
-      - associatedAgentPeer
-      - protocol
       - role
+      - protocol
+      - state
+      - correlation
       - properties
       - createdAt
+      - updatedAt
+      - version
       properties:
         id:
           type: string
           description: URN of the negotiation.
         userId:
-          description: Author of the record (`system` when a peer opened it).
           type: string
+          description: Author of the record (`system` when a peer opened it).
         userRole:
+          type: string
           description: Role the record was created under (or that handles it).
           examples:
           - /admin/upm
-          type: string
         visibility:
           $ref: '#/components/schemas/Visibility'
+        role:
+          type: string
+          enum:
+          - Provider
+          - Consumer
+        protocol:
+          type: string
         state:
           type: string
           enum:
@@ -8306,22 +8391,8 @@ components:
           type:
           - string
           - 'null'
-        associatedAgentPeer:
-          type: string
-          description: Participant id (DID) of the counterpart.
-        protocol:
-          type: string
-          examples:
-          - DSP
-        callbackAddress:
-          type:
-          - string
-          - 'null'
-        role:
-          type: string
-          enum:
-          - Provider
-          - Consumer
+        correlation:
+          $ref: '#/components/schemas/NegotiationCorrelation'
         properties:
           description: Free-form JSON.
         errorDetails:
@@ -8330,10 +8401,13 @@ components:
           type: string
           format: date-time
         updatedAt:
-          type:
-          - string
-          - 'null'
+          type: string
           format: date-time
+        version:
+          type: integer
+          description: Optimistic concurrency version.
+    NegotiationProcessRecord:
+      $ref: '#/components/schemas/NegotiationProcessDto'
     NewAgreementDto:
       type: object
       additionalProperties: false
@@ -11119,23 +11193,41 @@ components:
           description: Optimistic concurrency version.
     TransferRPCCompletionBody:
       type: object
+      additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - consumerPid
       - providerPid
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcTransferCompletionMessage
         consumerPid:
           type: string
         providerPid:
           type: string
     TransferRPCRequestBody:
       type: object
+      additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - associatedAgentPeer
       - providerAddress
       - callbackAddress
       - agreementId
       - format
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcTransferRequestMessage
         associatedAgentPeer:
           type: string
         providerAddress:
@@ -11150,25 +11242,45 @@ components:
           $ref: '#/components/schemas/DataAddressDto'
         autoStart:
           type: boolean
-          description: |
-            BFF simplified flow. When true the Provider automatically responds with a TransferStartMessage upon receiving the request.
+          description: Asks the provider to start the transfer as soon as it accepts the request
+            (`eunomia:autoStart` on the DSP request).
     TransferRPCStartBody:
       type: object
+      additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - consumerPid
       - providerPid
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcTransferStartMessage
         consumerPid:
           type: string
         providerPid:
           type: string
+        dataAddress:
+          $ref: '#/components/schemas/DataAddressDto'
     TransferRPCSuspensionBody:
       type: object
+      additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - consumerPid
       - providerPid
       - code
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcTransferSuspensionMessage
         consumerPid:
           type: string
         providerPid:
@@ -11181,11 +11293,20 @@ components:
             type: string
     TransferRPCTerminationBody:
       type: object
+      additionalProperties: false
       required:
+      - '@context'
+      - '@type'
       - consumerPid
       - providerPid
       - code
       properties:
+        '@context':
+          type: string
+          const: https://w3id.org/eunomia/v1/context.jsonld
+        '@type':
+          type: string
+          const: RpcTransferTerminationMessage
         consumerPid:
           type: string
         providerPid:

@@ -29,9 +29,7 @@ use urn::Urn;
 use ymir::errors::{BadFormat, Errors, Outcome};
 
 use crate::data::sea_orm::orm::negotiation_message::NewNegotiationMessageModel;
-use crate::data::repo::agreement::AgreementRepoTrait;
 use crate::data::repo::negotiation_message::NegotiationMessageRepoTrait;
-use crate::data::repo::offer::OfferRepoTrait;
 use crate::entities::filters::NegotiationMessageFilter;
 use crate::entities::negotiation_message::NewNegotiationMessageDto;
 use crate::setup::context::AppContext;
@@ -50,14 +48,6 @@ impl NegotiationMessageService {
 
     fn message_repo(&self) -> Arc<dyn NegotiationMessageRepoTrait> {
         self.ctx.repos.negotiation_message_repo()
-    }
-
-    fn offer_repo(&self) -> Arc<dyn OfferRepoTrait> {
-        self.ctx.repos.offer_repo()
-    }
-
-    fn agreement_repo(&self) -> Arc<dyn AgreementRepoTrait> {
-        self.ctx.repos.agreement_repo()
     }
 }
 
@@ -81,11 +71,11 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
 
         let items: Vec<NegotiationMessageView> = messages
             .into_iter()
-            .map(|m| NegotiationMessageView::assemble(m, None, None))
+            .map(NegotiationMessageView::assemble)
             .collect();
 
         Ok(Paginated::from_page(items, &page, total, |m| {
-            Cursor::encode_composite(&m.inner.created_at, &m.inner.id)
+            Cursor::encode_composite(&m.occurred_at, &m.id)
         }))
     }
 
@@ -102,17 +92,7 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
             .await?
             .or_not_found(id, "negotiation message")?;
 
-        let offer = self
-            .offer_repo()
-            .get_offer_by_negotiation_message(&OwnerScope::seeing(user), id)
-            .await?;
-
-        let agreement = self
-            .agreement_repo()
-            .get_agreement_by_negotiation_message(&OwnerScope::seeing(user), id)
-            .await?;
-
-        Ok(NegotiationMessageView::assemble(message, offer, agreement))
+        Ok(NegotiationMessageView::assemble(message))
     }
 
     #[tracing::instrument(level = "info", skip_all, err, fields(user = %user.id()))]
@@ -139,7 +119,7 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
 
         let views = messages
             .into_iter()
-            .map(|m| NegotiationMessageView::assemble(m, None, None))
+            .map(NegotiationMessageView::assemble)
             .collect();
 
         Ok(views)
@@ -158,10 +138,10 @@ impl NegotiationMessageServiceTrait for NegotiationMessageService {
             .create_negotiation_message(&new_model)
             .await?;
 
-        let view = NegotiationMessageView::assemble(created, None, None);
+        let view = NegotiationMessageView::assemble(created);
         events::emit_action!(
             self.ctx.events,
-            &view.inner.owner(),
+            &view.owner(),
             crate::EVENT_PREFIX,
             "message",
             "create",

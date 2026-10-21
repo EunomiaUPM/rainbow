@@ -1059,15 +1059,40 @@ components:
           type:
           - string
           - 'null'
-    NegotiationMessageRecord:
+    NegotiationCorrelation:
+      type: object
+      required:
+      - identifiers
+      - peerParticipantId
+      properties:
+        identifiers:
+          type: object
+          additionalProperties:
+            type: string
+        consumerPid:
+          type:
+          - string
+          - 'null'
+        providerPid:
+          type:
+          - string
+          - 'null'
+        callbackAddress:
+          type:
+          - string
+          - 'null'
+          format: uri
+        peerParticipantId:
+          type: string
+    NegotiationMessageDto:
       type: object
       required:
       - id
       - userId
       - userRole
       - visibility
-      - negotiationAgentProcessId
-      - createdAt
+      - negotiationProcessId
+      - occurredAt
       - direction
       - protocol
       - messageType
@@ -1076,6 +1101,8 @@ components:
       - payload
       properties:
         id:
+          type: string
+        negotiationProcessId:
           type: string
         userId:
           type: string
@@ -1087,11 +1114,6 @@ components:
           - /admin/upm
         visibility:
           $ref: '#/components/schemas/Visibility'
-        negotiationAgentProcessId:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
         direction:
           type: string
           enum:
@@ -1109,46 +1131,26 @@ components:
           type: string
         payload:
           description: The DSP message as sent or received.
+        occurredAt:
+          type: string
+          format: date-time
+    NegotiationMessageRecord:
+      $ref: '#/components/schemas/NegotiationMessageDto'
     NegotiationProcessDto:
-      description: Negotiation with its identifiers, messages, offers and agreement.
-      allOf:
-      - $ref: '#/components/schemas/NegotiationProcessRecord'
-      - type: object
-        required:
-        - identifiers
-        - messages
-        - offers
-        properties:
-          identifiers:
-            type: object
-            description: DSP identifiers such as `consumerPid` and `providerPid`.
-            additionalProperties:
-              type: string
-          messages:
-            type: array
-            items:
-              $ref: '#/components/schemas/NegotiationMessageRecord'
-          offers:
-            type: array
-            items:
-              $ref: '#/components/schemas/OfferDto'
-          agreement:
-            oneOf:
-            - $ref: '#/components/schemas/AgreementDto'
-            - type: 'null'
-    NegotiationProcessRecord:
       type: object
       required:
       - id
       - userId
       - userRole
       - visibility
-      - state
-      - associatedAgentPeer
-      - protocol
       - role
+      - protocol
+      - state
+      - correlation
       - properties
       - createdAt
+      - updatedAt
+      - version
       properties:
         id:
           type: string
@@ -1163,28 +1165,21 @@ components:
           - /admin/upm
         visibility:
           $ref: '#/components/schemas/Visibility'
+        role:
+          type: string
+          enum:
+          - Provider
+          - Consumer
+        protocol:
+          type: string
         state:
           $ref: '#/components/schemas/NegotiationProcessState'
         stateAttribute:
           type:
           - string
           - 'null'
-        associatedAgentPeer:
-          type: string
-          description: Participant id (DID) of the counterpart.
-        protocol:
-          type: string
-          examples:
-          - DSP
-        callbackAddress:
-          type:
-          - string
-          - 'null'
-        role:
-          type: string
-          enum:
-          - Provider
-          - Consumer
+        correlation:
+          $ref: '#/components/schemas/NegotiationCorrelation'
         properties:
           description: Free-form JSON.
         errorDetails:
@@ -1193,10 +1188,13 @@ components:
           type: string
           format: date-time
         updatedAt:
-          type:
-          - string
-          - 'null'
+          type: string
           format: date-time
+        version:
+          type: integer
+          description: Optimistic concurrency version.
+    NegotiationProcessRecord:
+      $ref: '#/components/schemas/NegotiationProcessDto'
     NegotiationProcessState:
       type: string
       enum:

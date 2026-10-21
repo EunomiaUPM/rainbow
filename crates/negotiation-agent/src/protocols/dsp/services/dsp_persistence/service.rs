@@ -19,7 +19,7 @@
 
 use std::sync::Arc;
 
-use common::dsp_common::persistence::DspPersistenceTrait;
+use common::dsp_common::persistence::{DspPersistenceTrait, INITIAL_STATE};
 use common::oauth::OwnerScope;
 use ymir::types::oauth::UserInfo;
 use serde_json::json;
@@ -68,13 +68,16 @@ impl NegotiationDspPersistence {
         record: NegotiationMessageRecord,
         attachment: NegotiationAttachment,
     ) -> Outcome<NegotiationProcess> {
-        let view = self.ctx.processes().create(user, cmd).await?;
-        let process = NegotiationProcess::hydrate(
-            view.inner,
-            view.identifiers.into_iter().map(|(k, v)| (k, Some(v))),
-        )?;
+        let correlation = self.ctx.processes().create(user, cmd).await?.correlation;
+        let pid = correlation
+            .consumer_pid
+            .or(correlation.provider_pid)
+            .ok_or_else(|| Errors::crazy("opened negotiation has no pid", None))?;
+        let process = self.hydrate_process(&pid).await?.ok_or_else(|| {
+            Errors::crazy(format!("negotiation {pid} vanished after a write"), None)
+        })?;
         let state = process.state;
-        let message_id = self.write_message(&process, record, state, state).await?;
+        let message_id = self.write_message(&process, record, None, state).await?;
         self.attach(&process, &message_id, attachment).await?;
         Ok(process)
     }
@@ -101,7 +104,7 @@ impl NegotiationDspPersistence {
             .edit(&Self::actor(), &process.id()?, &edit)
             .await?;
         let message_id = self
-            .write_message(process, change.message, from, to)
+            .write_message(process, change.message, Some(from), to)
             .await?;
         self.attach(process, &message_id, attachment).await?;
         self.reload(process).await
@@ -152,7 +155,7 @@ impl NegotiationDspPersistence {
         &self,
         process: &NegotiationProcess,
         record: NegotiationMessageRecord,
-        from: NegotiationState,
+        from: Option<NegotiationState>,
         to: NegotiationState,
     ) -> Outcome<Urn> {
         let cmd = NewNegotiationMessageDto {
@@ -163,12 +166,13 @@ impl NegotiationDspPersistence {
             direction: record.direction.to_string(),
             protocol: Self::PROTOCOL.to_string(),
             message_type: record.message.wire_type().to_string(),
-            state_transition_from: from.to_string(),
+            state_transition_from: from
+                .map_or_else(|| INITIAL_STATE.to_string(), |s| s.to_string()),
             state_transition_to: to.to_string(),
             payload: record.payload,
         };
         let view = self.ctx.messages().create(&Self::actor(), &cmd).await?;
-        Self::urn(&view.inner.id)
+        Self::urn(&view.id)
     }
 
     async fn attach(

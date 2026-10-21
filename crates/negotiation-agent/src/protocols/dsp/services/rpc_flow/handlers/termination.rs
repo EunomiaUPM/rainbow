@@ -25,7 +25,6 @@ use crate::protocols::dsp::entities::state::NegotiationState;
 use crate::protocols::dsp::entities::state_change::NegotiationAttachment;
 use crate::protocols::dsp::services::dsp_persistence::service::NegotiationDspPersistence;
 use crate::protocols::dsp::services::rpc_flow::handlers::OutboundTransition;
-use crate::setup::context::AppContext;
 
 /// Moves our process to TERMINATED, keeping our code and reasons.
 pub struct TerminationHandler;
@@ -33,13 +32,12 @@ pub struct TerminationHandler;
 impl TerminationHandler {
     #[tracing::instrument(level = "info", skip_all, err)]
     pub async fn handle(
-        ctx: &AppContext,
         persistence: &NegotiationDspPersistence,
         domain: NegotiationRpcDomain,
         reply: &Value,
     ) -> Outcome<NegotiationRpcOutcome> {
         let target = NegotiationState::TERMINATED;
         let nothing = NegotiationAttachment::Nothing;
-        OutboundTransition::apply(ctx, persistence, domain, reply, target, nothing).await
+        OutboundTransition::apply(persistence, domain, reply, target, nothing).await
     }
 }

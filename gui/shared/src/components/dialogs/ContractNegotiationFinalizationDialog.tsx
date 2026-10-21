@@ -11,7 +11,10 @@ import { BaseProcessDialog, mapCNProcessToInfoItemsForProvider } from "./base";
 import { useRpcSetupFinalization } from "../../data/orval/negotiation-rp-c/negotiation-rp-c";
 import { EUNOMIA_CONTEXT } from "../../data/eunomia";
 import { NegotiationProcessDto } from "../../data/orval/model";
-import { useGetNegotiationProcesses } from "../../data/orval/negotiations/negotiations";
+import {
+  useGetAgreementsByNegotiationProcess,
+  useGetNegotiationProcesses,
+} from "../../data/orval/negotiations/negotiations";
 import { useRouter } from "@tanstack/react-router";
 import { PolicyWrapperShow } from "../PolicyWrapperShow";
 
@@ -25,19 +28,32 @@ export const ContractNegotiationFinalizationDialog = ({
   const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: finalizeAsync } = useRpcSetupFinalization();
   const { refetch } = useGetNegotiationProcesses();
+  const { data: agreementsData } = useGetAgreementsByNegotiationProcess(process.id);
   const router = useRouter();
+
+  const agreement = agreementsData?.status === 200 ? agreementsData.data.items?.[0] : undefined;
+  const consumerPid =
+    process.correlation.consumerPid || process.correlation.identifiers?.consumerPid;
+  const providerPid =
+    process.correlation.providerPid || process.correlation.identifiers?.providerPid;
+  const datasetId = process.correlation.identifiers?.datasetId;
+  const catalogId = process.correlation.identifiers?.catalogId;
 
   /**
    * Handles the finalization submission.
    * Sends finalization event to close the negotiation.
    */
   const handleSubmit = async () => {
+    if (!consumerPid || !providerPid) {
+      console.error("Missing process identifiers");
+      return;
+    }
     await finalizeAsync({
       data: {
         "@context": EUNOMIA_CONTEXT,
         "@type": "RpcNegotiationFinalizationMessage",
-        consumerPid: process.identifiers!.consumerPid,
-        providerPid: process.identifiers!.providerPid,
+        consumerPid,
+        providerPid,
       },
     });
     await refetch();
@@ -63,13 +79,15 @@ export const ContractNegotiationFinalizationDialog = ({
       onSubmit={handleSubmit}
       scrollable={true}
       afterInfoContent={
-        <div className="pt-4">
-          <PolicyWrapperShow
-            policy={process.agreement!.agreementContent}
-            datasetId={process.identifiers!.datasetId}
-            catalogId={process.identifiers!.catalogId}
-          />
-        </div>
+        agreement?.agreementContent ? (
+          <div className="pt-4">
+            <PolicyWrapperShow
+              policy={agreement.agreementContent}
+              datasetId={datasetId}
+              catalogId={catalogId}
+            />
+          </div>
+        ) : undefined
       }
     />
   );
