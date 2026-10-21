@@ -16,6 +16,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export interface RecvGrant {
   id: string;
   participant_nick: string;
+  /** Role that handles (answers) the grant, e.g. `/admin/upm`; the roles above it too. */
+  role: string;
+  visibility: string;
   kind: string;
   final_token_hash?: string | null;
   vc_type_config?: string[] | null;
@@ -85,6 +88,16 @@ function ReceivedConnectionsPage() {
             header: "Request ID",
             accessorKey: "id",
             cell: (r) => <Badge variant="info">{formatUrn(r.id)}</Badge>,
+          },
+          {
+            header: "Handled by",
+            accessorKey: "role",
+            cell: (r) => <Badge variant="code">{r.role || "-"}</Badge>,
+          },
+          {
+            header: "Visibility",
+            accessorKey: "visibility",
+            cell: (r) => <Badge variant="info">{r.visibility || "-"}</Badge>,
           },
           {
             header: "Status",

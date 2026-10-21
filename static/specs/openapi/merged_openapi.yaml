@@ -2169,6 +2169,56 @@ paths:
           $ref: '#/components/responses/NotFound'
       security:
       - bearerAuth: []
+  /api/v1/mates/{id}/relations:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Participant id (DID).
+      schema:
+        type: string
+    get:
+      tags:
+      - Participants
+      operationId: getParticipantRelations
+      summary: Who added a participant
+      description: The relations with the participant the caller may see; anonymous ones of others come without author.
+      responses:
+        '200':
+          description: Relations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - user_id
+                  - participant_id
+                  - role
+                  - visibility
+                  properties:
+                    user_id:
+                      type: string
+                      description: Who added the participant; masked for anonymous relations the caller does not reach.
+                    username:
+                      type:
+                      - string
+                      - 'null'
+                      description: Never given for Anonymous relations.
+                    participant_id:
+                      type: string
+                    role:
+                      type: string
+                      description: Role path the relation was created under, e.g. `/admin/upm`.
+                    visibility:
+                      $ref: '#/components/schemas/Visibility'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
   /api/v1/vc-request/beg:
     post:
       tags:
@@ -2709,27 +2759,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      security:
-      - bearerAuth: []
-  /api/v1/mates/sync:
-    post:
-      tags:
-      - Participants
-      operationId: syncParticipantDirectory
-      summary: Sync the participant directory from the authorities
-      description: Root only. Pulls the participants each known authority lists into the registry.
-      responses:
-        '200':
-          description: Number of participants synced
-          content:
-            application/json:
-              schema:
-                type: integer
-                minimum: 0
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
       security:
       - bearerAuth: []
   /api/v1/gate/access:

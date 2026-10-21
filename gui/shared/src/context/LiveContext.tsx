@@ -39,6 +39,10 @@ const INVALIDATIONS: [topic: string, keys: string[]][] = [
     ],
   ],
   ["connector:", ["/connector"]],
+  [
+    "auth:",
+    ["/peer-connection", "/gate", "/mates", "/vc-request", "peer-connection-sent", "gate-received"],
+  ],
   ["keystore:", ["/keystore"]],
 ];
 const BUFFER = 100;

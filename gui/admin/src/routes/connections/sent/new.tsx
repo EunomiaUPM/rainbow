@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, CheckCircle2, Info, Loader2, Search } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { formatIdentifier } from "shared/lib/utils";
@@ -32,6 +32,7 @@ import {
 } from "shared/src/components/ui/select";
 import { customInstance } from "shared/src/data/orval-mutator";
 import { useFederatedCatalog } from "shared/src/data/useFederatedCatalog";
+import { DiscoveredPeer, discoverPeer } from "shared/src/data/peerConnection";
 import * as z from "zod";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,22 +48,6 @@ const schema = z.object({
   auto: z.boolean().default(true),
   actions: z.array(z.string()).min(1, "Select at least one action"),
 });
-
-interface DidService {
-  id?: string;
-  type: string;
-  serviceEndpoint: string;
-}
-
-/**
- * `host.docker.internal` doesn't resolve in the browser running on the host.
- * Rewrite only the host portion to `127.0.0.1` for the browser-side fetch.
- * The original URL (with the docker hostname) is what the form keeps and what
- * the backend ultimately receives — the backend lives inside docker and can
- * resolve `host.docker.internal` natively.
- */
-const toBrowserHost = (url: string): string =>
-  url.replace(/(^https?:\/\/)host\.docker\.internal/, "$1127.0.0.1");
 
 type FormValues = z.infer<typeof schema>;
 
@@ -84,10 +69,7 @@ function NewSentConnection() {
   const navigate = useNavigate();
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [discoveredInfo, setDiscoveredInfo] = useState<{
-    id: string;
-    services: DidService[];
-  } | null>(null);
+  const [discoveredInfo, setDiscoveredInfo] = useState<DiscoveredPeer | null>(null);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const { data: participantsResponse } = useGetAllParticipants({ limit: 100 });
   const localParticipants =
@@ -126,16 +108,7 @@ function NewSentConnection() {
     setIsDiscovering(true);
     setDiscoveryError(null);
     try {
-      const cleanUrl = targetUrl.replace(/\/$/, "");
-      const fetchUrl = toBrowserHost(cleanUrl);
-
-      const didResponse = await fetch(`${fetchUrl}/.well-known/did.json`);
-      if (!didResponse.ok) throw new Error("Failed to fetch DID document");
-      const didJson = await didResponse.json();
-      const id = didJson.id;
-      const services = (didJson.service || []) as DidService[];
-
-      setDiscoveredInfo({ id, services });
+      setDiscoveredInfo(await discoverPeer(targetUrl));
     } catch (err: any) {
       console.error(err);
       setDiscoveryError(err.message || "Could not discover provider info");
@@ -158,17 +131,12 @@ function NewSentConnection() {
 
     setIsSubmitting(true);
     try {
-      // The peer's gate takes grant requests at `<gate>/access`.
-      const authService = discoveredInfo.services.find((s) => s.type === "AuthorizationServer");
-      const gate = (authService?.serviceEndpoint || `${values.url}/api/v1/gate`).replace(/\/$/, "");
-      const targetUrl = `${gate}/access`;
-
       await customInstance(`/peer-connection/connect`, {
         method: "POST",
         data: {
           id: discoveredInfo.id,
           nick: values.nick,
-          url: targetUrl,
+          url: discoveredInfo.accessUrl,
           actions: values.actions,
           visibility: values.visibility,
           auto: values.auto,
@@ -231,8 +199,8 @@ function NewSentConnection() {
                   Enter the participant base URL to discover its DID and initiate onboarding.
                 </CardDescription>
                 <CardDescription>
-                  Connections are now obtained automatically when you talk to a participant; this
-                  manual onboarding is no longer needed.
+                  Participants of the dataspace are usually connected from the catalog browser;
+                  this page is for one you know by its URL.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -291,18 +259,6 @@ function NewSentConnection() {
                           <FormDescription>
                             Example: http://host.docker.internal:2000
                           </FormDescription>
-                          {url && url.includes("host.docker.internal") && (
-                            <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
-                              <Info className="h-3 w-3 mt-0.5 shrink-0" />
-                              <span>
-                                Browser fetch will use{" "}
-                                <code className="font-mono text-xs">127.0.0.1</code> — the back
-                                receives{" "}
-                                <code className="font-mono text-xs">host.docker.internal</code>{" "}
-                                unchanged.
-                              </span>
-                            </p>
-                          )}
                         </FormItem>
                       )}
                     />

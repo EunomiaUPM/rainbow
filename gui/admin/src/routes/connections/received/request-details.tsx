@@ -31,6 +31,9 @@ import { getFriendlyVCType, grantBadgeState } from "shared/src/lib/utils";
 interface RecvGrant {
   id: string;
   participant_nick: string;
+  /** Role that handles (answers) the grant; the roles above it too. */
+  role: string;
+  visibility: string;
   kind: string;
   final_token_hash?: string | null;
   final_expires_at?: string | null;
@@ -219,6 +222,15 @@ function ReceivedRequestDetails() {
                   </Badge>
                 </DetailItem>
                 <DetailItem label="Peer Nick">{grant.participant_nick || "-"}</DetailItem>
+                <DetailItem label="Handled by">
+                  <Badge variant="code">{grant.role || "-"}</Badge>
+                  <p className="mt-1 text-xs font-normal text-muted-foreground">
+                    This role and the ones above it can answer.
+                  </p>
+                </DetailItem>
+                <DetailItem label="Visibility">
+                  <Badge variant="info">{grant.visibility || "-"}</Badge>
+                </DetailItem>
                 <DetailItem label="Hash of Token">
                   <SecretField value={grant.final_token_hash} />
                 </DetailItem>

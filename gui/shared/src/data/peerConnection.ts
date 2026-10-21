@@ -1,0 +1,82 @@
+// Connections of the session's user with the dataspace peers.
+//
+// A peer counts as connected when this user (not someone else of the organization) holds an
+// approved grant with it. The federated catalog lists the peers; the grant is asked for from the
+// catalog browser, and once it completes the peer is stored as a mate with the chosen visibility.
+
+import { useMemo } from "react";
+import { getDidFromUrl } from "./orval/did/did";
+import { useGetSessionUser } from "./orval/gateway/gateway";
+import { useGetAllPeerConnectionRequests } from "./orval/onboard/onboard";
+import type { DidService } from "./orval/model/didService";
+import type { SentGrant } from "./orval/model/sentGrant";
+
+/** Where this user stands with a peer: an approved grant, one on its way, the last one
+ * rejected, or none. */
+export type PeerConnection = "approved" | "pending" | "rejected" | "none";
+
+/** A peer as its DID document describes it. */
+export interface DiscoveredPeer {
+  id: string;
+  services: DidService[];
+  /** Where grant requests go: `<gate>/access`. */
+  accessUrl: string;
+}
+
+/** The peer's DID and gate, from the DID document at `baseUrl` (the gateway fetches it). */
+export const discoverPeer = async (baseUrl: string): Promise<DiscoveredPeer> => {
+  const clean = baseUrl.replace(/\/$/, "");
+  const res = await getDidFromUrl(encodeURIComponent(clean));
+  if (res.status !== 200) throw new Error("Could not read the participant's DID document");
+  const services = res.data.service ?? [];
+  const gate =
+    services.find((s) => s.type === "AuthorizationServer")?.serviceEndpoint ??
+    `${clean}/api/v1/gate`;
+  return { id: res.data.id, services, accessUrl: `${gate.replace(/\/$/, "")}/access` };
+};
+
+const OPEN_STATUSES = ["Pending", "Processing"];
+/** While a grant of this user is on its way, how often to look again (in case `/live` is down). */
+const PENDING_POLL_MS = 2_000;
+
+/** This user's connection with each peer, from the grants they sent. */
+export const usePeerConnections = () => {
+  const { data: session, isLoading: sessionLoading } = useGetSessionUser();
+  const userId = session?.status === 200 ? session.data.userId : undefined;
+  // A role above sees its team's grants too: only the user's own count.
+  const ownGrants = (data: unknown): SentGrant[] => {
+    const page = data as { status: number; data: { items: SentGrant[] } } | undefined;
+    return page?.status === 200 ? page.data.items.filter((g) => g.user_id === userId) : [];
+  };
+  const { data, isLoading } = useGetAllPeerConnectionRequests(
+    { limit: 100, sort: "created_at_desc" },
+    {
+      query: {
+        refetchInterval: (query) =>
+          ownGrants(query.state.data).some((g) => OPEN_STATUSES.includes(g.status))
+            ? PENDING_POLL_MS
+            : false,
+      },
+    },
+  );
+
+  const byPeer = useMemo(() => {
+    const map = new Map<string, PeerConnection>();
+    // Newest first: the first grant seen for a peer is its latest, unless an older one is approved.
+    for (const grant of ownGrants(data)) {
+      const known = map.get(grant.participant_id);
+      if (grant.status === "Approved") map.set(grant.participant_id, "approved");
+      else if (known) continue;
+      else if (OPEN_STATUSES.includes(grant.status)) map.set(grant.participant_id, "pending");
+      else if (grant.status === "Rejected") map.set(grant.participant_id, "rejected");
+      else map.set(grant.participant_id, "none");
+    }
+    return map;
+  }, [data, userId]);
+
+  return {
+    isLoading: sessionLoading || isLoading,
+    statusOf: (participantId: string | undefined): PeerConnection =>
+      (participantId && byPeer.get(participantId)) || "none",
+  };
+};

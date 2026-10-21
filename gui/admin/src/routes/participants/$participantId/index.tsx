@@ -18,11 +18,31 @@ import { Skeleton } from "shared/src/components/ui/skeleton";
 import dayjs from "dayjs";
 import { Card, CardContent, CardHeader, CardTitle } from "shared/src/components/ui/card";
 import { Separator } from "shared/src/components/ui/separator";
-import { History, Shield, Globe, Cpu, Key, Calendar, Activity } from "lucide-react";
+import { History, Shield, Globe, Cpu, Key, Calendar, Activity, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { ParticipantDto } from "shared/data/orval/model/participantDto";
+import { useGetDidFromUrl } from "shared/src/data/orval/did/did";
+import { customInstance } from "shared/src/data/orval-mutator";
 
 type Participant = ParticipantDto;
+
+/** Who added the participant, as `GET /mates/{id}/relations` gives it. */
+interface ParticipantRelation {
+  user_id: string;
+  username?: string | null;
+  participant_id: string;
+  role: string;
+  visibility: "Private" | "Anonymous" | "Public";
+}
+
+/** Public relations, each one; with none, one anonymous entry stands for all the anonymous. */
+const shownRelations = (relations: ParticipantRelation[]): ParticipantRelation[] => {
+  const publicOnes = relations.filter((r) => r.visibility === "Public");
+  if (publicOnes.length > 0) return publicOnes;
+  const anonymous = relations.find((r) => r.visibility === "Anonymous");
+  return anonymous ? [anonymous] : [];
+};
 
 /**
  * Route for displaying individual participant details.
@@ -45,6 +65,18 @@ function RouteComponent() {
     isError: isAgreementsError,
     error: agreementsError,
   } = useGetAgreementsByParticipantId(participantId);
+  const baseUrl = participant?.status === 200 ? participant.data.base_url : undefined;
+  const { data: didDoc } = useGetDidFromUrl(encodeURIComponent(baseUrl ?? ""), {
+    query: { enabled: !!baseUrl },
+  });
+  const relationsPath = `/mates/${encodePathId(participantId)}/relations`;
+  const { data: relationsResponse } = useQuery({
+    queryKey: [relationsPath],
+    queryFn: () =>
+      customInstance<{ status: number; data: ParticipantRelation[] }>(relationsPath, {
+        method: "GET",
+      }),
+  });
 
   if (isParticipantLoading || isAgreementsLoading) {
     return (
@@ -69,6 +101,8 @@ function RouteComponent() {
 
   const p = participant.data as Participant;
   const agreementList = agreements?.status === 200 ? agreements.data.items : [];
+  const relations = shownRelations(relationsResponse?.status === 200 ? relationsResponse.data : []);
+  const did = didDoc?.status === 200 ? didDoc.data : undefined;
 
   return (
     <PageLayout>
@@ -126,6 +160,44 @@ function RouteComponent() {
                   },
                 ]}
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-brand-sky" />
+                Relations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {relations.length === 0 ? (
+                <p className="text-xs italic text-muted-foreground text-center py-4">
+                  No public relations with this participant
+                </p>
+              ) : (
+                <ul className="divide-y divide-ink/10">
+                  {relations.map((r) =>
+                    r.visibility === "Anonymous" ? (
+                      <li key="anonymous" className="flex items-center justify-between py-2 text-sm">
+                        <span className="text-muted-foreground">Someone in the organization</span>
+                        <Badge variant="info">Anonymous</Badge>
+                      </li>
+                    ) : (
+                      <li
+                        key={r.user_id}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
+                      >
+                        <span className="font-medium">{r.username || r.user_id}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="code">{r.role}</Badge>
+                          <Badge variant="info">Public</Badge>
+                        </div>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
             </CardContent>
           </Card>
 
@@ -223,16 +295,67 @@ function RouteComponent() {
                 Extended Metadata
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {p.extra_fields && Object.keys(p.extra_fields).length > 0 ? (
-                <pre className="text-xs bg-background-300 p-3 rounded-lg overflow-x-auto max-h-[300px]">
-                  {JSON.stringify(p.extra_fields, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-xs italic text-muted-foreground text-center py-4">
-                  No extra fields available
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  DID document
                 </p>
-              )}
+                {did ? (
+                  <div className="space-y-3 text-xs">
+                    {did.controller != null && (
+                      <div>
+                        <span className="text-muted-foreground">Controller</span>
+                        <p className="font-mono break-all">{String(did.controller)}</p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">Services</span>
+                      {(did.service ?? []).length === 0 ? (
+                        <p className="italic text-muted-foreground">None</p>
+                      ) : (
+                        (did.service ?? []).map((s, i) => (
+                          <div
+                            key={s.id ?? i}
+                            className="mt-1 rounded border border-ink/10 bg-background-200/30 p-2"
+                          >
+                            <p className="font-medium text-brand-sky">{s.type}</p>
+                            <p className="break-all text-ink/70">{s.serviceEndpoint}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Verification methods</span>
+                      {did.verificationMethod.map((m, i) => (
+                        <div
+                          key={String(m.id ?? i)}
+                          className="mt-1 rounded border border-ink/10 bg-background-200/30 p-2"
+                        >
+                          <p className="font-medium">{String(m.type ?? "-")}</p>
+                          <p className="font-mono break-all text-ink/70">{String(m.id ?? "-")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs italic text-muted-foreground">
+                    {baseUrl ? "Could not read the DID document" : "No base URL"}
+                  </p>
+                )}
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Extra fields
+                </p>
+                {p.extra_fields && Object.keys(p.extra_fields).length > 0 ? (
+                  <pre className="text-xs bg-background-300 p-3 rounded-lg overflow-x-auto max-h-[300px]">
+                    {JSON.stringify(p.extra_fields, null, 2)}
+                  </pre>
+                ) : (
+                  <p className="text-xs italic text-muted-foreground">No extra fields available</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

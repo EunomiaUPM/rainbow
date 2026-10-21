@@ -41,7 +41,7 @@ pub mod auth {
         pub const MYSELF: &str = "/myself";
         pub const BATCH: &str = "/batch";
         pub const BY_ID: &str = "/{id}";
-        pub const SYNC: &str = "/sync";
+        pub const RELATIONS: &str = "/{id}/relations";
     }
 
     /// Credential requests to an authority.

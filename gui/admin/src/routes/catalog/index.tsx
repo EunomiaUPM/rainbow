@@ -5,7 +5,7 @@ import Heading from "shared/src/components/ui/heading.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
 import { useFederatedCatalog } from "shared/src/data/useFederatedCatalog";
-import { useGetAllParticipants } from "shared/src/data/orval/participants/participants";
+import { usePeerConnections } from "shared/src/data/peerConnection";
 import WizardDialog from "shared/src/components/WizardDialog";
 import { useRef, useState } from "react";
 import { Card, CardContent } from "shared/components/ui/card";
@@ -17,9 +17,7 @@ import { useMyself } from "shared/src/data/useMyself";
 const RouteComponent = () => {
   const { resolvedTheme } = useTheme();
   const federated = useFederatedCatalog();
-  const { data: participantsResponse } = useGetAllParticipants({ limit: 100 });
-  const localParticipants =
-    participantsResponse?.status === 200 ? participantsResponse.data.items : [];
+  const connections = usePeerConnections();
 
   const myAgent = useMyself();
 
@@ -27,7 +25,7 @@ const RouteComponent = () => {
   // first wizard URL state
   const [wizardCatalogOpen, setWizardCatalogOpen] = useState(true);
 
-  if (federated.state === "loading") {
+  if (federated.state === "loading" || connections.isLoading) {
     return (
       <PageLayout>
         <div>Loading...</div>
@@ -73,13 +71,12 @@ const RouteComponent = () => {
 
   const { agents } = federated;
 
-  //variable that tells if user is onboarded with any provider or not.
-  // true = they are / false = they're not
-  const onboardedWithKnownProvider = agents.some((prov) =>
-    localParticipants.some(
-      (lp) => lp.participant_id === prov.participant_id && lp.participant_type !== "Authority",
-    ),
+  const isOwn = (participantId: string) => participantId === myAgent?.participant_id;
+  // Whether this user is connected to any peer yet; if not, the tutorial guides the first one.
+  const onboardedWithKnownProvider = agents.some(
+    (prov) => connections.statusOf(prov.participant_id) === "approved",
   );
+  const firstPeer = agents.find((p) => !isOwn(p.participant_id));
 
   return (
     <PageLayout>
@@ -92,7 +89,7 @@ const RouteComponent = () => {
           onClose={() => setWizardCatalogOpen(false)}
           anchorRef={labelCatalogRef}
           align="left"
-          step="1 of 3"
+          step="1 of 2"
           sectionTitle="Connection with Participant Tutorial"
           title="Catalog browser"
           content={
@@ -106,43 +103,32 @@ const RouteComponent = () => {
       <div ref={(el) => (labelCatalogRef.current = el as any)} className="h-4" />
       <div className="grid grid-cols-3 gap-5">
         {agents.map((p) => {
-          const isOnboarded = localParticipants.some(
-            (lp) => lp.participant_id === p.participant_id,
-          );
-          const unauthRedirect = isOnboarded ? null : { url: p.base_url, slug: p.participant_nick };
-          // si no está autenticado con ningun proveedor, y es el primer agente de la lista
-          // destacar ese agente (modo ejemplo)
+          const connection = connections.statusOf(p.participant_id);
+          // With no connection yet, the first peer is highlighted (tutorial).
           const firstAgentWithUnauth =
-            !onboardedWithKnownProvider && p === agents[0] ? true : false;
+            !onboardedWithKnownProvider && p === firstPeer && connection === "none";
 
           return (
             <div
               key={p.participant_id}
-              className={
-                firstAgentWithUnauth
-                  ? "ring-2 ring-secondary-400 shadow-md animate-pulse rounded-md"
-                  : ""
-              }
+              // Same width and corners as the card, so the highlight fits it.
+              className={`max-w-lg rounded-xl ${
+                firstAgentWithUnauth ? "ring-2 ring-secondary-400 shadow-md animate-pulse" : ""
+              }`}
               onClick={() => setWizardCatalogOpen(false)}
             >
               <CatalogItem
-                datasetNumber={0}
                 organizationName={p.participant_nick ?? "Unknown"}
                 id={p.participant_id ?? null}
-                isAuthenticated={
-                  (p.participant_id === myAgent?.participant_id ? true : false) ? true : isOnboarded
-                }
-                unauthRedirect={
-                  (p.participant_id === myAgent?.participant_id ? true : false)
-                    ? null
-                    : unauthRedirect
-                }
-                onUnauthDialogClose={() => {
+                connection={connection}
+                participant={p}
+                showTutorial={!onboardedWithKnownProvider}
+                onConnectClose={() => {
                   if (firstAgentWithUnauth) {
                     setTimeout(() => setWizardCatalogOpen(true), 50);
                   }
                 }}
-                ownCatalog={p.participant_id === myAgent?.participant_id ? true : false}
+                ownCatalog={isOwn(p.participant_id)}
               />
             </div>
           );

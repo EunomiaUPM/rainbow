@@ -37,6 +37,10 @@ interface SentGrant {
   id: string;
   participant_id: string;
   participant_nick: string;
+  role: string;
+  user_id: string;
+  username?: string | null;
+  visibility: string;
   grant_endpoint: string;
   kind: string;
   status: string;
@@ -269,6 +273,13 @@ function SentRequestDetails() {
                 </DetailItem>
                 <DetailItem label="Origin">
                   <Badge variant="info">{grant.requested ? "Request" : "Response"}</Badge>
+                </DetailItem>
+                <DetailItem label="Created by">{grant.username || grant.user_id || "-"}</DetailItem>
+                <DetailItem label="Role">
+                  <Badge variant="code">{grant.role || "-"}</Badge>
+                </DetailItem>
+                <DetailItem label="Visibility">
+                  <Badge variant="info">{grant.visibility || "-"}</Badge>
                 </DetailItem>
                 <DetailItem label="Access Token">
                   <SecretField value={grant.final_token} />

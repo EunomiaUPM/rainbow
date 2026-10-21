@@ -2,41 +2,33 @@ import React, { useState } from "react";
 import avatarImg from "../../../public/avatar.png";
 import Avatar from "./avatar-img";
 import Heading from "shared/src/components/ui/heading";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { FormatDate } from "shared/src/components/ui/format-date";
-import { CheckCircle2, Lock, Database, Server, Calendar, ArrowUpRight } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "shared/src/components/ui/dialog";
-import { Button } from "shared/src/components/ui/button";
+import { Lock, Database, Server, Calendar, ArrowUpRight } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover";
 import WizardDialog from "shared/src/components/WizardDialog";
 import { useRef } from "react";
-import { useGetAllParticipants } from "shared/src/data/orval/participants/participants";
 import { Badge } from "shared/src/components/ui/badge";
 import { useRpcSetupCatalogRequest } from "shared/src/data/orval/catalog-rp-c/catalog-rp-c";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "shared/src/components/ui/card";
+import { ConnectPeerForm } from "shared/src/components/ConnectPeerForm";
+import type { PeerConnection } from "shared/src/data/peerConnection";
+import type { FederatedParticipant } from "shared/src/data/useFederatedCatalog";
+import { Card, CardHeader, CardFooter } from "shared/src/components/ui/card";
 
 interface CatalogItemProps {
   date?: string | undefined;
-  datasetNumber: number;
+  /** Known only once connected; `?` until then. */
+  datasetNumber?: number;
   organizationName: string;
   id: string | null;
   title?: string;
-  isAuthenticated?: boolean;
-  unauthRedirect?: { url: string; slug: string } | null;
-  onUnauthDialogClose?: () => void;
+  /** This user's connection with the peer. */
+  connection?: PeerConnection;
+  /** The peer as the federated catalog lists it; needed to connect. */
+  participant?: FederatedParticipant;
+  /** Shows the tutorial step on the connection form. */
+  showTutorial?: boolean;
+  onConnectClose?: () => void;
   ownCatalog?: boolean;
 }
 
@@ -46,26 +38,32 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
   organizationName,
   id,
   title,
-  isAuthenticated,
-  unauthRedirect,
-  onUnauthDialogClose,
+  connection = "none",
+  participant,
+  showTutorial = false,
+  onConnectClose,
   ownCatalog = false,
 }) => {
+  const navigate = useNavigate();
+  const connected = ownCatalog || connection === "approved";
+  const canConnect =
+    id !== null &&
+    !ownCatalog &&
+    (connection === "none" || connection === "rejected") &&
+    !!participant;
+
   const unavailableCatalogClasses =
     id === null ? "opacity-65 grayscale cursor-not-allowed" : "cursor-pointer";
-
-  const highlightButtonClasses = unauthRedirect
-    ? "animate-pulse bg-secondary-600 hover:bg-secondary-500 ring-2 ring-secondary-400"
-    : "";
 
   const labelConnectRef = useRef<HTMLElement | null>(null);
   const [wizardConnectOpen, setWizardConnectOpen] = useState(false);
 
   const { mutate, data } = useRpcSetupCatalogRequest();
 
-  // The own catalog is local: there is no peer to ask through DSP.
+  // Only with a grant of this user: asking without one would get a grant on its own, with no
+  // visibility chosen. The own catalog is local: there is no peer to ask through DSP.
   React.useEffect(() => {
-    if (id && !ownCatalog) {
+    if (id && !ownCatalog && connection === "approved") {
       mutate({
         data: {
           associatedAgentPeer: id,
@@ -74,7 +72,7 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
         },
       });
     }
-  }, [id, ownCatalog, mutate]);
+  }, [id, ownCatalog, connection, mutate]);
 
   const liveCatalog = data?.status === 200 ? data.data : undefined;
   const liveTitle = liveCatalog?.response?.title;
@@ -83,7 +81,7 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
 
   const displayTitle = liveTitle || title;
   const displayDate = liveDate || date;
-  const displayDatasetNr = liveDatasetNr || datasetNumber;
+  const displayDatasetNr = liveDatasetNr ?? datasetNumber ?? "?";
 
   const headingText = displayTitle ? displayTitle : `${organizationName}'s Catalog`;
   const headingNode = (
@@ -99,109 +97,83 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
   );
 
   let headingLink: React.ReactNode;
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openForm, setOpenForm] = useState(false);
 
-  //verify if user is onboarded with any provider to decide whether we show the wizard or we dont
-  const { data: participantsResponse } = useGetAllParticipants({ limit: 100 });
-  const localParticipants =
-    participantsResponse?.status === 200 ? participantsResponse.data.items : [];
-
-  let isOnboardedWithKnownProvider = localParticipants.some(
-    (lp) => lp.participant_type !== "Authority",
-  );
-
-  // open the wizard only after the dialog has been opened and the title anchor is mounted
+  // open the wizard only after the form has been opened and the title anchor is mounted
   React.useEffect(() => {
     let t: any;
-    if (openDialog) {
-      // schedule on next tick so the Dialog content mounts and labelConnectRef is set
+    if (openForm && showTutorial) {
       t = setTimeout(() => setWizardConnectOpen(true), 50);
     } else {
       setWizardConnectOpen(false);
     }
     return () => clearTimeout(t);
-  }, [openDialog]);
+  }, [openForm, showTutorial]);
 
   const handleOpenChange = (isOpen: boolean) => {
-    setOpenDialog(isOpen);
-    if (!isOpen && onUnauthDialogClose) {
-      onUnauthDialogClose();
+    setOpenForm(isOpen);
+    if (!isOpen && onConnectClose) {
+      onConnectClose();
     }
   };
 
-  if (unauthRedirect) {
+  if (canConnect) {
     headingLink = (
-      <>
-        <button
-          type="button"
-          onClick={() => setOpenDialog(true)}
-          className="p-0 m-0 text-left w-full"
+      <Popover open={openForm} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <button type="button" className="p-0 m-0 text-left w-full">
+            {headingNode}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-96 rounded-xl border border-ink/15 bg-background-800/95 shadow-2xl backdrop-blur-xl"
         >
-          {headingNode}
-        </button>
-
-        <Dialog open={openDialog} onOpenChange={handleOpenChange}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle
-                ref={(el) => (labelConnectRef.current = el as any)}
-                className="flex gap-2 items-center"
-              >
-                <Lock className="h-5 w-5"></Lock>
-                <Heading level="h4" className="!mb-0">
-                  Access required
-                </Heading>
-              </DialogTitle>
-              <DialogDescription>
-                {isOnboardedWithKnownProvider ? (
-                  ""
-                ) : (
-                  <WizardDialog
-                    open={wizardConnectOpen}
-                    onClose={() => setWizardConnectOpen(false)}
-                    anchorRef={labelConnectRef}
-                    sectionTitle="Connection with Participant Tutorial"
-                    step="2 of 3"
-                    align="left"
-                    title="Connection with Dataspace Participant required"
-                    content={
-                      <>
-                        You can only access the catalog of a participant if you are connected to
-                        them. Click on the button <strong>"Request connection"</strong> to connect
-                        with the owner of the catalog.
-                      </>
-                    }
-                  />
-                )}
-                You don't have permission to access this catalog. <br /> First, you need to connect
-                with <strong>{organizationName}</strong>.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost">Keep browsing</Button>
-              </DialogClose>
-              <Link
-                to="/connections/sent/new"
-                search={{ url: unauthRedirect.url, nick: unauthRedirect.slug }}
-              >
-                <Button className={highlightButtonClasses}>Request connection</Button>
-              </Link>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
+          <div
+            ref={(el) => (labelConnectRef.current = el as any)}
+            className="flex gap-2 items-center mb-3"
+          >
+            <Lock className="h-4 w-4" />
+            <Heading level="h5" className="!mb-0">
+              Connect with {organizationName}
+            </Heading>
+          </div>
+          {showTutorial && (
+            <WizardDialog
+              open={wizardConnectOpen}
+              onClose={() => setWizardConnectOpen(false)}
+              anchorRef={labelConnectRef}
+              sectionTitle="Connection with Participant Tutorial"
+              step="2 of 2"
+              align="left"
+              title="Connection with Dataspace Participant required"
+              content={
+                <>
+                  You can only access the catalog of a participant once you are connected to them.
+                  Choose who else can see the connection and click <strong>"Connect"</strong>.
+                </>
+              }
+            />
+          )}
+          <ConnectPeerForm
+            participant={participant!}
+            onCancel={() => handleOpenChange(false)}
+            onSent={() => {
+              handleOpenChange(false);
+              navigate({
+                to: "/catalog/participant/$participantId",
+                params: { participantId: id! },
+              });
+            }}
+          />
+        </PopoverContent>
+      </Popover>
     );
   } else if (ownCatalog) {
     headingLink = <Link to={"/my-catalog"}>{headingNode}</Link>;
-  } else if (id !== null) {
+  } else if (id !== null && (connection === "approved" || connection === "pending")) {
     headingLink = (
-      <Link
-        to={"/catalog/participant/$id/"}
-        params={{
-          id: id!,
-        }}
-      >
+      <Link to={"/catalog/participant/$participantId"} params={{ participantId: id }}>
         {headingNode}
       </Link>
     );
@@ -213,7 +185,7 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
     <Card
       variant="interactive"
       className={`h-full flex flex-col justify-between max-w-lg transition-all duration-200 ${unavailableCatalogClasses} ${
-        isAuthenticated && !ownCatalog ? "border-emerald-500/30 hover:border-emerald-500/60" : ""
+        connected && !ownCatalog ? "border-emerald-500/30 hover:border-emerald-500/60" : ""
       }`}
     >
       <CardHeader className="pb-3 space-y-3">
@@ -225,21 +197,27 @@ const CatalogItem: React.FC<CatalogItemProps> = ({
             </span>
           </div>
 
-          {isAuthenticated ? (
-            !ownCatalog ? (
-              <Badge variant="status" state="active" className="text-xs">
-                Authenticated
-              </Badge>
-            ) : (
-              <Badge variant="role" dsrole="Provider" className="text-xs">
-                My Catalog
-              </Badge>
-            )
-          ) : id !== null ? (
+          {ownCatalog ? (
+            <Badge variant="role" dsrole="Provider" className="text-xs">
+              My Catalog
+            </Badge>
+          ) : id === null ? null : connection === "approved" ? (
+            <Badge variant="status" state="active" className="text-xs">
+              Authenticated
+            </Badge>
+          ) : connection === "pending" ? (
+            <Badge variant="status" state="process" className="text-xs">
+              Awaiting response
+            </Badge>
+          ) : connection === "rejected" ? (
+            <Badge variant="status" state="danger" className="text-xs">
+              Rejected
+            </Badge>
+          ) : (
             <Badge variant="status" state="error" className="text-xs">
               Auth Required
             </Badge>
-          ) : null}
+          )}
         </div>
 
         <div className="pt-1">

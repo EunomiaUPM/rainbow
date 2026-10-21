@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { getGetMyselfQueryOptions } from "shared/src/data/orval/participants/participants";
 import { useRpcSetupCatalogRequest } from "shared/src/data/orval/catalog-rp-c/catalog-rp-c";
 import { PageLayout } from "shared/src/components/layout/PageLayout";
@@ -38,10 +38,13 @@ import {
   Layers,
   ArrowRight,
   CheckCircle2,
+  Loader2,
   ShieldCheck,
   Search,
 } from "lucide-react";
 import { useMyself } from "shared/src/data/useMyself";
+import { usePeerConnections } from "shared/src/data/peerConnection";
+import { ConnectPeerForm } from "shared/src/components/ConnectPeerForm";
 
 function RouteComponent() {
   const { participantId } = Route.useParams();
@@ -51,13 +54,18 @@ function RouteComponent() {
   const [activeTab, setActiveTab] = useState<"datasets" | "dataservice">("datasets");
 
   const myAgent = useMyself();
+  const navigate = useNavigate();
+  const connections = usePeerConnections();
+  const connection = connections.statusOf(participantId);
 
   const participant =
     federated.state === "ok"
       ? federated.agents.find((p: any) => p.participant_id === participantId)
       : undefined;
 
+  // Only with a grant of this user; without one, the connection form comes first.
   useEffect(() => {
+    if (connection !== "approved") return;
     mutate({
       data: {
         associatedAgentPeer: participantId,
@@ -65,7 +73,7 @@ function RouteComponent() {
         noCache: true,
       },
     });
-  }, [participantId, mutate]);
+  }, [participantId, connection, mutate]);
 
   const catalog = data?.status === 200 ? data.data : undefined;
   const datasets = Array.isArray(catalog?.response?.dataset) ? catalog.response.dataset : [];
@@ -83,7 +91,7 @@ function RouteComponent() {
     );
   }, [datasets, searchQuery]);
 
-  if (federated.state === "loading" || isPending) {
+  if (federated.state === "loading" || connections.isLoading || isPending) {
     return (
       <PageLayout>
         <PageHeader
@@ -132,6 +140,53 @@ function RouteComponent() {
           <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
             Retry
           </Button>
+        </Card>
+      </PageLayout>
+    );
+  }
+
+  if (connection !== "approved") {
+    const nick = participant?.participant_nick || "this participant";
+    return (
+      <PageLayout>
+        <PageHeader title={`${participant?.participant_nick || "Participant"}'s Catalog`}>
+          <div className="pt-2">
+            <Link to="/catalog">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs px-2 gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Catalogs</span>
+              </Button>
+            </Link>
+          </div>
+        </PageHeader>
+        <Card className="p-6 max-w-lg">
+          <CardTitle className="mb-4">Connect with {nick}</CardTitle>
+          {connection === "pending" ? (
+            <CardDescription className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Waiting for {nick} to accept your request; the catalog opens once it does.
+            </CardDescription>
+          ) : participant ? (
+            <>
+              {connection === "rejected" && (
+                <p className="mb-4 text-sm text-destructive">
+                  {nick} rejected your last request. You can ask again.
+                </p>
+              )}
+              <ConnectPeerForm
+                participant={participant}
+                onCancel={() => navigate({ to: "/catalog" })}
+              />
+            </>
+          ) : (
+            <CardDescription>
+              This participant is not in the federated catalog of your authority.
+            </CardDescription>
+          )}
         </Card>
       </PageLayout>
     );

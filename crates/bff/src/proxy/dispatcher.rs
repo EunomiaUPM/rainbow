@@ -26,12 +26,11 @@ use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use common::config::services::traits::GatewayConfigTrait;
 use common::config::services::GatewayConfig;
-use common::config::types::traits::{CommonConfigTrait, MinKnownConfigTrait};
+use common::config::types::traits::MinKnownConfigTrait;
 use common::routes::auth;
 use futures_util::TryStreamExt;
 use tracing::error;
 use uuid::Uuid;
-use ymir::config::traits::HostsConfigTrait;
 use ymir::config::types::HostType;
 use ymir::services::client::ClientTrait;
 use ymir::types::http::StreamBody;
@@ -97,7 +96,9 @@ impl HttpProxyDispatcher {
         extra: String,
         req: Request<Body>,
     ) -> Response {
-        let base_url = self.config.common().get_host(HostType::Http);
+        // The gateway only runs inside the monolith, where every agent shares one internal
+        // address: the auth agent's reaches it directly, not the public name through the proxy.
+        let base_url = self.config.ssi_auth().get_host(HostType::Http);
         let api_path = format!("rpc/.well-known/{extra}");
         self.execute(&base_url, &api_path, None, req).await
     }
@@ -180,19 +181,31 @@ impl HttpProxyDispatcher {
                 "api/v1/catalog-agent/dataset-offerings".to_string(),
             )),
             "events" => Some((
-                self.config.common().get_host(HostType::Http),
+                // The gateway only runs inside the monolith, where every agent shares one internal
+                // address: the auth agent's reaches it directly, not the public name through the
+                // proxy.
+                self.config.ssi_auth().get_host(HostType::Http),
                 "api/v1/events".to_string(),
             )),
             "oauth" | "auth" => Some((
-                self.config.common().get_host(HostType::Http),
+                // The gateway only runs inside the monolith, where every agent shares one internal
+                // address: the auth agent's reaches it directly, not the public name through the
+                // proxy.
+                self.config.ssi_auth().get_host(HostType::Http),
                 "oauth".to_string(),
             )),
             "well-known" => Some((
-                self.config.common().get_host(HostType::Http),
+                // The gateway only runs inside the monolith, where every agent shares one internal
+                // address: the auth agent's reaches it directly, not the public name through the
+                // proxy.
+                self.config.ssi_auth().get_host(HostType::Http),
                 ".well-known".to_string(),
             )),
             "v1" => Some((
-                self.config.common().get_host(HostType::Http),
+                // The gateway only runs inside the monolith, where every agent shares one internal
+                // address: the auth agent's reaches it directly, not the public name through the
+                // proxy.
+                self.config.ssi_auth().get_host(HostType::Http),
                 "api/v1".to_string(),
             )),
             _ => None,

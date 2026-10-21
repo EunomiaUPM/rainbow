@@ -132,7 +132,7 @@ impl GateKeeperTrait for GnapGateKeeperService {
         Ok(grant::Plan {
             id: id.clone(),
             role: role.unwrap_or_else(RolePath::root),
-            visibility: visibility.unwrap_or(Visibility::Public),
+            visibility: visibility.unwrap_or(Visibility::Private),
             participant_nick: class_id,
             vc_type_config: None,
             kind: GrantKind::AccessToken,
@@ -288,7 +288,7 @@ impl GateKeeperTrait for GnapGateKeeperService {
             username: None,
             participant_id: holder.to_string(),
             role: role.clone(),
-            visibility: Visibility::Private,
+            visibility: Visibility::Anonymous,
         }
     }
 

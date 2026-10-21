@@ -19,6 +19,11 @@ export interface SentGrant {
   id: string;
   participant_id: string;
   participant_nick: string;
+  /** Role path the grant was created under, e.g. `/admin/upm`. */
+  role: string;
+  user_id: string;
+  username?: string | null;
+  visibility: string;
   grant_endpoint: string;
   kind: string;
   status: string;
@@ -120,6 +125,21 @@ function SentConnectionsPage() {
               header: "Request ID",
               accessorKey: "id",
               cell: (r) => <Badge variant="info">{formatUrn(r.id)}</Badge>,
+            },
+            {
+              header: "Created by",
+              accessorKey: "username",
+              cell: (r) => r.username || (r as SentGrant).user_id || "-",
+            },
+            {
+              header: "Role",
+              accessorKey: "role",
+              cell: (r) => <Badge variant="code">{r.role || "-"}</Badge>,
+            },
+            {
+              header: "Visibility",
+              accessorKey: "visibility",
+              cell: (r) => <Badge variant="info">{r.visibility || "-"}</Badge>,
             },
             {
               header: "Auto",

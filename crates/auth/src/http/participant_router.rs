@@ -30,8 +30,9 @@ use common::query::{QueryFilter, QuerySpec};
 use common::routes::auth::mates;
 use serde::Deserialize;
 use ymir::data::entities::shared::participant::{Model, Plan};
+use ymir::data::entities::shared::participant_relation;
 use ymir::errors::AppResult;
-use ymir::types::oauth::{RoleTrait, UserInfo};
+use ymir::types::oauth::UserInfo;
 use ymir::types::participants::Visibility;
 use ymir::utils::extract_payload;
 
@@ -57,9 +58,9 @@ impl ParticipantRouter {
             .route(mates::ALL, get(Self::get_all))
             .route(mates::MYSELF, get(Self::get_myself))
             .route(mates::BY_ID, get(Self::get_by_id).put(Self::update_by_id))
+            .route(mates::RELATIONS, get(Self::get_relations))
             .route(mates::BATCH, post(Self::get_batch))
             .route(mates::ROOT, post(Self::create))
-            .route(mates::SYNC, post(Self::sync))
             .with_state(self.manager.clone())
     }
 
@@ -88,6 +89,15 @@ impl ParticipantRouter {
     ) -> AppResult<Json<Model>> {
         let id = decode_path_id(&id)?;
         Ok(Json(manager.get_by_id(&user, &id).await?))
+    }
+
+    async fn get_relations(
+        State(manager): State<Arc<dyn ParticipantModule>>,
+        user: UserInfo,
+        Path(id): Path<String>,
+    ) -> AppResult<Json<Vec<participant_relation::Model>>> {
+        let id = decode_path_id(&id)?;
+        Ok(Json(manager.get_relations(&user, &id).await?))
     }
 
     async fn get_myself(
@@ -137,14 +147,6 @@ impl ParticipantRouter {
                 .create_participant(&user, payload.plan, payload.visibility)
                 .await?,
         ))
-    }
-
-    async fn sync(
-        State(manager): State<Arc<dyn ParticipantModule>>,
-        user: UserInfo,
-    ) -> AppResult<Json<u64>> {
-        user.require_root()?;
-        Ok(Json(manager.sync_directory().await?))
     }
 }
 

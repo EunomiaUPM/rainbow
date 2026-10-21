@@ -2670,24 +2670,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /mates/sync:
-    post:
-      description: Root only. Pulls the participants each known authority lists into the registry.
-      operationId: syncParticipantDirectory
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                minimum: 0
-                type: integer
-          description: Number of participants synced
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-      summary: Sync the participant directory from the authorities
-      tags: *id002
   /mates/{id}:
     parameters:
     - name: id
@@ -2736,6 +2718,54 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /mates/{id}/relations:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Participant id (DID).
+      schema:
+        type: string
+    get:
+      description: The relations with the participant the caller may see; anonymous ones of others come without author.
+      operationId: getParticipantRelations
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  properties:
+                    participant_id:
+                      type: string
+                    role:
+                      description: Role path the relation was created under, e.g. `/admin/upm`.
+                      type: string
+                    user_id:
+                      description: Who added the participant; masked for anonymous relations the caller does not reach.
+                      type: string
+                    username:
+                      description: Never given for Anonymous relations.
+                      type:
+                      - string
+                      - 'null'
+                    visibility:
+                      $ref: '#/components/schemas/Visibility'
+                  required:
+                  - user_id
+                  - participant_id
+                  - role
+                  - visibility
+                  type: object
+                type: array
+          description: Relations
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Who added a participant
+      tags:
+      - Participants
   /me:
     get:
       tags:
